@@ -27,9 +27,6 @@ function input(c)
     document.onkeydown = this.keyDown;
     document.onmouseup = this.mouseUp;
     document.onmousedown = this.mouseDown;
-    window.oncontextmenu = this.context;
-    // c.onmousemove = this.mouseMove;
-    // c.onclick = c.requestPointerLock;
 }
 
 input.prototype.is = function(c)
@@ -94,9 +91,4 @@ input.prototype.mouseMove = function(e)
 {
     movement[0] = e.movementX;
     movement[1] = e.movementY;
-};
-
-input.prototype.context = function()
-{
-    return false;
 };
