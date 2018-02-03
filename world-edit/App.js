@@ -47,6 +47,10 @@ class App
         window.onfocus = App.ToggleOn(this, true);
         document.body.appendChild(canvas);
 
+        let map = new Map();
+        Map.Init(map);
+        Map.Mesh(map);
+
         this.on = true;
         this.canvas = canvas;
         this.gl = gl;
@@ -57,6 +61,7 @@ class App
         this.generics = generics;
         this.generics2 = generics2;
         this.screen = screen;
+        this.map = map;
     }
     static Run(app)
     {
@@ -110,7 +115,6 @@ class App
         RenderBuffer.Zero(app.generics);
         Render.Rectangle(app.generics, 10, 10, 64, 32, 0.5, 0.25, 0.75);
         Render.Circle(app.generics, 300, 200, 32, 0.25, 0.75, 0.50);
-        Render.Skeleton(app.generics, 400, 300, 0.75, 0.50, 0.25);
         RenderSystem.DrawNew(gl, app.generics);
 
         RenderSystem.SetProgram(g, gl, 'texture');
