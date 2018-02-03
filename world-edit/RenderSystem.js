@@ -20,6 +20,12 @@ class RenderSystem
         gl.bindTexture(gl.TEXTURE_2D, sys.textures[name]);
         gl.uniform1i(sys.textureLocation[sys.programName], 0);
     }
+    static SetTextureArray(sys, gl, name)
+    {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D_ARRAY, sys.textures[name]);
+        gl.uniform1i(sys.textureLocation[sys.programName], 0);
+    }
     static SetTextureDirect(sys, gl, texture)
     {
         gl.activeTexture(gl.TEXTURE0);
@@ -41,6 +47,10 @@ class RenderSystem
         gl.viewport(x, y, width, height);
         gl.scissor(x, y, width, height);
     }
+    static BindVao(gl, buffer)
+    {
+        gl.bindVertexArray(buffer.vao);
+    }
     static UpdateVao(gl, buffer)
     {
         gl.bindVertexArray(buffer.vao);
@@ -53,6 +63,10 @@ class RenderSystem
     {
         gl.bindVertexArray(buffer.vao);
         gl.drawElements(gl.TRIANGLES, buffer.indexPos, gl.UNSIGNED_SHORT, 0);
+    }
+    static DrawRange(gl, start, count)
+    {
+        gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, start);
     }
     static DrawNew(gl, buffer)
     {
@@ -83,7 +97,7 @@ class RenderSystem
         Matrix.Translate(sys.mv, x, y, z);
         Matrix.Multiply(sys.mvp, sys.perspective, sys.mv);
     }
-    static SetMvp(sys, gl)
+    static SendMvp(sys, gl)
     {
         gl.uniformMatrix4fv(sys.mvpLocation[sys.programName], false, sys.mvp);
     }

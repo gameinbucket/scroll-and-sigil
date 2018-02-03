@@ -36,4 +36,70 @@ class Map
     {
         
     }
+    static Render(gl, map, x, y, z)
+    {
+        for (let i = 0; i < map.pool_all; i++)
+        {
+            let pool = map.pools[i];
+            let mesh = pool.mesh;
+            if (mesh.vertexPos == 0)
+            {
+                continue;
+            }
+            RenderSystem.BindVao(gl, mesh);
+            if (x == pool.x)
+            {
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                g.DrawRange(obj.beginSide[PosX], obj.countSide[PosX])
+                g.DrawRange(obj.beginSide[NegX], obj.countSide[NegX])
+            }
+            else if (x > pool.x)
+            {
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                g.DrawRange(obj.beginSide[PosX], obj.countSide[PosX])
+            }
+            else
+            {
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                g.DrawRange(obj.beginSide[NegX], obj.countSide[NegX])
+            }
+
+            if (y == pool.y)
+            {
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                g.DrawRange(obj.beginSide[PosY], obj.countSide[PosY])
+                g.DrawRange(obj.beginSide[NegY], obj.countSide[NegY])
+            }
+            else if (y > pool.y)
+            {
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                g.DrawRange(obj.beginSide[PosY], obj.countSide[PosY])
+            }
+            else
+            {
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                g.DrawRange(obj.beginSide[NegY], obj.countSide[NegY])
+            }
+
+            if (z == pool.z)
+            {
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                g.DrawRange(obj.beginSide[PosZ], obj.countSide[PosZ])
+                g.DrawRange(obj.beginSide[NegZ], obj.countSide[NegZ])
+            }
+            else if (z > pool.z)
+            {
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                g.DrawRange(obj.beginSide[PosZ], obj.countSide[PosZ])
+            }
+            else
+            {
+                RenderSystem.DrawRange(gl, pool.beginSide[], pool.countSide[]);
+                g.DrawRange(obj.beginSide[NegZ], obj.countSide[NegZ])
+            }
+        }
+    }
 }
