@@ -7,8 +7,8 @@ class MapPool
     {
         this.cells = [];
         this.mesh;
-        this.begin_side;
-        this.count_side;
+        this.begin_side = [];
+        this.count_side = [];
         this.visibility;
         this.x;
         this.y;
@@ -35,6 +35,17 @@ class MapPool
     }
     static Mesh(pool)
     {
-        
+        let mesh = pool.mesh;
+        RenderBuffer.Zero(mesh);
+        for (let side = 0; side < 6; side++)
+        {
+            let mesh_begin_index = mesh.index_pos;
+            let type = MapCell_BlockGrass;
+            let texture_index = MapCell.TextureIndex(type);
+            RenderCell.Side(mesh, side, xs, ys, zs, 1, 1, texture_index);
+
+            pool.begin_side[side] = mesh_begin_index;
+            pool.count_side[side] = mesh.index_pos - mesh_begin_index;
+        }
     }
 }

@@ -1,21 +1,21 @@
 class RenderBuffer
 {
-    constructor(sys, gl, position, color, texture, vertexLimit, indexLimit)
+    constructor(sys, gl, position, color, texture, vertex_limit, index_limit)
     {
         this.vao;
         this.vbo;
         this.ebo;
-        this.vertexPos = 0;
-        this.indexPos = 0;
-        this.indexOffset = 0;
-        this.vertices = new Float32Array(vertexLimit * (position + color + texture));
-        this.indices = new Uint16Array(indexLimit);
+        this.vertex_pos = 0;
+        this.index_pos = 0;
+        this.index_offset = 0;
+        this.vertices = new Float32Array(vertex_limit * (position + color + texture));
+        this.indices = new Uint16Array(index_limit);
         RenderSystem.MakeVao(sys, gl, this, position, color, texture);
     }
     static Zero(buffer)
     {
-        buffer.vertexPos = 0;
-        buffer.indexPos = 0;
-        buffer.indexOffset = 0;
+        buffer.vertex_pos = 0;
+        buffer.index_pos = 0;
+        buffer.index_offset = 0;
     }
 }

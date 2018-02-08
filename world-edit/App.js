@@ -22,7 +22,9 @@ class App
         gl.depthFunc(gl.LEQUAL);
         gl.cullFace(gl.BACK);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.disable(gl.CULL_FACE);
         gl.disable(gl.BLEND);
+        gl.disable(gl.DEPTH_TEST);
 
         Matrix.Perspective(g.perspective, 60, 0.01, 100.0, canvas.width / canvas.height);
         Matrix.Orthographic(g.orthographic, 0, canvas.width, 0, canvas.height, 0, 1);
@@ -33,7 +35,7 @@ class App
 
         let generics = new RenderBuffer(g, gl, 2, 3, 0, 1600, 2400);
         let generics2 = new RenderBuffer(g, gl, 2, 0, 2, 400, 600);
-        let mapBuffer = new RenderBuffer(g, gl, 3, 0, 3, 3200, 4800);
+        let map_buffer = new RenderBuffer(g, gl, 3, 0, 3, 3200, 4800);
 
         RenderSystem.MakeImage(g, gl, 'stone', gl.CLAMP_TO_EDGE);
         RenderSystem.MakeImage(g, gl, 'atlas', gl.CLAMP_TO_EDGE);
@@ -48,6 +50,9 @@ class App
         Map.Init(map);
         Map.Mesh(map);
 
+        window.onblur = App.ToggleOn(this, false);
+        window.onfocus = App.ToggleOn(this, true);
+
         this.on = true;
         this.canvas = canvas;
         this.gl = gl;
@@ -57,22 +62,24 @@ class App
         this.frame = frame;
         this.generics = generics;
         this.generics2 = generics2;
-        this.mapBuffer = mapBuffer;
+        this.map_buffer = map_buffer;
         this.screen = screen;
         this.map = map;
-
-        window.onblur = App.ToggleOn(this, false);
-        window.onfocus = App.ToggleOn(this, true);
-        document.body.appendChild(canvas);
     }
     static Run(app)
     {
-        if (app.g.shaders['color'] === undefined || app.g.shaders['texture'] === undefined || app.g.shaders['texture-atlas'] === undefined)
+        if (
+            app.g.shaders['color'] === undefined ||
+            app.g.shaders['texture'] === undefined ||
+            app.g.shaders['texture-atlas'] === undefined)
         {
             setTimeout(App.Run, 1000, app);
         }
         else
         {
+            let wait = document.getElementById('wait');
+            wait.parentNode.removeChild(wait);
+            document.body.appendChild(app.canvas);
             App.Loop(app);
         }
     }
@@ -107,35 +114,33 @@ class App
         let gl = app.gl;
         let frame = app.frame;
 
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.clear(gl.DEPTH_BUFFER_BIT);
-        
         RenderSystem.SetFrameBuffer(gl, frame.fbo);
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.clear(gl.DEPTH_BUFFER_BIT);
 
         gl.enable(gl.DEPTH_TEST);
         gl.enable(gl.CULL_FACE);
         RenderSystem.SetProgram(g, gl, 'texture-atlas');
         RenderSystem.SetMvpPerspective(g, 0, 0, 0, 0, 0);
-        RenderSystem.SendMvp(g, gl);
-        RenderSystem.SetTextureArray(g, gl, 'atlas');
-        Map.Render(app.map, app.mapBuffer);
+        RenderSystem.UpdatedMvp(g, gl);
+        // RenderSystem.SetTextureArray(g, gl, 'atlas'); // bad?
+        Map.Render(app.map, app.map_buffer);
 
         gl.disable(gl.DEPTH_TEST);
         gl.disable(gl.CULL_FACE);
         
-        /* gl.clear(gl.COLOR_BUFFER_BIT);
         RenderSystem.SetMvpOrthographic(g, 0, 0);
-
         RenderSystem.SetProgram(g, gl, 'color');
-        RenderSystem.SendMvp(g, gl);
+        RenderSystem.UpdatedMvp(g, gl);
         RenderBuffer.Zero(app.generics);
         Render.Rectangle(app.generics, 10, 10, 64, 32, 0.5, 0.25, 0.75);
         Render.Circle(app.generics, 300, 200, 32, 0.25, 0.75, 0.50);
         RenderSystem.DrawNew(gl, app.generics);
 
         RenderSystem.SetProgram(g, gl, 'texture');
-        RenderSystem.SendMvp(g, gl);
+        RenderSystem.UpdatedMvp(g, gl);
         RenderBuffer.Zero(app.generics2);
         Render.Image(app.generics2, 128, 128, 64, 128, 0.0, 0.0, 1.0, 1.0);
         RenderSystem.SetTexture(g, gl, 'stone');
@@ -145,9 +150,9 @@ class App
         RenderSystem.SetView(gl, 0, 0, app.canvas.width, app.canvas.height);
         RenderSystem.SetProgram(g, gl, 'texture');
         RenderSystem.SetMvpOrthographic(g, 0, 0);
-        RenderSystem.SendMvp(g, gl);
+        RenderSystem.UpdatedMvp(g, gl);
         RenderSystem.SetTextureDirect(g, gl, frame.textures[0]);
-        RenderSystem.Draw(gl, app.screen); */
+        RenderSystem.Draw(gl, app.screen);
     }
 }
 

@@ -62,7 +62,7 @@ class RenderSystem
     static Draw(gl, buffer)
     {
         gl.bindVertexArray(buffer.vao);
-        gl.drawElements(gl.TRIANGLES, buffer.indexPos, gl.UNSIGNED_SHORT, 0);
+        gl.drawElements(gl.TRIANGLES, buffer.index_pos, gl.UNSIGNED_SHORT, 0);
     }
     static DrawRange(gl, start, count)
     {
@@ -70,7 +70,7 @@ class RenderSystem
     }
     static DrawNew(gl, buffer)
     {
-        if (buffer.vertexPos == 0)
+        if (buffer.vertex_pos == 0)
         {
             return;
         }
@@ -79,7 +79,7 @@ class RenderSystem
         gl.bufferData(gl.ARRAY_BUFFER, buffer.vertices, gl.DYNAMIC_DRAW);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.ebo)
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, buffer.indices, gl.DYNAMIC_DRAW);
-        gl.drawElements(gl.TRIANGLES, buffer.indexPos, gl.UNSIGNED_SHORT, 0);
+        gl.drawElements(gl.TRIANGLES, buffer.index_pos, gl.UNSIGNED_SHORT, 0);
     }
     static SetMvpOrthographic(sys, x, y)
     {
@@ -97,7 +97,7 @@ class RenderSystem
         Matrix.Translate(sys.mv, x, y, z);
         Matrix.Multiply(sys.mvp, sys.perspective, sys.mv);
     }
-    static SendMvp(sys, gl)
+    static UpdatedMvp(sys, gl)
     {
         gl.uniformMatrix4fv(sys.mvpLocation[sys.programName], false, sys.mvp);
     }
@@ -133,31 +133,31 @@ class RenderSystem
             gl.enableVertexAttribArray(index);
         }
     }
-    static UpdateFrameBuffer(sys, gl, buffer)
+    static UpdateFrameBuffer(sys, gl, frame)
     {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.fbo);
-        for (let i = 0; i < buffer.textures.length; i++)
+        gl.bindFramebuffer(gl.FRAMEBUFFER, frame.fbo);
+        for (let i = 0; i < frame.textures.length; i++)
         {
-            gl.bindTexture(gl.TEXTURE_2D, buffer.textures[i]);
-            gl.texImage2D(gl.TEXTURE_2D, 0, buffer.internalFormat[i], buffer.width, buffer.height, 0, buffer.format[i], buffer.type[i], null);
+            gl.bindTexture(gl.TEXTURE_2D, frame.textures[i]);
+            gl.texImage2D(gl.TEXTURE_2D, 0, frame.internalFormat[i], frame.width, frame.height, 0, frame.format[i], frame.type[i], null);
         }
-        if (buffer.depth)
+        if (frame.depth)
         {
-            gl.bindTexture(gl.TEXTURE_2D, buffer.depthTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH24_STENCIL8, buffer.width, buffer.height, 0, gl.DEPTH_STENCIL, gl.UNSIGNED_INT_24_8, null);
+            gl.bindTexture(gl.TEXTURE_2D, frame.depthTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH24_STENCIL8, frame.width, frame.height, 0, gl.DEPTH_STENCIL, gl.UNSIGNED_INT_24_8, null);
         }
     }
-    static MakeFrameBuffer(sys, gl, buffer)
+    static MakeFrameBuffer(sys, gl, frame)
     {
-        buffer.fbo = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, buffer.fbo);
-        for (let i = 0; i < buffer.textures.length; i++)
+        frame.fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, frame.fbo);
+        for (let i = 0; i < frame.textures.length; i++)
         {
-            buffer.textures[i] = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, buffer.textures[i]);
+            frame.textures[i] = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, frame.textures[i]);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            if (buffer.linear)
+            if (frame.linear)
             {
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -167,21 +167,21 @@ class RenderSystem
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             }
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, buffer.textures[i], 0);
-            buffer.drawBuffers[i] = gl.COLOR_ATTACHMENT0 + i;
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, frame.textures[i], 0);
+            frame.drawBuffers[i] = gl.COLOR_ATTACHMENT0 + i;
         }
-        gl.drawBuffers(buffer.drawBuffers);
-        if (buffer.depth)
+        gl.drawBuffers(frame.drawBuffers);
+        if (frame.depth)
         {
-            buffer.depthTexture = gl.creatureTexture();
-            gl.bindTexture(gl.TEXTURE_2D, buffer.depthTexture);
+            frame.depthTexture = gl.creatureTexture();
+            gl.bindTexture(gl.TEXTURE_2D, frame.depthTexture);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.framebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, buffer.depthTexture, 0);
+            gl.framebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, frame.depthTexture, 0);
         }
-        RenderSystem.UpdateFrameBuffer(sys, gl, buffer);
+        RenderSystem.UpdateFrameBuffer(sys, gl, frame);
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE)
         {
             console.error('framebuffer error');

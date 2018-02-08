@@ -1,35 +1,212 @@
 class RenderCell
 {
+	static Side(buffer, side, x, y, z, width, height, index)
+	{
+		switch (side)
+		{
+			case Map_PositiveX: PositiveX(buffer, x, y, z, width, height, index); break;
+			case Map_PositiveY: PositiveY(buffer, x, y, z, width, height, index); break;
+			case Map_PositiveZ: PositiveZ(buffer, x, y, z, width, height, index); break;
+			case Map_NegativeX: NegativeX(buffer, x, y, z, width, height, index); break;
+			case Map_NegativeY: NegativeY(buffer, x, y, z, width, height, index); break;
+			case Map_NegativeZ: NegativeZ(buffer, x, y, z, width, height, index); break;
+		}
+	}
     static PositiveX(buffer, x, y, z, width, height, index)
     {
-        buffer.vertices[buffer.vertexPos++] = x + 1;
-        buffer.vertices[buffer.vertexPos++] = y;
-        buffer.vertices[buffer.vertexPos++] = z;
-        buffer.vertices[buffer.vertexPos++] = 0.0;
-        buffer.vertices[buffer.vertexPos++] = 0.0;
-        buffer.vertices[buffer.vertexPos++] = index;
+        buffer.vertices[buffer.vertex_pos++] = x + 1;
+        buffer.vertices[buffer.vertex_pos++] = y;
+        buffer.vertices[buffer.vertex_pos++] = z;
+        buffer.vertices[buffer.vertex_pos++] = 0.0;
+        buffer.vertices[buffer.vertex_pos++] = 0.0;
+        buffer.vertices[buffer.vertex_pos++] = index;
         
-        buffer.vertices[buffer.vertexPos++] = x + 1;
-        buffer.vertices[buffer.vertexPos++] = y + width;
-        buffer.vertices[buffer.vertexPos++] = z;
-        buffer.vertices[buffer.vertexPos++] = width;
-        buffer.vertices[buffer.vertexPos++] = 0.0;
-        buffer.vertices[buffer.vertexPos++] = index;
+        buffer.vertices[buffer.vertex_pos++] = x + 1;
+        buffer.vertices[buffer.vertex_pos++] = y + width;
+        buffer.vertices[buffer.vertex_pos++] = z;
+        buffer.vertices[buffer.vertex_pos++] = width;
+        buffer.vertices[buffer.vertex_pos++] = 0.0;
+        buffer.vertices[buffer.vertex_pos++] = index;
         
-        buffer.vertices[buffer.vertexPos++] = x + 1;
-        buffer.vertices[buffer.vertexPos++] = y + width;
-        buffer.vertices[buffer.vertexPos++] = z + height;
-        buffer.vertices[buffer.vertexPos++] = width;
-        buffer.vertices[buffer.vertexPos++] = height;
-        buffer.vertices[buffer.vertexPos++] = index;
+        buffer.vertices[buffer.vertex_pos++] = x + 1;
+        buffer.vertices[buffer.vertex_pos++] = y + width;
+        buffer.vertices[buffer.vertex_pos++] = z + height;
+        buffer.vertices[buffer.vertex_pos++] = width;
+        buffer.vertices[buffer.vertex_pos++] = height;
+        buffer.vertices[buffer.vertex_pos++] = index;
         
-        buffer.vertices[buffer.vertexPos++] = x + 1;
-        buffer.vertices[buffer.vertexPos++] = y;
-        buffer.vertices[buffer.vertexPos++] = z + height;
-        buffer.vertices[buffer.vertexPos++] = 0.0;
-        buffer.vertices[buffer.vertexPos++] = height;
-        buffer.vertices[buffer.vertexPos++] = index;
+        buffer.vertices[buffer.vertex_pos++] = x + 1;
+        buffer.vertices[buffer.vertex_pos++] = y;
+        buffer.vertices[buffer.vertex_pos++] = z + height;
+        buffer.vertices[buffer.vertex_pos++] = 0.0;
+        buffer.vertices[buffer.vertex_pos++] = height;
+        buffer.vertices[buffer.vertex_pos++] = index;
 
+        Render.Index4(buffer);
+    }
+
+    static NegativeX(buffer, x, y, z, width, height, index)
+    {
+        buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y;
+		buffer.vertices[buffer.vertex_pos++] = z;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y;
+		buffer.vertices[buffer.vertex_pos++] = z + height;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = height;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y + width;
+		buffer.vertices[buffer.vertex_pos++] = z + height;
+		buffer.vertices[buffer.vertex_pos++] = width;
+		buffer.vertices[buffer.vertex_pos++] = height;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y + width;
+		buffer.vertices[buffer.vertex_pos++] = z;
+		buffer.vertices[buffer.vertex_pos++] = width;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = index;
+        
+        Render.Index4(buffer);
+    }
+
+    static PositiveY(buffer, x, y, z, width, height, index)
+    {
+        buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y + 1
+		buffer.vertices[buffer.vertex_pos++] = z;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y + 1
+		buffer.vertices[buffer.vertex_pos++] = z + width;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = width;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x + height;
+		buffer.vertices[buffer.vertex_pos++] = y + 1
+		buffer.vertices[buffer.vertex_pos++] = z + width;
+		buffer.vertices[buffer.vertex_pos++] = height;
+		buffer.vertices[buffer.vertex_pos++] = width;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x + height;
+		buffer.vertices[buffer.vertex_pos++] = y + 1
+		buffer.vertices[buffer.vertex_pos++] = z;
+		buffer.vertices[buffer.vertex_pos++] = height;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = index;
+        
+        Render.Index4(buffer);
+    }
+
+    static NegativeY(buffer, x, y, z, width, height, index)
+    {
+        buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y;
+		buffer.vertices[buffer.vertex_pos++] = z;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x + height;
+		buffer.vertices[buffer.vertex_pos++] = y;
+		buffer.vertices[buffer.vertex_pos++] = z;
+		buffer.vertices[buffer.vertex_pos++] = height;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x + height;
+		buffer.vertices[buffer.vertex_pos++] = y;
+		buffer.vertices[buffer.vertex_pos++] = z + width;
+		buffer.vertices[buffer.vertex_pos++] = height;
+		buffer.vertices[buffer.vertex_pos++] = width;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y;
+		buffer.vertices[buffer.vertex_pos++] = z + width;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = width;
+		buffer.vertices[buffer.vertex_pos++] = index;
+        
+        Render.Index4(buffer);
+    }
+
+    static PositiveZ(buffer, x, y, z, width, height, index)
+    {
+        buffer.vertices[buffer.vertex_pos++] = x + width;
+		buffer.vertices[buffer.vertex_pos++] = y;
+		buffer.vertices[buffer.vertex_pos++] = z + 1
+		buffer.vertices[buffer.vertex_pos++] = width;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x + width;
+		buffer.vertices[buffer.vertex_pos++] = y + height;
+		buffer.vertices[buffer.vertex_pos++] = z + 1
+		buffer.vertices[buffer.vertex_pos++] = width;
+		buffer.vertices[buffer.vertex_pos++] = height;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y + height;
+		buffer.vertices[buffer.vertex_pos++] = z + 1
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = height;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y;
+		buffer.vertices[buffer.vertex_pos++] = z + 1
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = index;
+        
+        Render.Index4(buffer);
+    }
+
+    static NegativeZ(buffer, x, y, z, width, height, index)
+    {
+        buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y;
+		buffer.vertices[buffer.vertex_pos++] = z;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x;
+		buffer.vertices[buffer.vertex_pos++] = y + height;
+		buffer.vertices[buffer.vertex_pos++] = z;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = height;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x + width;
+		buffer.vertices[buffer.vertex_pos++] = y + height;
+		buffer.vertices[buffer.vertex_pos++] = z;
+		buffer.vertices[buffer.vertex_pos++] = width;
+		buffer.vertices[buffer.vertex_pos++] = height;
+		buffer.vertices[buffer.vertex_pos++] = index;
+
+		buffer.vertices[buffer.vertex_pos++] = x + width;
+		buffer.vertices[buffer.vertex_pos++] = y;
+		buffer.vertices[buffer.vertex_pos++] = z;
+		buffer.vertices[buffer.vertex_pos++] = width;
+		buffer.vertices[buffer.vertex_pos++] = 0.0;
+		buffer.vertices[buffer.vertex_pos++] = index;
+        
         Render.Index4(buffer);
     }
 }
