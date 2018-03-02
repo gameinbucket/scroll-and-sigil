@@ -46,12 +46,12 @@ class App
         Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0);
         RenderSystem.UpdateVao(gl, screen);
 
-        let map = new Map();
+        let map = new Map(4, 4, 4);
         Map.Init(map);
-        Map.Mesh(map);
+        Map.Mesh(map, g, gl);
 
-        window.onblur = App.ToggleOn(this, false);
-        window.onfocus = App.ToggleOn(this, true);
+        /* window.onblur = App.ToggleOn(this, false);
+        window.onfocus = App.ToggleOn(this, true); */
 
         this.on = true;
         this.canvas = canvas;
@@ -126,7 +126,7 @@ class App
         RenderSystem.SetMvpPerspective(g, 0, 0, 0, 0, 0);
         RenderSystem.UpdatedMvp(g, gl);
         // RenderSystem.SetTextureArray(g, gl, 'atlas'); // bad?
-        Map.Render(app.map, app.map_buffer);
+        Map.Render(gl, app.map, 0, 0, 0);
 
         gl.disable(gl.DEPTH_TEST);
         gl.disable(gl.CULL_FACE);

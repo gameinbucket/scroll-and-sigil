@@ -3,7 +3,7 @@ const MapPool_Slice = MapPool_Size * MapPool_Size;
 const MapPool_All = MapPool_Slice * MapPool_Size;
 class MapPool
 {
-    constructor()
+    constructor(g, gl)
     {
         this.cells = [];
         this.mesh;
@@ -14,27 +14,34 @@ class MapPool
         this.y;
         this.z;
     }
-    static Init(pool, x, y, z)
+    static Init(pool, px, py, pz)
     {
-        pool.x = x;
-        pool.y = y;
-        pool.z = z;
-        for (let z = 0; z < MapPool_Size; z++)
+        pool.x = px;
+        pool.y = py;
+        pool.z = pz;
+        let x = 0;
+        let y = 0;
+        let z = 0;
+        for (let i = 0; i < MapPool_Size; i++)
         {
-            let zz = z * MapPool_Slice;
-            for (let y = 0; y < MapPool_Size; y++)
+            let c = new MapCell(MapCell_BlockGrass);
+            pool.cells[i] = c;
+            x++;
+            if (x == MapPool_Size)
             {
-                let yy = y * MapPool_Size;
-                for (let x = 0; x < MapPool_Size; x++)
+                x = 0;
+                y++;
+                if (y == MapPool_Size)
                 {
-                    let c = new MapCell(MapCell_BlockGrass);
-                    pool.cells[x + yy + zz] = c;
-                }    
+                    y = 0;
+                    z++;
+                }
             }
         }
     }
-    static Mesh(pool)
+    static Mesh(pool, g, gl)
     {
+        pool.mesh = new RenderBuffer(g, gl, 2, 0, 2, 400, 600);
         let mesh = pool.mesh;
         RenderBuffer.Zero(mesh);
         for (let side = 0; side < 6; side++)
@@ -42,7 +49,26 @@ class MapPool
             let mesh_begin_index = mesh.index_pos;
             let type = MapCell_BlockGrass;
             let texture_index = MapCell.TextureIndex(type);
-            RenderCell.Side(mesh, side, xs, ys, zs, 1, 1, texture_index);
+
+            let x = 0;
+            let y = 0;
+            let z = 0;
+            for (let i = 0; i < MapPool_Size; i++)
+            {
+                RenderCell.Side(mesh, side, x, y, z, 1, 1, texture_index);
+                
+                x++;
+                if (x == MapPool_Size)
+                {
+                    x = 0;
+                    y++;
+                    if (y == MapPool_Size)
+                    {
+                        y = 0;
+                        z++;
+                    }
+                }
+            }
 
             pool.begin_side[side] = mesh_begin_index;
             pool.count_side[side] = mesh.index_pos - mesh_begin_index;

@@ -4,12 +4,12 @@ class RenderCell
 	{
 		switch (side)
 		{
-			case Map_PositiveX: PositiveX(buffer, x, y, z, width, height, index); break;
-			case Map_PositiveY: PositiveY(buffer, x, y, z, width, height, index); break;
-			case Map_PositiveZ: PositiveZ(buffer, x, y, z, width, height, index); break;
-			case Map_NegativeX: NegativeX(buffer, x, y, z, width, height, index); break;
-			case Map_NegativeY: NegativeY(buffer, x, y, z, width, height, index); break;
-			case Map_NegativeZ: NegativeZ(buffer, x, y, z, width, height, index); break;
+			case Map_PositiveX: RenderCell.PositiveX(buffer, x, y, z, width, height, index); break;
+			case Map_PositiveY: RenderCell.PositiveY(buffer, x, y, z, width, height, index); break;
+			case Map_PositiveZ: RenderCell.PositiveZ(buffer, x, y, z, width, height, index); break;
+			case Map_NegativeX: RenderCell.NegativeX(buffer, x, y, z, width, height, index); break;
+			case Map_NegativeY: RenderCell.NegativeY(buffer, x, y, z, width, height, index); break;
+			case Map_NegativeZ: RenderCell.NegativeZ(buffer, x, y, z, width, height, index); break;
 		}
 	}
     static PositiveX(buffer, x, y, z, width, height, index)

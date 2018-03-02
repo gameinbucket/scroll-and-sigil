@@ -38,11 +38,11 @@ class Map
             }
         }
     }
-    static Mesh(map)
+    static Mesh(map, g, gl)
     {
         for (let i = 0; i < map.pool_all; i++)
         {
-            MapPool.Mesh(map.pools[i]);
+            MapPool.Mesh(map.pools[i], g, gl);
         }
     }
     static Render(gl, map, x, y, z)
