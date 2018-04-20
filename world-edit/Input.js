@@ -1,83 +1,73 @@
+const INPUT_KEYS = {};
+const INPUT_MOUSE = [false, false];
+const INPUT_MOVEMENT = [0, 0];
+const INPUT_ONE = 49;
+const INPUT_TWO = 50;
+const INPUT_THREE = 51;
+const INPUT_FOUR = 52;
+const INPUT_W = 87;
+const INPUT_A = 65;
+const INPUT_S = 83;
+const INPUT_D = 68;
+const INPUT_Q = 81;
+const INPUT_E = 69;
+const INPUT_SPACE = 32;
+const INPUT_UP = 38;
+const INPUT_DOWN = 40;
+const INPUT_LEFT = 37;
+const INPUT_RIGHT = 39;
 class Input
 {
-    constructor()
+    static Is(key)
     {
-        this.keys = new Array(256);
-        this.mouse = [false, false];
-        this.movement = [0, 0];
-        this.map = [];
-        
-        this.One = 49;
-        this.Two = 50;
-        this.Three = 51;
-        this.Four = 52;
-        this.W = 87;
-        this.A = 65;
-        this.S = 83;
-        this.D = 68;
-        this.Q = 81;
-        this.E = 69;
-        this.Space = 32;
-        this.Up = 38;
-        this.Down = 40;
-        this.Left = 37;
-        this.Right = 39;
-        
-        document.onkeyup = this.KeyUp;
-        document.onkeydown = this.KeyDown;
-        document.onmouseup = this.MouseUp;
-        document.onmousedown = this.MouseDown;
+        return INPUT_KEYS[key];
     }
-    static Is(input, key)
+    static Off(key)
     {
-        return input.keys[key];
+        INPUT_KEYS[key] = false;
     }
-    static Off(input, key)
+    static IsClick(id)
     {
-        input.keys[key] = false;
+        return INPUT_MOUSE[id];
     }
-    static Click(input, id)
+    static MovementX()
     {
-        return input.mouse[id];
+        return INPUT_MOVEMENT[0];
     }
-    static MovementX(input)
+    static MovementY()
     {
-        return input.movement[0];
+        return INPUT_MOVEMENT[1];
     }
-    static MovementY(input)
+    static Moved()
     {
-        return input.movement[1];
+        INPUT_MOVEMENT[0] = 0;
+        INPUT_MOVEMENT[1] = 0;
     }
-    static Moved(input)
+    static Clicked(id)
     {
-        input.movement[0] = 0;
-        input.movement[1] = 0;
+        INPUT_MOUSE[id] = false;
     }
-    static Clicked(input, id)
+    static KeyUp(event)
     {
-        input.mouse[id] = false;
+        INPUT_KEYS[event.keyCode] = false;
     }
-    static KeyUp(input, event)
+    static KeyDown(event)
     {
-        input.keys[event.keyCode] = false;
+        INPUT_KEYS[event.keyCode] = true;
     }
-    static KeyDown(input, event)
+    static MouseUp(event)
     {
-        input.keys[event.keyCode] = true;
+        if (event.button === 0) INPUT_MOUSE[0] = false;
+        else if (event.button === 2) INPUT_MOUSE[1] = false;
     }
-    static MouseUp(input, event)
+    static MouseDown(event)
     {
-        if (event.button === 0) input.mouse[0] = false;
-        else if (event.button === 2) input.mouse[1] = false;
+        if (event.button === 0) INPUT_MOUSE[0] = true;
+        else if (event.button === 2) INPUT_MOUSE[1] = true;
     }
-    static MouseDown(input, event)
+    static MouseMove(event)
     {
-        if (event.button === 0) input.mouse[0] = true;
-        else if (event.button === 2) input.mouse[1] = true;
-    }
-    static MouseMove(input, event)
-    {
-        input.movement[0] = event.movementX;
-        input.movement[1] = event.movementY;
+        INPUT_MOVEMENT[0] = event.movementX;
+        INPUT_MOVEMENT[1] = event.movementY;
     }
 }

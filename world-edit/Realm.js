@@ -4,7 +4,7 @@ const Map_PositiveZ = 2;
 const Map_NegativeX = 3;
 const Map_NegativeY = 4;
 const Map_NegativeZ = 5;
-class Map
+class Realm
 {
     constructor(pool_w, pool_h, pool_l)
     {
@@ -15,22 +15,22 @@ class Map
         this.pool_all = pool_w * pool_h * pool_l;
         this.pools = [];
     }
-    static Init(map)
+    static Init(realm)
     {
         let x = 0;
         let y = 0;
         let z = 0;
-        for (let i = 0; i < map.pool_all; i++)
+        for (let i = 0; i < realm.pool_all; i++)
         {
-            let p = new MapPool();
-            MapPool.Init(p, x, y, z);
-            map.pools[i] = p;
+            let p = new Pool();
+            Pool.Init(p, x, y, z);
+            realm.pools[i] = p;
             x++;
-            if (x == map.pool_w)
+            if (x == realm.pool_w)
             {
                 x = 0;
                 y++;
-                if (y == map.pool_h)
+                if (y == realm.pool_h)
                 {
                     y = 0;
                     z++;
@@ -38,18 +38,18 @@ class Map
             }
         }
     }
-    static Mesh(map, g, gl)
+    static Mesh(realm, g, gl)
     {
-        for (let i = 0; i < map.pool_all; i++)
+        for (let i = 0; i < realm.pool_all; i++)
         {
-            MapPool.Mesh(map.pools[i], g, gl);
+            Pool.Mesh(realm.pools[i], g, gl);
         }
     }
-    static Render(gl, map, x, y, z)
+    static Render(gl, realm, x, y, z)
     {
-        for (let i = 0; i < map.pool_all; i++)
+        for (let i = 0; i < realm.pool_all; i++)
         {
-            let pool = map.pools[i];
+            let pool = realm.pools[i];
             let mesh = pool.mesh;
             if (mesh.vertex_pos == 0)
             {

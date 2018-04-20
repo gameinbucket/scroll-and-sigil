@@ -1,10 +1,7 @@
+MATRIX_TEMP = new Array(16);
+MATRIX_COPIED = new Array(16);
 class Matrix
 {
-    constructor()
-    {
-        this.temp = Matrix.Make();
-        this.copied = Matrix.Make();
-    }
     static Make()
     {
         return new Array(16);
@@ -91,101 +88,101 @@ class Matrix
         matrix[14] = x * matrix[2] + y * matrix[6] + z * matrix[10] + matrix[14];
         matrix[15] = x * matrix[3] + y * matrix[7] + z * matrix[11] + matrix[15];
     }
-    static RotateX(sys, matrix, r)
+    static RotateX(matrix, r)
     {
         let cos = Math.cos(r);
         let sin = Math.sin(r);
 
-        sys.temp[0] = 1.0;
-        sys.temp[1] = 0.0;
-        sys.temp[2] = 0.0;
-        sys.temp[3] = 0.0;
+        MATRIX_TEMP[0] = 1.0;
+        MATRIX_TEMP[1] = 0.0;
+        MATRIX_TEMP[2] = 0.0;
+        MATRIX_TEMP[3] = 0.0;
         
-        sys.temp[4] = 0.0;
-        sys.temp[5] = cos;
-        sys.temp[6] = sin;
-        sys.temp[7] = 0.0;
+        MATRIX_TEMP[4] = 0.0;
+        MATRIX_TEMP[5] = cos;
+        MATRIX_TEMP[6] = sin;
+        MATRIX_TEMP[7] = 0.0;
         
-        sys.temp[8] = 0.0;
-        sys.temp[9] = -sin;
-        sys.temp[10] = cos;
-        sys.temp[11] = 0.0;
+        MATRIX_TEMP[8] = 0.0;
+        MATRIX_TEMP[9] = -sin;
+        MATRIX_TEMP[10] = cos;
+        MATRIX_TEMP[11] = 0.0;
         
-        sys.temp[12] = 0.0;
-        sys.temp[13] = 0.0;
-        sys.temp[14] = 0.0;
-        sys.temp[15] = 1.0;
+        MATRIX_TEMP[12] = 0.0;
+        MATRIX_TEMP[13] = 0.0;
+        MATRIX_TEMP[14] = 0.0;
+        MATRIX_TEMP[15] = 1.0;
 
         for (let i = 0; i < 16; i++)
         {
-            sys.copied[i] = matrix[i]
+            MATRIX_COPIED[i] = matrix[i]
         }
 
-        Matrix.Multiply(matrix, sys.copied, sys.temp);
+        Matrix.Multiply(matrix, MATRIX_COPIED, MATRIX_TEMP);
     }
-    static RotateY(sys, matrix, r)
+    static RotateY(matrix, r)
     {
         let cos = Math.cos(r);
         let sin = Math.sin(r);
 
-        sys.temp[0] = cos;
-        sys.temp[1] = 0.0;
-        sys.temp[2] = -sin;
-        sys.temp[3] = 0.0;
+        MATRIX_TEMP[0] = cos;
+        MATRIX_TEMP[1] = 0.0;
+        MATRIX_TEMP[2] = -sin;
+        MATRIX_TEMP[3] = 0.0;
         
-        sys.temp[4] = 0.0;
-        sys.temp[5] = 1.0;
-        sys.temp[6] = 0.0;
-        sys.temp[7] = 0.0;
+        MATRIX_TEMP[4] = 0.0;
+        MATRIX_TEMP[5] = 1.0;
+        MATRIX_TEMP[6] = 0.0;
+        MATRIX_TEMP[7] = 0.0;
         
-        sys.temp[8] = sin;
-        sys.temp[9] = 0.0;
-        sys.temp[10] = cos;
-        sys.temp[11] = 0.0;
+        MATRIX_TEMP[8] = sin;
+        MATRIX_TEMP[9] = 0.0;
+        MATRIX_TEMP[10] = cos;
+        MATRIX_TEMP[11] = 0.0;
         
-        sys.temp[12] = 0.0;
-        sys.temp[13] = 0.0;
-        sys.temp[14] = 0.0;
-        sys.temp[15] = 1.0;
+        MATRIX_TEMP[12] = 0.0;
+        MATRIX_TEMP[13] = 0.0;
+        MATRIX_TEMP[14] = 0.0;
+        MATRIX_TEMP[15] = 1.0;
         
         for (let i = 0; i < 16; i++)
         {
-            sys.copied[i] = matrix[i]
+            MATRIX_COPIED[i] = matrix[i]
         }
 
-        Matrix.Multiply(matrix, sys.copied, sys.temp);
+        Matrix.Multiply(matrix, MATRIX_COPIED, MATRIX_TEMP);
     }
     static RotateZ(matrix, r)
     {
         let cos = Math.cos(r);
         let sin = Math.sin(r);
 
-        sys.temp[0] = cos;
-        sys.temp[1] = sin;
-        sys.temp[2] = 0.0;
-        sys.temp[3] = 0.0;
+        MATRIX_TEMP[0] = cos;
+        MATRIX_TEMP[1] = sin;
+        MATRIX_TEMP[2] = 0.0;
+        MATRIX_TEMP[3] = 0.0;
         
-        sys.temp[4] = -sin;
-        sys.temp[5] = cos;
-        sys.temp[6] = 0.0;
-        sys.temp[7] = 0.0;
+        MATRIX_TEMP[4] = -sin;
+        MATRIX_TEMP[5] = cos;
+        MATRIX_TEMP[6] = 0.0;
+        MATRIX_TEMP[7] = 0.0;
         
-        sys.temp[8] = 0.0;
-        sys.temp[9] = 0.0;
-        sys.temp[10] = 1.0;
-        sys.temp[11] = 0.0;
+        MATRIX_TEMP[8] = 0.0;
+        MATRIX_TEMP[9] = 0.0;
+        MATRIX_TEMP[10] = 1.0;
+        MATRIX_TEMP[11] = 0.0;
         
-        sys.temp[12] = 0.0;
-        sys.temp[13] = 0.0;
-        sys.temp[14] = 0.0;
-        sys.temp[15] = 1.0;
+        MATRIX_TEMP[12] = 0.0;
+        MATRIX_TEMP[13] = 0.0;
+        MATRIX_TEMP[14] = 0.0;
+        MATRIX_TEMP[15] = 1.0;
         
         for (let i = 0; i < 16; i++)
         {
-            sys.copied[i] = matrix[i]
+            MATRIX_COPIED[i] = matrix[i]
         }
 
-        Matrix.Multiply(matrix, sys.copied, sys.temp);
+        Matrix.Multiply(matrix, MATRIX_COPIED, MATRIX_TEMP);
     }
     static Multiply(matrix, b, c)
     {

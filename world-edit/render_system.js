@@ -1,3 +1,4 @@
+const RESOURCES = 'resources/';
 class RenderSystem
 {
     constructor()
@@ -8,9 +9,9 @@ class RenderSystem
         this.mvp = Matrix.Make();
         
         this.program;
-        this.programName;
-        this.mvpLocation = [];
-        this.textureLocation = [];
+        this.program_name;
+        this.mvp_location = [];
+        this.texture_location = [];
         this.shaders = [];
         this.textures = [];
     }
@@ -18,24 +19,18 @@ class RenderSystem
     {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, sys.textures[name]);
-        gl.uniform1i(sys.textureLocation[sys.programName], 0);
-    }
-    static SetTextureArray(sys, gl, name)
-    {
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D_ARRAY, sys.textures[name]);
-        gl.uniform1i(sys.textureLocation[sys.programName], 0);
+        gl.uniform1i(sys.texture_location[sys.program_name], 0);
     }
     static SetTextureDirect(sys, gl, texture)
     {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.uniform1i(sys.textureLocation[sys.programName], 0);
+        gl.uniform1i(sys.texture_location[sys.program_name], 0);
     }
     static SetProgram(sys, gl, name)
     {
         sys.program = sys.shaders[name];
-        sys.programName = name;
+        sys.program_name = name;
         gl.useProgram(sys.program);
     }
     static SetFrameBuffer(gl, fbo)
@@ -59,7 +54,7 @@ class RenderSystem
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.ebo)
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, buffer.indices, gl.STATIC_DRAW);
     }
-    static Draw(gl, buffer)
+    static BindAndDraw(gl, buffer)
     {
         gl.bindVertexArray(buffer.vao);
         gl.drawElements(gl.TRIANGLES, buffer.index_pos, gl.UNSIGNED_SHORT, 0);
@@ -68,7 +63,7 @@ class RenderSystem
     {
         gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, start);
     }
-    static DrawNew(gl, buffer)
+    static UpdateAndDraw(gl, buffer)
     {
         if (buffer.vertex_pos == 0)
         {
@@ -90,18 +85,16 @@ class RenderSystem
     static SetMvpPerspective(sys, x, y, z, rx, ry)
     {
         Matrix.Identity(sys.mv);
-        
-        if (rx !== 0) Matrix.RotateX(sys.mv, rx);
-        if (ry !== 0) Matrix.RotateY(sys.mv, ry);
-
+        Matrix.RotateX(sys.mv, rx);
+        Matrix.RotateY(sys.mv, ry);
         Matrix.Translate(sys.mv, x, y, z);
         Matrix.Multiply(sys.mvp, sys.perspective, sys.mv);
     }
     static UpdatedMvp(sys, gl)
     {
-        gl.uniformMatrix4fv(sys.mvpLocation[sys.programName], false, sys.mvp);
+        gl.uniformMatrix4fv(sys.mvp_location[sys.program_name], false, sys.mvp);
     }
-    static MakeVao(sys, gl, buffer, position, color, texture)
+    static MakeVao(gl, buffer, position, color, texture)
     {
         buffer.vao = gl.createVertexArray();
         buffer.vbo = gl.createBuffer();
@@ -173,13 +166,13 @@ class RenderSystem
         gl.drawBuffers(frame.drawBuffers);
         if (frame.depth)
         {
-            frame.depthTexture = gl.creatureTexture();
+            frame.depthTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, frame.depthTexture);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.framebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, frame.depthTexture, 0);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, frame.depthTexture, 0);
         }
         RenderSystem.UpdateFrameBuffer(sys, gl, frame);
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE)
@@ -192,6 +185,8 @@ class RenderSystem
         var data = new Array(2);
         var completed = 0;
 
+        sys.shaders[name] = null;
+
         function partial(id, text)
         {
             data[id] = text;
@@ -200,30 +195,33 @@ class RenderSystem
             {
                 let program = RenderSystem.CompileProgram(gl, data[0], data[1]);
                 sys.shaders[name] = program;
-                sys.mvpLocation[name] = gl.getUniformLocation(program, 'u_mvp');
-                sys.textureLocation[name] = gl.getUniformLocation(program, 'u_texture0');
+                sys.mvp_location[name] = gl.getUniformLocation(program, 'u_mvp');
+                sys.texture_location[name] = gl.getUniformLocation(program, 'u_texture0');
             }
         }
     
-        Network.Get(name + '.v', 0, partial);
-        Network.Get(name + '.f', 1, partial);
+        Network.Get(RESOURCES + name + '.v', 0, partial);
+        Network.Get(RESOURCES + name + '.f', 1, partial);
     }
     static MakeImage(sys, gl, name, wrap)
     {
+        sys.textures[name] = null;
+        
         let texture = gl.createTexture();
-        
         texture.image = new Image();
-        texture.image.src = name + '.png';
-        
-        sys.textures[name] = texture;
-        
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
-        gl.bindTexture(gl.TEXTURE_2D, null);
+        texture.image.onload = function()
+        {
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+
+            sys.textures[name] = texture;
+        }
+        texture.image.src = RESOURCES + name + '.png';
     }
     static CompileProgram(gl, v, f)
     {

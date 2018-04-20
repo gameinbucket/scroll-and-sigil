@@ -1,16 +1,15 @@
-class RenderBuffer
+class RenderCopy
 {
-    constructor(sys, gl, position, color, texture, vertex_limit, index_limit)
+    constructor(position, color, texture, vertex_limit, index_limit)
     {
-        this.vao;
-        this.vbo;
-        this.ebo;
+        this.position = position;
+        this.color = color;
+        this.texture = texture;
         this.vertex_pos = 0;
         this.index_pos = 0;
         this.index_offset = 0;
         this.vertices = new Float32Array(vertex_limit * (position + color + texture));
         this.indices = new Uint16Array(index_limit);
-        RenderSystem.MakeVao(sys, gl, this, position, color, texture);
     }
     static Zero(buffer)
     {

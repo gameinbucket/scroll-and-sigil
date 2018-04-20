@@ -1,7 +1,8 @@
-const MapPool_Size = 8;
-const MapPool_Slice = MapPool_Size * MapPool_Size;
-const MapPool_All = MapPool_Slice * MapPool_Size;
-class MapPool
+const POOL_DIM = 8;
+const POOL_SLICE = POOL_DIM * POOL_DIM;
+const POOL_ALL = POOL_SLICE * POOL_DIM;
+const POOL_MESH = new RenderCopy(3, 0, 2, POOL_ALL * 6 * 4, POOL_ALL * 6);
+class Pool
 {
     constructor(g, gl)
     {
@@ -22,16 +23,16 @@ class MapPool
         let x = 0;
         let y = 0;
         let z = 0;
-        for (let i = 0; i < MapPool_Size; i++)
+        for (let i = 0; i < POOL_DIM; i++)
         {
-            let c = new MapCell(MapCell_BlockGrass);
+            let c = new Block(MapCell_BlockGrass);
             pool.cells[i] = c;
             x++;
-            if (x == MapPool_Size)
+            if (x == POOL_DIM)
             {
                 x = 0;
                 y++;
-                if (y == MapPool_Size)
+                if (y == POOL_DIM)
                 {
                     y = 0;
                     z++;
@@ -41,28 +42,31 @@ class MapPool
     }
     static Mesh(pool, g, gl)
     {
-        pool.mesh = new RenderBuffer(g, gl, 2, 0, 2, 400, 600);
-        let mesh = pool.mesh;
-        RenderBuffer.Zero(mesh);
+        RenderBuffer.Zero(POOL_MESH);
         for (let side = 0; side < 6; side++)
         {
-            let mesh_begin_index = mesh.index_pos;
-            let type = MapCell_BlockGrass;
-            let texture_index = MapCell.TextureIndex(type);
-
+            let mesh_begin_index = POOL_MESH.index_pos;
+            
             let x = 0;
             let y = 0;
             let z = 0;
-            for (let i = 0; i < MapPool_Size; i++)
+            for (let i = 0; i < POOL_ALL; i++)
             {
-                RenderCell.Side(mesh, side, x, y, z, 1, 1, texture_index);
+                let type = MapCell_BlockGrass;
+                if (Math.random() < 0.5)
+                {
+                    type = MapCell_BlockStone;
+                }
+                let texture = Block.Texture(type);
+
+                RenderCell.Side(POOL_MESH, side, x, y, z, texture[0], texture[1], texture[2], texture[3]);
                 
                 x++;
-                if (x == MapPool_Size)
+                if (x == POOL_DIM)
                 {
                     x = 0;
                     y++;
-                    if (y == MapPool_Size)
+                    if (y == POOL_DIM)
                     {
                         y = 0;
                         z++;
@@ -71,7 +75,8 @@ class MapPool
             }
 
             pool.begin_side[side] = mesh_begin_index;
-            pool.count_side[side] = mesh.index_pos - mesh_begin_index;
+            pool.count_side[side] = POOL_MESH.index_pos - mesh_begin_index;
         }
+        pool.mesh = RenderBuffer.InitCopy(gl, POOL_MESH);
     }
 }

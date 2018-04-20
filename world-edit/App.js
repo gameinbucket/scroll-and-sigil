@@ -15,8 +15,6 @@ class App
 
         let gl = canvas.getContext("webgl2");
         let g = new RenderSystem();
-        let draw = new Render();
-        let io = new Input();
 
         gl.clearColor(0, 0, 0, 1);
         gl.depthFunc(gl.LEQUAL);
@@ -26,62 +24,84 @@ class App
         gl.disable(gl.BLEND);
         gl.disable(gl.DEPTH_TEST);
 
-        Matrix.Perspective(g.perspective, 60, 0.01, 100.0, canvas.width / canvas.height);
-        Matrix.Orthographic(g.orthographic, 0, canvas.width, 0, canvas.height, 0, 1);
+        Matrix.Perspective(g.perspective, 60.0, 0.01, 100.0, canvas.width / canvas.height);
+        Matrix.Orthographic(g.orthographic, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0);
 
         RenderSystem.MakeProgram(g, gl, 'color');
         RenderSystem.MakeProgram(g, gl, 'texture');
-        RenderSystem.MakeProgram(g, gl, 'texture-atlas');
+        RenderSystem.MakeProgram(g, gl, 'texture3d');
 
-        let generics = new RenderBuffer(g, gl, 2, 3, 0, 1600, 2400);
-        let generics2 = new RenderBuffer(g, gl, 2, 0, 2, 400, 600);
-        let map_buffer = new RenderBuffer(g, gl, 3, 0, 3, 3200, 4800);
+        let generics = RenderBuffer.Init(gl, 2, 3, 0, 1600, 2400);
+        let generics2 = RenderBuffer.Init(gl, 2, 0, 2, 400, 600);
 
-        RenderSystem.MakeImage(g, gl, 'stone', gl.CLAMP_TO_EDGE);
-        RenderSystem.MakeImage(g, gl, 'atlas', gl.CLAMP_TO_EDGE);
+        RenderSystem.MakeImage(g, gl, 'caverns', gl.CLAMP_TO_EDGE);
 
-        let frame = new FrameBuffer(g, gl, canvas.width, canvas.height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], false, false);
+        let frame = new FrameBuffer(g, gl, canvas.width, canvas.height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], false, true);
 
-        let screen = new RenderBuffer(g, gl, 2, 0, 2, 4, 6);
+        let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6);
         Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0);
         RenderSystem.UpdateVao(gl, screen);
 
-        let map = new Map(4, 4, 4);
-        Map.Init(map);
-        Map.Mesh(map, g, gl);
+        let s = 16.0;
+        let w = 1.0 / 256.0;
+        let h = 1.0 / 128.0;
+        let sprite_cavern = {};
+        sprite_cavern['dirt'] = new Sprite(1+17*0, 1+17*0, s, s, w, h, 0, 0)
+        sprite_cavern['dirt light'] = new Sprite(1+17*0, 1+17*1, s, s, w, h, 0, 0)
+        sprite_cavern['dirt lightest'] = new Sprite(1+17*0, 1+17*2, s, s, w, h, 0, 0)
+        sprite_cavern['wall'] = new Sprite(1+17*1, 1+17*0, s, s, w, h, 0, 0)
+        sprite_cavern['wall edge'] = new Sprite(1+17*1, 1+17*1, s, s, w, h, 0, 0)
+        sprite_cavern['wall corner'] = new Sprite(1+17*1, 1+17*2, s, s, w, h, 0, 0)
+        sprite_cavern['stone floor'] = new Sprite(1+17*1, 1+17*3, s, s, w, h, 0, 0)
 
-        /* window.onblur = App.ToggleOn(this, false);
-        window.onfocus = App.ToggleOn(this, true); */
+        let realm = new Realm(2, 2, 2);
+        Realm.Init(realm);
+        Realm.Mesh(realm, g, gl);
+
+        window.onblur = App.ToggleOn(this, false);
+        window.onfocus = App.ToggleOn(this, true);
+        
+        document.onkeyup = Input.KeyUp;
+        document.onkeydown = Input.KeyDown;
+        document.onmouseup = Input.MouseUp;
+        document.onmousedown = Input.MouseDown;
+
+        let camera = new Camera(0.0, 0.0, 10.0, 0.0, 0.0);
 
         this.on = true;
         this.canvas = canvas;
         this.gl = gl;
         this.g = g;
-        this.draw = draw;
-        this.io = io;
         this.frame = frame;
         this.generics = generics;
         this.generics2 = generics2;
-        this.map_buffer = map_buffer;
         this.screen = screen;
-        this.map = map;
+        this.realm = realm;
+        this.camera = camera;
+        this.sprite_cavern = sprite_cavern;
     }
     static Run(app)
     {
-        if (
-            app.g.shaders['color'] === undefined ||
-            app.g.shaders['texture'] === undefined ||
-            app.g.shaders['texture-atlas'] === undefined)
+        for (let key in app.g.shaders)
         {
-            setTimeout(App.Run, 1000, app);
+            if (app.g.shaders[key] === null)
+            {
+                setTimeout(App.Run, 500, app);
+                return;
+            }
         }
-        else
+        for (let key in app.g.textures)
         {
-            let wait = document.getElementById('wait');
-            wait.parentNode.removeChild(wait);
-            document.body.appendChild(app.canvas);
-            App.Loop(app);
+            if (app.g.textures[key] === null)
+            {
+                setTimeout(App.Run, 500, app);
+                return;
+            }
         }
+        let wait = document.getElementById('wait');
+        wait.parentNode.removeChild(wait);
+        document.body.appendChild(app.canvas);
+        App.Loop(app);
     }
     static ToggleOn(app, on)
     {
@@ -97,15 +117,55 @@ class App
             App.Update(app);
             App.Render(app);
         }
-        setTimeout(App.Loop, 1000 / 60, app);
+        setTimeout(App.Loop, 1000.0 / 60.0, app);
     }
     static Update(app)
     {
-        let input = app.io;
-
-        if (Input.Is(input, 'q'))
+        let cam = app.camera;
+        let pace = 0.1;
+        if (Input.Is(INPUT_W))
         {
-            Input.Off(input, 'q');
+            cam.x += Math.sin(cam.ry) * pace;
+            cam.z -= Math.cos(cam.ry) * pace;
+        }
+        if (Input.Is(INPUT_S))
+        {
+            cam.x -= Math.sin(cam.ry) * pace;
+            cam.z += Math.cos(cam.ry) * pace;
+        }
+        if (Input.Is(INPUT_A))
+        {
+            cam.x -= Math.cos(cam.ry) * pace;
+            cam.z -= Math.sin(cam.ry) * pace;
+        }
+        if (Input.Is(INPUT_D))
+        {
+            cam.x += Math.cos(cam.ry) * pace;
+            cam.z += Math.sin(cam.ry) * pace;
+        }
+        if (Input.Is(INPUT_Q))
+        {
+            cam.y += 0.1;
+        }
+        if (Input.Is(INPUT_E))
+        {
+            cam.y -= 0.1;
+        }
+        if (Input.Is(INPUT_UP))
+        {
+            cam.rx -= 0.05;
+        }
+        if (Input.Is(INPUT_DOWN))
+        {
+            cam.rx += 0.05;
+        }
+        if (Input.Is(INPUT_LEFT))
+        {
+            cam.ry -= 0.05;
+        }
+        if (Input.Is(INPUT_RIGHT))
+        {
+            cam.ry += 0.05;
         }
     }
     static Render(app)
@@ -113,38 +173,38 @@ class App
         let g = app.g;
         let gl = app.gl;
         let frame = app.frame;
+        let cam = app.camera;
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo);
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height);
 
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.clear(gl.DEPTH_BUFFER_BIT);
-
         gl.enable(gl.DEPTH_TEST);
         gl.enable(gl.CULL_FACE);
-        RenderSystem.SetProgram(g, gl, 'texture-atlas');
-        RenderSystem.SetMvpPerspective(g, 0, 0, 0, 0, 0);
+        RenderSystem.SetMvpPerspective(g, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry);
+        
+        RenderSystem.SetProgram(g, gl, 'texture3d');
         RenderSystem.UpdatedMvp(g, gl);
-        // RenderSystem.SetTextureArray(g, gl, 'atlas'); // bad?
-        Map.Render(gl, app.map, 0, 0, 0);
+        RenderSystem.SetTexture(g, gl, 'caverns');
+
+        let cam_chunk_x = Math.floor(cam.x / POOL_DIM);
+        let cam_chunk_y = Math.floor(cam.y / POOL_DIM);
+        let cam_chunk_z = Math.floor(cam.z / POOL_DIM);
+        
+        Realm.Render(gl, app.realm, cam_chunk_x, cam_chunk_y, cam_chunk_z);
 
         gl.disable(gl.DEPTH_TEST);
         gl.disable(gl.CULL_FACE);
-        
         RenderSystem.SetMvpOrthographic(g, 0, 0);
-        RenderSystem.SetProgram(g, gl, 'color');
-        RenderSystem.UpdatedMvp(g, gl);
-        RenderBuffer.Zero(app.generics);
-        Render.Rectangle(app.generics, 10, 10, 64, 32, 0.5, 0.25, 0.75);
-        Render.Circle(app.generics, 300, 200, 32, 0.25, 0.75, 0.50);
-        RenderSystem.DrawNew(gl, app.generics);
 
         RenderSystem.SetProgram(g, gl, 'texture');
         RenderSystem.UpdatedMvp(g, gl);
         RenderBuffer.Zero(app.generics2);
-        Render.Image(app.generics2, 128, 128, 64, 128, 0.0, 0.0, 1.0, 1.0);
-        RenderSystem.SetTexture(g, gl, 'stone');
-        RenderSystem.DrawNew(gl, app.generics2);
+        let sprite = app.sprite_cavern['wall'];
+        Render.Image(app.generics2, 10, 10, 32, 32, sprite.u, sprite.v, sprite.s, sprite.t);
+        RenderSystem.SetTexture(g, gl, 'caverns');
+        RenderSystem.UpdateAndDraw(gl, app.generics2);
 
         RenderSystem.SetFrameBuffer(gl, null);
         RenderSystem.SetView(gl, 0, 0, app.canvas.width, app.canvas.height);
@@ -152,7 +212,7 @@ class App
         RenderSystem.SetMvpOrthographic(g, 0, 0);
         RenderSystem.UpdatedMvp(g, gl);
         RenderSystem.SetTextureDirect(g, gl, frame.textures[0]);
-        RenderSystem.Draw(gl, app.screen);
+        RenderSystem.BindAndDraw(gl, app.screen);
     }
 }
 
