@@ -1,36 +1,36 @@
-const Map_PositiveX = 0;
-const Map_PositiveY = 1;
-const Map_PositiveZ = 2;
-const Map_NegativeX = 3;
-const Map_NegativeY = 4;
-const Map_NegativeZ = 5;
+const REALM_POSITIVE_X = 0;
+const REALM_POSITIVE_Y = 1;
+const REALM_POSITIVE_Z = 2;
+const REALM_NEGATIVE_X = 3;
+const REALM_NEGATIVE_Y = 4;
+const REALM_NEGATIVE_Z = 5;
 class Realm
 {
-    constructor(pool_w, pool_h, pool_l)
+    constructor(chunk_w, chunk_h, chunk_l)
     {
-        this.pool_w = pool_w;
-        this.pool_h = pool_h;
-        this.pool_l = pool_l;
-        this.pool_slice = pool_w * pool_h;
-        this.pool_all = pool_w * pool_h * pool_l;
-        this.pools = [];
+        this.chunk_w = chunk_w;
+        this.chunk_h = chunk_h;
+        this.chunk_l = chunk_l;
+        this.chunk_slice = chunk_w * chunk_h;
+        this.chunk_all = chunk_w * chunk_h * chunk_l;
+        this.chunks = [];
     }
     static Init(realm)
     {
         let x = 0;
         let y = 0;
         let z = 0;
-        for (let i = 0; i < realm.pool_all; i++)
+        for (let i = 0; i < realm.chunk_all; i++)
         {
-            let p = new Pool();
-            Pool.Init(p, x, y, z);
-            realm.pools[i] = p;
+            let p = new Chunk();
+            Chunk.Init(p, x, y, z);
+            realm.chunks[i] = p;
             x++;
-            if (x == realm.pool_w)
+            if (x == realm.chunk_w)
             {
                 x = 0;
                 y++;
-                if (y == realm.pool_h)
+                if (y == realm.chunk_h)
                 {
                     y = 0;
                     z++;
@@ -38,62 +38,112 @@ class Realm
             }
         }
     }
+    get_block_unsafe(cx, cy, cz, bx, by, bz) {
+        let chunk = this.chunks[cx + cy * this.chunk_w + cz * this.chunk_slice];
+        return chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE].type;
+    }
+    get_block(cx, cy, cz, bx, by, bz) {
+        while (bx < 0){
+            bx += CHUNK_DIM;
+            cx--;
+        }
+        while (bx >= CHUNK_DIM) {
+            bx -= CHUNK_DIM;
+            cx++;
+        }
+        while (by < 0) {
+            by += CHUNK_DIM;
+            cy--;
+        }
+        while (by >= CHUNK_DIM) {
+            by -= CHUNK_DIM;
+            cy++;
+        }
+        while (bz < 0) {
+            bz += CHUNK_DIM;
+            cz--;
+        }
+        while (bz >= CHUNK_DIM) {
+            bz -= CHUNK_DIM;
+            cz++;
+        }
+        let chunk = this.get_chunk(cx, cy, cz);
+        if (chunk === null) {
+            return BLOCK_NONE;
+        }
+        return chunk.get_block_unsafe(bx, by, bz);
+    }
+    get_chunk(x, y, z) {
+        if (x < 0 || x >= this.chunk_w) {
+            return null;
+        }
+        if (y < 0 || y >= this.chunk_h) {
+            return null;
+        }
+        if (z < 0 || z >= this.chunk_l) {
+            return null;
+        }
+        return this.chunks[x + y * this.chunk_w + z * this.chunk_slice];
+    }
     static Mesh(realm, g, gl)
     {
-        for (let i = 0; i < realm.pool_all; i++)
+        for (let i = 0; i < realm.chunk_all; i++)
         {
-            Pool.Mesh(realm.pools[i], g, gl);
+            Chunk.Mesh(realm, realm.chunks[i], g, gl);
         }
     }
     static Render(gl, realm, x, y, z)
     {
-        for (let i = 0; i < realm.pool_all; i++)
+        for (let i = 0; i < realm.chunk_all; i++)
         {
-            let pool = realm.pools[i];
-            let mesh = pool.mesh;
+            let chunk = realm.chunks[i];
+            let mesh = chunk.mesh;
             if (mesh.vertex_pos == 0)
             {
                 continue;
             }
             RenderSystem.BindVao(gl, mesh);
-            if (x == pool.x)
+
+            if (x == chunk.x)
             {
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_PositiveX], pool.count_side[Map_PositiveX]);
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_NegativeX], pool.count_side[Map_NegativeX]);
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_POSITIVE_X], chunk.count_side[REALM_POSITIVE_X]);
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_NEGATIVE_X], chunk.count_side[REALM_NEGATIVE_X]);
             }
-            else if (x > pool.x)
+            else if (x > chunk.x)
             {
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_PositiveX], pool.count_side[Map_PositiveX]);
-            }
-            else
-            {
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_NegativeX], pool.count_side[Map_NegativeX]);
-            }
-            if (y == pool.y)
-            {
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_PositiveY], pool.count_side[Map_PositiveY]);
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_NegativeY], pool.count_side[Map_NegativeY]);
-            }
-            else if (y > pool.y)
-            {
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_PositiveY], pool.count_side[Map_PositiveY]);
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_POSITIVE_X], chunk.count_side[REALM_POSITIVE_X]);
             }
             else
             {
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_NegativeY], pool.count_side[Map_NegativeY]);
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_NEGATIVE_X], chunk.count_side[REALM_NEGATIVE_X]);
             }
-            if (z == pool.z)
+            
+            if (y == chunk.y)
             {
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_PositiveZ], pool.count_side[Map_PositiveZ]);
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_NegativeZ], pool.count_side[Map_NegativeZ]);
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_POSITIVE_Y], chunk.count_side[REALM_POSITIVE_Y]);
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_NEGATIVE_Y], chunk.count_side[REALM_NEGATIVE_Y]);
             }
-            else if (z > pool.z)
+            else if (y > chunk.y)
             {
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_PositiveZ], pool.count_side[Map_PositiveZ]);
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_POSITIVE_Y], chunk.count_side[REALM_POSITIVE_Y]);
             }
             else
             {
-                RenderSystem.DrawRange(gl, pool.begin_side[Map_NegativeZ], pool.count_side[Map_NegativeZ]);
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_NEGATIVE_Y], chunk.count_side[REALM_NEGATIVE_Y]);
+            }
+
+            if (z == chunk.z)
+            {
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_POSITIVE_Z], chunk.count_side[REALM_POSITIVE_Z]);
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_NEGATIVE_Z], chunk.count_side[REALM_NEGATIVE_Z]);
+            }
+            else if (z > chunk.z)
+            {
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_POSITIVE_Z], chunk.count_side[REALM_POSITIVE_Z]);
+            }
+            else
+            {
+                RenderSystem.DrawRange(gl, chunk.begin_side[REALM_NEGATIVE_Z], chunk.count_side[REALM_NEGATIVE_Z]);
             }
         }
     }

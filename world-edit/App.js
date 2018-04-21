@@ -110,14 +110,14 @@ class App
             app.on = on;
         }
     }
-    static Loop(app)
+    static Loop()
     {
-        if (app.on)
+        if (APP.on)
         {
-            App.Update(app);
-            App.Render(app);
+            App.Update(APP);
+            App.Render(APP);
         }
-        setTimeout(App.Loop, 1000.0 / 60.0, app);
+        requestAnimationFrame(App.Loop);
     }
     static Update(app)
     {
@@ -188,9 +188,9 @@ class App
         RenderSystem.UpdatedMvp(g, gl);
         RenderSystem.SetTexture(g, gl, 'caverns');
 
-        let cam_chunk_x = Math.floor(cam.x / POOL_DIM);
-        let cam_chunk_y = Math.floor(cam.y / POOL_DIM);
-        let cam_chunk_z = Math.floor(cam.z / POOL_DIM);
+        let cam_chunk_x = Math.floor(cam.x / CHUNK_DIM);
+        let cam_chunk_y = Math.floor(cam.y / CHUNK_DIM);
+        let cam_chunk_z = Math.floor(cam.z / CHUNK_DIM);
         
         Realm.Render(gl, app.realm, cam_chunk_x, cam_chunk_y, cam_chunk_z);
 
@@ -216,4 +216,5 @@ class App
     }
 }
 
-App.Run(new App());
+const APP = new App();
+App.Run(APP);

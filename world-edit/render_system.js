@@ -57,11 +57,11 @@ class RenderSystem
     static BindAndDraw(gl, buffer)
     {
         gl.bindVertexArray(buffer.vao);
-        gl.drawElements(gl.TRIANGLES, buffer.index_pos, gl.UNSIGNED_SHORT, 0);
+        gl.drawElements(gl.TRIANGLES, buffer.index_pos, gl.UNSIGNED_INT, 0);
     }
     static DrawRange(gl, start, count)
     {
-        gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, start);
+        gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_INT, start);
     }
     static UpdateAndDraw(gl, buffer)
     {
@@ -74,7 +74,7 @@ class RenderSystem
         gl.bufferData(gl.ARRAY_BUFFER, buffer.vertices, gl.DYNAMIC_DRAW);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.ebo)
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, buffer.indices, gl.DYNAMIC_DRAW);
-        gl.drawElements(gl.TRIANGLES, buffer.index_pos, gl.UNSIGNED_SHORT, 0);
+        gl.drawElements(gl.TRIANGLES, buffer.index_pos, gl.UNSIGNED_INT, 0);
     }
     static SetMvpOrthographic(sys, x, y)
     {
