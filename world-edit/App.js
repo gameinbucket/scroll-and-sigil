@@ -54,9 +54,12 @@ class App
         sprite_cavern['wall corner'] = new Sprite(1+17*1, 1+17*2, s, s, w, h, 0, 0)
         sprite_cavern['stone floor'] = new Sprite(1+17*1, 1+17*3, s, s, w, h, 0, 0)
 
-        let realm = new Realm(2, 2, 2);
-        Realm.Init(realm);
-        Realm.Mesh(realm, g, gl);
+        let world = new World(2, 2, 2);
+        world.init();
+        world.mesh(g, gl);
+
+        let you = new Unit();
+        you.init(world, 0, 1, 1, 1);
 
         window.onblur = App.ToggleOn(this, false);
         window.onfocus = App.ToggleOn(this, true);
@@ -76,24 +79,19 @@ class App
         this.generics = generics;
         this.generics2 = generics2;
         this.screen = screen;
-        this.realm = realm;
+        this.world = world;
         this.camera = camera;
         this.sprite_cavern = sprite_cavern;
     }
-    static Run(app)
-    {
-        for (let key in app.g.shaders)
-        {
-            if (app.g.shaders[key] === null)
-            {
+    static Run(app) {
+        for (let key in app.g.shaders) {
+            if (app.g.shaders[key] === null) {
                 setTimeout(App.Run, 500, app);
                 return;
             }
         }
-        for (let key in app.g.textures)
-        {
-            if (app.g.textures[key] === null)
-            {
+        for (let key in app.g.textures) {
+            if (app.g.textures[key] === null) {
                 setTimeout(App.Run, 500, app);
                 return;
             }
@@ -103,77 +101,62 @@ class App
         document.body.appendChild(app.canvas);
         App.Loop(app);
     }
-    static ToggleOn(app, on)
-    {
-        return function()
-        {
+    static ToggleOn(app, on) {
+        return function() {
             app.on = on;
         }
     }
-    static Loop()
-    {
-        if (APP.on)
-        {
-            App.Update(APP);
-            App.Render(APP);
+    static Loop() {
+        if (APP.on) {
+            APP.update();
+            APP.render();
         }
         requestAnimationFrame(App.Loop);
     }
-    static Update(app)
-    {
-        let cam = app.camera;
+    update() {
+        let cam = this.camera;
         let pace = 0.1;
-        if (Input.Is(INPUT_W))
-        {
+        if (Input.Is(INPUT_W)) {
             cam.x += Math.sin(cam.ry) * pace;
             cam.z -= Math.cos(cam.ry) * pace;
         }
-        if (Input.Is(INPUT_S))
-        {
+        if (Input.Is(INPUT_S)) {
             cam.x -= Math.sin(cam.ry) * pace;
             cam.z += Math.cos(cam.ry) * pace;
         }
-        if (Input.Is(INPUT_A))
-        {
+        if (Input.Is(INPUT_A)) {
             cam.x -= Math.cos(cam.ry) * pace;
             cam.z -= Math.sin(cam.ry) * pace;
         }
-        if (Input.Is(INPUT_D))
-        {
+        if (Input.Is(INPUT_D)) {
             cam.x += Math.cos(cam.ry) * pace;
             cam.z += Math.sin(cam.ry) * pace;
         }
-        if (Input.Is(INPUT_Q))
-        {
+        if (Input.Is(INPUT_Q)) {
             cam.y += 0.1;
         }
-        if (Input.Is(INPUT_E))
-        {
+        if (Input.Is(INPUT_E)) {
             cam.y -= 0.1;
         }
-        if (Input.Is(INPUT_UP))
-        {
+        if (Input.Is(INPUT_UP)) {
             cam.rx -= 0.05;
         }
-        if (Input.Is(INPUT_DOWN))
-        {
+        if (Input.Is(INPUT_DOWN)) {
             cam.rx += 0.05;
         }
-        if (Input.Is(INPUT_LEFT))
-        {
+        if (Input.Is(INPUT_LEFT)) {
             cam.ry -= 0.05;
         }
-        if (Input.Is(INPUT_RIGHT))
-        {
+        if (Input.Is(INPUT_RIGHT)) {
             cam.ry += 0.05;
         }
     }
-    static Render(app)
+    render()
     {
-        let g = app.g;
-        let gl = app.gl;
-        let frame = app.frame;
-        let cam = app.camera;
+        let g = this.g;
+        let gl = this.gl;
+        let frame = this.frame;
+        let cam = this.camera;
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo);
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height);
@@ -192,7 +175,7 @@ class App
         let cam_chunk_y = Math.floor(cam.y / CHUNK_DIM);
         let cam_chunk_z = Math.floor(cam.z / CHUNK_DIM);
         
-        Realm.Render(gl, app.realm, cam_chunk_x, cam_chunk_y, cam_chunk_z);
+        this.world.render(gl, cam_chunk_x, cam_chunk_y, cam_chunk_z);
 
         gl.disable(gl.DEPTH_TEST);
         gl.disable(gl.CULL_FACE);
@@ -200,19 +183,19 @@ class App
 
         RenderSystem.SetProgram(g, gl, 'texture');
         RenderSystem.UpdatedMvp(g, gl);
-        RenderBuffer.Zero(app.generics2);
-        let sprite = app.sprite_cavern['wall'];
-        Render.Image(app.generics2, 10, 10, 32, 32, sprite.u, sprite.v, sprite.s, sprite.t);
+        RenderBuffer.Zero(this.generics2);
+        let sprite = this.sprite_cavern['wall'];
+        Render.Image(this.generics2, 10, 10, 32, 32, sprite.u, sprite.v, sprite.s, sprite.t);
         RenderSystem.SetTexture(g, gl, 'caverns');
-        RenderSystem.UpdateAndDraw(gl, app.generics2);
+        RenderSystem.UpdateAndDraw(gl, this.generics2);
 
         RenderSystem.SetFrameBuffer(gl, null);
-        RenderSystem.SetView(gl, 0, 0, app.canvas.width, app.canvas.height);
+        RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height);
         RenderSystem.SetProgram(g, gl, 'texture');
         RenderSystem.SetMvpOrthographic(g, 0, 0);
         RenderSystem.UpdatedMvp(g, gl);
         RenderSystem.SetTextureDirect(g, gl, frame.textures[0]);
-        RenderSystem.BindAndDraw(gl, app.screen);
+        RenderSystem.BindAndDraw(gl, this.screen);
     }
 }
 

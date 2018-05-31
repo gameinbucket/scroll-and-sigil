@@ -23,23 +23,23 @@ function parseExtension(url) {
 }
 
 function serve(req, res) {
-    console.log(req.url)
-    let pathname = '.' + req.url
-    const ext = path.parse(pathname).ext
+    let url = '.' + req.url
+    const ext = path.parse(url).ext
+    console.log(url)
     if (cache[req.url]) {
         res.setHeader('Content-type', contentMap[ext] || 'text/plain')
-        res.end(cache[pathname])
+        res.end(cache[url])
     } else {
-        fs.exists(pathname, function (exist) {
+        fs.exists(url, function (exist) {
             if (!exist) {
                 res.statusCode = 404
                 res.end(`${req.url} not found!`)
                 return
             }
-            if (fs.statSync(pathname).isDirectory()) {
-                pathname += '/app.html'
+            if (fs.statSync(url).isDirectory()) {
+                url += 'app.html'
             }
-            fs.readFile(pathname, function (err, data) {
+            fs.readFile(url, function (err, data) {
                 if (err) {
                     res.statusCode = 500
                     res.end(`internal server error`)
@@ -63,5 +63,4 @@ function getWorld() {
 }
 
 http.createServer(serve).listen(port)
-console.log(`world edit`)
-console.log(`port ${port}`)
+console.log(`world edit listening on port ${port}`)

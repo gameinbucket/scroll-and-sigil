@@ -4,12 +4,12 @@ class RenderBlock
 	{
 		switch (side)
 		{
-			case REALM_POSITIVE_X: RenderBlock.PositiveX(buffer, x, y, z, u, v, s, t); break;
-			case REALM_POSITIVE_Y: RenderBlock.PositiveY(buffer, x, y, z, u, v, s, t); break;
-			case REALM_POSITIVE_Z: RenderBlock.PositiveZ(buffer, x, y, z, u, v, s, t); break;
-			case REALM_NEGATIVE_X: RenderBlock.NegativeX(buffer, x, y, z, u, v, s, t); break;
-			case REALM_NEGATIVE_Y: RenderBlock.NegativeY(buffer, x, y, z, u, v, s, t); break;
-			case REALM_NEGATIVE_Z: RenderBlock.NegativeZ(buffer, x, y, z, u, v, s, t); break;
+			case WORLD_POSITIVE_X: RenderBlock.PositiveX(buffer, x, y, z, u, v, s, t); break;
+			case WORLD_POSITIVE_Y: RenderBlock.PositiveY(buffer, x, y, z, u, v, s, t); break;
+			case WORLD_POSITIVE_Z: RenderBlock.PositiveZ(buffer, x, y, z, u, v, s, t); break;
+			case WORLD_NEGATIVE_X: RenderBlock.NegativeX(buffer, x, y, z, u, v, s, t); break;
+			case WORLD_NEGATIVE_Y: RenderBlock.NegativeY(buffer, x, y, z, u, v, s, t); break;
+			case WORLD_NEGATIVE_Z: RenderBlock.NegativeZ(buffer, x, y, z, u, v, s, t); break;
 		}
 	}
     static PositiveX(buffer, x, y, z, u, v, s, t)
