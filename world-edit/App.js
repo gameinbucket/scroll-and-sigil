@@ -33,8 +33,14 @@ class App
 
         let generics = RenderBuffer.Init(gl, 2, 3, 0, 1600, 2400);
         let generics2 = RenderBuffer.Init(gl, 2, 0, 2, 400, 600);
+        
+        let sprite_buffers = [
+            RenderBuffer.Init(gl, 3, 0, 2, 400, 600)
+        ];
+        this.sprite_buffers = sprite_buffers;
 
         RenderSystem.MakeImage(g, gl, 'caverns', gl.CLAMP_TO_EDGE);
+        RenderSystem.MakeImage(g, gl, 'footman', gl.CLAMP_TO_EDGE);
 
         let frame = new FrameBuffer(g, gl, canvas.width, canvas.height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], false, true);
 
@@ -58,8 +64,33 @@ class App
         world.init();
         world.mesh(g, gl);
 
+        w = 1.0 / 1024.0;
+        h = 1.0 / 256.0;
+        let d = 48.0;
+        let z = 0.0;
+        let t = 24.0;
+        let footman_walk = [];
+        footman_walk[0] = new Array(8);
+        footman_walk[1] = new Array(8);
+        footman_walk[2] = new Array(8);
+        footman_walk[3] = new Array(8);
+        footman_walk[4] = new Array(8);
+        for (let i = 0; i < 5; i++) {
+            footman_walk[i][0] = new Sprite(i * d, 0, d, d, w, h, z, t);
+            footman_walk[i][1] = new Sprite(i * d, 4.0 * d, d, d, w, h, z, t);
+            footman_walk[i][2] = new Sprite(i * d, 3.0 * d, d, d, w, h, z, t);
+            footman_walk[i][3] = footman_walk[i][1];
+            footman_walk[i][4] = footman_walk[i][0];
+            footman_walk[i][5] = new Sprite(i * d, 0.0 * d, d, d, w, h, z, t);
+            footman_walk[i][6] = new Sprite(i * d, 1.0 * d, d, d, w, h, z, t);
+            footman_walk[i][7] = footman_walk[i][5];
+        }
+    
         let you = new Unit();
-        you.init(world, 0, 1, 1, 1);
+        you.init(world, UNIT_COLOR_RED, 0, footman_walk, 0.5, 0.5, 0.5);
+
+        new Unit().init(world, UNIT_COLOR_RED, 0, footman_walk, 2.5, 2.5, 2.5);
+        new Unit().init(world, UNIT_COLOR_RED, 0, footman_walk, 4.5, 2.5, 2.5);
 
         window.onblur = App.ToggleOn(this, false);
         window.onfocus = App.ToggleOn(this, true);
@@ -138,18 +169,20 @@ class App
         if (Input.Is(INPUT_E)) {
             cam.y -= 0.1;
         }
+        if (Input.Is(INPUT_LEFT)) {
+            cam.ry -= 0.05;
+        }
         if (Input.Is(INPUT_UP)) {
             cam.rx -= 0.05;
         }
         if (Input.Is(INPUT_DOWN)) {
             cam.rx += 0.05;
         }
-        if (Input.Is(INPUT_LEFT)) {
-            cam.ry -= 0.05;
-        }
         if (Input.Is(INPUT_RIGHT)) {
             cam.ry += 0.05;
         }
+
+        this.world.update();
     }
     render()
     {
@@ -175,7 +208,20 @@ class App
         let cam_chunk_y = Math.floor(cam.y / CHUNK_DIM);
         let cam_chunk_z = Math.floor(cam.z / CHUNK_DIM);
         
-        this.world.render(gl, cam_chunk_x, cam_chunk_y, cam_chunk_z);
+        let sprite_buffers = this.sprite_buffers;
+
+        for (let i = 0; i < sprite_buffers.length; i++) {
+            sprite_buffers[i].zero();
+        }
+
+        let sin = Math.sin(-cam.rx);
+        let cos = Math.cos(-cam.rx);
+        this.world.render(gl, sprite_buffers, cam_chunk_x, cam_chunk_y, cam_chunk_z, cam.x, cam.z, sin, cos);
+
+        RenderSystem.SetTexture(g, gl, 'footman');
+        for (let i = 0; i < sprite_buffers.length; i++) {
+            RenderSystem.UpdateAndDraw(gl, sprite_buffers[i]);
+        }
 
         gl.disable(gl.DEPTH_TEST);
         gl.disable(gl.CULL_FACE);
@@ -183,9 +229,9 @@ class App
 
         RenderSystem.SetProgram(g, gl, 'texture');
         RenderSystem.UpdatedMvp(g, gl);
-        RenderBuffer.Zero(this.generics2);
+        this.generics2.zero();
         let sprite = this.sprite_cavern['wall'];
-        Render.Image(this.generics2, 10, 10, 32, 32, sprite.u, sprite.v, sprite.s, sprite.t);
+        Render.Image(this.generics2, 10, 10, 32, 32, sprite.left, sprite.top, sprite.right, sprite.bottom);
         RenderSystem.SetTexture(g, gl, 'caverns');
         RenderSystem.UpdateAndDraw(gl, this.generics2);
 

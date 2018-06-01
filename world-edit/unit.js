@@ -1,3 +1,4 @@
+const UNIT_COLOR_RED = 0;
 const UNIT_ANIMATION_RATE = 8;
 const UNIT_ANIMATION_NOT_DONE = 0;
 const UNIT_ANIMATION_DONE = 1;
@@ -28,14 +29,14 @@ class Unit
 		this.formation;
 		this.position;
 		this.holding;
-		this.mirror;
+		this.mirror = false;
 		this.direction;
 		this.sprite_id;
 		this.animation_move;
 		this.animation_attack;
 		this.animation_death;
 		this.animation;
-		this.animation_rate;
+		this.animation_rate = 16;
 		this.animation_frame;
         this.x;
         this.y;
@@ -60,13 +61,16 @@ class Unit
 		this.final_move_to_y;
 		this.final_move_to_z;
 	}
-	init(world, sprite_id, x, y, z) {
+	init(world, color, sprite_id, animation_move, x, y, z) {
 		this.color = color;
+		world.colors[color].push(this);
 		this.status = UNIT_STATUS_IDLE;
+		this.direction = 0;
 		this.sprite_id = sprite_id;
 		this.animation_move = animation_move;
 		this.animation = this.animation_move;
 		this.attack_time = 32;
+		this.animation_frame = 0;
         this.x = x;
         this.y = y;
 		this.z = z;
@@ -78,28 +82,48 @@ class Unit
 		this.gz = Math.floor(z / CHUNK_DIM);
 		world.get_chunk(this.gx, this.gy, this.gz).add_unit(this);
 		this.health = 2;
-		this.radius = 32;
+		this.radius = 0.0001;
 		this.speed = 1;
 		this.range = 8;
 		this.sight = 10;
-		this.low_gx = Math.floor(this.x - this.radius) / CHUNK_DIM;
-		this.low_gy = Math.floor(this.y - this.radius) / CHUNK_DIM;
-		this.low_gz = Math.floor(this.z - this.radius) / CHUNK_DIM;
-		this.high_gx = Math.floor(this.x + this.radius) / CHUNK_DIM;
-		this.high_gy = Math.floor(this.y + this.radius) / CHUNK_DIM;
-		this.high_gz = Math.floor(this.z + this.radius) / CHUNK_DIM;
+		this.low_gx = Math.floor((this.x - this.radius) / CHUNK_DIM);
+		this.low_gy = Math.floor((this.y - this.radius) / CHUNK_DIM);
+		this.low_gz = Math.floor((this.z - this.radius) / CHUNK_DIM);
+		this.high_gx = Math.floor((this.x + this.radius) / CHUNK_DIM);
+		this.high_gy = Math.floor((this.y + this.radius) / CHUNK_DIM);
+		this.high_gz = Math.floor((this.z + this.radius) / CHUNK_DIM);
 		for (let gx = this.low_gx; gx <= this.high_gx; gx++) {
 			for (let gy = this.low_gy; gy <= this.high_gy; gy++) {
 				for (let gz = this.low_gz; gz <= this.high_gz; gz++) {
-					world.get_chunk(gx, gy, gz).add_physical(this);
+					let c = world.get_chunk(gx, gy, gz);
+					if (c !== null) {
+						c.add_physical(world, this);
+					}
 				}
 			}	
 		}
 	}
 	vision() {
-
+		// todo
+	}
+	animate() {
+		this.animation_rate++;
+		if (this.animation_rate === UNIT_ANIMATION_RATE) {
+			this.animation_rate = 0;
+			this.animation_frame++;
+			if (this.animation_frame === this.animation.length) {
+				this.animation_frame = 0;
+			}
+		}
 	}
 	update() {
-
+		// todo
+	//	this.x += this.dx;
+	//	this.y += this.dy;
+		//this.z += this.dz;
+		this.dx = 0;
+		this.dy = 0;
+		this.dz = 0;
+		this.animate();
 	}
 }

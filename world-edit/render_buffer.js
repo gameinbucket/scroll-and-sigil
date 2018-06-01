@@ -32,11 +32,10 @@ class RenderBuffer
         RenderSystem.UpdateVao(gl, buffer);
         return buffer;
     }
-    static Zero(buffer)
-    {
-        buffer.vertex_pos = 0;
-        buffer.index_pos = 0;
-        buffer.index_offset = 0;
+    zero() {
+        this.vertex_pos = 0;
+        this.index_pos = 0;
+        this.index_offset = 0;
     }
     static Copy(from, to)
     {

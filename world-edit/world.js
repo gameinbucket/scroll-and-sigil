@@ -12,6 +12,7 @@ class World {
         this.chunk_slice = chunk_w * chunk_h;
         this.chunk_all = chunk_w * chunk_h * chunk_l;
         this.chunks = [];
+        this.colors = [[]];
 
         // this.grid = [];
 
@@ -90,7 +91,7 @@ class World {
             this.chunks[i].mesh(this, g, gl);
         }
     }
-    render(gl, x, y, z) {
+    render(gl, sprite_buffers, x, y, z, xx, zz, sin, cos) {
         for (let i = 0; i < this.chunk_all; i++) {
             let chunk = this.chunks[i];
             let mesh = chunk.mesh;
@@ -132,7 +133,7 @@ class World {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_NEGATIVE_Z], chunk.count_side[WORLD_NEGATIVE_Z]);
             }
 
-            chunk.render_things(gl);
+            chunk.render_things(gl, sprite_buffers, xx, zz, sin, cos);
         }
     }
     add_chunk_cache(c) {
@@ -169,15 +170,20 @@ class World {
                 for (let k = j + 1; k < c.physical_count; k++) {
                     let b = c.physical[k];
                     let id = Math.floor(a.x) + ' ' + Math.floor(a.y) + ' ' + Math.floor(a.z) + ' ' + Math.floor(b.x) + ' ' + Math.floor(b.y) + ' ' + Math.floor(b.z);
-                    if (!set.has(id)) {
-                        set.add(id);
+                    if (!this.collisions.has(id)) {
+                        this.collisions.add(id);
                         this.unit_overlap(a, b);
                     }
                 }
             }
         }
 
-        // ... unit update
+        for (let i = 0; i < this.colors.length; i++) {
+            let c =  this.colors[i];
+            for (let j = 0; j < c.length; j++) {
+                c[j].update();
+            }
+        }
 
         // ... remove dead units
     }
@@ -197,8 +203,8 @@ class World {
         let fx = dxx * repel - dxx;
         let fz = dzz * repel - dzz;
         a.dx += fx;
-        a.dz += dz;
-        b.dx -= dx;
-        b.dz -= dz;
+        a.dz += fz;
+        b.dx -= fx;
+        b.dz -= fz;
     }
 }

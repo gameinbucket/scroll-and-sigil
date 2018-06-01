@@ -1,7 +1,5 @@
-class Render
-{
-    static Index4(buffer)
-    {
+class Render {
+    static Index4(buffer) {
         buffer.indices[buffer.index_pos++] = buffer.index_offset;
         buffer.indices[buffer.index_pos++] = buffer.index_offset + 1;
         buffer.indices[buffer.index_pos++] = buffer.index_offset + 2;
@@ -10,8 +8,7 @@ class Render
         buffer.indices[buffer.index_pos++] = buffer.index_offset;
         buffer.index_offset += 4;
     }
-    static Image(buffer, x, y, width, height, left, top, right, bottom)
-    {
+    static Image(buffer, x, y, width, height, left, top, right, bottom) {
         buffer.vertices[buffer.vertex_pos++] = x;
         buffer.vertices[buffer.vertex_pos++] = y;
         buffer.vertices[buffer.vertex_pos++] = left;
@@ -34,8 +31,7 @@ class Render
         
         Render.Index4(buffer);
     }
-    static Rectangle(buffer, x, y, width, height, red, green, blue)
-    {
+    static Rectangle(buffer, x, y, width, height, red, green, blue) {
         buffer.vertices[buffer.vertex_pos++] = x;
         buffer.vertices[buffer.vertex_pos++] = y;
         buffer.vertices[buffer.vertex_pos++] = red;
@@ -62,8 +58,7 @@ class Render
         
         Render.Index4(buffer);
     }
-    static Circle(buffer, x, y, radius, red, green, blue)
-    {
+    static Circle(buffer, x, y, radius, red, green, blue) {
         const points = 32;
         const tau = Math.PI * 2.0;
         const slice = tau / points;
@@ -93,5 +88,65 @@ class Render
             radian += slice;
         }
         buffer.indices[buffer.index_pos - 1] = firstIndex + 1;
+    }
+    static Sprite(buffer, x, y, z, sin, cos, sprite) {
+        let sine = sprite.width * sin;
+        let cosine = sprite.width * cos;
+
+        buffer.vertices[buffer.vertex_pos++] = x - cosine;
+        buffer.vertices[buffer.vertex_pos++] = y + sprite.height;
+        buffer.vertices[buffer.vertex_pos++] = z + sine;
+        buffer.vertices[buffer.vertex_pos++] = sprite.left;
+        buffer.vertices[buffer.vertex_pos++] = sprite.top;
+        
+        buffer.vertices[buffer.vertex_pos++] = x - cosine;
+        buffer.vertices[buffer.vertex_pos++] = y;
+        buffer.vertices[buffer.vertex_pos++] = z + sine;
+        buffer.vertices[buffer.vertex_pos++] = sprite.left;
+        buffer.vertices[buffer.vertex_pos++] = sprite.bottom;
+
+        buffer.vertices[buffer.vertex_pos++] = x + cosine;
+        buffer.vertices[buffer.vertex_pos++] = y;
+        buffer.vertices[buffer.vertex_pos++] = z - sine;
+        buffer.vertices[buffer.vertex_pos++] = sprite.right;
+        buffer.vertices[buffer.vertex_pos++] = sprite.bottom;
+
+        buffer.vertices[buffer.vertex_pos++] = x + cosine;
+        buffer.vertices[buffer.vertex_pos++] = y + sprite.height;
+        buffer.vertices[buffer.vertex_pos++] = z - sine;
+        buffer.vertices[buffer.vertex_pos++] = sprite.right;
+        buffer.vertices[buffer.vertex_pos++] = sprite.top;
+        
+        Render.Index4(buffer);
+    }
+    static MirrorSprite(buffer, x, y, z, sin, cos, sprite) {
+        let sine = sprite.width * sin;
+        let cosine = sprite.width * cos;
+
+        buffer.vertices[buffer.vertex_pos++] = x - cosine;
+        buffer.vertices[buffer.vertex_pos++] = y + sprite.height;
+        buffer.vertices[buffer.vertex_pos++] = z + sine;
+        buffer.vertices[buffer.vertex_pos++] = sprite.right;
+        buffer.vertices[buffer.vertex_pos++] = sprite.top;
+        
+        buffer.vertices[buffer.vertex_pos++] = x - cosine;
+        buffer.vertices[buffer.vertex_pos++] = y;
+        buffer.vertices[buffer.vertex_pos++] = z + sine;
+        buffer.vertices[buffer.vertex_pos++] = sprite.right;
+        buffer.vertices[buffer.vertex_pos++] = sprite.bottom;
+
+        buffer.vertices[buffer.vertex_pos++] = x + cosine;
+        buffer.vertices[buffer.vertex_pos++] = y;
+        buffer.vertices[buffer.vertex_pos++] = z - sine;
+        buffer.vertices[buffer.vertex_pos++] = sprite.left;
+        buffer.vertices[buffer.vertex_pos++] = sprite.bottom;
+
+        buffer.vertices[buffer.vertex_pos++] = x + cosine;
+        buffer.vertices[buffer.vertex_pos++] = y + sprite.height;
+        buffer.vertices[buffer.vertex_pos++] = z - sine;
+        buffer.vertices[buffer.vertex_pos++] = sprite.left;
+        buffer.vertices[buffer.vertex_pos++] = sprite.top;
+        
+        Render.Index4(buffer);
     }
 }

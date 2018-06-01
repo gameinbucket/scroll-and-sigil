@@ -98,9 +98,8 @@ class Chunk {
             }
         }
     }
-    mesh(world, g, gl)
-    {
-        RenderBuffer.Zero(CHUNK_MESH);
+    mesh(world, g, gl) {
+        CHUNK_MESH.zero();
         for (let side = 0; side < 6; side++) {
             let mesh_begin_index = CHUNK_MESH.index_pos;
             let ptr_x = SLICE_X[side];
@@ -133,14 +132,24 @@ class Chunk {
         }
         this.mesh = RenderBuffer.InitCopy(gl, CHUNK_MESH);
     }
-    render_things(gl, sprite_buffers) {
+    render_things(gl, sprite_buffers, xx, zz, sin, cos) {
         for (let i = 0; i < this.unit_count; i++) {
             let u = this.units[i];
-            let s = u.animation[u.direction][u.animation_frame];
+            let s = u.animation[u.animation_frame][u.direction];
+
+            sin = u.x - xx;
+            cos = u.z - zz;
+            let length = Math.sqrt(sin * sin + cos * cos);
+            sin /= length;
+            cos /= length;
+
+            sin = -sin;
+            cos = -cos;
+
             if (u.mirror) {
-                Render.Sprite(sprite_buffers[u.sprite_id], 10, 10, 32, 32, s.u, s.v, s.s, s.t);
+                Render.MirrorSprite(sprite_buffers[u.sprite_id], u.x, u.y, u.z, sin, cos, s);
             } else {
-                Render.SpriteMirror(sprite_buffers[u.sprite_id], 10, 10, 32, 32, s.u, s.v, s.s, s.t);
+                Render.Sprite(sprite_buffers[u.sprite_id], u.x, u.y, u.z, sin, cos, s);
             }
         }
     }

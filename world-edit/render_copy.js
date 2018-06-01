@@ -11,10 +11,10 @@ class RenderCopy
         this.vertices = new Float32Array(vertex_limit * (position + color + texture));
         this.indices = new Uint32Array(index_limit);
     }
-    static Zero(buffer)
+    zero()
     {
-        buffer.vertex_pos = 0;
-        buffer.index_pos = 0;
-        buffer.index_offset = 0;
+        this.vertex_pos = 0;
+        this.index_pos = 0;
+        this.index_offset = 0;
     }
 }
