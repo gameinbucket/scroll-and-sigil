@@ -1,7 +1,23 @@
-class App
-{
-    constructor()
-    {
+class App {
+    constructor() {
+
+        let units = new Int32Array(10);
+
+        units[0] = 0; // x
+        units[1] = 0; // y
+        units[2] = 0; // z
+        units[3] = 0; // dx
+        units[4] = 0; // dy
+        units[5] = 0; // dz
+        units[6] = 6; // radius
+
+        let worker = new Worker("collision_worker.js");
+        worker.onmessage = function(event) {
+            let units = new Int32Array(event.data);
+            console.log('main: ' + units.toString());
+        };  
+        worker.postMessage(units.buffer, [units.buffer]);
+
         let canvas = document.createElement('canvas');
         canvas.style.display = 'block';
         canvas.style.position = 'absolute';
@@ -214,9 +230,9 @@ class App
             sprite_buffers[i].zero();
         }
 
-        let sin = Math.sin(-cam.rx);
-        let cos = Math.cos(-cam.rx);
-        this.world.render(gl, sprite_buffers, cam_chunk_x, cam_chunk_y, cam_chunk_z, cam.x, cam.z, sin, cos);
+        // look_x, look_y, look_z -> g.mv[2], g.mv[6], g.mv[10]
+
+        this.world.render(gl, sprite_buffers, cam_chunk_x, cam_chunk_y, cam_chunk_z, g.mv);
 
         RenderSystem.SetTexture(g, gl, 'footman');
         for (let i = 0; i < sprite_buffers.length; i++) {

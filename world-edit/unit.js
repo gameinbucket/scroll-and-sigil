@@ -22,7 +22,7 @@ class Unit
 		this.speed;
 		this.target;
 		this.attack_time;
-		this.Attack_cooldown;
+		this.attack_cooldown;
 		this.range;
 		this.sight;
 		this.health;

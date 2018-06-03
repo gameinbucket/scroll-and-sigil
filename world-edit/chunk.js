@@ -132,24 +132,14 @@ class Chunk {
         }
         this.mesh = RenderBuffer.InitCopy(gl, CHUNK_MESH);
     }
-    render_things(gl, sprite_buffers, xx, zz, sin, cos) {
+    render_things(gl, sprite_buffers, mv) {
         for (let i = 0; i < this.unit_count; i++) {
             let u = this.units[i];
             let s = u.animation[u.animation_frame][u.direction];
-
-            sin = u.x - xx;
-            cos = u.z - zz;
-            let length = Math.sqrt(sin * sin + cos * cos);
-            sin /= length;
-            cos /= length;
-
-            sin = -sin;
-            cos = -cos;
-
             if (u.mirror) {
-                Render.MirrorSprite(sprite_buffers[u.sprite_id], u.x, u.y, u.z, sin, cos, s);
+                Render.MirrorSprite(sprite_buffers[u.sprite_id], u.x, u.y, u.z, mv, s);
             } else {
-                Render.Sprite(sprite_buffers[u.sprite_id], u.x, u.y, u.z, sin, cos, s);
+                Render.Sprite(sprite_buffers[u.sprite_id], u.x, u.y, u.z, mv, s);
             }
         }
     }

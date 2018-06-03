@@ -91,7 +91,7 @@ class World {
             this.chunks[i].mesh(this, g, gl);
         }
     }
-    render(gl, sprite_buffers, x, y, z, xx, zz, sin, cos) {
+    render(gl, sprite_buffers, x, y, z, mv) {
         for (let i = 0; i < this.chunk_all; i++) {
             let chunk = this.chunks[i];
             let mesh = chunk.mesh;
@@ -133,7 +133,7 @@ class World {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_NEGATIVE_Z], chunk.count_side[WORLD_NEGATIVE_Z]);
             }
 
-            chunk.render_things(gl, sprite_buffers, xx, zz, sin, cos);
+            chunk.render_things(gl, sprite_buffers, mv);
         }
     }
     add_chunk_cache(c) {
