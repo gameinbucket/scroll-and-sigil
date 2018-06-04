@@ -43,6 +43,15 @@ class World {
         let chunk = this.chunks[cx + cy * this.chunk_w + cz * this.chunk_slice];
         return chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE].type;
     }
+    find_block(x, y, z) {
+        let cx = Math.floor(x / CHUNK_DIM);
+		let cy = Math.floor(y / CHUNK_DIM);
+        let cz = Math.floor(z / CHUNK_DIM);
+        let bx = x % CHUNK_DIM;
+		let by = y % CHUNK_DIM;
+		let bz = z % CHUNK_DIM;
+        return this.get_block_unsafe(cx, cy, cz, bx, by, bz);
+    }
     get_block(cx, cy, cz, bx, by, bz) {
         while (bx < 0){
             bx += CHUNK_DIM;
@@ -94,6 +103,9 @@ class World {
     render(gl, sprite_buffers, x, y, z, mv) {
         for (let i = 0; i < this.chunk_all; i++) {
             let chunk = this.chunks[i];
+
+            chunk.render_things(gl, sprite_buffers, mv);
+
             let mesh = chunk.mesh;
             if (mesh.vertex_pos == 0) {
                 continue;
@@ -132,8 +144,6 @@ class World {
             else {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_NEGATIVE_Z], chunk.count_side[WORLD_NEGATIVE_Z]);
             }
-
-            chunk.render_things(gl, sprite_buffers, mv);
         }
     }
     add_chunk_cache(c) {
@@ -181,7 +191,7 @@ class World {
         for (let i = 0; i < this.colors.length; i++) {
             let c =  this.colors[i];
             for (let j = 0; j < c.length; j++) {
-                c[j].update();
+                c[j].update(this);
             }
         }
 

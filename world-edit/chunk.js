@@ -2,6 +2,9 @@ const CHUNK_DIM = 8;
 const CHUNK_SLICE = CHUNK_DIM * CHUNK_DIM;
 const CHUNK_ALL = CHUNK_SLICE * CHUNK_DIM;
 const CHUNK_MESH = new RenderCopy(3, 0, 2, CHUNK_ALL * 6 * 4, CHUNK_ALL * 6 * 6);
+const CHUNK_POINT_DIM = CHUNK_DIM + 1;
+const CHUNK_POINT_SLICE = CHUNK_POINT_DIM * CHUNK_POINT_DIM;
+const CHUNK_POINT_ALL = CHUNK_POINT_SLICE * CHUNK_POINT_DIM;
 const SLICE_X = [2, 1, 0, 2, 1, 0];
 const SLICE_Y = [0, 2, 1, 0, 2, 1];
 const SLICE_Z = [1, 0, 2, 1, 0, 2];
@@ -11,6 +14,7 @@ const SLICE_TEMP = new Array(3);
 class Chunk {
     constructor(g, gl) {
         this.blocks = [];
+        this.terrain_offset = [];
         this.mesh;
         this.begin_side = new Array(6);
         this.count_side = new Array(6);
@@ -26,11 +30,17 @@ class Chunk {
         this.x = px;
         this.y = py;
         this.z = pz;
+        for (let i = 0; i < CHUNK_POINT_ALL; i++) {
+            this.terrain_offset[i] = [Math.random() * 0.5, Math.random() * 0.5, Math.random() * 0.5];
+        }
         let x = 0;
         let y = 0;
         let z = 0;
         for (let i = 0; i < CHUNK_ALL; i++) {
             let type = Math.random() > 0.5 ? BLOCK_GRASS : BLOCK_STONE;
+            if (py > 0 && px !== 0 && pz !== 0) {
+                type = BLOCK_NONE;
+            }
             let block = new Block(type);
             this.blocks[i] = block;
             x++;
@@ -123,7 +133,12 @@ class Chunk {
                         let bx = SLICE[ptr_x] + CHUNK_DIM * this.x;
                         let by = SLICE[ptr_y] + CHUNK_DIM * this.y;
                         let bz = SLICE[ptr_z] + CHUNK_DIM * this.z;
-                        RenderBlock.Side(CHUNK_MESH, side, bx, by, bz, texture[0], texture[1], texture[2], texture[3]);
+                        let index = SLICE[ptr_x] + SLICE[ptr_y] * CHUNK_POINT_DIM + SLICE[ptr_z] * CHUNK_POINT_SLICE;
+                        let raise0 = this.terrain_offset[index];
+                        let raise1 = this.terrain_offset[index + 1];
+                        let raise2 = this.terrain_offset[index + CHUNK_POINT_SLICE];
+                        let raise3 = this.terrain_offset[index + CHUNK_POINT_SLICE + 1];
+                        RenderBlock.Side(CHUNK_MESH, side, bx, by, bz, texture[0], texture[1], texture[2], texture[3], raise0, raise1, raise2, raise3);
                     }   
                 }   
             }
@@ -137,9 +152,9 @@ class Chunk {
             let u = this.units[i];
             let s = u.animation[u.animation_frame][u.direction];
             if (u.mirror) {
-                Render.MirrorSprite(sprite_buffers[u.sprite_id], u.x, u.y, u.z, mv, s);
+                Render.MirrorSprite(sprite_buffers[u.sprite_id], u.x, u.y + s.height, u.z, mv, s);
             } else {
-                Render.Sprite(sprite_buffers[u.sprite_id], u.x, u.y, u.z, mv, s);
+                Render.Sprite(sprite_buffers[u.sprite_id], u.x, u.y + s.height, u.z, mv, s);
             }
         }
     }

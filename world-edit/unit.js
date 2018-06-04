@@ -12,6 +12,7 @@ const UNIT_STATUS_MOVE = 5
 const UNIT_STATUS_ATTACK_MOVE = 6;
 const UNIT_STATUS_DOODAD = 7;
 const UNIT_STATUS_STEP_ASIDE  = 8;
+const UNIT_GRAVITY = 0.01;
 class Unit
 {
 	constructor() {
@@ -36,7 +37,7 @@ class Unit
 		this.animation_attack;
 		this.animation_death;
 		this.animation;
-		this.animation_rate = 16;
+		this.animation_mod = 16;
 		this.animation_frame;
         this.x;
         this.y;
@@ -44,9 +45,9 @@ class Unit
 		this.gx;
 		this.gy;
 		this.gz;
-		this.dx;
-		this.dy;
-		this.dz;
+		this.dx = 0;
+		this.dy = 0;
+		this.dz = 0;
 		this.low_gx;
 		this.low_gy;
 		this.low_gz;
@@ -60,6 +61,7 @@ class Unit
 		this.final_move_to_x;
 		this.final_move_to_y;
 		this.final_move_to_z;
+		this.ground = false;
 	}
 	init(world, color, sprite_id, animation_move, x, y, z) {
 		this.color = color;
@@ -107,23 +109,44 @@ class Unit
 		// todo
 	}
 	animate() {
-		this.animation_rate++;
-		if (this.animation_rate === UNIT_ANIMATION_RATE) {
-			this.animation_rate = 0;
+		this.animation_mod++;
+		if (this.animation_mod === UNIT_ANIMATION_RATE) {
+			this.animation_mod = 0;
 			this.animation_frame++;
 			if (this.animation_frame === this.animation.length) {
 				this.animation_frame = 0;
 			}
 		}
 	}
-	update() {
-		// todo
-	//	this.x += this.dx;
-	//	this.y += this.dy;
-		//this.z += this.dz;
+	update(world) {
+
+		this.dy -= UNIT_GRAVITY;
+
+		this.x += this.dx;
+		this.y += this.dy;
+		this.z += this.dz;
 		this.dx = 0;
-		this.dy = 0;
 		this.dz = 0;
+
+		this.collide_block_y(world);	
+
 		this.animate();
+	}
+	collide_block_y(world) {
+		this.ground = false;
+		if (this.dy === 0) {
+			return;
+		}
+		let gx = Math.floor(this.x);
+		let gy = Math.floor(this.y);
+		let gz = Math.floor(this.z);
+		if (world.find_block(gx, gy, gz) === BLOCK_NONE) {
+			return;
+		}
+		if (this.dy < 0) {
+			this.y = gy + 1;
+			this.ground = true;
+		}
+		this.dy = 0;
 	}
 }

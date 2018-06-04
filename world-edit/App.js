@@ -76,7 +76,7 @@ class App {
         sprite_cavern['wall corner'] = new Sprite(1+17*1, 1+17*2, s, s, w, h, 0, 0)
         sprite_cavern['stone floor'] = new Sprite(1+17*1, 1+17*3, s, s, w, h, 0, 0)
 
-        let world = new World(2, 2, 2);
+        let world = new World(4, 4, 4);
         world.init();
         world.mesh(g, gl);
 
@@ -101,12 +101,9 @@ class App {
             footman_walk[i][6] = new Sprite(i * d, 1.0 * d, d, d, w, h, z, t);
             footman_walk[i][7] = footman_walk[i][5];
         }
-    
-        let you = new Unit();
-        you.init(world, UNIT_COLOR_RED, 0, footman_walk, 0.5, 0.5, 0.5);
 
-        new Unit().init(world, UNIT_COLOR_RED, 0, footman_walk, 2.5, 2.5, 2.5);
-        new Unit().init(world, UNIT_COLOR_RED, 0, footman_walk, 4.5, 2.5, 2.5);
+        new Unit().init(world, UNIT_COLOR_RED, 0, footman_walk, 16, 16, 16);
+        new Unit().init(world, UNIT_COLOR_RED, 0, footman_walk, 24, 16, 24);
 
         window.onblur = App.ToggleOn(this, false);
         window.onfocus = App.ToggleOn(this, true);
@@ -116,7 +113,7 @@ class App {
         document.onmouseup = Input.MouseUp;
         document.onmousedown = Input.MouseDown;
 
-        let camera = new Camera(0.0, 0.0, 10.0, 0.0, 0.0);
+        let camera = new Camera(16.0, 16.0, 48.0, 0.0, 0.0);
 
         this.on = true;
         this.canvas = canvas;
