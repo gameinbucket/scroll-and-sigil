@@ -7,8 +7,9 @@ const BLOCK_SPRITE_SHEET_HEIGHT = 1.0 / 128.0;
 const BLOCK_SPRITE_DIRT = Sprite.Build(1+17*0, 1+17*0, BLOCK_SPRITE_DIM, BLOCK_SPRITE_DIM, BLOCK_SPRITE_SHEET_WIDTH, BLOCK_SPRITE_SHEET_HEIGHT);
 const BLOCK_SPRITE_GRASS = Sprite.Build(1+17*1, 1+17*0, BLOCK_SPRITE_DIM, BLOCK_SPRITE_DIM, BLOCK_SPRITE_SHEET_WIDTH, BLOCK_SPRITE_SHEET_HEIGHT);
 class Block {
-    constructor(type) {
+    constructor(type, raise) {
         this.type = type;
+        this.raise = raise;
     }
     static Texture(type) {
         switch(type) {

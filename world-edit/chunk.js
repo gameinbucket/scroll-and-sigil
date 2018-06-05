@@ -1,10 +1,7 @@
 const CHUNK_DIM = 8;
 const CHUNK_SLICE = CHUNK_DIM * CHUNK_DIM;
 const CHUNK_ALL = CHUNK_SLICE * CHUNK_DIM;
-const CHUNK_MESH = new RenderCopy(3, 0, 2, CHUNK_ALL * 6 * 4, CHUNK_ALL * 6 * 6);
-const CHUNK_POINT_DIM = CHUNK_DIM + 1;
-const CHUNK_POINT_SLICE = CHUNK_POINT_DIM * CHUNK_POINT_DIM;
-const CHUNK_POINT_ALL = CHUNK_POINT_SLICE * CHUNK_POINT_DIM;
+const CHUNK_MESH = new RenderCopy(3, 3, 2, CHUNK_ALL * 6 * 4, CHUNK_ALL * 6 * 6);
 const SLICE_X = [2, 1, 0, 2, 1, 0];
 const SLICE_Y = [0, 2, 1, 0, 2, 1];
 const SLICE_Z = [1, 0, 2, 1, 0, 2];
@@ -30,9 +27,6 @@ class Chunk {
         this.x = px;
         this.y = py;
         this.z = pz;
-        for (let i = 0; i < CHUNK_POINT_ALL; i++) {
-            this.terrain_offset[i] = [Math.random() * 0.5, Math.random() * 0.5, Math.random() * 0.5];
-        }
         let x = 0;
         let y = 0;
         let z = 0;
@@ -41,7 +35,7 @@ class Chunk {
             if (py > 0 && px !== 0 && pz !== 0) {
                 type = BLOCK_NONE;
             }
-            let block = new Block(type);
+            let block = new Block(type, [Math.random() * 0.5, Math.random() * 0.5, Math.random() * 0.5]);
             this.blocks[i] = block;
             x++;
             if (x == CHUNK_DIM) {
@@ -54,8 +48,11 @@ class Chunk {
             }
         }
     }
-    get_block_unsafe(x, y, z) {
+    get_block_type_unsafe(x, y, z) {
         return this.blocks[x + y * CHUNK_DIM + z * CHUNK_SLICE].type;
+    }
+    get_block_raise_unsafe(x, y, z) {
+        return this.blocks[x + y * CHUNK_DIM + z * CHUNK_SLICE].raise;
     }
     add_unit(u) {
         if (this.unit_count === this.units.length) {
@@ -119,26 +116,44 @@ class Chunk {
             for (SLICE[2] = 0; SLICE[2] < CHUNK_DIM; SLICE[2]++) {
                 for (SLICE[1] = 0; SLICE[1] < CHUNK_DIM; SLICE[1]++) {
                     for (SLICE[0] = 0; SLICE[0] < CHUNK_DIM; SLICE[0]++) {
-                        let type = this.get_block_unsafe(SLICE[ptr_x], SLICE[ptr_y], SLICE[ptr_z]);
+                        let type = this.get_block_type_unsafe(SLICE[ptr_x], SLICE[ptr_y], SLICE[ptr_z]);
                         if (type === BLOCK_NONE) {
                             continue;
                         }
                         SLICE_TEMP[0] = SLICE[0];
                         SLICE_TEMP[1] = SLICE[1];
                         SLICE_TEMP[2] = SLICE[2] + toward;
-                        if (Block.Closed(world.get_block(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]))) {
+                        if (Block.Closed(world.get_block_type(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]))) {
                             continue;
                         }
                         let texture = Block.Texture(type);
                         let bx = SLICE[ptr_x] + CHUNK_DIM * this.x;
                         let by = SLICE[ptr_y] + CHUNK_DIM * this.y;
                         let bz = SLICE[ptr_z] + CHUNK_DIM * this.z;
-                        let index = SLICE[ptr_x] + SLICE[ptr_y] * CHUNK_POINT_DIM + SLICE[ptr_z] * CHUNK_POINT_SLICE;
-                        let raise0 = this.terrain_offset[index];
-                        let raise1 = this.terrain_offset[index + 1];
-                        let raise2 = this.terrain_offset[index + CHUNK_POINT_SLICE];
-                        let raise3 = this.terrain_offset[index + CHUNK_POINT_SLICE + 1];
-                        RenderBlock.Side(CHUNK_MESH, side, bx, by, bz, texture[0], texture[1], texture[2], texture[3], raise0, raise1, raise2, raise3);
+                        
+                        let raise_a = world.get_block_raise(this.x, this.y, this.z, SLICE[ptr_x], SLICE[ptr_y], SLICE[ptr_z]);
+                        
+                        SLICE_TEMP[0] = SLICE[0] + 1;
+                        SLICE_TEMP[1] = SLICE[1];
+                        SLICE_TEMP[2] = SLICE[2];
+                        let raise_b = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]);
+                        
+                        SLICE_TEMP[0] = SLICE[0];
+                        SLICE_TEMP[1] = SLICE[1] + 1;
+                        SLICE_TEMP[2] = SLICE[2];
+                        let raise_c = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]);
+
+                        SLICE_TEMP[0] = SLICE[0] + 1;
+                        SLICE_TEMP[1] = SLICE[1] + 1;
+                        SLICE_TEMP[2] = SLICE[2];
+                        let raise_d = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]);
+
+                        let rgb_a = [1.0 - raise_a[1], 1.0 - raise_a[1], 1.0 - raise_a[1]];
+                        let rgb_b = [1.0 - raise_b[1], 1.0 - raise_b[1], 1.0 - raise_b[1]];
+                        let rgb_c = [1.0, 1.0, 1.0];
+                        let rgb_d = [1.0, 1.0, 1.0];
+
+                        RenderBlock.Side(CHUNK_MESH, side, bx, by, bz, texture, rgb_a, rgb_b, rgb_c, rgb_d, raise_a, raise_b, raise_c, raise_d);
                     }   
                 }   
             }

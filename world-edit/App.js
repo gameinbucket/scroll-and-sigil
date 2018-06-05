@@ -45,6 +45,7 @@ class App {
 
         RenderSystem.MakeProgram(g, gl, 'color');
         RenderSystem.MakeProgram(g, gl, 'texture');
+        RenderSystem.MakeProgram(g, gl, 'texcol3d');
         RenderSystem.MakeProgram(g, gl, 'texture3d');
 
         let generics = RenderBuffer.Init(gl, 2, 3, 0, 1600, 2400);
@@ -114,7 +115,7 @@ class App {
         document.onmousedown = Input.MouseDown;
 
         let camera = new Camera(16.0, 16.0, 48.0, 0.0, 0.0);
-
+        
         this.on = true;
         this.canvas = canvas;
         this.gl = gl;
@@ -213,7 +214,7 @@ class App {
         gl.enable(gl.CULL_FACE);
         RenderSystem.SetMvpPerspective(g, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry);
         
-        RenderSystem.SetProgram(g, gl, 'texture3d');
+        RenderSystem.SetProgram(g, gl, 'texcol3d');
         RenderSystem.UpdatedMvp(g, gl);
         RenderSystem.SetTexture(g, gl, 'caverns');
 
@@ -231,6 +232,8 @@ class App {
 
         this.world.render(gl, sprite_buffers, cam_chunk_x, cam_chunk_y, cam_chunk_z, g.mv);
 
+        RenderSystem.SetProgram(g, gl, 'texture3d');
+        RenderSystem.UpdatedMvp(g, gl);
         RenderSystem.SetTexture(g, gl, 'footman');
         for (let i = 0; i < sprite_buffers.length; i++) {
             RenderSystem.UpdateAndDraw(gl, sprite_buffers[i]);

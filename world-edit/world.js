@@ -39,20 +39,17 @@ class World {
             }
         }
     }
-    get_block_unsafe(cx, cy, cz, bx, by, bz) {
-        let chunk = this.chunks[cx + cy * this.chunk_w + cz * this.chunk_slice];
-        return chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE].type;
-    }
     find_block(x, y, z) {
         let cx = Math.floor(x / CHUNK_DIM);
 		let cy = Math.floor(y / CHUNK_DIM);
         let cz = Math.floor(z / CHUNK_DIM);
         let bx = x % CHUNK_DIM;
 		let by = y % CHUNK_DIM;
-		let bz = z % CHUNK_DIM;
-        return this.get_block_unsafe(cx, cy, cz, bx, by, bz);
+        let bz = z % CHUNK_DIM;
+        let chunk = this.chunks[cx + cy * this.chunk_w + cz * this.chunk_slice];
+        return chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE].type;
     }
-    get_block(cx, cy, cz, bx, by, bz) {
+    get_block_type(cx, cy, cz, bx, by, bz) {
         while (bx < 0){
             bx += CHUNK_DIM;
             cx--;
@@ -81,7 +78,38 @@ class World {
         if (chunk === null) {
             return BLOCK_NONE;
         }
-        return chunk.get_block_unsafe(bx, by, bz);
+        return chunk.get_block_type_unsafe(bx, by, bz);
+    }
+    get_block_raise(cx, cy, cz, bx, by, bz) {
+        while (bx < 0){
+            bx += CHUNK_DIM;
+            cx--;
+        }
+        while (bx >= CHUNK_DIM) {
+            bx -= CHUNK_DIM;
+            cx++;
+        }
+        while (by < 0) {
+            by += CHUNK_DIM;
+            cy--;
+        }
+        while (by >= CHUNK_DIM) {
+            by -= CHUNK_DIM;
+            cy++;
+        }
+        while (bz < 0) {
+            bz += CHUNK_DIM;
+            cz--;
+        }
+        while (bz >= CHUNK_DIM) {
+            bz -= CHUNK_DIM;
+            cz++;
+        }
+        let chunk = this.get_chunk(cx, cy, cz);
+        if (chunk === null) {
+            return [0, 0, 0];
+        }
+        return chunk.get_block_raise_unsafe(bx, by, bz);
     }
     get_chunk(x, y, z) {
         if (x < 0 || x >= this.chunk_w) {
