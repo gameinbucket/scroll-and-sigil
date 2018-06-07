@@ -49,6 +49,37 @@ class World {
         let chunk = this.chunks[cx + cy * this.chunk_w + cz * this.chunk_slice];
         return chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE].type;
     }
+    get_block_pointer(cx, cy, cz, bx, by, bz) {
+        while (bx < 0){
+            bx += CHUNK_DIM;
+            cx--;
+        }
+        while (bx >= CHUNK_DIM) {
+            bx -= CHUNK_DIM;
+            cx++;
+        }
+        while (by < 0) {
+            by += CHUNK_DIM;
+            cy--;
+        }
+        while (by >= CHUNK_DIM) {
+            by -= CHUNK_DIM;
+            cy++;
+        }
+        while (bz < 0) {
+            bz += CHUNK_DIM;
+            cz--;
+        }
+        while (bz >= CHUNK_DIM) {
+            bz -= CHUNK_DIM;
+            cz++;
+        }
+        let chunk = this.get_chunk(cx, cy, cz);
+        if (chunk === null) {
+            return null;
+        }
+        return chunk.get_block_pointer_unsafe(bx, by, bz);
+    }
     get_block_type(cx, cy, cz, bx, by, bz) {
         while (bx < 0){
             bx += CHUNK_DIM;
@@ -195,6 +226,40 @@ class World {
                 break;
             }
         }
+    }
+    get_terrain_height(x, y, z) {
+        let gx = Math.floor(x);
+        let gy = Math.floor(y) + 1;
+        let gz = Math.floor(z);
+        let cx = Math.floor(gx / CHUNK_DIM);
+		let cy = Math.floor(gy / CHUNK_DIM);
+        let cz = Math.floor(gz / CHUNK_DIM);
+        let bx = gx % CHUNK_DIM;
+		let by = gy % CHUNK_DIM;
+        let bz = gz % CHUNK_DIM;
+
+        if (this.get_block_type(cx, cy, cz, bx, by, bz) === BLOCK_NONE) {
+            return 0;
+        }
+
+        let y1 = this.get_block_raise(cx, cy, cz, bx, by, bz + 1)[1];
+        let y2 = this.get_block_raise(cx, cy, cz, bx + 1, gy, bz + 1)[1];
+        let y3 = this.get_block_raise(cx, cy, cz, bx + 1, by, bz)[1];
+        let y4 = this.get_block_raise(cx, cy, cz, bx, by, bz)[1];
+        
+        let height;
+        
+        let sq_x = x - gx;
+        let sq_z = z - gz;
+        
+        if (sq_x + sq_z < 1.0) {
+            height = y4 + (y3 - y4) * sq_x + (y1 - y4) * sq_z;
+        }
+        else {
+            height = y2 + (y3 - y2) * (1.0 - sq_z) + (y1 - y2) * (fixed.one - sq_x);
+        }
+        
+        return height;
     }
     update() {
         // ... unit vision

@@ -128,25 +128,19 @@ class Unit
 		this.dx = 0;
 		this.dz = 0;
 
-		this.collide_block_y(world);	
+		this.terrain_collision_y(world);
 
 		this.animate();
 	}
-	collide_block_y(world) {
+	terrain_collision_y(world) {
 		this.ground = false;
-		if (this.dy === 0) {
-			return;
-		}
-		let gx = Math.floor(this.x);
-		let gy = Math.floor(this.y);
-		let gz = Math.floor(this.z);
-		if (world.find_block(gx, gy, gz) === BLOCK_NONE) {
-			return;
-		}
 		if (this.dy < 0) {
-			this.y = gy + 1;
-			this.ground = true;
+			let height = world.get_terrain_height(this.x, this.y, this.z);
+			if (this.y < height) {
+				this.y = height;
+				this.ground = true;
+				this.dy = 0;
+			}
 		}
-		this.dy = 0;
 	}
 }

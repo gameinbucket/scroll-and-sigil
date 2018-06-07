@@ -8,6 +8,15 @@ class Render {
         buffer.indices[buffer.index_pos++] = buffer.index_offset;
         buffer.index_offset += 4;
     }
+    static MirrorIndex4(buffer) {
+        buffer.indices[buffer.index_pos++] = buffer.index_offset + 1;
+        buffer.indices[buffer.index_pos++] = buffer.index_offset + 2;
+        buffer.indices[buffer.index_pos++] = buffer.index_offset + 3;
+        buffer.indices[buffer.index_pos++] = buffer.index_offset + 3;
+        buffer.indices[buffer.index_pos++] = buffer.index_offset;
+        buffer.indices[buffer.index_pos++] = buffer.index_offset + 1;
+        buffer.index_offset += 4;
+    }
     static Image(buffer, x, y, width, height, left, top, right, bottom) {
         buffer.vertices[buffer.vertex_pos++] = x;
         buffer.vertices[buffer.vertex_pos++] = y;

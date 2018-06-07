@@ -4,17 +4,20 @@ const BLOCK_STONE = 2;
 const BLOCK_SPRITE_DIM = 16.0;
 const BLOCK_SPRITE_SHEET_WIDTH = 1.0 / 256.0;
 const BLOCK_SPRITE_SHEET_HEIGHT = 1.0 / 128.0;
-const BLOCK_SPRITE_DIRT = Sprite.Build(1+17*0, 1+17*0, BLOCK_SPRITE_DIM, BLOCK_SPRITE_DIM, BLOCK_SPRITE_SHEET_WIDTH, BLOCK_SPRITE_SHEET_HEIGHT);
-const BLOCK_SPRITE_GRASS = Sprite.Build(1+17*1, 1+17*0, BLOCK_SPRITE_DIM, BLOCK_SPRITE_DIM, BLOCK_SPRITE_SHEET_WIDTH, BLOCK_SPRITE_SHEET_HEIGHT);
+const BLOCK_SPRITE_DIRT = Sprite.Build(1+17*1, 1+17*0, BLOCK_SPRITE_DIM, BLOCK_SPRITE_DIM, BLOCK_SPRITE_SHEET_WIDTH, BLOCK_SPRITE_SHEET_HEIGHT);
+const BLOCK_SPRITE_STONE = Sprite.Build(1+17*0, 1+17*0, BLOCK_SPRITE_DIM, BLOCK_SPRITE_DIM, BLOCK_SPRITE_SHEET_WIDTH, BLOCK_SPRITE_SHEET_HEIGHT);
 class Block {
     constructor(type, raise) {
         this.type = type;
         this.raise = raise;
+        this.red = 255;
+        this.green = 255;
+        this.blue = 255;
     }
     static Texture(type) {
         switch(type) {
-        case BLOCK_GRASS: return BLOCK_SPRITE_GRASS;
-        case BLOCK_STONE: return BLOCK_SPRITE_DIRT;
+        case BLOCK_GRASS: return BLOCK_SPRITE_DIRT;
+        case BLOCK_STONE: return BLOCK_SPRITE_STONE;
         }
         return 0.0;
     }
@@ -25,5 +28,20 @@ class Block {
         case BLOCK_STONE: return true;
         }
         return false;
+    }
+    static PointerClosed(block) {
+        if (block === null) {
+            return true;
+        }
+        return Block.Closed(block.type);
+    }
+    static Ambient(side1, side2, corner) {
+        if (side1 && side2) {
+            return 175;
+        }
+        if (side1 || side2 || corner) {
+            return 215;
+        }
+        return 255;
     }
 }
