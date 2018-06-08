@@ -1,4 +1,16 @@
 class Render {
+    static Lumin(rgb) {
+		return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+    }
+    static PackRgb(red, green, blue) {
+		return (red << 16) | (green << 8) | blue;
+    }
+    static UnpackRgb(rgb) {
+        let red = (rgb >> 16) & 255;
+        let green = (rgb >> 8) & 255;
+        let blue = rgb & 255;
+		return [red, green, blue];
+    }
     static Index4(buffer) {
         buffer.indices[buffer.index_pos++] = buffer.index_offset;
         buffer.indices[buffer.index_pos++] = buffer.index_offset + 1;

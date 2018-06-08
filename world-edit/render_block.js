@@ -1,7 +1,4 @@
 class RenderBlock {
-	static Lumin(rgb) {
-		return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
-	}
 	static Side(buffer, side, x, y, z, texture, rgb_a, rgb_b, rgb_c, rgb_d, raise_a, raise_b, raise_c, raise_d) {
 		switch (side) {
 		case WORLD_POSITIVE_X: 
@@ -228,7 +225,7 @@ class RenderBlock {
 			break;
 		}
 
-        if (RenderBlock.Lumin(rgb_a) + RenderBlock.Lumin(rgb_c) < RenderBlock.Lumin(rgb_b) + RenderBlock.Lumin(rgb_d)) {
+        if (Render.Lumin(rgb_a) + Render.Lumin(rgb_c) < Render.Lumin(rgb_b) + Render.Lumin(rgb_d)) {
 			Render.MirrorIndex4(buffer);
 		} else {
 			Render.Index4(buffer);

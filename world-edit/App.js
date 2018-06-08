@@ -79,7 +79,7 @@ class App {
 
         let world = new World(4, 4, 4);
         world.init();
-        world.mesh(g, gl);
+        world.build(g, gl);
 
         w = 1.0 / 1024.0;
         h = 1.0 / 256.0;

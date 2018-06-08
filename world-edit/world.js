@@ -39,6 +39,14 @@ class World {
             }
         }
     }
+    build(g, gl) {
+        for (let i = 0; i < this.chunk_all; i++) {
+            Light.Process(this, this.chunks[i]);
+        }
+        for (let i = 0; i < this.chunk_all; i++) {
+            this.chunks[i].mesh(this, g, gl);
+        }
+    }
     find_block(x, y, z) {
         let cx = Math.floor(x / CHUNK_DIM);
 		let cy = Math.floor(y / CHUNK_DIM);
@@ -153,11 +161,6 @@ class World {
             return null;
         }
         return this.chunks[x + y * this.chunk_w + z * this.chunk_slice];
-    }
-    mesh(g, gl) {
-        for (let i = 0; i < this.chunk_all; i++) {
-            this.chunks[i].mesh(this, g, gl);
-        }
     }
     render(gl, sprite_buffers, x, y, z, mv) {
         for (let i = 0; i < this.chunk_all; i++) {

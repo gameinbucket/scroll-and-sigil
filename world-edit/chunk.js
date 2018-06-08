@@ -45,13 +45,21 @@ class Chunk {
         let z = 0;
         for (let i = 0; i < CHUNK_ALL; i++) {
             let type = Math.random() > 0.5 ? BLOCK_GRASS : BLOCK_STONE;
+            let block = new Block();
+            
             if (py > 0 && px !== 0 && pz !== 0) {
                 type = BLOCK_NONE;
             }
             if (px === 3 && pz === 3 && py === 1) {
                 type = BLOCK_STONE;
             }
-            let block = new Block(type, [Math.random() * 0.5, Math.random() * 0.5, Math.random() * 0.5]);
+            if (i === CHUNK_ALL - 1) {
+                type = BLOCK_NONE;
+                block.light = Render.PackRgb(255, 230, 200);
+            }
+            block.type = type;
+            block.raise = [Math.random() * 0.5, Math.random() * 0.5, Math.random() * 0.5];
+            
             this.blocks[i] = block;
             x++;
             if (x == CHUNK_DIM) {
@@ -248,7 +256,9 @@ class Chunk {
                         CHUNK_MESH_COLOR[index][1] = color[1] / color[3];
                         CHUNK_MESH_COLOR[index][2] = color[2] / color[3];
                     } else {
-                        CHUNK_MESH_COLOR[index] = 0;
+                        CHUNK_MESH_COLOR[index][0] = 255;
+                        CHUNK_MESH_COLOR[index][1] = 255;
+                        CHUNK_MESH_COLOR[index][2] = 255;
                     }
                 }
             }
@@ -268,36 +278,95 @@ class Chunk {
     light_of_side(xs, ys, zs, side) {
         switch (side) {
         case WORLD_POSITIVE_X:
-            return meshColor[xs+1+ys*meshColorSize+zs*meshColorSlice],
-                meshColor[xs+1+(ys+1)*meshColorSize+zs*meshColorSlice],
-                meshColor[xs+1+(ys+1)*meshColorSize+(zs+1)*meshColorSlice],
-                meshColor[xs+1+ys*meshColorSize+(zs+1)*meshColorSlice];
+            return [
+                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE]];
         case WORLD_NEGATIVE_X:
-            return meshColor[xs+ys*meshColorSize+zs*meshColorSlice],
-                meshColor[xs+ys*meshColorSize+(zs+1)*meshColorSlice],
-                meshColor[xs+(ys+1)*meshColorSize+(zs+1)*meshColorSlice],
-                meshColor[xs+(ys+1)*meshColorSize+zs*meshColorSlice];
+            return [
+                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE]];
         case WORLD_POSITIVE_Y:
-            return meshColor[xs+(ys+1)*meshColorSize+zs*meshColorSlice],
-                meshColor[xs+(ys+1)*meshColorSize+(zs+1)*meshColorSlice],
-                meshColor[xs+1+(ys+1)*meshColorSize+(zs+1)*meshColorSlice],
-                meshColor[xs+1+(ys+1)*meshColorSize+zs*meshColorSlice];
+            return [
+                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE]];
         case WORLD_NEGATIVE_Y:
-            return meshColor[xs+ys*meshColorSize+zs*meshColorSlice],
-                meshColor[xs+1+ys*meshColorSize+zs*meshColorSlice],
-                meshColor[xs+1+ys*meshColorSize+(zs+1)*meshColorSlice],
-                meshColor[xs+ys*meshColorSize+(zs+1)*meshColorSlice];
+            return [
+                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE]];
         case WORLD_POSITIVE_Z:
-            return meshColor[xs+1+ys*meshColorSize+(zs+1)*meshColorSlice],
-                meshColor[xs+1+(ys+1)*meshColorSize+(zs+1)*meshColorSlice],
-                meshColor[xs+(ys+1)*meshColorSize+(zs+1)*meshColorSlice],
-                meshColor[xs+ys*meshColorSize+(zs+1)*meshColorSlice];
+            return [
+                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE]];
         default:
-            return meshColor[xs+ys*meshColorSize+zs*meshColorSlice],
-                meshColor[xs+(ys+1)*meshColorSize+zs*meshColorSlice],
-                meshColor[xs+1+(ys+1)*meshColorSize+zs*meshColorSlice],
-                meshColor[xs+1+ys*meshColorSize+zs*meshColorSlice];
+            return [
+                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE]];
         }
+    }
+    side_offset(world, xs, ys, zs, side) {
+        switch (side) {
+        case WORLD_POSITIVE_X:
+            return [
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs),
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs),
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs + 1),
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs + 1)];
+        case WORLD_NEGATIVE_X:
+            return [
+                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs),
+                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs + 1),
+                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs + 1),
+                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs)];
+        case WORLD_POSITIVE_Y:
+            return [
+                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs),
+                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs + 1),
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs + 1),
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs)];
+        case WORLD_NEGATIVE_Y:
+            return [
+                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs),
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs),
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs + 1),
+                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs + 1)];
+        case WORLD_POSITIVE_Z:
+            return [
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs + 1),
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs + 1),
+                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs + 1),
+                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs + 1)];
+        default:
+            return [
+                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs),
+                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs),
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs),
+                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs)];
+        }
+        /* let raise_a = world.get_block_raise(this.x, this.y, this.z, xs, ys, zs);
+        SLICE_TEMP[0] = SLICE[0] + 1;
+        SLICE_TEMP[1] = SLICE[1];
+        SLICE_TEMP[2] = SLICE[2];
+        let raise_b = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]);
+        SLICE_TEMP[0] = SLICE[0];
+        SLICE_TEMP[1] = SLICE[1] + 1;
+        SLICE_TEMP[2] = SLICE[2];
+        let raise_c = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]);
+        SLICE_TEMP[0] = SLICE[0] + 1;
+        SLICE_TEMP[1] = SLICE[1] + 1;
+        SLICE_TEMP[2] = SLICE[2];
+        let raise_d = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]); */
     }
     mesh(world, g, gl) {
         this.ambient_mesh(world);
@@ -322,25 +391,14 @@ class Chunk {
                         if (Block.Closed(world.get_block_type(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]))) {
                             continue;
                         }
+                        let xs = SLICE[ptr_x];
+                        let ys = SLICE[ptr_y];
+                        let zs = SLICE[ptr_z];
                         let texture = Block.Texture(type);
-                        let bx = SLICE[ptr_x] + CHUNK_DIM * this.x;
-                        let by = SLICE[ptr_y] + CHUNK_DIM * this.y;
-                        let bz = SLICE[ptr_z] + CHUNK_DIM * this.z;
+                        let bx = xs + CHUNK_DIM * this.x;
+                        let by = ys + CHUNK_DIM * this.y;
+                        let bz = zs + CHUNK_DIM * this.z;
                         
-                        let raise_a = world.get_block_raise(this.x, this.y, this.z, SLICE[ptr_x], SLICE[ptr_y], SLICE[ptr_z]);
-                        SLICE_TEMP[0] = SLICE[0] + 1;
-                        SLICE_TEMP[1] = SLICE[1];
-                        SLICE_TEMP[2] = SLICE[2];
-                        let raise_b = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]);
-                        SLICE_TEMP[0] = SLICE[0];
-                        SLICE_TEMP[1] = SLICE[1] + 1;
-                        SLICE_TEMP[2] = SLICE[2];
-                        let raise_c = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]);
-                        SLICE_TEMP[0] = SLICE[0] + 1;
-                        SLICE_TEMP[1] = SLICE[1] + 1;
-                        SLICE_TEMP[2] = SLICE[2];
-                        let raise_d = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]);
-
                         /* TODO: heightmap ambient light
                         let nx = raise_a[0] - raise_b[1];
                         let ny = raise_b[0] - raise_c[1]; 
@@ -367,22 +425,22 @@ class Chunk {
 
                         light = Math.max(light, light_ambience); */
 
-                        // TODO light0, light1, light2, light3 := lightOfSide(xs, ys, zs, side)
-                        
-                        let index = SLICE[ptr_x] + SLICE[ptr_y] * CHUNK_DIM + SLICE[ptr_z] * CHUNK_SLICE;
-
+                        let index = xs + ys * CHUNK_DIM + zs * CHUNK_SLICE;
                         let ambient = CHUNK_MESH_AMBIENT[index][side];
                         let ambient_a = ambient[0] / 255.0;
                         let ambient_b = ambient[1] / 255.0;
                         let ambient_c = ambient[2] / 255.0;
                         let ambient_d = ambient[3] / 255.0;
 
-                        let rgb_a = [ambient_a, ambient_a, ambient_a];
-                        let rgb_b = [ambient_b, ambient_b, ambient_b];
-                        let rgb_c = [ambient_c, ambient_c, ambient_c];
-                        let rgb_d = [ambient_d, ambient_d, ambient_d];
+                        let light = this.light_of_side(xs, ys, zs, side);
+                        let raise = this.side_offset(world, xs, ys, zs, side);
+                        
+                        let rgb_a = Light.Colorize(light[0], ambient_a);
+                        let rgb_b = Light.Colorize(light[1], ambient_b);
+                        let rgb_c = Light.Colorize(light[2], ambient_c);
+                        let rgb_d = Light.Colorize(light[3], ambient_d);
 
-                        RenderBlock.Side(CHUNK_MESH, side, bx, by, bz, texture, rgb_a, rgb_b, rgb_c, rgb_d, raise_a, raise_b, raise_c, raise_d);
+                        RenderBlock.Side(CHUNK_MESH, side, bx, by, bz, texture, rgb_a, rgb_b, rgb_c, rgb_d, raise[0], raise[1], raise[2], raise[3]);
                     }   
                 }   
             }
