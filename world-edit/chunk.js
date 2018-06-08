@@ -354,19 +354,6 @@ class Chunk {
                 world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs),
                 world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs)];
         }
-        /* let raise_a = world.get_block_raise(this.x, this.y, this.z, xs, ys, zs);
-        SLICE_TEMP[0] = SLICE[0] + 1;
-        SLICE_TEMP[1] = SLICE[1];
-        SLICE_TEMP[2] = SLICE[2];
-        let raise_b = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]);
-        SLICE_TEMP[0] = SLICE[0];
-        SLICE_TEMP[1] = SLICE[1] + 1;
-        SLICE_TEMP[2] = SLICE[2];
-        let raise_c = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]);
-        SLICE_TEMP[0] = SLICE[0] + 1;
-        SLICE_TEMP[1] = SLICE[1] + 1;
-        SLICE_TEMP[2] = SLICE[2];
-        let raise_d = world.get_block_raise(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z]); */
     }
     mesh(world, g, gl) {
         this.ambient_mesh(world);
@@ -398,11 +385,13 @@ class Chunk {
                         let bx = xs + CHUNK_DIM * this.x;
                         let by = ys + CHUNK_DIM * this.y;
                         let bz = zs + CHUNK_DIM * this.z;
-                        
-                        /* TODO: heightmap ambient light
-                        let nx = raise_a[0] - raise_b[1];
-                        let ny = raise_b[0] - raise_c[1]; 
-                        let nz = raise_c[0] - raise_d[1];
+                       
+                        let light = this.light_of_side(xs, ys, zs, side);
+                        let raise = this.side_offset(world, xs, ys, zs, side);
+
+                        let nx = raise[0][0] - raise[1][1];
+                        let ny = raise[1][0] - raise[2][1]; 
+                        let nz = raise[2][0] - raise[3][1];
                         let nl = Math.sqrt(nx * nx + ny * ny + nz * nz);
                         
                         nx /= nl;
@@ -415,26 +404,22 @@ class Chunk {
                         let light_intensity = 1.0;
                         let light_ambience = 0.5;
 
-                        let light = (-world_normal_x * nx + -world_normal_y * ny + -world_normal_z * nz) * light_intensity;
+                        let ambient_raise = (-world_normal_x * nx + -world_normal_y * ny + -world_normal_z * nz) * light_intensity;
                         
-                        if (light > 1.0) {
-                            light = 1.0;
-                        } else if (light < 0.0) {
-                            light = 0.0;
+                        if (ambient_raise > 1.0) {
+                            ambient_raise = 1.0;
+                        } else if (ambient_raise < 0.0) {
+                            ambient_raise = 0.0;
                         }
-
-                        light = Math.max(light, light_ambience); */
+                        ambient_raise = Math.max(ambient_raise, light_ambience);
 
                         let index = xs + ys * CHUNK_DIM + zs * CHUNK_SLICE;
                         let ambient = CHUNK_MESH_AMBIENT[index][side];
-                        let ambient_a = ambient[0] / 255.0;
-                        let ambient_b = ambient[1] / 255.0;
-                        let ambient_c = ambient[2] / 255.0;
-                        let ambient_d = ambient[3] / 255.0;
+                        let ambient_a = Math.min(ambient[0] / 255.0, ambient_raise);
+                        let ambient_b = Math.min(ambient[1] / 255.0, ambient_raise);
+                        let ambient_c = Math.min(ambient[2] / 255.0, ambient_raise);
+                        let ambient_d = Math.min(ambient[3] / 255.0, ambient_raise);
 
-                        let light = this.light_of_side(xs, ys, zs, side);
-                        let raise = this.side_offset(world, xs, ys, zs, side);
-                        
                         let rgb_a = Light.Colorize(light[0], ambient_a);
                         let rgb_b = Light.Colorize(light[1], ambient_b);
                         let rgb_c = Light.Colorize(light[2], ambient_c);
