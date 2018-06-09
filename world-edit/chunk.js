@@ -161,6 +161,24 @@ class Chunk {
                     let ao_ppp = Block.Closed(world.get_block_type(this.x, this.y, this.z, bx + 1, by + 1, bz + 1));
                     let ao_pmp = Block.Closed(world.get_block_type(this.x, this.y, this.z, bx + 1, by - 1, bz + 1));
                     
+                    /* let nx = raise[0][0] - raise[1][1];
+                    let ny = raise[1][0] - raise[2][1]; 
+                    let nz = raise[2][0] - raise[3][1];
+                    let nl = Math.sqrt(nx * nx + ny * ny + nz * nz);
+                    
+                    nx /= nl;
+                    ny /= nl;
+                    nz /= nl;
+
+                    let ambient_raise = (-WORLD_LIGHT_X * nx + -WORLD_LIGHT_Y * ny + -WORLD_LIGHT_Z * nz) * WORLD_LIGHT_INTESITY;
+                    
+                    if (ambient_raise > 1.0) {
+                        ambient_raise = 1.0;
+                    } else if (ambient_raise < 0.0) {
+                        ambient_raise = 0.0;
+                    }
+                    ambient_raise = Math.max(ambient_raise, WORLD_LIGHT_AMBIENT); */
+
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_X][0] = Block.Ambient(ao_pmz, ao_pzm, ao_pmm);
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_X][1] = Block.Ambient(ao_ppz, ao_pzm, ao_ppm);
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_X][2] = Block.Ambient(ao_ppz, ao_pzp, ao_ppp);
@@ -381,6 +399,8 @@ class Chunk {
                         let xs = SLICE[ptr_x];
                         let ys = SLICE[ptr_y];
                         let zs = SLICE[ptr_z];
+                        let index = xs + ys * CHUNK_DIM + zs * CHUNK_SLICE;
+
                         let texture = Block.Texture(type);
                         let bx = xs + CHUNK_DIM * this.x;
                         let by = ys + CHUNK_DIM * this.y;
@@ -388,42 +408,12 @@ class Chunk {
                        
                         let light = this.light_of_side(xs, ys, zs, side);
                         let raise = this.side_offset(world, xs, ys, zs, side);
-
-                        let nx = raise[0][0] - raise[1][1];
-                        let ny = raise[1][0] - raise[2][1]; 
-                        let nz = raise[2][0] - raise[3][1];
-                        let nl = Math.sqrt(nx * nx + ny * ny + nz * nz);
-                        
-                        nx /= nl;
-                        ny /= nl;
-                        nz /= nl;
-
-                        let world_normal_x = 0.0;
-                        let world_normal_y = 1.0;
-                        let world_normal_z = 0.0;
-                        let light_intensity = 1.0;
-                        let light_ambience = 0.5;
-
-                        let ambient_raise = (-world_normal_x * nx + -world_normal_y * ny + -world_normal_z * nz) * light_intensity;
-                        
-                        if (ambient_raise > 1.0) {
-                            ambient_raise = 1.0;
-                        } else if (ambient_raise < 0.0) {
-                            ambient_raise = 0.0;
-                        }
-                        ambient_raise = Math.max(ambient_raise, light_ambience);
-
-                        let index = xs + ys * CHUNK_DIM + zs * CHUNK_SLICE;
                         let ambient = CHUNK_MESH_AMBIENT[index][side];
-                        let ambient_a = Math.min(ambient[0] / 255.0, ambient_raise);
-                        let ambient_b = Math.min(ambient[1] / 255.0, ambient_raise);
-                        let ambient_c = Math.min(ambient[2] / 255.0, ambient_raise);
-                        let ambient_d = Math.min(ambient[3] / 255.0, ambient_raise);
-
-                        let rgb_a = Light.Colorize(light[0], ambient_a);
-                        let rgb_b = Light.Colorize(light[1], ambient_b);
-                        let rgb_c = Light.Colorize(light[2], ambient_c);
-                        let rgb_d = Light.Colorize(light[3], ambient_d);
+                        
+                        let rgb_a = Light.Colorize(light[0], ambient[0]);
+                        let rgb_b = Light.Colorize(light[1], ambient[1]);
+                        let rgb_c = Light.Colorize(light[2], ambient[2]);
+                        let rgb_d = Light.Colorize(light[3], ambient[3]);
 
                         RenderBlock.Side(CHUNK_MESH, side, bx, by, bz, texture, rgb_a, rgb_b, rgb_c, rgb_d, raise[0], raise[1], raise[2], raise[3]);
                     }   

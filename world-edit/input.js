@@ -16,57 +16,44 @@ const INPUT_UP = 38;
 const INPUT_DOWN = 40;
 const INPUT_LEFT = 37;
 const INPUT_RIGHT = 39;
-class Input
-{
-    static Is(key)
-    {
+class Input {
+    static Is(key) {
         return INPUT_KEYS[key];
     }
-    static Off(key)
-    {
+    static Off(key) {
         INPUT_KEYS[key] = false;
     }
-    static IsClick(id)
-    {
+    static IsClick(id) {
         return INPUT_MOUSE[id];
     }
-    static MovementX()
-    {
+    static MovementX() {
         return INPUT_MOVEMENT[0];
     }
-    static MovementY()
-    {
+    static MovementY() {
         return INPUT_MOVEMENT[1];
     }
-    static Moved()
-    {
+    static Moved() {
         INPUT_MOVEMENT[0] = 0;
         INPUT_MOVEMENT[1] = 0;
     }
-    static Clicked(id)
-    {
+    static Clicked(id) {
         INPUT_MOUSE[id] = false;
     }
-    static KeyUp(event)
-    {
+    static KeyUp(event) {
         INPUT_KEYS[event.keyCode] = false;
     }
-    static KeyDown(event)
-    {
+    static KeyDown(event) {
         INPUT_KEYS[event.keyCode] = true;
     }
-    static MouseUp(event)
-    {
+    static MouseUp(event) {
         if (event.button === 0) INPUT_MOUSE[0] = false;
         else if (event.button === 2) INPUT_MOUSE[1] = false;
     }
-    static MouseDown(event)
-    {
+    static MouseDown(event) {
         if (event.button === 0) INPUT_MOUSE[0] = true;
         else if (event.button === 2) INPUT_MOUSE[1] = true;
     }
-    static MouseMove(event)
-    {
+    static MouseMove(event) {
         INPUT_MOVEMENT[0] = event.movementX;
         INPUT_MOVEMENT[1] = event.movementY;
     }

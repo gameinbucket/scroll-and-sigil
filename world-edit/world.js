@@ -4,6 +4,11 @@ const WORLD_POSITIVE_Z = 2;
 const WORLD_NEGATIVE_X = 3;
 const WORLD_NEGATIVE_Y = 4;
 const WORLD_NEGATIVE_Z = 5;
+const WORLD_LIGHT_X = 0;
+const WORLD_LIGHT_Y = 1;
+const WORLD_LIGHT_Z = 0;
+const WORLD_LIGHT_INTESITY = 1;
+const WORLD_LIGHT_AMBIENT = 0.2;
 class World {
     constructor(chunk_w, chunk_h, chunk_l) {
         this.chunk_w = chunk_w;

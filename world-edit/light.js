@@ -14,9 +14,9 @@ let LIGHT_NUM = 0;
 class Light {
     static Colorize(rgb, ambient) {
         return [
-            rgb[0] / 255.0 * ambient,
-            rgb[1] / 255.0 * ambient,
-            rgb[2] / 255.0 * ambient
+            rgb[0] * ambient / 65025.0,
+            rgb[1] * ambient / 65025.0,
+            rgb[2] * ambient / 65025.0
         ];
     }
     static Visit(world, bx, by, bz, red, green, blue) {

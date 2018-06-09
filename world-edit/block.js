@@ -11,9 +11,9 @@ class Block {
         this.type;
         this.raise;
         this.light = 0;
-        this.red = 150;
-        this.green = 150;
-        this.blue = 150;
+        this.red = 255;
+        this.green = 255;
+        this.blue = 255;
     }
     static Texture(type) {
         switch(type) {
