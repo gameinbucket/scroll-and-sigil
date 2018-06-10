@@ -198,8 +198,7 @@ class App {
 
         this.world.update();
     }
-    render()
-    {
+    render() {
         let g = this.g;
         let gl = this.gl;
         let frame = this.frame;
@@ -230,6 +229,8 @@ class App {
 
         // look_x, look_y, look_z -> g.mv[2], g.mv[6], g.mv[10]
 
+        Occlusion.PrepareFrustum(g);
+        Occlusion.Occlude(this.world, cam_chunk_x, cam_chunk_y, cam_chunk_z);
         this.world.render(gl, sprite_buffers, cam_chunk_x, cam_chunk_y, cam_chunk_z, g.mv);
 
         RenderSystem.SetProgram(g, gl, 'texture3d');

@@ -25,6 +25,7 @@ class Chunk {
     constructor(g, gl) {
         this.blocks = [];
         this.terrain_offset = [];
+        this.visibility = 0;
         this.mesh;
         this.begin_side = new Array(6);
         this.count_side = new Array(6);

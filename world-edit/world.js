@@ -18,6 +18,7 @@ class World {
         this.chunk_all = chunk_w * chunk_h * chunk_l;
         this.chunks = [];
         this.colors = [[]];
+        this.viewable = [];
 
         // this.grid = [];
 
@@ -46,7 +47,9 @@ class World {
     }
     build(g, gl) {
         for (let i = 0; i < this.chunk_all; i++) {
-            Light.Process(this, this.chunks[i]);
+            let chunk = this.chunks[i];
+            Light.Process(this, chunk);
+            Occlusion.Calculate(chunk);
         }
         for (let i = 0; i < this.chunk_all; i++) {
             this.chunks[i].mesh(this, g, gl);
@@ -168,13 +171,13 @@ class World {
         return this.chunks[x + y * this.chunk_w + z * this.chunk_slice];
     }
     render(gl, sprite_buffers, x, y, z, mv) {
-        for (let i = 0; i < this.chunk_all; i++) {
-            let chunk = this.chunks[i];
+        for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
+            let chunk = this.viewable[i];
 
             chunk.render_things(gl, sprite_buffers, mv);
 
             let mesh = chunk.mesh;
-            if (mesh.vertex_pos == 0) {
+            if (mesh.vertex_pos === 0) {
                 continue;
             }
             RenderSystem.BindVao(gl, mesh);
