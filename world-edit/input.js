@@ -1,6 +1,6 @@
 const INPUT_KEYS = {};
 const INPUT_MOUSE = [false, false];
-const INPUT_MOVEMENT = [0, 0];
+const INPUT_POS = [0, 0];
 const INPUT_ONE = 49;
 const INPUT_TWO = 50;
 const INPUT_THREE = 51;
@@ -25,9 +25,6 @@ class Input {
     }
     static IsClick(id) {
         return INPUT_MOUSE[id];
-    }
-    static MovementX() {
-        return INPUT_MOVEMENT[0];
     }
     static MovementY() {
         return INPUT_MOVEMENT[1];
@@ -54,7 +51,7 @@ class Input {
         else if (event.button === 2) INPUT_MOUSE[1] = true;
     }
     static MouseMove(event) {
-        INPUT_MOVEMENT[0] = event.movementX;
-        INPUT_MOVEMENT[1] = event.movementY;
+        INPUT_POS[0] = event.clientX;
+        INPUT_POS[1] = event.clientY;
     }
 }

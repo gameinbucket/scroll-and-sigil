@@ -1,3 +1,5 @@
+const APP_EDIT_NOTHING = 0;
+const APP_EDIT_ADD_BLOCK = 1;
 class App {
     constructor() {
 
@@ -113,8 +115,21 @@ class App {
         document.onkeydown = Input.KeyDown;
         document.onmouseup = Input.MouseUp;
         document.onmousedown = Input.MouseDown;
+        document.onmousemove = Input.MouseMove;
 
         let camera = new Camera(16.0, 16.0, 48.0, 0.0, 0.0);
+
+        let func_nothing = function(app) {
+            app.edit_state = APP_EDIT_NOTHING;
+        };
+        let button_nothing = new Button(this, sprite_cavern['dirt'], func_nothing, 10, 10, 32, 32);
+        
+        let func_add_block = function(app) {
+            app.edit_state = APP_EDIT_ADD_BLOCK;
+        };
+        let button_add_block = new Button(this, sprite_cavern['wall'], func_add_block, 52, 10, 32, 32);
+        
+        let buttons = [button_nothing, button_add_block];
         
         this.on = true;
         this.canvas = canvas;
@@ -127,6 +142,8 @@ class App {
         this.world = world;
         this.camera = camera;
         this.sprite_cavern = sprite_cavern;
+        this.buttons = buttons;
+        this.edit_state = APP_EDIT_NOTHING;
     }
     static Run(app) {
         for (let key in app.g.shaders) {
@@ -159,6 +176,25 @@ class App {
         requestAnimationFrame(App.Loop);
     }
     update() {
+        if (Input.IsClick(0)) {
+            Input.Clicked(0);
+            INPUT_POS[1] = this.canvas.height - INPUT_POS[1];
+            let open = true;
+            for (let i = 0; i < this.buttons.length; i++) {
+                if (this.buttons[i].click(INPUT_POS)) {
+                    open = false;
+                    break;
+                }
+            }
+            if (open) {
+                switch (this.edit_state) {
+                case APP_EDIT_ADD_BLOCK:
+                    console.log('todo: shoot a ray');   
+                    break;
+                }
+            }
+        }
+
         let cam = this.camera;
         let pace = 0.1;
         if (Input.Is(INPUT_W)) {
@@ -247,8 +283,9 @@ class App {
         RenderSystem.SetProgram(g, gl, 'texture');
         RenderSystem.UpdatedMvp(g, gl);
         this.generics2.zero();
-        let sprite = this.sprite_cavern['wall'];
-        Render.Image(this.generics2, 10, 10, 32, 32, sprite.left, sprite.top, sprite.right, sprite.bottom);
+        for (let i = 0; i < this.buttons.length; i++) {
+            this.buttons[i].draw(this.generics2);
+        }
         RenderSystem.SetTexture(g, gl, 'caverns');
         RenderSystem.UpdateAndDraw(gl, this.generics2);
 
