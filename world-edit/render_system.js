@@ -5,8 +5,11 @@ class RenderSystem
     {
         this.perspective = Matrix.Make();
         this.orthographic = Matrix.Make();
+        this.v = Matrix.Make();
         this.mv = Matrix.Make();
         this.mvp = Matrix.Make();
+        this.ip = Matrix.Make();
+        this.iv = Matrix.Make();
         
         this.program;
         this.program_name;
@@ -84,10 +87,10 @@ class RenderSystem
     }
     static SetMvpPerspective(sys, x, y, z, rx, ry)
     {
-        Matrix.Identity(sys.mv);
-        Matrix.RotateX(sys.mv, rx);
-        Matrix.RotateY(sys.mv, ry);
-        Matrix.Translate(sys.mv, x, y, z);
+        Matrix.Identity(sys.v);
+        Matrix.RotateX(sys.v, rx);
+        Matrix.RotateY(sys.v, ry);
+        Matrix.TranslateFromView(sys.mv, sys.v, x, y, z);
         Matrix.Multiply(sys.mvp, sys.perspective, sys.mv);
     }
     static UpdatedMvp(sys, gl)

@@ -374,7 +374,7 @@ class Chunk {
                 world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs)];
         }
     }
-    mesh(world, g, gl) {
+    build_mesh(world, g, gl) {
         this.ambient_mesh(world);
         this.color_mesh(world);
         CHUNK_MESH.zero();

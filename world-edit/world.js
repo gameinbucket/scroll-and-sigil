@@ -4,11 +4,18 @@ const WORLD_POSITIVE_Z = 2;
 const WORLD_NEGATIVE_X = 3;
 const WORLD_NEGATIVE_Y = 4;
 const WORLD_NEGATIVE_Z = 5;
-const WORLD_LIGHT_X = 0;
-const WORLD_LIGHT_Y = 1;
-const WORLD_LIGHT_Z = 0;
-const WORLD_LIGHT_INTESITY = 1;
-const WORLD_LIGHT_AMBIENT = 0.2;
+const WORLD_LIGHT_AMBIENT = 0.38;
+const WORLD_LIGHT_INTESITY = 5.0;
+const WORLD_LIGHT_DIR_X = 50.0;
+const WORLD_LIGHT_DIR_Y = -10.0;
+const WORLD_LIGHT_DIR_Z = 50.0;
+const WORLD_LIGHT_LEN = Math.sqrt(
+    WORLD_LIGHT_DIR_X * WORLD_LIGHT_DIR_X +
+    WORLD_LIGHT_DIR_Y * WORLD_LIGHT_DIR_Y +
+    WORLD_LIGHT_DIR_Z * WORLD_LIGHT_DIR_Z);
+const WORLD_LIGHT_X = WORLD_LIGHT_DIR_X / WORLD_LIGHT_LEN;
+const WORLD_LIGHT_Y = WORLD_LIGHT_DIR_Y / WORLD_LIGHT_LEN;
+const WORLD_LIGHT_Z = WORLD_LIGHT_DIR_Z / WORLD_LIGHT_LEN;
 class World {
     constructor(chunk_w, chunk_h, chunk_l) {
         this.chunk_w = chunk_w;
@@ -52,7 +59,7 @@ class World {
             Occlusion.Calculate(chunk);
         }
         for (let i = 0; i < this.chunk_all; i++) {
-            this.chunks[i].mesh(this, g, gl);
+            this.chunks[i].build_mesh(this, g, gl);
         }
     }
     find_block(x, y, z) {

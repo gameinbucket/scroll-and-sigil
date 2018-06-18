@@ -44,6 +44,7 @@ class App {
 
         Matrix.Perspective(g.perspective, 60.0, 0.01, 100.0, canvas.width / canvas.height);
         Matrix.Orthographic(g.orthographic, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0);
+        Matrix.Inverse(g.ip, g.perspective);
 
         RenderSystem.MakeProgram(g, gl, 'color');
         RenderSystem.MakeProgram(g, gl, 'texture');
@@ -189,7 +190,31 @@ class App {
             if (open) {
                 switch (this.edit_state) {
                 case APP_EDIT_ADD_BLOCK:
-                    console.log('todo: shoot a ray');   
+                    let from_x = this.camera.x;
+                    let from_y = this.camera.y;
+                    let from_z = this.camera.z;
+                    let to = Camera.Ray(this.canvas, INPUT_POS, this.g.ip, this.g.iv);
+                    let to_x = this.camera.x + 10.0 * to[0];
+                    let to_y = this.camera.y + 10.0 * to[1];
+                    let to_z = this.camera.z + 10.0 * to[2];
+                    let point = Cast.World(this.world, from_x, from_y, from_z, to_x, to_y, to_z);
+                    
+                    let cx = Math.floor(point[0] / CHUNK_DIM);
+                    let cy = Math.floor(point[1] / CHUNK_DIM);
+                    let cz = Math.floor(point[2] / CHUNK_DIM);
+                    let bx = Math.floor(point[0]) % CHUNK_DIM;
+                    let by = Math.floor(point[1]) % CHUNK_DIM;
+                    let bz = Math.floor(point[2]) % CHUNK_DIM;
+
+                    let chunk = this.world.chunks[cx + cy * this.world.chunk_w + cz * this.world.chunk_slice];
+                    let block = chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE];
+
+                    block.type = BLOCK_GRASS;
+
+                    // todo: light process
+                    // todo: occlusion calculate
+                    chunk.build_mesh(this.world, this.g, this.gl);
+
                     break;
                 }
             }
@@ -248,6 +273,7 @@ class App {
         gl.enable(gl.DEPTH_TEST);
         gl.enable(gl.CULL_FACE);
         RenderSystem.SetMvpPerspective(g, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry);
+        Matrix.Inverse(g.iv, g.v);
         
         RenderSystem.SetProgram(g, gl, 'texcol3d');
         RenderSystem.UpdatedMvp(g, gl);

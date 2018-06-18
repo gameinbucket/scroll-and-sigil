@@ -46,7 +46,7 @@ class Occlusion {
                                 let to_x = OCCLUSION_SLICE_B[bx] + 0.5;
                                 let to_y = OCCLUSION_SLICE_B[by] + 0.5;
                                 let to_z = OCCLUSION_SLICE_B[bz] + 0.5;
-                                if (Ray.Cast(chunk, from_x, from_y, from_z, to_x, to_y, to_z)) {
+                                if (Cast.Chunk(chunk, from_x, from_y, from_z, to_x, to_y, to_z)) {
                                     chunk.visibility |= 1 << (side_a * 6 + side_b)
                                     break loop;
                                 }

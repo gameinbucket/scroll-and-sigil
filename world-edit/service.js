@@ -1,7 +1,7 @@
-var cache_name = '11';
+let cache_name = '1.0';
 
 self.addEventListener('install', function(event) {
-    var files_to_cache = [
+    let files_to_cache = [
         '/',
         'index.html',
         'index.css',
