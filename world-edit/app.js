@@ -1,5 +1,6 @@
 const APP_EDIT_NOTHING = 0;
 const APP_EDIT_ADD_BLOCK = 1;
+const APP_EDIT_ADD_THING = 2;
 class App {
     constructor() {
 
@@ -106,8 +107,7 @@ class App {
             footman_walk[i][7] = footman_walk[i][5];
         }
 
-        new Unit().init(world, UNIT_COLOR_RED, 0, footman_walk, 16, 16, 16);
-        new Unit().init(world, UNIT_COLOR_RED, 0, footman_walk, 24, 16, 24);
+        new Unit().init(world, UNIT_COLOR_RED, 0, footman_walk, 16, 9, 20);
 
         window.onblur = App.ToggleOn(this, false);
         window.onfocus = App.ToggleOn(this, true);
@@ -129,8 +129,13 @@ class App {
             app.edit_state = APP_EDIT_ADD_BLOCK;
         };
         let button_add_block = new Button(this, sprite_cavern['wall'], func_add_block, 52, 10, 32, 32);
+
+        let func_add_thing = function(app) {
+            app.edit_state = APP_EDIT_ADD_THING;
+        };
+        let button_add_thing = new Button(this, sprite_cavern['stone floor'], func_add_thing, 94, 10, 32, 32);
         
-        let buttons = [button_nothing, button_add_block];
+        let buttons = [button_nothing, button_add_block, button_add_thing];
         
         this.on = true;
         this.canvas = canvas;
@@ -145,6 +150,7 @@ class App {
         this.sprite_cavern = sprite_cavern;
         this.buttons = buttons;
         this.edit_state = APP_EDIT_NOTHING;
+        this.footman_walk = footman_walk;
     }
     static Run(app) {
         for (let key in app.g.shaders) {
@@ -189,7 +195,7 @@ class App {
             }
             if (open) {
                 switch (this.edit_state) {
-                case APP_EDIT_ADD_BLOCK:
+                case APP_EDIT_ADD_BLOCK: {
                     let from_x = this.camera.x;
                     let from_y = this.camera.y;
                     let from_z = this.camera.z;
@@ -215,7 +221,30 @@ class App {
                     // todo: occlusion calculate
                     chunk.build_mesh(this.world, this.g, this.gl);
 
-                    break;
+                } break;
+                case APP_EDIT_ADD_THING: {
+                    let from_x = this.camera.x;
+                    let from_y = this.camera.y;
+                    let from_z = this.camera.z;
+                    let to = Camera.Ray(this.canvas, INPUT_POS, this.g.ip, this.g.iv);
+                    let to_x = this.camera.x + 10.0 * to[0];
+                    let to_y = this.camera.y + 10.0 * to[1];
+                    let to_z = this.camera.z + 10.0 * to[2];
+                    let point = Cast.World(this.world, from_x, from_y, from_z, to_x, to_y, to_z);
+                    
+                    let cx = Math.floor(point[0] / CHUNK_DIM);
+                    let cy = Math.floor(point[1] / CHUNK_DIM);
+                    let cz = Math.floor(point[2] / CHUNK_DIM);
+                    let bx = Math.floor(point[0]) % CHUNK_DIM;
+                    let by = Math.floor(point[1]) % CHUNK_DIM;
+                    let bz = Math.floor(point[2]) % CHUNK_DIM;
+
+                    let chunk = this.world.chunks[cx + cy * this.world.chunk_w + cz * this.world.chunk_slice];
+                    let block = chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE];
+
+                    new Unit().init(this.world, UNIT_COLOR_RED, 0, this.footman_walk, point[0], point[1] + 2, point[2]);
+
+                } break;
                 }
             }
         }

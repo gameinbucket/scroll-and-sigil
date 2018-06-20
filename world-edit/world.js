@@ -247,7 +247,7 @@ class World {
     }
     get_terrain_height(x, y, z) {
         let gx = Math.floor(x);
-        let gy = Math.floor(y) + 1;
+        let gy = Math.floor(y);
         let gz = Math.floor(z);
         let cx = Math.floor(gx / CHUNK_DIM);
 		let cy = Math.floor(gy / CHUNK_DIM);
@@ -256,28 +256,25 @@ class World {
 		let by = gy % CHUNK_DIM;
         let bz = gz % CHUNK_DIM;
 
-        if (this.get_block_type(cx, cy, cz, bx, by, bz) === BLOCK_NONE) {
-            return 0;
+        if (this.get_block_type(cx, cy, cz, bx, by, bz) === BLOCK_NONE) { // && this.get_block_type(cx, cy, cz, bx, by - 1, bz) === BLOCK_NONE) {
+            return 0.0;
         }
 
-        let y1 = this.get_block_raise(cx, cy, cz, bx, by, bz + 1)[1];
-        let y2 = this.get_block_raise(cx, cy, cz, bx + 1, gy, bz + 1)[1];
-        let y3 = this.get_block_raise(cx, cy, cz, bx + 1, by, bz)[1];
-        let y4 = this.get_block_raise(cx, cy, cz, bx, by, bz)[1];
-        
-        let height;
+        let y_a = this.get_block_raise(cx, cy, cz, bx, by, bz + 1)[1];
+        let y_b = this.get_block_raise(cx, cy, cz, bx + 1, gy, bz + 1)[1];
+        let y_c = this.get_block_raise(cx, cy, cz, bx + 1, by, bz)[1];
+        let y_d = this.get_block_raise(cx, cy, cz, bx, by, bz)[1];
         
         let sq_x = x - gx;
         let sq_z = z - gz;
         
         if (sq_x + sq_z < 1.0) {
-            height = y4 + (y3 - y4) * sq_x + (y1 - y4) * sq_z;
-        }
-        else {
-            height = y2 + (y3 - y2) * (1.0 - sq_z) + (y1 - y2) * (fixed.one - sq_x);
+            gy += y_d + (y_c - y_d) * sq_x + (y_a - y_d) * sq_z;
+        } else {
+            gy += y_b + (y_c - y_b) * (1.0 - sq_z) + (y_a - y_b) * (1.0 - sq_x);
         }
         
-        return height;
+        return gy + 1;
     }
     update() {
         // ... unit vision

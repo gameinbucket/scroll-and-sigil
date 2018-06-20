@@ -59,7 +59,7 @@ class Chunk {
                 block.light = Render.PackRgb(255, 230, 200);
             }
             block.type = type;
-            block.raise = [Math.random() * 0.5, Math.random() * 0.5, Math.random() * 0.5];
+            block.raise = [-Math.random() * 0.5, -Math.random() * 0.5, -Math.random() * 0.5];
             
             this.blocks[i] = block;
             x++;
