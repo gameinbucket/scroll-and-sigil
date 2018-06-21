@@ -56,7 +56,7 @@ class Chunk {
             }
             if (i === CHUNK_ALL - 1) {
                 type = BLOCK_NONE;
-                block.light = Render.PackRgb(255, 230, 200);
+                block.light = Render.PackRgb(255, 255, 255); // Render.PackRgb(255, 230, 200);
             }
             block.type = type;
             block.raise = [-Math.random() * 0.5, -Math.random() * 0.5, -Math.random() * 0.5];

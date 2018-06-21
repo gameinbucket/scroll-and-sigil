@@ -9,7 +9,7 @@ class Camera
     }
     static Ray(canvas, mouse, ipm, iv) {
         let clip_x = (2.0 * mouse[0]) / canvas.width - 1.0;
-        let clip_y = 1.0 - (2.0 * mouse[1]) / canvas.height;
+        let clip_y = (2.0 * mouse[1]) / canvas.height - 1.0;
         
         console.log("ray clip " + clip_x + ", " + clip_y);
         

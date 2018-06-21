@@ -200,9 +200,9 @@ class App {
                     let from_y = this.camera.y;
                     let from_z = this.camera.z;
                     let to = Camera.Ray(this.canvas, INPUT_POS, this.g.ip, this.g.iv);
-                    let to_x = this.camera.x + 10.0 * to[0];
-                    let to_y = this.camera.y + 10.0 * to[1];
-                    let to_z = this.camera.z + 10.0 * to[2];
+                    let to_x = this.camera.x + 999.0 * to[0];
+                    let to_y = this.camera.y + 999.0 * to[1];
+                    let to_z = this.camera.z + 999.0 * to[2];
                     let point = Cast.World(this.world, from_x, from_y, from_z, to_x, to_y, to_z);
                     
                     let cx = Math.floor(point[0] / CHUNK_DIM);

@@ -137,7 +137,7 @@ class Cast {
                 if (next_x < next_z) {
                     x += inc_x
                     if (x < 0 || x >= world.chunks_w) {
-                        return [x + 0.5, y + 0.5, z + 0.5]
+                        return [x + 0.5, y + 0.5, z + 0.5, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
                     }
                     let cx = Math.floor(x / CHUNK_DIM)
                     let cy = Math.floor(y / CHUNK_DIM)
@@ -147,7 +147,7 @@ class Cast {
                     let bz = z % CHUNK_DIM
                     if (Block.Closed(world.get_block_type(cx, cy, cz, bx, by, bz))) {
                         x -= inc_x
-					    return [x + 0.5, y + 0.5, z + 0.5]
+					    return [x, y, z, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
                     }
                     next_x += dt_dx
                 } else {
@@ -163,7 +163,7 @@ class Cast {
                     let bz = z % CHUNK_DIM
                     if (Block.Closed(world.get_block_type(cx, cy, cz, bx, by, bz))) {
                         z -= inc_z
-					    return [x + 0.5, y + 0.5, z + 0.5]
+					    return [x, y, z, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
                     }
                     next_z += dt_dz
                 }
