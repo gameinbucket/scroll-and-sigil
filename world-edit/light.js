@@ -6,12 +6,18 @@ const LIGHT_FADE = 0.95; // 0.8;
 for (let i = 0; i < LIGHT_QUEUE.length; i++) {
     LIGHT_QUEUE[i] = new Int32Array(3);
 }
-let LIGHT_X = 0;
-let LIGHT_Y = 0;
-let LIGHT_Z = 0;
+let LIGHT_CHUNK_X = 0;
+let LIGHT_CHUNK_Y = 0;
+let LIGHT_CHUNK_Z = 0;
 let LIGHT_POS = 0;
 let LIGHT_NUM = 0;
 class Light {
+    constructor(x, y, z, rgb) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.rgb = rgb;
+    }
     static Colorize(rgb, ambient) {
         return [
             rgb[0] * ambient / 65025.0,
@@ -20,7 +26,7 @@ class Light {
         ];
     }
     static Visit(world, bx, by, bz, red, green, blue) {
-        let block = world.get_block_pointer(LIGHT_X, LIGHT_Y, LIGHT_Z, bx, by, bz);
+        let block = world.get_block_pointer(LIGHT_CHUNK_X, LIGHT_CHUNK_Y, LIGHT_CHUNK_Z, bx, by, bz);
         if (block === null || Block.Closed(block.type)) {
             return;
         }
@@ -40,56 +46,64 @@ class Light {
         LIGHT_QUEUE[queue][2] = bz;
         LIGHT_NUM++;
     }
-    static Process(world, chunk) {
-        LIGHT_X = chunk.x;
-        LIGHT_Y = chunk.y;
-        LIGHT_Z = chunk.z;
-        for (let bz = 0; bz < CHUNK_DIM; bz++) {
-            for (let by = 0; by < CHUNK_DIM; by++) {
-                for (let bx = 0; bx < CHUNK_DIM; bx++) {
-                    let index = bx + by * CHUNK_DIM + bz * CHUNK_SLICE;
-                    let block = chunk.blocks[index];
-                    if (block.light === 0) {
-                        continue;
-                    }
-                    let color = Render.UnpackRgb(block.light);
-                    block.red = color[0];
-                    block.green = color[1];
-                    block.blue = color[2];
-                    
-                    LIGHT_QUEUE[0][0] = bx;
-                    LIGHT_QUEUE[0][1] = by;
-                    LIGHT_QUEUE[0][2] = bz;
-                    LIGHT_POS = 0;
-                    LIGHT_NUM = 1;
+    static Add(world, chunk, light) {
+        LIGHT_CHUNK_X = chunk.x;
+        LIGHT_CHUNK_Y = chunk.y;
+        LIGHT_CHUNK_Z = chunk.z;
+        
+        let color = Render.UnpackRgb(light.rgb);
 
-                    while (LIGHT_NUM > 0) {
-                        let x = LIGHT_QUEUE[LIGHT_POS][0];
-                        let y = LIGHT_QUEUE[LIGHT_POS][1];
-                        let z = LIGHT_QUEUE[LIGHT_POS][2];
-                        LIGHT_POS++;
-                        if (LIGHT_POS == LIGHT_QUEUE_LIMIT) {
-                            LIGHT_POS = 0;
-                        }
-                        LIGHT_NUM--;
+        let index = light.x + light.y * CHUNK_DIM + light.z * CHUNK_SLICE;
+        let block = chunk.blocks[index];
+        block.red = color[0];
+        block.green = color[1];
+        block.blue = color[2];
+        
+        LIGHT_QUEUE[0][0] = light.x;
+        LIGHT_QUEUE[0][1] = light.y;
+        LIGHT_QUEUE[0][2] = light.z;
+        LIGHT_POS = 0;
+        LIGHT_NUM = 1;
 
-                        let node = world.get_block_pointer(LIGHT_X, LIGHT_Y, LIGHT_Z, x, y, z);
-                        if (node === null) {
-                            continue;
-                        }
+        while (LIGHT_NUM > 0) {
+            let x = LIGHT_QUEUE[LIGHT_POS][0];
+            let y = LIGHT_QUEUE[LIGHT_POS][1];
+            let z = LIGHT_QUEUE[LIGHT_POS][2];
+            LIGHT_POS++;
+            if (LIGHT_POS == LIGHT_QUEUE_LIMIT) {
+                LIGHT_POS = 0;
+            }
+            LIGHT_NUM--;
 
-						let r = Math.floor(node.red * LIGHT_FADE);
-						let g = Math.floor(node.green * LIGHT_FADE);
-                        let b = Math.floor(node.blue * LIGHT_FADE);
-                        
-						Light.Visit(world, x - 1, y, z, r, g, b);
-						Light.Visit(world, x + 1, y, z, r, g, b);
-						Light.Visit(world, x, y - 1, z, r, g, b);
-						Light.Visit(world, x, y + 1, z, r, g, b);
-						Light.Visit(world, x, y, z - 1, r, g, b);
-						Light.Visit(world, x, y, z + 1, r, g, b);
-                    }
-                }
+            let node = world.get_block_pointer(LIGHT_CHUNK_X, LIGHT_CHUNK_Y, LIGHT_CHUNK_Z, x, y, z);
+            if (node === null) {
+                continue;
+            }
+
+            let r = Math.floor(node.red * LIGHT_FADE);
+            let g = Math.floor(node.green * LIGHT_FADE);
+            let b = Math.floor(node.blue * LIGHT_FADE);
+            
+            Light.Visit(world, x - 1, y, z, r, g, b);
+            Light.Visit(world, x + 1, y, z, r, g, b);
+            Light.Visit(world, x, y - 1, z, r, g, b);
+            Light.Visit(world, x, y + 1, z, r, g, b);
+            Light.Visit(world, x, y, z - 1, r, g, b);
+            Light.Visit(world, x, y, z + 1, r, g, b);
+        }
+    }
+    static Remove(world, x, y, z) {
+        let cx = Math.floor(x / CHUNK_DIM);
+		let cy = Math.floor(y / CHUNK_DIM);
+        let cz = Math.floor(z / CHUNK_DIM);
+        let bx = x % CHUNK_DIM;
+		let by = y % CHUNK_DIM;
+        let bz = z % CHUNK_DIM;
+        let chunk = world.chunks[cx + cy * world.chunk_w + cz * world.chunk_slice];
+        for (let i = 0; i < chunk.lights.length; i++) {
+            let light = chunk.lights[i];
+            if (light.x === bx && light.y === by && light.z === bz) {
+                chunk.lights.splice(i, 1);
             }
         }
     }

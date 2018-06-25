@@ -36,6 +36,7 @@ class Chunk {
         this.unit_count = 0;
         this.physical = [];
         this.physical_count = 0;
+        this.lights = [];
     }
     init(px, py, pz) {
         this.x = px;
@@ -56,7 +57,6 @@ class Chunk {
             }
             if (i === CHUNK_ALL - 1) {
                 type = BLOCK_NONE;
-                block.light = Render.PackRgb(255, 255, 255); // Render.PackRgb(255, 230, 200);
             }
             block.type = type;
             block.raise = [-Math.random() * 0.5, -Math.random() * 0.5, -Math.random() * 0.5];
@@ -72,6 +72,7 @@ class Chunk {
                 }
             }
         }
+        this.lights.push(new Light(CHUNK_DIM - 1, CHUNK_DIM - 1, CHUNK_DIM - 1, Render.PackRgb(255, 230, 200)));
     }
     get_block_pointer_unsafe(x, y, z) {
         return this.blocks[x + y * CHUNK_DIM + z * CHUNK_SLICE];

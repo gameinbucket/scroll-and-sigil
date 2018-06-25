@@ -10,7 +10,6 @@ class Block {
     constructor() {
         this.type;
         this.raise;
-        this.light = 0;
         this.red = 0;
         this.green = 0;
         this.blue = 0;

@@ -55,7 +55,9 @@ class World {
     build(g, gl) {
         for (let i = 0; i < this.chunk_all; i++) {
             let chunk = this.chunks[i];
-            Light.Process(this, chunk);
+            for (let j = 0; j < chunk.lights.length; j++) {
+                Light.Add(this, chunk, chunk.lights[j]);
+            }
             Occlusion.Calculate(chunk);
         }
         for (let i = 0; i < this.chunk_all; i++) {
