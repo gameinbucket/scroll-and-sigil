@@ -151,6 +151,9 @@ class App {
         this.buttons = buttons;
         this.edit_state = APP_EDIT_NOTHING;
         this.footman_walk = footman_walk;
+        this.frame_count = 0;
+        this.elapsed_time = 0;
+        this.previous_time = new Date().getTime();
     }
     static Run(app) {
         for (let key in app.g.shaders) {
@@ -181,6 +184,17 @@ class App {
             APP.render();
         }
         requestAnimationFrame(App.Loop);
+        
+        let now = new Date().getTime();
+        APP.frame_count++;
+        APP.elapsed_time += (now - APP.previous_time);
+        APP.previous_time = now;
+        if (APP.elapsed_time >= 1000) {
+            let fps = APP.frame_count;
+            APP.frame_count = 0;
+            APP.elapsed_time -= 1000;
+            console.log(fps);
+        }
     }
     update() {
         if (Input.IsClick(0)) {
