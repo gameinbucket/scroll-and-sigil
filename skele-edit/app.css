@@ -1,0 +1,54 @@
+@font-face {
+    font-family: 'roboto';
+    src: url(roboto.ttf);
+    font-weight: bold;
+}
+:root {
+    --menu-width: 13em;
+    --button-color: white;
+}
+html {
+    font-family: 'roboto';
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+#menu {
+    position: fixed;
+    background-color: white;
+    color: #212121;
+    width: var(--menu-width);
+    height: 100%;
+}
+.button {
+    display: block;
+    margin: auto;
+    background-color: var(--menu-width);
+    text-align: center;
+    cursor: pointer;
+}
+.button:hover {
+    background-color: rgb(238, 238, 238);
+}
+.nop-button {
+    display: block;
+    margin: auto;
+    background-color: var(--menu-width);
+    text-align: center;
+}
+.nop-button:hover {
+    background-color: rgb(238, 238, 238);
+}
+.mode {
+    background-color: rgb(245, 245, 245);
+    color: orange;
+}
+#draw {
+    position: fixed;
+    left: var(--menu-width);
+}
