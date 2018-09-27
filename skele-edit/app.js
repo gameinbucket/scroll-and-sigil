@@ -45,7 +45,7 @@ class App {
         let y = event.clientY - bound.top
 
         if (x < 0 || y < 0 || x > canvas.width || y > canvas.height) {
-            return
+            returnlk
         }
 
         console.log('zoink ' + x + ' ' + y)
@@ -73,11 +73,11 @@ class App {
 
 const app = new App();
 
-document.onmousedown = function(event) {
+document.onmousedown = function (event) {
     app.mouse_down(event)
 }
 
-document.oncontextmenu = function() {
+document.oncontextmenu = function () {
     return false
 }
 

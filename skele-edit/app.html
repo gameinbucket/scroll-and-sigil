@@ -1,27 +1,26 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>skeleton animation</title>
-        <meta charset="utf-8">
-        <meta name="theme-color" content="#2c3338">
-        <link rel="manifest" href="manifest.json">
-        <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
-        <link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16">
-        <link rel="stylesheet" href="app.css">
-    </head>
-    <body>
-        <div id="menu">
-            <div id="save" class="button" onclick="app.action('save')">save</div>
-            <div id="load" class="button" onclick="app.action('load')">load</div>
-            <div class="nop-button">-----</div>
-            <div id="line" class="button" onclick="app.action('line')">line</div>
-            <div id="circle" class="button" onclick="app.action('circle')">circle</div>
-            <div id="delete" class="button" onclick="app.action('delete')">delete</div>
-            <div class="nop-button">-----</div>
-            <div id="next-frame" class="button" onclick="app.action('next-frame')">next frame</div>
-        </div>
-        <canvas id="draw"></canvas>
-        <script src="skeleton.js"></script>
-        <script src="app.js"></script>
-    </body>
+
+<head>
+    <title>skeleton animation</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="app.css">
+</head>
+
+<body>
+    <div id="menu">
+        <div id="save" class="button" onclick="app.action('save')">save</div>
+        <div id="load" class="button" onclick="app.action('load')">load</div>
+        <div class="nop-button">-----</div>
+        <div id="line" class="button" onclick="app.action('line')">line</div>
+        <div id="circle" class="button" onclick="app.action('circle')">circle</div>
+        <div id="delete" class="button" onclick="app.action('delete')">delete</div>
+        <div class="nop-button">-----</div>
+        <div id="next-frame" class="button" onclick="app.action('next-frame')">next frame</div>
+    </div>
+    <canvas id="draw"></canvas>
+    <script src="skeleton.js"></script>
+    <script src="app.js"></script>
+</body>
+
 </html>
