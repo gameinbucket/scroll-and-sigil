@@ -24,7 +24,9 @@ class World {
         this.chunk_slice = chunk_w * chunk_h;
         this.chunk_all = chunk_w * chunk_h * chunk_l;
         this.chunks = [];
-        this.colors = [[]];
+        this.colors = [
+            []
+        ];
         this.viewable = [];
 
         // this.grid = [];
@@ -66,16 +68,16 @@ class World {
     }
     find_block(x, y, z) {
         let cx = Math.floor(x / CHUNK_DIM);
-		let cy = Math.floor(y / CHUNK_DIM);
+        let cy = Math.floor(y / CHUNK_DIM);
         let cz = Math.floor(z / CHUNK_DIM);
         let bx = x % CHUNK_DIM;
-		let by = y % CHUNK_DIM;
+        let by = y % CHUNK_DIM;
         let bz = z % CHUNK_DIM;
         let chunk = this.chunks[cx + cy * this.chunk_w + cz * this.chunk_slice];
         return chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE].type;
     }
     get_block_pointer(cx, cy, cz, bx, by, bz) {
-        while (bx < 0){
+        while (bx < 0) {
             bx += CHUNK_DIM;
             cx--;
         }
@@ -106,7 +108,7 @@ class World {
         return chunk.get_block_pointer_unsafe(bx, by, bz);
     }
     get_block_type(cx, cy, cz, bx, by, bz) {
-        while (bx < 0){
+        while (bx < 0) {
             bx += CHUNK_DIM;
             cx--;
         }
@@ -137,7 +139,7 @@ class World {
         return chunk.get_block_type_unsafe(bx, by, bz);
     }
     get_block_raise(cx, cy, cz, bx, by, bz) {
-        while (bx < 0){
+        while (bx < 0) {
             bx += CHUNK_DIM;
             cx--;
         }
@@ -194,33 +196,27 @@ class World {
             if (x == chunk.x) {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_POSITIVE_X], chunk.count_side[WORLD_POSITIVE_X]);
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_NEGATIVE_X], chunk.count_side[WORLD_NEGATIVE_X]);
-            }
-            else if (x > chunk.x) {
+            } else if (x > chunk.x) {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_POSITIVE_X], chunk.count_side[WORLD_POSITIVE_X]);
-            }
-            else {
+            } else {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_NEGATIVE_X], chunk.count_side[WORLD_NEGATIVE_X]);
             }
-            
+
             if (y == chunk.y) {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_POSITIVE_Y], chunk.count_side[WORLD_POSITIVE_Y]);
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_NEGATIVE_Y], chunk.count_side[WORLD_NEGATIVE_Y]);
-            }
-            else if (y > chunk.y) {
+            } else if (y > chunk.y) {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_POSITIVE_Y], chunk.count_side[WORLD_POSITIVE_Y]);
-            }
-            else {
+            } else {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_NEGATIVE_Y], chunk.count_side[WORLD_NEGATIVE_Y]);
             }
 
             if (z == chunk.z) {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_POSITIVE_Z], chunk.count_side[WORLD_POSITIVE_Z]);
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_NEGATIVE_Z], chunk.count_side[WORLD_NEGATIVE_Z]);
-            }
-            else if (z > chunk.z) {
+            } else if (z > chunk.z) {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_POSITIVE_Z], chunk.count_side[WORLD_POSITIVE_Z]);
-            }
-            else {
+            } else {
                 RenderSystem.DrawRange(gl, chunk.begin_side[WORLD_NEGATIVE_Z], chunk.count_side[WORLD_NEGATIVE_Z]);
             }
         }
@@ -230,7 +226,7 @@ class World {
             let cp = new Array(this.chunk_cache_count + 10);
             for (let i = 0; i < this.chunk_cache_count; i++) {
                 cp[i] = this.chunk_cache[i];
-            }    
+            }
             this.chunk_cache = cp;
         }
         this.chunk_cache[this.chunk_cache_count] = c;
@@ -252,10 +248,10 @@ class World {
         let gy = Math.floor(y);
         let gz = Math.floor(z);
         let cx = Math.floor(gx / CHUNK_DIM);
-		let cy = Math.floor(gy / CHUNK_DIM);
+        let cy = Math.floor(gy / CHUNK_DIM);
         let cz = Math.floor(gz / CHUNK_DIM);
         let bx = gx % CHUNK_DIM;
-		let by = gy % CHUNK_DIM;
+        let by = gy % CHUNK_DIM;
         let bz = gz % CHUNK_DIM;
 
         if (this.get_block_type(cx, cy, cz, bx, by, bz) === BLOCK_NONE) { // && this.get_block_type(cx, cy, cz, bx, by - 1, bz) === BLOCK_NONE) {
@@ -266,16 +262,16 @@ class World {
         let y_b = this.get_block_raise(cx, cy, cz, bx + 1, gy, bz + 1)[1];
         let y_c = this.get_block_raise(cx, cy, cz, bx + 1, by, bz)[1];
         let y_d = this.get_block_raise(cx, cy, cz, bx, by, bz)[1];
-        
+
         let sq_x = x - gx;
         let sq_z = z - gz;
-        
+
         if (sq_x + sq_z < 1.0) {
             gy += y_d + (y_c - y_d) * sq_x + (y_a - y_d) * sq_z;
         } else {
             gy += y_b + (y_c - y_b) * (1.0 - sq_z) + (y_a - y_b) * (1.0 - sq_x);
         }
-        
+
         return gy + 1;
     }
     update() {
@@ -299,7 +295,7 @@ class World {
         }
 
         for (let i = 0; i < this.colors.length; i++) {
-            let c =  this.colors[i];
+            let c = this.colors[i];
             for (let j = 0; j < c.length; j++) {
                 c[j].update(this);
             }

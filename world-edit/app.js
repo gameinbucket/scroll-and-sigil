@@ -15,10 +15,10 @@ class App {
         units[6] = 6; // radius
 
         let worker = new Worker("collision_worker.js");
-        worker.onmessage = function(event) {
+        worker.onmessage = function (event) {
             let units = new Int32Array(event.data);
             console.log('main: ' + units.toString());
-        };  
+        };
         worker.postMessage(units.buffer, [units.buffer]);
 
         let canvas = document.createElement('canvas');
@@ -54,7 +54,7 @@ class App {
 
         let generics = RenderBuffer.Init(gl, 2, 3, 0, 1600, 2400);
         let generics2 = RenderBuffer.Init(gl, 2, 0, 2, 400, 600);
-        
+
         let sprite_buffers = [
             RenderBuffer.Init(gl, 3, 0, 2, 400, 600)
         ];
@@ -73,13 +73,13 @@ class App {
         let w = 1.0 / 256.0;
         let h = 1.0 / 128.0;
         let sprite_cavern = {};
-        sprite_cavern['dirt'] = new Sprite(1+17*0, 1+17*0, s, s, w, h, 0, 0)
-        sprite_cavern['dirt light'] = new Sprite(1+17*0, 1+17*1, s, s, w, h, 0, 0)
-        sprite_cavern['dirt lightest'] = new Sprite(1+17*0, 1+17*2, s, s, w, h, 0, 0)
-        sprite_cavern['wall'] = new Sprite(1+17*1, 1+17*0, s, s, w, h, 0, 0)
-        sprite_cavern['wall edge'] = new Sprite(1+17*1, 1+17*1, s, s, w, h, 0, 0)
-        sprite_cavern['wall corner'] = new Sprite(1+17*1, 1+17*2, s, s, w, h, 0, 0)
-        sprite_cavern['stone floor'] = new Sprite(1+17*1, 1+17*3, s, s, w, h, 0, 0)
+        sprite_cavern['dirt'] = new Sprite(1 + 17 * 0, 1 + 17 * 0, s, s, w, h, 0, 0)
+        sprite_cavern['dirt light'] = new Sprite(1 + 17 * 0, 1 + 17 * 1, s, s, w, h, 0, 0)
+        sprite_cavern['dirt lightest'] = new Sprite(1 + 17 * 0, 1 + 17 * 2, s, s, w, h, 0, 0)
+        sprite_cavern['wall'] = new Sprite(1 + 17 * 1, 1 + 17 * 0, s, s, w, h, 0, 0)
+        sprite_cavern['wall edge'] = new Sprite(1 + 17 * 1, 1 + 17 * 1, s, s, w, h, 0, 0)
+        sprite_cavern['wall corner'] = new Sprite(1 + 17 * 1, 1 + 17 * 2, s, s, w, h, 0, 0)
+        sprite_cavern['stone floor'] = new Sprite(1 + 17 * 1, 1 + 17 * 3, s, s, w, h, 0, 0)
 
         let world = new World(4, 4, 4);
         world.init();
@@ -111,7 +111,7 @@ class App {
 
         window.onblur = App.ToggleOn(this, false);
         window.onfocus = App.ToggleOn(this, true);
-        
+
         document.onkeyup = Input.KeyUp;
         document.onkeydown = Input.KeyDown;
         document.onmouseup = Input.MouseUp;
@@ -120,23 +120,23 @@ class App {
 
         let camera = new Camera(16.0, 16.0, 48.0, 0.0, 0.0);
 
-        let func_nothing = function(app) {
+        let func_nothing = function (app) {
             app.edit_state = APP_EDIT_NOTHING;
         };
         let button_nothing = new Button(this, sprite_cavern['dirt'], func_nothing, 10, 10, 32, 32);
-        
-        let func_add_block = function(app) {
+
+        let func_add_block = function (app) {
             app.edit_state = APP_EDIT_ADD_BLOCK;
         };
         let button_add_block = new Button(this, sprite_cavern['wall'], func_add_block, 52, 10, 32, 32);
 
-        let func_add_thing = function(app) {
+        let func_add_thing = function (app) {
             app.edit_state = APP_EDIT_ADD_THING;
         };
         let button_add_thing = new Button(this, sprite_cavern['stone floor'], func_add_thing, 94, 10, 32, 32);
-        
+
         let buttons = [button_nothing, button_add_block, button_add_thing];
-        
+
         this.on = true;
         this.canvas = canvas;
         this.gl = gl;
@@ -174,7 +174,7 @@ class App {
         App.Loop(app);
     }
     static ToggleOn(app, on) {
-        return function() {
+        return function () {
             app.on = on;
         }
     }
@@ -184,7 +184,7 @@ class App {
             APP.render();
         }
         requestAnimationFrame(App.Loop);
-        
+
         let now = new Date().getTime();
         APP.frame_count++;
         APP.elapsed_time += (now - APP.previous_time);
@@ -209,56 +209,60 @@ class App {
             }
             if (open) {
                 switch (this.edit_state) {
-                case APP_EDIT_ADD_BLOCK: {
-                    let from_x = this.camera.x;
-                    let from_y = this.camera.y;
-                    let from_z = this.camera.z;
-                    let to = Camera.Ray(this.canvas, INPUT_POS, this.g.ip, this.g.iv);
-                    let to_x = this.camera.x + 999.0 * to[0];
-                    let to_y = this.camera.y + 999.0 * to[1];
-                    let to_z = this.camera.z + 999.0 * to[2];
-                    let point = Cast.World(this.world, from_x, from_y, from_z, to_x, to_y, to_z);
-                    
-                    let cx = Math.floor(point[0] / CHUNK_DIM);
-                    let cy = Math.floor(point[1] / CHUNK_DIM);
-                    let cz = Math.floor(point[2] / CHUNK_DIM);
-                    let bx = Math.floor(point[0]) % CHUNK_DIM;
-                    let by = Math.floor(point[1]) % CHUNK_DIM;
-                    let bz = Math.floor(point[2]) % CHUNK_DIM;
+                    case APP_EDIT_ADD_BLOCK:
+                        {
+                            let from_x = this.camera.x;
+                            let from_y = this.camera.y;
+                            let from_z = this.camera.z;
+                            let to = Camera.Ray(this.canvas, INPUT_POS, this.g.ip, this.g.iv);
+                            let to_x = this.camera.x + 999.0 * to[0];
+                            let to_y = this.camera.y + 999.0 * to[1];
+                            let to_z = this.camera.z + 999.0 * to[2];
+                            let point = Cast.World(this.world, from_x, from_y, from_z, to_x, to_y, to_z);
 
-                    let chunk = this.world.chunks[cx + cy * this.world.chunk_w + cz * this.world.chunk_slice];
-                    let block = chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE];
+                            let cx = Math.floor(point[0] / CHUNK_DIM);
+                            let cy = Math.floor(point[1] / CHUNK_DIM);
+                            let cz = Math.floor(point[2] / CHUNK_DIM);
+                            let bx = Math.floor(point[0]) % CHUNK_DIM;
+                            let by = Math.floor(point[1]) % CHUNK_DIM;
+                            let bz = Math.floor(point[2]) % CHUNK_DIM;
 
-                    block.type = BLOCK_GRASS;
+                            let chunk = this.world.chunks[cx + cy * this.world.chunk_w + cz * this.world.chunk_slice];
+                            let block = chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE];
 
-                    // todo: light process
-                    // todo: occlusion calculate
-                    chunk.build_mesh(this.world, this.g, this.gl);
+                            block.type = BLOCK_GRASS;
 
-                } break;
-                case APP_EDIT_ADD_THING: {
-                    let from_x = this.camera.x;
-                    let from_y = this.camera.y;
-                    let from_z = this.camera.z;
-                    let to = Camera.Ray(this.canvas, INPUT_POS, this.g.ip, this.g.iv);
-                    let to_x = this.camera.x + 10.0 * to[0];
-                    let to_y = this.camera.y + 10.0 * to[1];
-                    let to_z = this.camera.z + 10.0 * to[2];
-                    let point = Cast.World(this.world, from_x, from_y, from_z, to_x, to_y, to_z);
-                    
-                    let cx = Math.floor(point[0] / CHUNK_DIM);
-                    let cy = Math.floor(point[1] / CHUNK_DIM);
-                    let cz = Math.floor(point[2] / CHUNK_DIM);
-                    let bx = Math.floor(point[0]) % CHUNK_DIM;
-                    let by = Math.floor(point[1]) % CHUNK_DIM;
-                    let bz = Math.floor(point[2]) % CHUNK_DIM;
+                            // todo: light process
+                            // todo: occlusion calculate
+                            chunk.build_mesh(this.world, this.g, this.gl);
 
-                    let chunk = this.world.chunks[cx + cy * this.world.chunk_w + cz * this.world.chunk_slice];
-                    let block = chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE];
+                        }
+                        break;
+                    case APP_EDIT_ADD_THING:
+                        {
+                            let from_x = this.camera.x;
+                            let from_y = this.camera.y;
+                            let from_z = this.camera.z;
+                            let to = Camera.Ray(this.canvas, INPUT_POS, this.g.ip, this.g.iv);
+                            let to_x = this.camera.x + 10.0 * to[0];
+                            let to_y = this.camera.y + 10.0 * to[1];
+                            let to_z = this.camera.z + 10.0 * to[2];
+                            let point = Cast.World(this.world, from_x, from_y, from_z, to_x, to_y, to_z);
 
-                    new Unit().init(this.world, UNIT_COLOR_RED, 0, this.footman_walk, point[0], point[1] + 2, point[2]);
+                            let cx = Math.floor(point[0] / CHUNK_DIM);
+                            let cy = Math.floor(point[1] / CHUNK_DIM);
+                            let cz = Math.floor(point[2] / CHUNK_DIM);
+                            let bx = Math.floor(point[0]) % CHUNK_DIM;
+                            let by = Math.floor(point[1]) % CHUNK_DIM;
+                            let bz = Math.floor(point[2]) % CHUNK_DIM;
 
-                } break;
+                            let chunk = this.world.chunks[cx + cy * this.world.chunk_w + cz * this.world.chunk_slice];
+                            let block = chunk.blocks[bx + by * CHUNK_DIM + bz * CHUNK_SLICE];
+
+                            new Unit().init(this.world, UNIT_COLOR_RED, 0, this.footman_walk, point[0], point[1] + 2, point[2]);
+
+                        }
+                        break;
                 }
             }
         }
@@ -317,7 +321,7 @@ class App {
         gl.enable(gl.CULL_FACE);
         RenderSystem.SetMvpPerspective(g, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry);
         Matrix.Inverse(g.iv, g.v);
-        
+
         RenderSystem.SetProgram(g, gl, 'texcol3d');
         RenderSystem.UpdatedMvp(g, gl);
         RenderSystem.SetTexture(g, gl, 'caverns');
@@ -325,7 +329,7 @@ class App {
         let cam_chunk_x = Math.floor(cam.x / CHUNK_DIM);
         let cam_chunk_y = Math.floor(cam.y / CHUNK_DIM);
         let cam_chunk_z = Math.floor(cam.z / CHUNK_DIM);
-        
+
         let sprite_buffers = this.sprite_buffers;
 
         for (let i = 0; i < sprite_buffers.length; i++) {

@@ -36,11 +36,11 @@ class Light {
         block.red = red;
         block.green = green;
         block.blue = blue;
-        
+
         let queue = LIGHT_POS + LIGHT_NUM;
         if (queue >= LIGHT_QUEUE_LIMIT) {
             queue -= LIGHT_QUEUE_LIMIT;
-        } 
+        }
         LIGHT_QUEUE[queue][0] = bx;
         LIGHT_QUEUE[queue][1] = by;
         LIGHT_QUEUE[queue][2] = bz;
@@ -50,7 +50,7 @@ class Light {
         LIGHT_CHUNK_X = chunk.x;
         LIGHT_CHUNK_Y = chunk.y;
         LIGHT_CHUNK_Z = chunk.z;
-        
+
         let color = Render.UnpackRgb(light.rgb);
 
         let index = light.x + light.y * CHUNK_DIM + light.z * CHUNK_SLICE;
@@ -58,7 +58,7 @@ class Light {
         block.red = color[0];
         block.green = color[1];
         block.blue = color[2];
-        
+
         LIGHT_QUEUE[0][0] = light.x;
         LIGHT_QUEUE[0][1] = light.y;
         LIGHT_QUEUE[0][2] = light.z;
@@ -83,7 +83,7 @@ class Light {
             let r = Math.floor(node.red * LIGHT_FADE);
             let g = Math.floor(node.green * LIGHT_FADE);
             let b = Math.floor(node.blue * LIGHT_FADE);
-            
+
             Light.Visit(world, x - 1, y, z, r, g, b);
             Light.Visit(world, x + 1, y, z, r, g, b);
             Light.Visit(world, x, y - 1, z, r, g, b);
@@ -94,10 +94,10 @@ class Light {
     }
     static Remove(world, x, y, z) {
         let cx = Math.floor(x / CHUNK_DIM);
-		let cy = Math.floor(y / CHUNK_DIM);
+        let cy = Math.floor(y / CHUNK_DIM);
         let cz = Math.floor(z / CHUNK_DIM);
         let bx = x % CHUNK_DIM;
-		let by = y % CHUNK_DIM;
+        let by = y % CHUNK_DIM;
         let bz = z % CHUNK_DIM;
         let chunk = world.chunks[cx + cy * world.chunk_w + cz * world.chunk_slice];
         for (let i = 0; i < chunk.lights.length; i++) {

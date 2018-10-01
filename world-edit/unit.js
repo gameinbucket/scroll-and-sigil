@@ -11,10 +11,9 @@ const UNIT_STATUS_DEAD = 4;
 const UNIT_STATUS_MOVE = 5
 const UNIT_STATUS_ATTACK_MOVE = 6;
 const UNIT_STATUS_DOODAD = 7;
-const UNIT_STATUS_STEP_ASIDE  = 8;
+const UNIT_STATUS_STEP_ASIDE = 8;
 const UNIT_GRAVITY = 0.01;
-class Unit
-{
+class Unit {
 	constructor() {
 		this.color;
 		this.command;
@@ -39,8 +38,8 @@ class Unit
 		this.animation;
 		this.animation_mod = 16;
 		this.animation_frame;
-        this.x;
-        this.y;
+		this.x;
+		this.y;
 		this.z;
 		this.gx;
 		this.gy;
@@ -73,8 +72,8 @@ class Unit
 		this.animation = this.animation_move;
 		this.attack_time = 32;
 		this.animation_frame = 0;
-        this.x = x;
-        this.y = y;
+		this.x = x;
+		this.y = y;
 		this.z = z;
 		this.move_to_x = x;
 		this.move_to_y = y;
@@ -102,7 +101,7 @@ class Unit
 						c.add_physical(world, this);
 					}
 				}
-			}	
+			}
 		}
 	}
 	vision() {

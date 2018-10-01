@@ -48,7 +48,7 @@ class Chunk {
         for (let i = 0; i < CHUNK_ALL; i++) {
             let type = Math.random() > 0.5 ? BLOCK_GRASS : BLOCK_STONE;
             let block = new Block();
-            
+
             if (py > 0 && px !== 0 && pz !== 0) {
                 type = BLOCK_NONE;
             }
@@ -60,7 +60,7 @@ class Chunk {
             }
             block.type = type;
             block.raise = [-Math.random() * 0.5, -Math.random() * 0.5, -Math.random() * 0.5];
-            
+
             this.blocks[i] = block;
             x++;
             if (x == CHUNK_DIM) {
@@ -88,7 +88,7 @@ class Chunk {
             let cp = new Array(this.unit_count + 5);
             for (let i = 0; i < this.unit_count; i++) {
                 cp[i] = this.units[i];
-            }    
+            }
             this.units = cp;
         }
         this.units[this.unit_count] = u;
@@ -110,7 +110,7 @@ class Chunk {
             let cp = new Array(this.physical_count + 5);
             for (let i = 0; i < this.physical_count; i++) {
                 cp[i] = this.physical[i];
-            }    
+            }
             this.physical = cp;
         }
         this.physical[this.physical_count] = p;
@@ -162,7 +162,7 @@ class Chunk {
                     let ao_ppm = Block.Closed(world.get_block_type(this.x, this.y, this.z, bx + 1, by + 1, bz - 1));
                     let ao_ppp = Block.Closed(world.get_block_type(this.x, this.y, this.z, bx + 1, by + 1, bz + 1));
                     let ao_pmp = Block.Closed(world.get_block_type(this.x, this.y, this.z, bx + 1, by - 1, bz + 1));
-                    
+
                     /* let nx = raise[0][0] - raise[1][1];
                     let ny = raise[1][0] - raise[2][1]; 
                     let nz = raise[2][0] - raise[3][1];
@@ -185,27 +185,27 @@ class Chunk {
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_X][1] = Block.Ambient(ao_ppz, ao_pzm, ao_ppm);
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_X][2] = Block.Ambient(ao_ppz, ao_pzp, ao_ppp);
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_X][3] = Block.Ambient(ao_pmz, ao_pzp, ao_pmp);
-                    
+
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_X][0] = Block.Ambient(ao_mmz, ao_mzm, ao_mmm);
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_X][1] = Block.Ambient(ao_mmz, ao_mzp, ao_mmp);
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_X][2] = Block.Ambient(ao_mpz, ao_mzp, ao_mpp);
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_X][3] = Block.Ambient(ao_mpz, ao_mzm, ao_mpm);
-                    
+
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_Y][0] = Block.Ambient(ao_mpz, ao_zpm, ao_mpm);
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_Y][1] = Block.Ambient(ao_mpz, ao_zpp, ao_mpp);
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_Y][2] = Block.Ambient(ao_ppz, ao_zpp, ao_ppp);
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_Y][3] = Block.Ambient(ao_ppz, ao_zpm, ao_ppm);
-                    
+
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_Y][0] = Block.Ambient(ao_mmz, ao_zmm, ao_mmm);
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_Y][1] = Block.Ambient(ao_pmz, ao_zmm, ao_pmm);
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_Y][2] = Block.Ambient(ao_pmz, ao_zmp, ao_pmp);
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_Y][3] = Block.Ambient(ao_mmz, ao_zmp, ao_mmp);
-                    
+
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_Z][0] = Block.Ambient(ao_pzp, ao_zmp, ao_pmp);
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_Z][1] = Block.Ambient(ao_pzp, ao_zpp, ao_ppp);
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_Z][2] = Block.Ambient(ao_mzp, ao_zpp, ao_mpp);
                     CHUNK_MESH_AMBIENT[index][WORLD_POSITIVE_Z][3] = Block.Ambient(ao_mzp, ao_zmp, ao_mmp);
-                    
+
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_Z][0] = Block.Ambient(ao_mzm, ao_zmm, ao_mmm);
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_Z][1] = Block.Ambient(ao_mzm, ao_zpm, ao_mpm);
                     CHUNK_MESH_AMBIENT[index][WORLD_NEGATIVE_Z][2] = Block.Ambient(ao_pzm, ao_zpm, ao_ppm);
@@ -297,82 +297,94 @@ class Chunk {
     }
     light_of_side(xs, ys, zs, side) {
         switch (side) {
-        case WORLD_POSITIVE_X:
-            return [
-                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE]];
-        case WORLD_NEGATIVE_X:
-            return [
-                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE]];
-        case WORLD_POSITIVE_Y:
-            return [
-                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE]];
-        case WORLD_NEGATIVE_Y:
-            return [
-                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE]];
-        case WORLD_POSITIVE_Z:
-            return [
-                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE]];
-        default:
-            return [
-                CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
-                CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE]];
+            case WORLD_POSITIVE_X:
+                return [
+                    CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE]
+                ];
+            case WORLD_NEGATIVE_X:
+                return [
+                    CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE]
+                ];
+            case WORLD_POSITIVE_Y:
+                return [
+                    CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE]
+                ];
+            case WORLD_NEGATIVE_Y:
+                return [
+                    CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE]
+                ];
+            case WORLD_POSITIVE_Z:
+                return [
+                    CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + (zs + 1) * CHUNK_COLOR_SLICE]
+                ];
+            default:
+                return [
+                    CHUNK_MESH_COLOR[xs + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + 1 + (ys + 1) * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE],
+                    CHUNK_MESH_COLOR[xs + 1 + ys * CHUNK_COLOR_DIM + zs * CHUNK_COLOR_SLICE]
+                ];
         }
     }
     side_offset(world, xs, ys, zs, side) {
         switch (side) {
-        case WORLD_POSITIVE_X:
-            return [
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs),
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs),
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs + 1),
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs + 1)];
-        case WORLD_NEGATIVE_X:
-            return [
-                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs),
-                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs + 1),
-                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs + 1),
-                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs)];
-        case WORLD_POSITIVE_Y:
-            return [
-                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs),
-                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs + 1),
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs + 1),
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs)];
-        case WORLD_NEGATIVE_Y:
-            return [
-                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs),
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs),
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs + 1),
-                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs + 1)];
-        case WORLD_POSITIVE_Z:
-            return [
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs + 1),
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs + 1),
-                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs + 1),
-                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs + 1)];
-        default:
-            return [
-                world.get_block_raise(this.x, this.y, this.z, xs, ys, zs),
-                world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs),
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs),
-                world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs)];
+            case WORLD_POSITIVE_X:
+                return [
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs),
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs),
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs + 1),
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs + 1)
+                ];
+            case WORLD_NEGATIVE_X:
+                return [
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys, zs),
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys, zs + 1),
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs + 1),
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs)
+                ];
+            case WORLD_POSITIVE_Y:
+                return [
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs),
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs + 1),
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs + 1),
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs)
+                ];
+            case WORLD_NEGATIVE_Y:
+                return [
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys, zs),
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs),
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs + 1),
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys, zs + 1)
+                ];
+            case WORLD_POSITIVE_Z:
+                return [
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs + 1),
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs + 1),
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs + 1),
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys, zs + 1)
+                ];
+            default:
+                return [
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys, zs),
+                    world.get_block_raise(this.x, this.y, this.z, xs, ys + 1, zs),
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys + 1, zs),
+                    world.get_block_raise(this.x, this.y, this.z, xs + 1, ys, zs)
+                ];
         }
     }
     build_mesh(world, g, gl) {
@@ -382,9 +394,9 @@ class Chunk {
         for (let side = 0; side < 6; side++) {
             let mesh_begin_index = CHUNK_MESH.index_pos;
             let ptr_x = SLICE_X[side];
-		    let ptr_y = SLICE_Y[side];
-		    let ptr_z = SLICE_Z[side];
-		    let toward = SLICE_TOWARDS[side];
+            let ptr_y = SLICE_Y[side];
+            let ptr_z = SLICE_Z[side];
+            let toward = SLICE_TOWARDS[side];
             for (SLICE[2] = 0; SLICE[2] < CHUNK_DIM; SLICE[2]++) {
                 for (SLICE[1] = 0; SLICE[1] < CHUNK_DIM; SLICE[1]++) {
                     for (SLICE[0] = 0; SLICE[0] < CHUNK_DIM; SLICE[0]++) {
@@ -407,19 +419,19 @@ class Chunk {
                         let bx = xs + CHUNK_DIM * this.x;
                         let by = ys + CHUNK_DIM * this.y;
                         let bz = zs + CHUNK_DIM * this.z;
-                       
+
                         let light = this.light_of_side(xs, ys, zs, side);
                         let raise = this.side_offset(world, xs, ys, zs, side);
                         let ambient = CHUNK_MESH_AMBIENT[index][side];
-                        
+
                         let rgb_a = Light.Colorize(light[0], ambient[0]);
                         let rgb_b = Light.Colorize(light[1], ambient[1]);
                         let rgb_c = Light.Colorize(light[2], ambient[2]);
                         let rgb_d = Light.Colorize(light[3], ambient[3]);
 
                         RenderBlock.Side(CHUNK_MESH, side, bx, by, bz, texture, rgb_a, rgb_b, rgb_c, rgb_d, raise[0], raise[1], raise[2], raise[3]);
-                    }   
-                }   
+                    }
+                }
             }
             this.begin_side[side] = mesh_begin_index * 4;
             this.count_side[side] = CHUNK_MESH.index_pos - mesh_begin_index;

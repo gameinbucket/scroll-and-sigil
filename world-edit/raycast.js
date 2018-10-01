@@ -45,7 +45,7 @@ class Cast {
             dt_dz = 1.0 / -dz
             next_z = (from_z - z) * dt_dz
         }
-        while(true) {
+        while (true) {
             if (Block.Closed(chunk.get_block_type_unsafe(x, y, z))) {
                 return false
             } else if (x === Math.floor(to_x) && y === Math.floor(to_y) && z === Math.floor(to_z)) {
@@ -128,7 +128,7 @@ class Cast {
             dt_dz = 1.0 / -dz
             next_z = (from_z - z) * dt_dz
         }
-        while(true) {
+        while (true) {
             console.log(`${x} ${y} ${z}`)
             if (x === Math.floor(to_x) && y === Math.floor(to_y) && z === Math.floor(to_z)) {
                 return [to_x, to_y, to_z]
@@ -147,7 +147,7 @@ class Cast {
                     let bz = z % CHUNK_DIM
                     if (Block.Closed(world.get_block_type(cx, cy, cz, bx, by, bz))) {
                         x -= inc_x
-					    return [x, y, z, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
+                        return [x, y, z, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
                     }
                     next_x += dt_dx
                 } else {
@@ -163,7 +163,7 @@ class Cast {
                     let bz = z % CHUNK_DIM
                     if (Block.Closed(world.get_block_type(cx, cy, cz, bx, by, bz))) {
                         z -= inc_z
-					    return [x, y, z, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
+                        return [x, y, z, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
                     }
                     next_z += dt_dz
                 }
@@ -181,7 +181,7 @@ class Cast {
                     let bz = z % CHUNK_DIM
                     if (Block.Closed(world.get_block_type(cx, cy, cz, bx, by, bz))) {
                         y -= inc_y
-					    return [x + 0.5, y + 0.5, z + 0.5]
+                        return [x + 0.5, y + 0.5, z + 0.5]
                     }
                     next_y += dt_dy
                 } else {
@@ -197,7 +197,7 @@ class Cast {
                     let bz = z % CHUNK_DIM
                     if (Block.Closed(world.get_block_type(cx, cy, cz, bx, by, bz))) {
                         z -= inc_z
-					    return [x + 0.5, y + 0.5, z + 0.5]
+                        return [x + 0.5, y + 0.5, z + 0.5]
                     }
                     next_z += dt_dz
                 }
