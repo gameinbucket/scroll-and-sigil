@@ -1,16 +1,15 @@
-const SPRITE_SCALE = 0.01
 class Sprite {
     constructor(left, top, width, height, sheet_width, sheet_height, ox, oy) {
-        this.width = width * SPRITE_SCALE
-        this.height = height * SPRITE_SCALE
+        this.width = width
+        this.height = height
 
         this.left = left * sheet_width
         this.top = top * sheet_height
         this.right = (left + width) * sheet_width
         this.bottom = (top + height) * sheet_height
 
-        this.ox = ox * SPRITE_SCALE
-        this.oy = oy * SPRITE_SCALE
+        this.ox = ox
+        this.oy = oy
     }
     static Build(left, top, width, height, sheet_width, sheet_height) {
         return [

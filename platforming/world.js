@@ -1,14 +1,13 @@
+const GRID_SIZE = BLOCK_SIZE * TILE_SIZE
+
 class World {
     constructor(block_w, block_h) {
         this.block_w = block_w
         this.block_h = block_h
         this.block_all = block_w * block_h
         this.blocks = []
-        this.things = []
-
-        this.collisions = new Set()
-        this.block_cache = []
-        this.block_cache_count = 0
+        this.things = new Array(6)
+        this.thing_count = 0
 
         let x = 0
         let y = 0
@@ -26,36 +25,13 @@ class World {
             this.blocks[i].build_mesh(gl)
         }
     }
-    find_tile(x, y) {
-        let cx = Math.floor(x / BLOCK_SIZE)
-        let cy = Math.floor(y / BLOCK_SIZE)
-        let bx = x % BLOCK_SIZE
-        let by = y % BLOCK_SIZE
-        let block = this.blocks[cx + cy * this.block_w]
-        return block.tiles[bx + by * BLOCK_SIZE].type
-    }
-    get_tile(cx, cy, bx, by) {
-        while (bx < 0) {
-            bx += BLOCK_SIZE
-            cx--
-        }
-        while (bx >= BLOCK_SIZE) {
-            bx -= BLOCK_SIZE
-            cx++
-        }
-        while (by < 0) {
-            by += BLOCK_SIZE
-            cy--
-        }
-        while (by >= BLOCK_SIZE) {
-            by -= BLOCK_SIZE
-            cy++
-        }
-        let block = this.get_block(cx, cy)
-        if (block === null) {
-            return null
-        }
-        return block.get_tile(bx, by)
+    get_tile(x, y) {
+        let block_x = Math.floor(x / BLOCK_SIZE)
+        let block_y = Math.floor(y / BLOCK_SIZE)
+        let tile_x = x % BLOCK_SIZE
+        let tile_y = y % BLOCK_SIZE
+        let block = this.blocks[block_x + block_y * this.block_w]
+        return block.tiles[tile_x + tile_y * BLOCK_SIZE]
     }
     get_block(x, y) {
         if (x < 0 || x >= this.block_w) {
@@ -66,7 +42,30 @@ class World {
         }
         return this.blocks[x + y * this.block_w]
     }
+    add_thing(thing) {
+        if (this.thing_count === this.things.length) {
+            let copy = new Array(this.thing_count + 5)
+            for (let i = 0; i < this.thing_count; i++) {
+                copy[i] = this.things[i]
+            }
+            this.things = copy
+        }
+        this.things[this.thing_count] = thing
+        this.thing_count++
+    }
+    remove_thing(thing) {
+        for (let i = 0; i < this.thing_count; i++) {
+            if (this.things[i] === thing) {
+                for (let j = i; j < this.thing_count - 1; j++) {
+                    this.things[j] = this.things[j + 1]
+                }
+                this.thing_count--
+                break
+            }
+        }
+    }
     render(g, gl, sprite_buffers) {
+        let sprite_set = new Set()
         for (let key in sprite_buffers) {
             sprite_buffers[key].zero()
         }
@@ -76,7 +75,7 @@ class World {
             let mesh = block.mesh
             if (mesh.vertex_pos > 0)
                 RenderSystem.BindAndDraw(gl, mesh)
-            block.render_things(sprite_buffers)
+            block.render_things(sprite_set, sprite_buffers)
         }
         for (let key in sprite_buffers) {
             let buffer = sprite_buffers[key]
@@ -86,51 +85,9 @@ class World {
             }
         }
     }
-    add_block_cache(c) {
-        if (this.block_cache_count === this.block_cache.length) {
-            let cp = new Array(this.block_cache_count + 10)
-            for (let i = 0; i < this.block_cache_count; i++) {
-                cp[i] = this.block_cache[i]
-            }
-            this.block_cache = cp
-        }
-        this.block_cache[this.block_cache_count] = c
-        this.block_cache_count++
-    }
-    remove_block_cache(c) {
-        for (let i = 0; i < this.block_cache_count; i++) {
-            if (this.block_cache[i] === c) {
-                for (let j = i; j < this.block_cache_count - 1; j++) {
-                    this.block_cache[j] = this.block_cache[j + 1]
-                }
-                this.block_cache_count--
-                break
-            }
-        }
-    }
     update() {
-        this.collisions.clear()
-
-        for (let i = 0; i < this.block_cache_count; i++) {
-            let c = this.block_cache[i]
-            for (let j = 0; j < c.physical_count; j++) {
-                let a = c.physical[j]
-                for (let k = j + 1; k < c.physical_count; k++) {
-                    let b = c.physical[k]
-                    let id = Math.floor(a.x) + ' ' + Math.floor(b.x) + ' ' + Math.floor(a.y) + ' ' + Math.floor(b.y)
-                    if (!this.collisions.has(id)) {
-                        this.collisions.add(id)
-                        this.thing_overlap(a, b)
-                    }
-                }
-            }
-        }
-
-        for (let i = 0; i < this.things.length; i++) {
+        for (let i = 0; i < this.thing_count; i++) {
             this.things[i].update(this)
         }
-    }
-    thing_overlap(a, b) {
-
     }
 }

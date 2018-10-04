@@ -11,7 +11,8 @@ class Application {
     }
     load_images(g, gl) {
         g.make_image(gl, 'caverns', gl.CLAMP_TO_EDGE)
-        g.make_image(gl, 'footman', gl.CLAMP_TO_EDGE)
+        g.make_image(gl, 'you', gl.CLAMP_TO_EDGE)
+        g.make_image(gl, 'skeleton', gl.CLAMP_TO_EDGE)
     }
     constructor() {
 
@@ -28,7 +29,7 @@ class Application {
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
 
-        let gl = canvas.getContext("webgl2")
+        let gl = canvas.getContext('webgl2')
         let g = new RenderSystem()
 
         this.configure_opengl(gl)
@@ -39,8 +40,8 @@ class Application {
 
         let generic = RenderBuffer.Init(gl, 2, 0, 2, 1600, 2400)
         let sprite_buffers = new Map()
-        sprite_buffers['footman'] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
-
+        sprite_buffers['you'] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffers['skeleton'] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
 
         let frame = new FrameBuffer(gl, canvas.width, canvas.height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], false, true)
 
@@ -51,7 +52,7 @@ class Application {
         let s = 16.0
         let w = 1.0 / 256.0
         let h = 1.0 / 128.0
-        let sprite_cavern = {}
+        let sprite_cavern = new Map()
         sprite_cavern['dirt'] = new Sprite(1 + 17 * 0, 1 + 17 * 0, s, s, w, h, 0, 0)
         sprite_cavern['dirt light'] = new Sprite(1 + 17 * 0, 1 + 17 * 1, s, s, w, h, 0, 0)
         sprite_cavern['dirt lightest'] = new Sprite(1 + 17 * 0, 1 + 17 * 2, s, s, w, h, 0, 0)
@@ -60,39 +61,22 @@ class Application {
         sprite_cavern['wall corner'] = new Sprite(1 + 17 * 1, 1 + 17 * 2, s, s, w, h, 0, 0)
         sprite_cavern['stone floor'] = new Sprite(1 + 17 * 1, 1 + 17 * 3, s, s, w, h, 0, 0)
 
+        let you_walk = [new Sprite(0, 0, 16, 30, 1.0 / 16.0, 1.0 / 30.0, 0, 0)]
+        let skeleton_walk = [new Sprite(0, 0, 16, 31, 1.0 / 16.0, 1.0 / 31.0, 0, 0)]
+
         let world = new World(8, 3)
         world.build(gl)
 
-        w = 1.0 / 1024.0
-        h = 1.0 / 256.0
-        let d = 48.0
-        let z = 0.0
-        let t = 24.0
-        let footman_walk = []
-        footman_walk[0] = new Array(8)
-        footman_walk[1] = new Array(8)
-        footman_walk[2] = new Array(8)
-        footman_walk[3] = new Array(8)
-        footman_walk[4] = new Array(8)
-        for (let i = 0; i < 5; i++) {
-            footman_walk[i][0] = new Sprite(i * d, 0, d, d, w, h, z, t)
-            footman_walk[i][1] = new Sprite(i * d, 4.0 * d, d, d, w, h, z, t)
-            footman_walk[i][2] = new Sprite(i * d, 3.0 * d, d, d, w, h, z, t)
-            footman_walk[i][3] = footman_walk[i][1]
-            footman_walk[i][4] = footman_walk[i][0]
-            footman_walk[i][5] = new Sprite(i * d, 0.0 * d, d, d, w, h, z, t)
-            footman_walk[i][6] = new Sprite(i * d, 1.0 * d, d, d, w, h, z, t)
-            footman_walk[i][7] = footman_walk[i][5]
-        }
-
-        new Thing(world, 0, footman_walk, 16, 9, 20)
+        this.player = new Thing(world, 'you', you_walk, BLOCK_SIZE * (TILE_SIZE + 9), (BLOCK_SIZE + 1) * TILE_SIZE)
+        // new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 14), (BLOCK_SIZE + 1) * TILE_SIZE)
+        // new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 64), (BLOCK_SIZE + 1) * TILE_SIZE)
 
         window.onblur = function () {
             self.on = false
         }
 
         window.onfocus = function () {
-            self.on = false
+            self.on = true
         }
 
         document.onkeyup = Input.KeyUp
@@ -123,7 +107,6 @@ class Application {
         this.world = world
         this.sprite_cavern = sprite_cavern
         this.buttons = buttons
-        this.footman_walk = footman_walk
     }
     run() {
         for (let key in this.g.shaders) {
@@ -158,6 +141,16 @@ class Application {
                 }
             }
         }
+        let player = this.player
+        if (Input.Is(INPUT_A)) {
+            player.move_left()
+        }
+        if (Input.Is(INPUT_D)) {
+            player.move_right()
+        }
+        if (Input.Is(INPUT_SPACE)) {
+            player.jump()
+        }
         this.world.update()
     }
     render() {
@@ -165,15 +158,19 @@ class Application {
         let gl = this.gl
         let frame = this.frame
 
+        let view_x = -(this.player.x - this.canvas.width / 2)
+        let view_y = -(this.player.y - this.canvas.height / 2)
+
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
         gl.clear(gl.COLOR_BUFFER_BIT)
         g.set_program(gl, 'texture')
-        g.set_orthographic(0, 0)
+        g.set_orthographic(view_x, view_y)
         g.update_mvp(gl)
-
         this.world.render(g, gl, this.sprite_buffers)
 
+        g.set_orthographic(0, 0)
+        g.update_mvp(gl)
         this.generic.zero()
         for (let i = 0; i < this.buttons.length; i++) {
             this.buttons[i].draw(this.generic)

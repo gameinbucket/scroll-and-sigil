@@ -16,6 +16,7 @@ const INPUT_UP = 38
 const INPUT_DOWN = 40
 const INPUT_LEFT = 37
 const INPUT_RIGHT = 39
+
 class Input {
     static Is(key) {
         return INPUT_KEYS[key]
