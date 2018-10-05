@@ -88,7 +88,7 @@ class Thing {
 			let gx = Math.floor((this.x + this.width) / TILE_SIZE)
 			for (let gy = bottom_gy; gy <= top_gy; gy++) {
 				let tile = world.get_tile(gx, gy)
-				if (!Tile.Closed(tile.type))
+				if (Tile.Empty(tile))
 					continue
 				this.dx = 0
 				return gx * TILE_SIZE - this.width
@@ -97,7 +97,7 @@ class Thing {
 			let gx = Math.floor((this.x - this.width) / TILE_SIZE)
 			for (let gy = bottom_gy; gy <= top_gy; gy++) {
 				let tile = world.get_tile(gx, gy)
-				if (!Tile.Closed(tile.type))
+				if (Tile.Empty(tile))
 					continue
 				this.dx = 0
 				return (gx + 1) * TILE_SIZE + this.width
@@ -114,28 +114,33 @@ class Thing {
 			let gy = Math.floor(this.y / TILE_SIZE)
 			for (let gx = left_gx; gx <= right_gx; gx++) {
 				let tile = world.get_tile(gx, gy)
-				if (!Tile.Closed(tile.type))
+				if (Tile.Empty(tile))
 					continue
 				this.ground = true
-				return (gy + 1) * TILE_SIZE
+				let height = Tile.Floor(tile)
+				return gy * TILE_SIZE + height
 			}
 		}
 		return 0
 	}
 	tile_collision(world) {
 
-		let dxx = this.tile_x_collision(world)
 		let dyy = this.tile_y_collision(world)
-		if (dxx === 0 && dyy === 0) return
-		if (Math.abs(dxx - this.x) > Math.abs(dyy - this.y)) {
-			this.x = dxx
-			console.log('x', this.x, 'y', this.y)
-			this.y = this.tile_y_collision(world)
-		} else {
-			this.y = dyy
-			console.log('x', this.x, 'y', this.y)
-			this.x = this.tile_x_collision(world)
-		}
+		if (dyy !== 0) this.y = dyy + 1
+
+		let dxx = this.tile_x_collision(world)
+		if (dxx !== 0) this.x = dxx
+
+		// let dxx = this.tile_x_collision(world)
+		// let dyy = this.tile_y_collision(world)
+		// if (dxx === 0 && dyy === 0) return
+		// if (Math.abs(dxx - this.x) < Math.abs(dyy - this.y)) {
+		// 	this.x = dxx
+		// 	this.y = this.tile_y_collision(world)
+		// } else {
+		// 	this.y = dyy
+		// 	this.x = this.tile_x_collision(world)
+		// }
 
 		// let gx
 		// if (this.dx > 0) gx = Math.floor((this.x + this.width) / TILE_SIZE)

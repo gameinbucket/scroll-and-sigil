@@ -69,7 +69,7 @@ class World {
         for (let key in sprite_buffers) {
             sprite_buffers[key].zero()
         }
-        g.set_texture(gl, 'caverns')
+        g.set_texture(gl, 'map')
         for (let i = 0; i < this.blocks.length; i++) {
             let block = this.blocks[i]
             let mesh = block.mesh

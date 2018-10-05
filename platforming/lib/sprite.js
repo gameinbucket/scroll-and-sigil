@@ -11,12 +11,12 @@ class Sprite {
         this.ox = ox
         this.oy = oy
     }
-    static Build(left, top, width, height, sheet_width, sheet_height) {
+    static Build(left, top, width, height, sheet_size) {
         return [
-            left * sheet_width,
-            top * sheet_height,
-            (left + width) * sheet_width,
-            (top + height) * sheet_height
+            left * sheet_size,
+            top * sheet_size,
+            (left + width) * sheet_size,
+            (top + height) * sheet_size
         ]
     }
 }

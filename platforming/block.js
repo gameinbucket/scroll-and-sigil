@@ -4,7 +4,7 @@ const BLOCK_MESH = new RenderCopy(2, 0, 2, BLOCK_TOTAL * 4, BLOCK_TOTAL * 6)
 
 class Block {
     constructor(px, py) {
-        this.tiles = new Array()
+        this.tiles = new UInt8Array(BLOCK_TOTAL)
         this.mesh
         this.begin_side = new Array(6)
         this.count_side = new Array(6)
@@ -14,19 +14,27 @@ class Block {
         this.thing_count = 0
 
         let x = 0
+        let y = 0
         for (let i = 0; i < BLOCK_TOTAL; i++) {
 
-            let tile = new Tile()
-            if (py > 0 && px > 0 && px < 7) {
-                tile.type = TILE_NONE
-            } else {
-                tile.type = Math.random() > 0.5 ? TILE_GRASS : TILE_STONE
+            let tile
+            if (py > 0 && px > 0 && px < 7) tile = TILE_NONE
+            else {
+                if (y == BLOCK_SIZE - 2) tile = TILE_GRASS
+                else if (y == BLOCK_SIZE - 1) {
+                    if (x == 0) tile = TILE_GRASS_SLOPE_RIGHT
+                    else if (x == 1) tile = TILE_GRASS
+                    else if (x == 2) tile = TILE_GRASS_SLOPE_LEFT
+                    else tile = TILE_FENCE
+                } else tile = TILE_DIRT
             }
+
             this.tiles[i] = tile
 
             x++
             if (x == BLOCK_SIZE) {
                 x = 0
+                y++
             }
         }
     }
@@ -62,8 +70,8 @@ class Block {
             let yy = this.y * BLOCK_SIZE * TILE_SIZE
             for (let y = 0; y < BLOCK_SIZE; y++) {
                 let tile = this.get_tile(x, y)
-                if (tile.type !== TILE_NONE) {
-                    let texture = Tile.Texture(tile.type)
+                if (tile !== TILE_NONE) {
+                    let texture = Tile.Texture(tile)
                     Render.Image(BLOCK_MESH, xx, yy, TILE_SIZE, TILE_SIZE, texture[0], texture[1], texture[2], texture[3])
                 }
                 yy += TILE_SIZE

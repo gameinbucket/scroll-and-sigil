@@ -10,7 +10,7 @@ class Application {
         g.make_program(gl, 'texture')
     }
     load_images(g, gl) {
-        g.make_image(gl, 'caverns', gl.CLAMP_TO_EDGE)
+        g.make_image(gl, 'map', gl.CLAMP_TO_EDGE)
         g.make_image(gl, 'you', gl.CLAMP_TO_EDGE)
         g.make_image(gl, 'skeleton', gl.CLAMP_TO_EDGE)
     }
@@ -68,8 +68,8 @@ class Application {
         world.build(gl)
 
         this.player = new Thing(world, 'you', you_walk, BLOCK_SIZE * (TILE_SIZE + 9), (BLOCK_SIZE + 1) * TILE_SIZE)
-        // new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 14), (BLOCK_SIZE + 1) * TILE_SIZE)
-        // new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 64), (BLOCK_SIZE + 1) * TILE_SIZE)
+        //new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 14), (BLOCK_SIZE + 1) * TILE_SIZE)
+        //new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 64), (BLOCK_SIZE + 1) * TILE_SIZE)
 
         window.onblur = function () {
             self.on = false
@@ -175,7 +175,7 @@ class Application {
         for (let i = 0; i < this.buttons.length; i++) {
             this.buttons[i].draw(this.generic)
         }
-        g.set_texture(gl, 'caverns')
+        g.set_texture(gl, 'map')
         RenderSystem.UpdateAndDraw(gl, this.generic)
 
         RenderSystem.SetFrameBuffer(gl, null)
