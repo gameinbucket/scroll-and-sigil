@@ -4,7 +4,7 @@ const BLOCK_MESH = new RenderCopy(2, 0, 2, BLOCK_TOTAL * 4, BLOCK_TOTAL * 6)
 
 class Block {
     constructor(px, py) {
-        this.tiles = new UInt8Array(BLOCK_TOTAL)
+        this.tiles = new Uint8Array(BLOCK_TOTAL)
         this.mesh
         this.begin_side = new Array(6)
         this.count_side = new Array(6)
@@ -22,9 +22,7 @@ class Block {
             else {
                 if (y == BLOCK_SIZE - 2) tile = TILE_GRASS
                 else if (y == BLOCK_SIZE - 1) {
-                    if (x == 0) tile = TILE_GRASS_SLOPE_RIGHT
-                    else if (x == 1) tile = TILE_GRASS
-                    else if (x == 2) tile = TILE_GRASS_SLOPE_LEFT
+                    if (x == 0) tile = TILE_DIRT
                     else tile = TILE_FENCE
                 } else tile = TILE_DIRT
             }
