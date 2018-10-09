@@ -1,4 +1,4 @@
-const GRID_SIZE = BLOCK_SIZE * TILE_SIZE
+const INV_GRID_SIZE = 1.0 / (BLOCK_SIZE * TILE_SIZE)
 
 class World {
     constructor(block_w, block_h) {
@@ -26,20 +26,14 @@ class World {
         }
     }
     get_tile(x, y) {
-        let block_x = Math.floor(x / BLOCK_SIZE)
-        let block_y = Math.floor(y / BLOCK_SIZE)
+        let block_x = Math.floor(x * INV_BLOCK_SIZE)
+        let block_y = Math.floor(y * INV_BLOCK_SIZE)
         let tile_x = x % BLOCK_SIZE
         let tile_y = y % BLOCK_SIZE
         let block = this.blocks[block_x + block_y * this.block_w]
         return block.tiles[tile_x + tile_y * BLOCK_SIZE]
     }
     get_block(x, y) {
-        if (x < 0 || x >= this.block_w) {
-            return null
-        }
-        if (y < 0 || y >= this.block_h) {
-            return null
-        }
         return this.blocks[x + y * this.block_w]
     }
     add_thing(thing) {
@@ -64,19 +58,38 @@ class World {
             }
         }
     }
-    render(g, gl, sprite_buffers) {
+    render(g, gl, frame, player, sprite_buffers) {
         let sprite_set = new Set()
         for (let key in sprite_buffers) {
             sprite_buffers[key].zero()
         }
         g.set_texture(gl, 'map')
-        for (let i = 0; i < this.blocks.length; i++) {
-            let block = this.blocks[i]
-            let mesh = block.mesh
-            if (mesh.vertex_pos > 0)
-                RenderSystem.BindAndDraw(gl, mesh)
-            block.render_things(sprite_set, sprite_buffers)
+
+
+        let x = player.x
+        let y = player.y
+        let hw = frame.width * 0.5
+        let hh = frame.height * 0.5
+
+        let c_min = Math.floor((x - hw) * INV_GRID_SIZE)
+        let c_lim = Math.floor((x + hw) * INV_GRID_SIZE)
+        let r_min = Math.floor((y - hh) * INV_GRID_SIZE)
+        let r_lim = Math.floor((y + hh) * INV_GRID_SIZE)
+
+        for (let gy = r_min; gy <= r_lim; gy++) {
+            if (gy < 0) continue
+            if (gy >= this.block_h) break
+            for (let gx = c_min; gx <= c_lim; gx++) {
+                if (gx < 0) continue
+                if (gx >= this.block_w) break
+                let block = this.blocks[gx + gy * this.block_w]
+                let mesh = block.mesh
+                if (mesh.vertex_pos > 0)
+                    RenderSystem.BindAndDraw(gl, mesh)
+                block.render_things(sprite_set, sprite_buffers)
+            }
         }
+
         for (let key in sprite_buffers) {
             let buffer = sprite_buffers[key]
             if (buffer.vertex_pos > 0) {

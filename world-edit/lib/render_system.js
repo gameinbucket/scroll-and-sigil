@@ -1,6 +1,8 @@
 const RESOURCES = 'resources/'
 class RenderSystem {
     constructor() {
+        this.perspective = Matrix.Make()
+        this.orthographic = Matrix.Make()
         this.v = Matrix.Make()
         this.mv = Matrix.Make()
         this.mvp = Matrix.Make()
@@ -63,17 +65,17 @@ class RenderSystem {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, buffer.indices, gl.DYNAMIC_DRAW)
         gl.drawElements(gl.TRIANGLES, buffer.index_pos, gl.UNSIGNED_INT, 0)
     }
-    set_orthographic(orthographic, x, y) {
+    set_orthographic(x, y) {
         Matrix.Identity(this.mv)
         Matrix.Translate(this.mv, x, y, -1)
-        Matrix.Multiply(this.mvp, orthographic, this.mv)
+        Matrix.Multiply(this.mvp, this.orthographic, this.mv)
     }
-    set_perspective(perspective, x, y, z, rx, ry) {
+    set_perspective(x, y, z, rx, ry) {
         Matrix.Identity(this.v)
         Matrix.RotateX(this.v, rx)
         Matrix.RotateY(this.v, ry)
         Matrix.TranslateFromView(this.mv, this.v, x, y, z)
-        Matrix.Multiply(this.mvp, perspective, this.mv)
+        Matrix.Multiply(this.mvp, this.perspective, this.mv)
     }
     update_mvp(gl) {
         gl.uniformMatrix4fv(this.mvp_location[this.program_name], false, this.mvp)

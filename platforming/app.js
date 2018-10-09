@@ -36,14 +36,21 @@ class Application {
         this.load_programs(g, gl)
         this.load_images(g, gl)
 
-        Matrix.Orthographic(g.orthographic, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
-
         let generic = RenderBuffer.Init(gl, 2, 0, 2, 1600, 2400)
         let sprite_buffers = new Map()
         sprite_buffers['you'] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffers['skeleton'] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
 
-        let frame = new FrameBuffer(gl, canvas.width, canvas.height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], false, true)
+        let canvas_ortho = Matrix.Make()
+        let draw_ortho = Matrix.Make()
+
+        let draw_width = canvas.width * 0.5
+        let draw_height = canvas.height * 0.5
+
+        Matrix.Orthographic(draw_ortho, 0.0, draw_width, 0.0, draw_height, 0.0, 1.0)
+        Matrix.Orthographic(canvas_ortho, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
+
+        let frame = new FrameBuffer(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], false, true)
 
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
         Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0)
@@ -67,9 +74,9 @@ class Application {
         let world = new World(8, 3)
         world.build(gl)
 
-        this.player = new Thing(world, 'you', you_walk, BLOCK_SIZE * (TILE_SIZE + 9), (BLOCK_SIZE + 1) * TILE_SIZE)
-        //new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 14), (BLOCK_SIZE + 1) * TILE_SIZE)
-        //new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 64), (BLOCK_SIZE + 1) * TILE_SIZE)
+        let player = new Thing(world, 'you', you_walk, BLOCK_SIZE * (TILE_SIZE + 9), (BLOCK_SIZE + 1) * TILE_SIZE)
+        // new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 14), (BLOCK_SIZE + 1) * TILE_SIZE)
+        // new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 64), (BLOCK_SIZE + 1) * TILE_SIZE)
 
         window.onblur = function () {
             self.on = false
@@ -79,23 +86,17 @@ class Application {
             self.on = true
         }
 
+        window.onresize = function () {
+            self.resize()
+        }
+
         document.onkeyup = Input.KeyUp
         document.onkeydown = Input.KeyDown
         document.onmouseup = Input.MouseUp
         document.onmousedown = Input.MouseDown
         document.onmousemove = Input.MouseMove
 
-        let func_nothing = function (app) {}
-        let button_nothing = new Button(this, sprite_cavern['dirt'], func_nothing, 10, 10, 32, 32)
-
-        let func_add_block = function (app) {}
-        let button_add_block = new Button(this, sprite_cavern['wall'], func_add_block, 52, 10, 32, 32)
-
-        let func_add_thing = function (app) {}
-        let button_add_thing = new Button(this, sprite_cavern['stone floor'], func_add_thing, 94, 10, 32, 32)
-
-        let buttons = [button_nothing, button_add_block, button_add_thing]
-
+        this.player = player
         this.sprite_buffers = sprite_buffers
         this.on = true
         this.canvas = canvas
@@ -106,7 +107,8 @@ class Application {
         this.screen = screen
         this.world = world
         this.sprite_cavern = sprite_cavern
-        this.buttons = buttons
+        this.canvas_ortho = canvas_ortho
+        this.draw_ortho = draw_ortho
     }
     run() {
         for (let key in this.g.shaders) {
@@ -132,56 +134,52 @@ class Application {
         requestAnimationFrame(loop)
     }
     update() {
-        if (Input.IsClick(0)) {
-            Input.Clicked(0)
-            INPUT_POS[1] = this.canvas.height - INPUT_POS[1]
-            for (let i = 0; i < this.buttons.length; i++) {
-                if (this.buttons[i].click(INPUT_POS)) {
-                    break
-                }
-            }
+        const alternate = true
+
+        if (alternate) {
+            if (Input.Is(INPUT_LEFT)) this.player.move_left()
+            if (Input.Is(INPUT_RIGHT)) this.player.move_right()
+            if (Input.Is(INPUT_DOWN)) this.player.crouch()
+            if (Input.Is(INPUT_CONTROL)) this.player.block()
+            if (Input.Is(INPUT_A)) this.player.parry()
+            if (Input.Is(INPUT_SPACE)) this.player.jump()
+            if (Input.Is(INPUT_S)) this.player.dodge()
+            if (Input.Is(INPUT_Z)) this.player.light_attack()
+            if (Input.Is(INPUT_X)) this.player.heavy_attack()
+            if (Input.Is(INPUT_SHIFT)) this.player.sprint(true)
+            else this.player.sprint(false)
+        } else {
+            if (Input.Is(INPUT_A)) this.player.move_left()
+            if (Input.Is(INPUT_D)) this.player.move_right()
+            if (Input.Is(INPUT_SPACE)) this.player.jump()
         }
-        let player = this.player
-        if (Input.Is(INPUT_A)) {
-            player.move_left()
-        }
-        if (Input.Is(INPUT_D)) {
-            player.move_right()
-        }
-        if (Input.Is(INPUT_SPACE)) {
-            player.jump()
-        }
+
         this.world.update()
+    }
+    resize() {
+        console.log('resizing')
     }
     render() {
         let g = this.g
         let gl = this.gl
         let frame = this.frame
+        let player = this.player
 
-        let view_x = -(this.player.x - this.canvas.width / 2)
-        let view_y = -(this.player.y - this.canvas.height / 2)
+        let view_x = -(player.x - frame.width * 0.5)
+        let view_y = -(player.y - frame.height * 0.5)
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
         gl.clear(gl.COLOR_BUFFER_BIT)
         g.set_program(gl, 'texture')
-        g.set_orthographic(view_x, view_y)
+        g.set_orthographic(this.draw_ortho, view_x, view_y)
         g.update_mvp(gl)
-        this.world.render(g, gl, this.sprite_buffers)
-
-        g.set_orthographic(0, 0)
-        g.update_mvp(gl)
-        this.generic.zero()
-        for (let i = 0; i < this.buttons.length; i++) {
-            this.buttons[i].draw(this.generic)
-        }
-        g.set_texture(gl, 'map')
-        RenderSystem.UpdateAndDraw(gl, this.generic)
+        this.world.render(g, gl, frame, player, this.sprite_buffers)
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)
         g.set_program(gl, 'texture')
-        g.set_orthographic(0, 0)
+        g.set_orthographic(this.canvas_ortho, 0, 0)
         g.update_mvp(gl)
         g.set_texture_direct(gl, frame.textures[0])
         RenderSystem.BindAndDraw(gl, this.screen)

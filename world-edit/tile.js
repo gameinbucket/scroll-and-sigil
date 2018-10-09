@@ -1,5 +1,4 @@
 const TILE_SIZE = 16
-const INV_TILE_SIZE = 1.0 / TILE_SIZE
 
 const TILE_NONE = 0
 const TILE_GRASS = 1

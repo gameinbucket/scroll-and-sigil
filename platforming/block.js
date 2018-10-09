@@ -1,4 +1,5 @@
 const BLOCK_SIZE = 8
+const INV_BLOCK_SIZE = 1.0 / BLOCK_SIZE
 const BLOCK_TOTAL = BLOCK_SIZE * BLOCK_SIZE
 const BLOCK_MESH = new RenderCopy(2, 0, 2, BLOCK_TOTAL * 4, BLOCK_TOTAL * 6)
 

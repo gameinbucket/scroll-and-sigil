@@ -16,11 +16,6 @@ const INPUT_UP = 38
 const INPUT_DOWN = 40
 const INPUT_LEFT = 37
 const INPUT_RIGHT = 39
-const INPUT_SHIFT = 16
-const INPUT_CONTROL = 17
-const INPUT_ALT = 18
-const INPUT_Z = 90
-const INPUT_X = 88
 
 class Input {
     static Is(key) {

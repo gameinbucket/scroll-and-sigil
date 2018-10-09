@@ -13,12 +13,10 @@ class Resolution {
 class Thing {
 	constructor(world, sprite_id, animation_move, x, y) {
 		this.command
-		this.half_width = 6
+		this.width = 8
 		this.height = 31
 		this.speed = 4
 		this.health = 1
-		this.sprinting = false
-		this.stamina = 100
 		this.mirror = false
 		this.sprite = animation_move
 		this.sprite_id = sprite_id
@@ -34,10 +32,10 @@ class Thing {
 		this.add_to_blocks(world)
 	}
 	block_borders() {
-		this.left_gx = Math.floor((this.x - this.half_width) * INV_GRID_SIZE)
-		this.right_gx = Math.floor((this.x + this.half_width) * INV_GRID_SIZE)
-		this.bottom_gy = Math.floor(this.y * INV_GRID_SIZE)
-		this.top_gy = Math.floor((this.y + this.height) * INV_GRID_SIZE)
+		this.left_gx = Math.floor((this.x - this.width) / GRID_SIZE)
+		this.right_gx = Math.floor((this.x + this.width) / GRID_SIZE)
+		this.bottom_gy = Math.floor(this.y / GRID_SIZE)
+		this.top_gy = Math.floor((this.y + this.height) / GRID_SIZE)
 	}
 	add_to_blocks(world) {
 		for (let gx = this.left_gx; gx <= this.right_gx; gx++) {
@@ -55,43 +53,19 @@ class Thing {
 	}
 	move_left() {
 		this.mirror = true
-		if (this.ground) {
-			if (this.sprinting) {
-				this.dx -= this.speed
-				this.stamina -= 1
-			} else this.dx -= this.speed * 0.25
-		} else
-			this.dx -= this.speed * 0.01
+		if (this.ground) this.dx -= this.speed
+		else this.dx -= this.speed * 0.01
 	}
 	move_right() {
 		this.mirror = false
-		if (this.ground) {
-			if (this.sprinting) {
-				this.dx += this.speed
-				this.stamina -= 1
-			} else this.dx += this.speed * 0.25
-		} else
-			this.dx += this.speed * 0.01
+		if (this.ground) this.dx += this.speed
+		else this.dx += this.speed * 0.01
 	}
 	jump() {
 		if (!this.ground) return
 		this.dy += 7.5
 		if (this.mirror) this.dx -= this.speed * 0.25
 		else this.dx += this.speed * 0.25
-	}
-	dodge() {
-		if (!this.ground) return
-		this.dy += 4.5
-		if (this.mirror) this.dx += this.speed * 0.25
-		else this.dx -= this.speed * 0.25
-	}
-	block() {}
-	parry() {}
-	light_attack() {}
-	heavy_attack() {}
-	crouch() {}
-	sprint(on) {
-		this.sprinting = on
 	}
 	update(world) {
 		this.dy -= GRAVITY
@@ -103,43 +77,39 @@ class Thing {
 		// this.thing_collision(world)
 		this.block_borders()
 		this.add_to_blocks(world)
-		if (this.sprinting) {
-			if (this.stamina <= 0) this.sprinting = false
-		} else
-			this.stamina += 1
-
 		if (this.ground) {
 			this.dx = 0
+			this.dy = 0
 		} else {
 			this.dx *= AIR_DRAG
 			this.dy *= AIR_DRAG
 		}
 	}
 	tile_x_collision(world, res) {
-		let bottom_gy = Math.floor(this.y * INV_TILE_SIZE)
-		let top_gy = Math.floor((this.y + this.height) * INV_TILE_SIZE)
+		let bottom_gy = Math.floor(this.y / TILE_SIZE)
+		let top_gy = Math.floor((this.y + this.height) / TILE_SIZE)
 		res.finite = true
 		res.resolve = false
 		if (this.dx > 0) {
-			let gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
+			let gx = Math.floor((this.x + this.width) / TILE_SIZE)
 			for (let gy = bottom_gy; gy <= top_gy; gy++) {
 				if (Tile.Empty(world.get_tile(gx, gy)))
 					continue
 				res.resolve = true
-				res.delta = gx * TILE_SIZE - this.half_width
+				res.delta = gx * TILE_SIZE - this.width
 				if (!Tile.Empty(world.get_tile(gx - 1, gy))) {
 					res.finite = false
 					return
 				}
 			}
 		} else {
-			let gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
+			let gx = Math.floor((this.x - this.width) / TILE_SIZE)
 			for (let gy = bottom_gy; gy <= top_gy; gy++) {
 				let tile = world.get_tile(gx, gy)
 				if (Tile.Empty(tile))
 					continue
 				res.resolve = true
-				res.delta = (gx + 1) * TILE_SIZE + this.half_width
+				res.delta = (gx + 1) * TILE_SIZE + this.width
 				if (!Tile.Empty(world.get_tile(gx + 1, gy))) {
 					res.finite = false
 					return
@@ -148,14 +118,14 @@ class Thing {
 		}
 	}
 	tile_y_collision(world, res) {
-		let left_gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
-		let right_gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
+		let left_gx = Math.floor((this.x - this.width) / TILE_SIZE)
+		let right_gx = Math.floor((this.x + this.width) / TILE_SIZE)
 		res.finite = true
 		res.resolve = false
 		if (this.dy > 0) {
 			res.resolve = false
 		} else {
-			let gy = Math.floor(this.y * INV_TILE_SIZE)
+			let gy = Math.floor(this.y / TILE_SIZE)
 			for (let gx = left_gx; gx <= right_gx; gx++) {
 				if (Tile.Empty(world.get_tile(gx, gy)))
 					continue
@@ -173,8 +143,6 @@ class Thing {
 		let dyy = new Resolution()
 		this.tile_x_collision(world, dxx)
 		this.tile_y_collision(world, dyy)
-
-		// TODO : falling off edge, stuck on right walls
 
 		if (dxx.resolve) {
 			if (dyy.resolve) {
@@ -213,7 +181,6 @@ class Thing {
 					}
 				} else {
 					this.y = dyy.delta
-					if (this.dy < 0) this.ground = true
 					this.dy = 0
 					this.tile_x_collision(world, dxx)
 					if (dxx.resolve && dxx.finite) {
@@ -231,7 +198,7 @@ class Thing {
 					this.dy = 0
 				}
 			}
-		} else if (dyy.resolve) {
+		} else if (dyy.length > 0) {
 			this.y = dyy.delta
 			if (this.dy < 0) this.ground = true
 			this.dy = 0
@@ -246,8 +213,8 @@ class Thing {
 		if (!this.overlap_thing(b)) return
 
 		if (Math.abs(this.old_x - b.x) > Math.abs(this.old_y - b.y)) {
-			if (this.old_x - b.x < 0) this.x = b.x - this.half_width - b.half_width
-			else this.x = b.x + this.half_width + b.half_width
+			if (this.old_x - b.x < 0) this.x = b.x - this.width - b.width
+			else this.x = b.x + this.width + b.width
 			this.dx = 0
 		} else {
 			if (this.old_y - b.y < 0) this.y = b.y - this.height
@@ -259,7 +226,7 @@ class Thing {
 		}
 	}
 	overlap_thing(b) {
-		return this.x + this.half_width > b.x - b.half_width && this.x - this.half_width < b.x + b.half_width &&
+		return this.x + this.width > b.x - b.width && this.x - this.width < b.x + b.width &&
 			this.y + this.height > b.y && this.y < b.y + b.height
 	}
 	thing_collision(world) {
