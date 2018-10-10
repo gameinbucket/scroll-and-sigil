@@ -29,6 +29,7 @@ class Thing {
 		this.dx = 0
 		this.dy = 0
 		this.ground = false
+		this.timer = 0
 		world.add_thing(this)
 		this.block_borders()
 		this.add_to_blocks(world)
@@ -93,6 +94,25 @@ class Thing {
 	heavy_attack() {}
 	crouch() {}
 	sprint(on) {
+		// const slice = 10
+		// if (on) {
+		// 	if (this.timer == 0) this.timer = slice
+		// 	else if (this.timer < slice) {
+		// 		if (!Input.Is('a') && !Input.Is('d')) {
+		// 			this.timer = 0
+		// 			this.dodge()
+		// 		}
+		// 	} else this.timer++
+
+		// 	if (this.timer > slice) {
+		// 		this.sprinting = true
+		// 		// if (Input.Is('a') || Input.Is('d')) this.jump()
+		// 	}
+		// } else {
+		// 	if (this.timer > slice) this.timer = slice
+		// 	else if (this.timer > 0) this.timer--
+		// 	this.sprinting = false
+		// }
 		this.sprinting = on
 	}
 	update(world) {

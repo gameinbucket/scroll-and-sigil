@@ -14,6 +14,34 @@ class Application {
         g.make_image(gl, 'you', gl.CLAMP_TO_EDGE)
         g.make_image(gl, 'skeleton', gl.CLAMP_TO_EDGE)
     }
+    resize() {
+        let gl = this.gl
+        let canvas = this.canvas
+        let screen = this.screen
+
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+
+        let canvas_ortho = Matrix.Make()
+        let draw_ortho = Matrix.Make()
+
+        let scale = 0.5
+        let draw_width = canvas.width * scale
+        let draw_height = canvas.height * scale
+
+        Matrix.Orthographic(draw_ortho, 0.0, draw_width, 0.0, draw_height, 0.0, 1.0)
+        Matrix.Orthographic(canvas_ortho, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
+
+        let frame = new FrameBuffer(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], false, true)
+
+        screen.zero()
+        Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0)
+        RenderSystem.UpdateVao(gl, screen)
+
+        this.frame = frame
+        this.canvas_ortho = canvas_ortho
+        this.draw_ortho = draw_ortho
+    }
     constructor() {
 
         let self = this
@@ -41,20 +69,7 @@ class Application {
         sprite_buffers['you'] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffers['skeleton'] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
 
-        let canvas_ortho = Matrix.Make()
-        let draw_ortho = Matrix.Make()
-
-        let draw_width = canvas.width * 0.5
-        let draw_height = canvas.height * 0.5
-
-        Matrix.Orthographic(draw_ortho, 0.0, draw_width, 0.0, draw_height, 0.0, 1.0)
-        Matrix.Orthographic(canvas_ortho, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
-
-        let frame = new FrameBuffer(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], false, true)
-
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
-        Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0)
-        RenderSystem.UpdateVao(gl, screen)
 
         let s = 16.0
         let w = 1.0 / 256.0
@@ -75,8 +90,8 @@ class Application {
         world.build(gl)
 
         let player = new Thing(world, 'you', you_walk, BLOCK_SIZE * (TILE_SIZE + 9), (BLOCK_SIZE + 1) * TILE_SIZE)
-        // new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 14), (BLOCK_SIZE + 1) * TILE_SIZE)
-        // new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 64), (BLOCK_SIZE + 1) * TILE_SIZE)
+        new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 14), (BLOCK_SIZE + 1) * TILE_SIZE)
+        new Thing(world, 'skeleton', skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 64), (BLOCK_SIZE + 1) * TILE_SIZE)
 
         window.onblur = function () {
             self.on = false
@@ -96,19 +111,18 @@ class Application {
         document.onmousedown = Input.MouseDown
         document.onmousemove = Input.MouseMove
 
+        this.canvas = canvas
+        this.screen = screen
         this.player = player
         this.sprite_buffers = sprite_buffers
         this.on = true
-        this.canvas = canvas
         this.gl = gl
         this.g = g
-        this.frame = frame
         this.generic = generic
-        this.screen = screen
         this.world = world
         this.sprite_cavern = sprite_cavern
-        this.canvas_ortho = canvas_ortho
-        this.draw_ortho = draw_ortho
+
+        this.resize()
     }
     run() {
         for (let key in this.g.shaders) {
@@ -152,22 +166,19 @@ class Application {
             if (Input.Is('a')) this.player.move_left()
             if (Input.Is('d')) this.player.move_right()
             if (Input.Is('s')) this.player.crouch()
-            if (Input.Is('Shift')) this.player.block()
+            if (Input.Is('q')) this.player.block()
             if (Input.Is('Control')) this.player.parry()
+            if (Input.Is('Shift')) this.player.sprint(true)
+            else this.player.sprint(false)
             if (Input.Is(' ')) {
-                this.player.sprint(true)
                 if (Input.Is('a') || Input.Is('d')) this.player.jump()
                 else this.player.dodge()
-            } else
-                this.player.sprint(false)
+            }
             if (Input.Is('h')) this.player.light_attack()
             if (Input.Is('u')) this.player.heavy_attack()
         }
 
         this.world.update()
-    }
-    resize() {
-        console.log('resizing')
     }
     render() {
         let g = this.g
@@ -175,8 +186,8 @@ class Application {
         let frame = this.frame
         let player = this.player
 
-        let view_x = -(player.x - frame.width * 0.5)
-        let view_y = -(player.y - frame.height * 0.5)
+        let view_x = -Math.floor(player.x - frame.width * 0.5)
+        let view_y = -Math.floor(player.y - frame.height * 0.5)
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)

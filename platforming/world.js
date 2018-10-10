@@ -76,12 +76,13 @@ class World {
         let r_min = Math.floor((y - hh) * INV_GRID_SIZE)
         let r_lim = Math.floor((y + hh) * INV_GRID_SIZE)
 
+        if (c_min < 0) c_min = 0
+        if (r_min < 0) r_min = 0
+        if (c_lim >= this.block_w) c_lim = this.block_w - 1
+        if (r_lim >= this.block_h) r_lim = this.block_h - 1
+
         for (let gy = r_min; gy <= r_lim; gy++) {
-            if (gy < 0) continue
-            if (gy >= this.block_h) break
             for (let gx = c_min; gx <= c_lim; gx++) {
-                if (gx < 0) continue
-                if (gx >= this.block_w) break
                 let block = this.blocks[gx + gy * this.block_w]
                 let mesh = block.mesh
                 if (mesh.vertex_pos > 0)
