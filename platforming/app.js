@@ -134,24 +134,34 @@ class Application {
         requestAnimationFrame(loop)
     }
     update() {
-        const alternate = true
+        const alternate = false
 
         if (alternate) {
-            if (Input.Is(INPUT_LEFT)) this.player.move_left()
-            if (Input.Is(INPUT_RIGHT)) this.player.move_right()
-            if (Input.Is(INPUT_DOWN)) this.player.crouch()
-            if (Input.Is(INPUT_CONTROL)) this.player.block()
-            if (Input.Is(INPUT_A)) this.player.parry()
-            if (Input.Is(INPUT_SPACE)) this.player.jump()
-            if (Input.Is(INPUT_S)) this.player.dodge()
-            if (Input.Is(INPUT_Z)) this.player.light_attack()
-            if (Input.Is(INPUT_X)) this.player.heavy_attack()
-            if (Input.Is(INPUT_SHIFT)) this.player.sprint(true)
+            if (Input.Is('ArrowLeft')) this.player.move_left()
+            if (Input.Is('ArrowRight')) this.player.move_right()
+            if (Input.Is('ArrowDown')) this.player.crouch()
+            if (Input.Is('Control')) this.player.block()
+            if (Input.Is('a')) this.player.parry()
+            if (Input.Is(' ')) this.player.jump()
+            if (Input.Is('s')) this.player.dodge()
+            if (Input.Is('z')) this.player.light_attack()
+            if (Input.Is('x')) this.player.heavy_attack()
+            if (Input.Is('Shift')) this.player.sprint(true)
             else this.player.sprint(false)
         } else {
-            if (Input.Is(INPUT_A)) this.player.move_left()
-            if (Input.Is(INPUT_D)) this.player.move_right()
-            if (Input.Is(INPUT_SPACE)) this.player.jump()
+            if (Input.Is('a')) this.player.move_left()
+            if (Input.Is('d')) this.player.move_right()
+            if (Input.Is('s')) this.player.crouch()
+            if (Input.Is('Shift')) this.player.block()
+            if (Input.Is('Control')) this.player.parry()
+            if (Input.Is(' ')) {
+                this.player.sprint(true)
+                if (Input.Is('a') || Input.Is('d')) this.player.jump()
+                else this.player.dodge()
+            } else
+                this.player.sprint(false)
+            if (Input.Is('h')) this.player.light_attack()
+            if (Input.Is('u')) this.player.heavy_attack()
         }
 
         this.world.update()

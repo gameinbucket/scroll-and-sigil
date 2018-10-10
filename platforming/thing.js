@@ -75,12 +75,14 @@ class Thing {
 	}
 	jump() {
 		if (!this.ground) return
+		this.ground = false
 		this.dy += 7.5
 		if (this.mirror) this.dx -= this.speed * 0.25
 		else this.dx += this.speed * 0.25
 	}
 	dodge() {
 		if (!this.ground) return
+		this.ground = false
 		this.dy += 4.5
 		if (this.mirror) this.dx += this.speed * 0.25
 		else this.dx -= this.speed * 0.25
@@ -94,10 +96,9 @@ class Thing {
 		this.sprinting = on
 	}
 	update(world) {
-		this.dy -= GRAVITY
+		if (!this.ground) this.dy -= GRAVITY
 		this.x += this.dx
 		this.y += this.dy
-		this.ground = false
 		this.remove_from_blocks(world)
 		this.tile_collision(world)
 		// this.thing_collision(world)
@@ -149,7 +150,7 @@ class Thing {
 	}
 	tile_y_collision(world, res) {
 		let left_gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
-		let right_gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
+		let right_gx = Math.floor((this.x + this.half_width - 1) * INV_TILE_SIZE)
 		res.finite = true
 		res.resolve = false
 		if (this.dy > 0) {
@@ -168,6 +169,17 @@ class Thing {
 			}
 		}
 	}
+	check_ground(world) {
+		let left_gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
+		let right_gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
+		let gy = Math.floor((this.y + 1) * INV_TILE_SIZE)
+		for (let gx = left_gx; gx <= right_gx; gx++) {
+			if (Tile.Empty(world.get_tile(gx, gy)))
+				continue
+			return true
+		}
+		return false
+	}
 	tile_collision(world) {
 		let dxx = new Resolution()
 		let dyy = new Resolution()
@@ -176,12 +188,14 @@ class Thing {
 
 		// TODO : falling off edge, stuck on right walls
 
+		let ground = false
+
 		if (dxx.resolve) {
 			if (dyy.resolve) {
 				if (!dxx.finite && !dyy.finite) {
 					this.x = dxx.delta
 					this.y = dyy.delta
-					if (this.dy < 0) this.ground = true
+					if (this.dy < 0) ground = true
 					this.dx = 0
 					this.dy = 0
 				} else if (dxx.finite && !dyy.finite) {
@@ -190,12 +204,12 @@ class Thing {
 					this.tile_y_collision(world, dyy)
 					if (dyy.resolve && dyy.finite) {
 						this.y = dyy.delta
-						if (this.dy < 0) this.ground = true
+						if (this.dy < 0) ground = true
 						this.dy = 0
 					}
 				} else if (dyy.finite && !dxx.finite) {
 					this.y = dyy.delta
-					if (this.dy < 0) this.ground = true
+					if (this.dy < 0) ground = true
 					this.dy = 0
 					this.tile_x_collision(world, dxx)
 					if (dxx.resolve && dxx.finite) {
@@ -208,12 +222,12 @@ class Thing {
 					this.tile_y_collision(world, dyy)
 					if (dyy.resolve && dyy.finite) {
 						this.y = dyy.delta
-						if (this.dy < 0) this.ground = true
+						if (this.dy < 0) ground = true
 						this.dy = 0
 					}
 				} else {
 					this.y = dyy.delta
-					if (this.dy < 0) this.ground = true
+					if (this.dy < 0) ground = true
 					this.dy = 0
 					this.tile_x_collision(world, dxx)
 					if (dxx.resolve && dxx.finite) {
@@ -227,13 +241,13 @@ class Thing {
 				this.tile_y_collision(world, dyy)
 				if (dyy.resolve && dyy.finite) {
 					this.y = dyy.delta
-					if (this.dy < 0) this.ground = true
+					if (this.dy < 0) ground = true
 					this.dy = 0
 				}
 			}
 		} else if (dyy.resolve) {
 			this.y = dyy.delta
-			if (this.dy < 0) this.ground = true
+			if (this.dy < 0) ground = true
 			this.dy = 0
 			this.tile_x_collision(world, dxx)
 			if (dxx.resolve && dxx.finite) {
@@ -241,6 +255,11 @@ class Thing {
 				this.dx = 0
 			}
 		}
+
+		if (dyy.resolve)
+			this.ground = ground
+		else if (this.ground)
+			this.ground = this.check_ground(world)
 	}
 	resolve_collision_thing(b) {
 		if (!this.overlap_thing(b)) return

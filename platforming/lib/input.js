@@ -1,26 +1,6 @@
 const INPUT_KEYS = {}
 const INPUT_MOUSE = [false, false]
 const INPUT_POS = [0, 0]
-const INPUT_ONE = 49
-const INPUT_TWO = 50
-const INPUT_THREE = 51
-const INPUT_FOUR = 52
-const INPUT_W = 87
-const INPUT_A = 65
-const INPUT_S = 83
-const INPUT_D = 68
-const INPUT_Q = 81
-const INPUT_E = 69
-const INPUT_SPACE = 32
-const INPUT_UP = 38
-const INPUT_DOWN = 40
-const INPUT_LEFT = 37
-const INPUT_RIGHT = 39
-const INPUT_SHIFT = 16
-const INPUT_CONTROL = 17
-const INPUT_ALT = 18
-const INPUT_Z = 90
-const INPUT_X = 88
 
 class Input {
     static Is(key) {
@@ -43,10 +23,10 @@ class Input {
         INPUT_MOUSE[id] = false
     }
     static KeyUp(event) {
-        INPUT_KEYS[event.keyCode] = false
+        INPUT_KEYS[event.key] = false
     }
     static KeyDown(event) {
-        INPUT_KEYS[event.keyCode] = true
+        INPUT_KEYS[event.key] = true
     }
     static MouseUp(event) {
         if (event.button === 0) INPUT_MOUSE[0] = false
