@@ -148,7 +148,7 @@ class Application {
         requestAnimationFrame(loop)
     }
     update() {
-        const alternate = false
+        const alternate = true
 
         if (alternate) {
             if (Input.Is('ArrowLeft')) this.player.move_left()
@@ -195,7 +195,7 @@ class Application {
         g.set_program(gl, 'texture')
         g.set_orthographic(this.draw_ortho, view_x, view_y)
         g.update_mvp(gl)
-        this.world.render(g, gl, frame, player, this.sprite_buffers)
+        this.world.render(g, gl, frame, player.x, player.y, this.sprite_buffers)
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)

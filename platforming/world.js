@@ -33,6 +33,14 @@ class World {
         let block = this.blocks[block_x + block_y * this.block_w]
         return block.tiles[tile_x + tile_y * BLOCK_SIZE]
     }
+    set_tile(x, y, tile) {
+        let block_x = Math.floor(x * INV_BLOCK_SIZE)
+        let block_y = Math.floor(y * INV_BLOCK_SIZE)
+        let tile_x = x % BLOCK_SIZE
+        let tile_y = y % BLOCK_SIZE
+        let block = this.blocks[block_x + block_y * this.block_w]
+        block.tiles[tile_x + tile_y * BLOCK_SIZE] = tile
+    }
     get_block(x, y) {
         return this.blocks[x + y * this.block_w]
     }
@@ -58,7 +66,7 @@ class World {
             }
         }
     }
-    render(g, gl, frame, player, sprite_buffers) {
+    render(g, gl, frame, x, y, sprite_buffers) {
         let sprite_set = new Set()
         for (let key in sprite_buffers) {
             sprite_buffers[key].zero()
@@ -66,8 +74,6 @@ class World {
         g.set_texture(gl, 'map')
 
 
-        let x = player.x
-        let y = player.y
         let hw = frame.width * 0.5
         let hh = frame.height * 0.5
 

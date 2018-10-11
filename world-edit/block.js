@@ -1,95 +1,47 @@
-const BLOCK_SIZE = 8
-const BLOCK_TOTAL = BLOCK_SIZE * BLOCK_SIZE
-const BLOCK_MESH = new RenderCopy(2, 0, 2, BLOCK_TOTAL * 4, BLOCK_TOTAL * 6)
-
+const BLOCK_NONE = 0;
+const BLOCK_GRASS = 1;
+const BLOCK_STONE = 2;
+const BLOCK_SPRITE_DIM = 16.0;
+const BLOCK_SPRITE_SHEET_WIDTH = 1.0 / 256.0;
+const BLOCK_SPRITE_SHEET_HEIGHT = 1.0 / 128.0;
+const BLOCK_SPRITE_DIRT = Sprite.Build(1 + 17 * 1, 1 + 17 * 0, BLOCK_SPRITE_DIM, BLOCK_SPRITE_DIM, BLOCK_SPRITE_SHEET_WIDTH, BLOCK_SPRITE_SHEET_HEIGHT);
+const BLOCK_SPRITE_STONE = Sprite.Build(1 + 17 * 0, 1 + 17 * 0, BLOCK_SPRITE_DIM, BLOCK_SPRITE_DIM, BLOCK_SPRITE_SHEET_WIDTH, BLOCK_SPRITE_SHEET_HEIGHT);
 class Block {
-    constructor(px, py) {
-        this.tiles = new Uint8Array(BLOCK_TOTAL)
-        this.mesh
-        this.begin_side = new Array(6)
-        this.count_side = new Array(6)
-        this.x = px
-        this.y = py
-        this.things = new Array()
-        this.thing_count = 0
-
-        let x = 0
-        let y = 0
-        for (let i = 0; i < BLOCK_TOTAL; i++) {
-
-            let tile
-            if (py > 0 && px > 0 && px < 7) tile = TILE_NONE
-            else {
-                if (y == BLOCK_SIZE - 2) tile = TILE_GRASS
-                else if (y == BLOCK_SIZE - 1) {
-                    if (x == 0) tile = TILE_DIRT
-                    else tile = TILE_FENCE
-                } else tile = TILE_DIRT
-            }
-
-            this.tiles[i] = tile
-
-            x++
-            if (x == BLOCK_SIZE) {
-                x = 0
-                y++
-            }
-        }
+    constructor() {
+        this.type;
+        this.raise;
+        this.red = 0;
+        this.green = 0;
+        this.blue = 0;
     }
-    get_tile(x, y) {
-        return this.tiles[x + y * BLOCK_SIZE]
-    }
-    add_thing(thing) {
-        if (this.thing_count === this.things.length) {
-            let copy = new Array(this.thing_count + 3)
-            for (let i = 0; i < this.thing_count; i++) {
-                copy[i] = this.things[i]
-            }
-            this.things = copy
+    static Texture(type) {
+        switch(type) {
+        case BLOCK_GRASS: return BLOCK_SPRITE_DIRT;
+        case BLOCK_STONE: return BLOCK_SPRITE_STONE;
         }
-        this.things[this.thing_count] = thing
-        this.thing_count++
+        return 0.0;
     }
-    remove_thing(thing) {
-        for (let i = 0; i < this.thing_count; i++) {
-            if (this.things[i] === thing) {
-                for (let j = i; j < this.thing_count - 1; j++) {
-                    this.things[j] = this.things[j + 1]
-                }
-                this.thing_count--
-                break
-            }
+    static Closed(type) {
+        switch(type) {
+        case BLOCK_NONE: return false;
+        case BLOCK_GRASS: return true;
+        case BLOCK_STONE: return true;
         }
+        return false;
     }
-    build_mesh(gl) {
-        BLOCK_MESH.zero()
-        let xx = this.x * BLOCK_SIZE * TILE_SIZE
-        for (let x = 0; x < BLOCK_SIZE; x++) {
-            let yy = this.y * BLOCK_SIZE * TILE_SIZE
-            for (let y = 0; y < BLOCK_SIZE; y++) {
-                let tile = this.get_tile(x, y)
-                if (tile !== TILE_NONE) {
-                    let texture = Tile.Texture(tile)
-                    Render.Image(BLOCK_MESH, xx, yy, TILE_SIZE, TILE_SIZE, texture[0], texture[1], texture[2], texture[3])
-                }
-                yy += TILE_SIZE
-            }
-            xx += TILE_SIZE
+    static PointerClosed(block) {
+        if (block === null) {
+            return true;
         }
-        this.mesh = RenderBuffer.InitCopy(gl, BLOCK_MESH)
+        return Block.Closed(block.type);
     }
-    render_things(sprite_set, sprite_buffers) {
-        for (let i = 0; i < this.thing_count; i++) {
-            let thing = this.things[i]
-            if (sprite_set.has(thing)) continue
-            sprite_set.add(thing)
-            let sprite = thing.sprite[thing.frame]
-            let x = thing.x - sprite.width / 2
-            if (thing.mirror) {
-                Render.MirrorSprite(sprite_buffers[thing.sprite_id], x, thing.y, sprite)
-            } else {
-                Render.Sprite(sprite_buffers[thing.sprite_id], x, thing.y, sprite)
-            }
+    static Ambient(side1, side2, corner) {
+        if (side1 && side2) {
+            return 175;
         }
+        if (side1 || side2 || corner) {
+            return 215;
+        }
+        return 255;
     }
 }
