@@ -37,6 +37,14 @@ class Block {
             }
         }
     }
+    save() {
+        let concat = "" + this.tiles[0]
+        for (let i = 1; i < BLOCK_TOTAL; i++) {
+            concat += ","
+            concat += this.tiles[i]
+        }
+        return concat + ""
+    }
     get_tile(x, y) {
         return this.tiles[x + y * BLOCK_SIZE]
     }

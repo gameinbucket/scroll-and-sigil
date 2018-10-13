@@ -99,6 +99,8 @@ class Application {
         document.onmousemove = mouse_move
 
         let buttons = [
+            new Button(this, sprite_cavern["dirt"], "load", 10, 94, 32, 32),
+            new Button(this, sprite_cavern["dirt"], "save", 10, 52, 32, 32),
             new Button(this, sprite_cavern["dirt"], "add.grass", 10, 10, 32, 32),
             new Button(this, sprite_cavern["wall"], "add.dirt", 52, 10, 32, 32),
             new Button(this, sprite_cavern["stone floor"], "nothing", 94, 10, 32, 32)
@@ -145,29 +147,61 @@ class Application {
             }
         }
 
-        if (action === null) {
+        if (action === null) this.edit_action()
+        else this.edit_next_action(action)
+    }
+    edit_next_action(action) {
+        switch (action) {
+            case "save":
+                let saving = this.world.save()
+                console.log(saving)
+                localStorage.setItem("world", saving)
+                break
+            case "load":
+                let loading = localStorage.getItem("world")
+                if (loading === null) break
+                this.world.load(this.gl, loading)
+                this.render()
+                break
+            default:
+                this.action = action
+        }
+    }
+    edit_action() {
+        switch (this.action) {
+            case "add.grass":
+                this.edit_set_tile(TILE_GRASS)
+                break
+            case "add.dirt":
+                this.edit_set_tile(TILE_DIRT)
+                break
+        }
+    }
+    edit_set_tile(tile) {
+        let px = this.mouse_x + this.camera.x - this.canvas.width * 0.5
+        let py = this.mouse_y + this.camera.y - this.canvas.height * 0.5
+        let bx = Math.floor(px * INV_GRID_SIZE)
+        let by = Math.floor(py * INV_GRID_SIZE)
+        let tx = Math.floor(px * INV_TILE_SIZE) % BLOCK_SIZE
+        let ty = Math.floor(py * INV_TILE_SIZE) % BLOCK_SIZE
 
-            let gx = Math.floor((x + this.camera.x - this.canvas.width * 0.5) * INV_TILE_SIZE)
-            let gy = Math.floor((y + this.camera.y - this.canvas.height * 0.5) * INV_TILE_SIZE)
+        if (bx < 0 || by < 0 || bx >= this.world.block_w || by >= this.world.block_h) return
 
-            let bx = Math.floor((x + this.camera.x - this.canvas.width * 0.5) * INV_GRID_SIZE)
-            let by = Math.floor((y + this.camera.y - this.canvas.height * 0.5) * INV_GRID_SIZE)
+        let block = this.world.blocks[bx + by * this.world.block_w]
+        let index = tx + ty * BLOCK_SIZE
+        let existing = block.tiles[index]
 
-            console.log(x, y, gx, gy, bx, by)
-
-            switch (this.action) {
-                case "add.grass":
-                    this.world.set_tile(gx, gy, TILE_GRASS)
-                    this.world.get_block(bx, by).build_mesh(this.gl)
-                    this.render()
-                    break
-            }
-        } else
-            this.action = action
+        if (tile !== existing) {
+            block.tiles[index] = tile
+            block.build_mesh(this.gl)
+            this.render()
+        }
     }
     mouse_move(event) {
         this.mouse_x = event.clientX
         this.mouse_y = this.canvas.height - event.clientY
+
+        if (this.mouse_left) this.edit_action()
     }
     run() {
         for (let key in this.g.shaders) {

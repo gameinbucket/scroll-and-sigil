@@ -20,10 +20,35 @@ class World {
             }
         }
     }
+    load(gl, data) {
+        let content = JSON.parse(data)
+        this.block_w = content["width"]
+        this.block_h = content["height"]
+        this.block_all = this.block_w * this.block_h
+        let tiles = content["tiles"]
+        let index = 0
+        for (let b = 0; b < this.block_all; b++) {
+            let block = this.blocks[b]
+            for (let t = 0; t < BLOCK_TOTAL; t++) {
+                block.tiles[t] = tiles[index]
+                index++
+            }
+        }
+        this.build(gl)
+    }
     build(gl) {
         for (let i = 0; i < this.block_all; i++) {
             this.blocks[i].build_mesh(gl)
         }
+    }
+    save() {
+        let concat = ""
+        concat += this.blocks[0].save()
+        for (let i = 1; i < this.blocks.length; i++) {
+            concat += ","
+            concat += this.blocks[i].save()
+        }
+        return `{"width":${this.block_w}, "height":${this.block_h}, "tiles":[${concat}]}`
     }
     get_tile(x, y) {
         let block_x = Math.floor(x * INV_BLOCK_SIZE)
