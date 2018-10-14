@@ -1,4 +1,5 @@
-const INV_GRID_SIZE = 1.0 / (BLOCK_SIZE * TILE_SIZE)
+const GRID_SIZE = BLOCK_SIZE * TILE_SIZE
+const INV_GRID_SIZE = 1.0 / GRID_SIZE
 
 class World {
     constructor(block_w, block_h) {
@@ -79,6 +80,7 @@ class World {
         }
         this.things[this.thing_count] = thing
         this.thing_count++
+        // todo: using thing uid keep track of sprite buffer overflow before rendering 
     }
     remove_thing(thing) {
         for (let i = 0; i < this.thing_count; i++) {
@@ -96,8 +98,6 @@ class World {
         for (let key in sprite_buffers) {
             sprite_buffers[key].zero()
         }
-        g.set_texture(gl, 'map')
-
 
         let hw = frame.width * 0.5
         let hh = frame.height * 0.5
@@ -112,6 +112,7 @@ class World {
         if (c_lim >= this.block_w) c_lim = this.block_w - 1
         if (r_lim >= this.block_h) r_lim = this.block_h - 1
 
+        g.set_texture(gl, "map")
         for (let gy = r_min; gy <= r_lim; gy++) {
             for (let gx = c_min; gx <= c_lim; gx++) {
                 let block = this.blocks[gx + gy * this.block_w]
@@ -121,7 +122,8 @@ class World {
                 block.render_things(sprite_set, sprite_buffers)
             }
         }
-
+    }
+    render_sprites(g, gl, sprite_buffers) {
         for (let key in sprite_buffers) {
             let buffer = sprite_buffers[key]
             if (buffer.vertex_pos > 0) {

@@ -21,11 +21,9 @@ class Block {
             let tile
             if (py > 0 && px > 0 && px < 7) tile = TILE_NONE
             else {
-                if (y == BLOCK_SIZE - 2) tile = TILE_GRASS
-                else if (y == BLOCK_SIZE - 1) {
-                    if (x == 0) tile = TILE_DIRT
-                    else tile = TILE_FENCE
-                } else tile = TILE_DIRT
+                if (y == BLOCK_SIZE - 2) tile = TILE_GROUND
+                else if (y == BLOCK_SIZE - 1) tile = TILE_RAIL
+                else tile = TILE_WALL
             }
 
             this.tiles[i] = tile
@@ -72,9 +70,9 @@ class Block {
     }
     build_mesh(gl) {
         BLOCK_MESH.zero()
-        let xx = this.x * BLOCK_SIZE * TILE_SIZE
+        let xx = this.x * GRID_SIZE
         for (let x = 0; x < BLOCK_SIZE; x++) {
-            let yy = this.y * BLOCK_SIZE * TILE_SIZE
+            let yy = this.y * GRID_SIZE
             for (let y = 0; y < BLOCK_SIZE; y++) {
                 let tile = this.get_tile(x, y)
                 if (tile !== TILE_NONE) {

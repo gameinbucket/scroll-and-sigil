@@ -11,7 +11,7 @@ class Resolution {
 }
 
 class Thing {
-	constructor(world, sprite_id, animation_move, x, y) {
+	constructor(world, sprite_id, animations, x, y) {
 		this.command
 		this.half_width = 6
 		this.height = 31
@@ -20,9 +20,9 @@ class Thing {
 		this.sprinting = false
 		this.stamina = 100
 		this.mirror = false
-		this.sprite = animation_move
+		this.animations = animations
+		this.sprite = animations["walk"]
 		this.sprite_id = sprite_id
-		this.animations = [animation_move]
 		this.frame = 0
 		this.x = x
 		this.y = y
