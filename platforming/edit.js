@@ -5,6 +5,7 @@ class Application {
         gl.disable(gl.CULL_FACE)
         gl.disable(gl.BLEND)
         gl.disable(gl.DEPTH_TEST)
+        gl.enable(gl.SCISSOR_TEST)
     }
     load_programs(g, gl) {
         g.make_program(gl, "texture")
@@ -78,7 +79,15 @@ class Application {
         sprites["map"]["dirt"] = new Sprite(0, 0, TILE_SIZE, TILE_SIZE, inv)
 
         sprites["buttons"] = new Map()
-        sprites["buttons"]["reg"] = new Sprite(1, 1, 48, 48, inv, inv)
+        sprites["buttons"]["menu"] = new Sprite(0, 0, 32, 32, inv, inv)
+        sprites["buttons"]["save"] = new Sprite(1 * 33, 0, 32, 32, inv, inv)
+        sprites["buttons"]["load"] = new Sprite(2 * 33, 0, 32, 32, inv, inv)
+        sprites["buttons"]["eraser"] = new Sprite(0, 1 * 33, 32, 32, inv, inv)
+        sprites["buttons"]["ground"] = new Sprite(1 * 33, 1 * 33, 32, 32, inv, inv)
+        sprites["buttons"]["wall"] = new Sprite(2 * 33, 1 * 33, 32, 32, inv, inv)
+        sprites["buttons"]["rail"] = new Sprite(0, 2 * 33, 32, 32, inv, inv)
+        sprites["buttons"]["you"] = new Sprite(1 * 33, 2 * 33, 32, 32, inv, inv)
+        sprites["buttons"]["skeleton"] = new Sprite(2 * 33, 2 * 33, 32, 32, inv, inv)
 
         sprites["you"] = new Map()
         sprites["you"]["walk"] = [new Sprite(0, 0, 16, 30, inv)]
@@ -103,14 +112,15 @@ class Application {
         let btn = 32
         let pad = 10
         let buttons = [
-            new Button(this, sprites["buttons"]["reg"], "menu", pad, pad, btn, btn),
-            new Button(this, sprites["buttons"]["reg"], "load", pad, pad + 1 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["reg"], "save", pad, pad + 2 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["reg"], "add.ground", pad, pad + 3 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["reg"], "add.wall", pad, pad + 4 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["reg"], "add.rail", pad, pad + 5 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["reg"], "add.skeleton", pad, pad + 6 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["reg"], "eraser", pad, pad + 7 * (btn + pad), btn, btn)
+            new Button(this, sprites["buttons"]["menu"], "menu", pad, pad, btn, btn),
+            new Button(this, sprites["buttons"]["save"], "save", pad, pad + 1 * (btn + pad), btn, btn),
+            new Button(this, sprites["buttons"]["load"], "load", pad, pad + 2 * (btn + pad), btn, btn),
+            new Button(this, sprites["buttons"]["eraser"], "eraser", pad, pad + 3 * (btn + pad), btn, btn),
+            new Button(this, sprites["buttons"]["ground"], "add.ground", pad, pad + 4 * (btn + pad), btn, btn),
+            new Button(this, sprites["buttons"]["wall"], "add.wall", pad, pad + 5 * (btn + pad), btn, btn),
+            new Button(this, sprites["buttons"]["rail"], "add.rail", pad, pad + 6 * (btn + pad), btn, btn),
+            new Button(this, sprites["buttons"]["you"], "add.you", pad, pad + 7 * (btn + pad), btn, btn),
+            new Button(this, sprites["buttons"]["skeleton"], "add.skeleton", pad, pad + 8 * (btn + pad), btn, btn)
         ]
 
         this.on = true
@@ -127,13 +137,6 @@ class Application {
         this.generic = generic
         this.world = world
         this.buttons = buttons
-        this.edit_tile_uid = null
-        this.c_edit_tile = null
-        this.c_min_edit_tile = null
-        this.c_max_edit_tile = null
-        this.r_edit_tile = null
-        this.r_min_edit_tile = null
-        this.r_max_edit_tile = null
         this.camera = {
             x: 200,
             y: 200
@@ -147,25 +150,21 @@ class Application {
         if (event.button !== 0)
             return
         this.mouse_left = false
-        let action = null;
-        let buttons = this.buttons
-
-        for (let i = 0; i < buttons.length; i++) {
-            let button = buttons[i]
-            if (button.click(this.mouse_x, this.mouse_y)) {
-                action = button.action
-                break
-            }
-        }
-
-        if (action === null) this.edit_action_off()
-        else this.edit_next_action(action)
     }
     mouse_down(event) {
         if (event.button !== 0)
             return
         this.mouse_left = true
-        if (this.mouse_x > 10 + 10 + 32)
+
+        if (this.mouse_x < 10 + 10 + 32) {
+            for (let i = 0; i < this.buttons.length; i++) {
+                let button = this.buttons[i]
+                if (button.click(this.mouse_x, this.mouse_y)) {
+                    this.edit_next_action(button.action)
+                    break
+                }
+            }
+        } else
             this.edit_action_on()
     }
     edit_next_action(action) {
@@ -190,15 +189,16 @@ class Application {
     edit_action_on() {
         switch (this.action) {
             case "eraser":
-                this.edit_begin_tile(TILE_NONE)
+                this.edit_set_tile(TILE_NONE)
+                break
             case "add.ground":
-                this.edit_begin_tile(TILE_GROUND)
+                this.edit_set_tile(TILE_GROUND)
                 break
             case "add.wall":
-                this.edit_begin_tile(TILE_WALL)
+                this.edit_set_tile(TILE_WALL)
                 break
             case "add.rail":
-                this.edit_begin_tile(TILE_RAIL)
+                this.edit_set_tile(TILE_RAIL)
                 break
             case "add.skeleton":
                 let px = this.mouse_to_world_x()
@@ -213,93 +213,30 @@ class Application {
     edit_action_move() {
         switch (this.action) {
             case "eraser":
+                this.edit_set_tile(TILE_NONE)
+                break
             case "add.ground":
+                this.edit_set_tile(TILE_GROUND)
+                break
             case "add.wall":
+                this.edit_set_tile(TILE_WALL)
+                break
             case "add.rail":
-                this.edit_update_mouse_tile()
+                this.edit_set_tile(TILE_RAIL)
                 break
         }
     }
-    edit_action_off() {
-        switch (this.action) {
-            case "eraser":
-            case "add.ground":
-            case "add.wall":
-            case "add.rail":
-                // this.edit_set_tile(TILE_GROUND)
-                if (this.c_min_edit_tile < 0) this.c_min_edit_tile = 0
-                if (this.r_min_edit_tile < 0) this.r_min_edit_tile = 0
-                if (this.c_max_edit_tile >= this.world.block_w * BLOCK_SIZE) this.c_max_edit_tile = this.world.block_w * BLOCK_SIZE - 1
-                if (this.r_max_edit_tile >= this.world.block_h * BLOCK_SIZE) this.r_max_edit_tile = this.world.block_h * BLOCK_SIZE - 1
-                let block_set = new Set()
-                for (let gy = this.r_min_edit_tile; gy <= this.r_max_edit_tile; gy++) {
-                    let by = Math.floor(gy * INV_BLOCK_SIZE)
-                    let ty = gy % BLOCK_SIZE
-                    for (let gx = this.c_min_edit_tile; gx <= this.c_max_edit_tile; gx++) {
-                        let bx = Math.floor(gx * INV_BLOCK_SIZE)
-                        let tx = gx % BLOCK_SIZE
-                        let block = this.world.blocks[bx + by * this.world.block_w]
-                        block.tiles[tx + ty * BLOCK_SIZE] = this.edit_tile_uid
-                        block_set.add(block)
-                    }
-                }
-                for (let block of block_set) {
-                    block.build_mesh(this.gl)
-                }
-                this.render()
-                this.edit_tile_uid = null
-                break
-        }
+    mouse_move(event) {
+        this.mouse_x = event.clientX
+        this.mouse_y = this.canvas.height - event.clientY
+        if (this.mouse_left)
+            this.edit_action_move()
     }
     mouse_to_world_x() {
         return this.mouse_x + this.camera.x - this.canvas.width * 0.5
     }
     mouse_to_world_y() {
         return this.mouse_y + this.camera.y - this.canvas.height * 0.5
-    }
-    edit_begin_tile(tile) {
-        this.edit_tile_uid = tile
-        let tx = Math.floor(this.mouse_to_world_x() * INV_TILE_SIZE)
-        let ty = Math.floor(this.mouse_to_world_y() * INV_TILE_SIZE)
-        this.c_edit_tile = tx
-        this.c_min_edit_tile = tx
-        this.c_max_edit_tile = tx
-        this.r_edit_tile = ty
-        this.r_min_edit_tile = ty
-        this.r_max_edit_tile = ty
-        this.render()
-    }
-    edit_update_mouse_tile() {
-        let tx = Math.floor(this.mouse_to_world_x() * INV_TILE_SIZE)
-        let ty = Math.floor(this.mouse_to_world_y() * INV_TILE_SIZE)
-        let render = false
-        if (tx < this.c_edit_tile) {
-            if (this.c_min_edit_tile != tx) {
-                this.c_min_edit_tile = tx
-                render = true
-            }
-            this.c_max_edit_tile = this.c_edit_tile
-        } else {
-            this.c_min_edit_tile = this.c_edit_tile
-            if (this.c_max_edit_tile != tx) {
-                this.c_max_edit_tile = tx
-                render = true
-            }
-        }
-        if (ty < this.r_edit_tile) {
-            if (this.r_min_edit_tile != ty) {
-                this.r_min_edit_tile = ty
-                render = true
-            }
-            this.r_max_edit_tile = this.r_edit_tile
-        } else {
-            this.r_min_edit_tile = this.r_edit_tile
-            if (this.r_max_edit_tile != ty) {
-                this.r_max_edit_tile = ty
-                render = true
-            }
-        }
-        if (render) this.render()
     }
     edit_set_tile(tile) {
         let px = this.mouse_to_world_x()
@@ -321,11 +258,6 @@ class Application {
             block.build_mesh(this.gl)
             this.render()
         }
-    }
-    mouse_move(event) {
-        this.mouse_x = event.clientX
-        this.mouse_y = this.canvas.height - event.clientY
-        if (this.mouse_left) this.edit_action_move()
     }
     run() {
         for (let key in this.g.shaders) {
@@ -355,34 +287,14 @@ class Application {
         let view_y = -Math.floor(camera.y - frame.height * 0.5)
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
+
+        gl.clearColor(0, 0, 0, 1)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
         gl.clear(gl.COLOR_BUFFER_BIT)
         g.set_program(gl, "texture")
         g.set_orthographic(this.draw_ortho, view_x, view_y)
         g.update_mvp(gl)
         this.world.render(g, gl, frame, camera.x, camera.y, this.sprite_buffers)
-        if (this.edit_tile_uid !== null) {
-            generic.zero()
-            let texture = Tile.Texture(this.edit_tile_uid)
-
-            let c_min = this.c_min_edit_tile
-            let c_max = this.c_max_edit_tile
-            let r_min = this.r_min_edit_tile
-            let r_max = this.r_max_edit_tile
-            if (c_min < 0) c_min = 0
-            if (r_min < 0) r_min = 0
-            if (c_max >= this.world.block_w * BLOCK_SIZE) c_max = this.world.block_w * BLOCK_SIZE - 1
-            if (r_max >= this.world.block_h * BLOCK_SIZE) r_max = this.world.block_h * BLOCK_SIZE - 1
-            for (let gy = r_min; gy <= r_max; gy++) {
-                let yy = gy * TILE_SIZE
-                for (let gx = c_min; gx <= c_max; gx++) {
-                    let xx = gx * TILE_SIZE
-                    Render.Image(generic, xx, yy, TILE_SIZE, TILE_SIZE, texture[0], texture[1], texture[2], texture[3])
-                }
-            }
-            RenderSystem.UpdateAndDraw(gl, generic)
-        }
-        this.world.render_sprites(g, gl, this.sprite_buffers)
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)
@@ -391,6 +303,13 @@ class Application {
         g.update_mvp(gl)
         g.set_texture_direct(gl, frame.textures[0])
         RenderSystem.BindAndDraw(gl, this.screen)
+
+        gl.clearColor(0.5, 0.5, 0.5, 1)
+        gl.viewport(0, 0, 52, this.canvas.height)
+        gl.scissor(0, 0, 52, this.canvas.height)
+        // RenderSystem.SetView(gl, 0, 0, 52, frame.height)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)
 
         g.set_program(gl, "texture");
         g.set_orthographic(this.canvas_ortho, 0, 0)

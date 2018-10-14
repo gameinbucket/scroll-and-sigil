@@ -122,8 +122,7 @@ class World {
                 block.render_things(sprite_set, sprite_buffers)
             }
         }
-    }
-    render_sprites(g, gl, sprite_buffers) {
+
         for (let key in sprite_buffers) {
             let buffer = sprite_buffers[key]
             if (buffer.vertex_pos > 0) {
