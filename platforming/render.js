@@ -1,3 +1,9 @@
+const FONT = "0123456789abcdefghijklmnopqrstuvwxyz"
+const FONT_WIDTH = 9
+const FONT_HEIGHT = 9
+const FONT_GRID = Math.floor(64.0 / FONT_WIDTH)
+const FONT_COLUMN = FONT_WIDTH / 64.0
+const FONT_ROW = FONT_HEIGHT / 64.0
 class Render {
     static Lumin(rgb) {
         return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
@@ -97,5 +103,33 @@ class Render {
         buffer.vertices[buffer.vertex_pos++] = sprite.bottom
 
         Render.Index4(buffer)
+    }
+    static Print(buffer, text, x, y, scale) {
+        let xx = x
+        let yy = y
+        for (let i = 0; i < text.length; i++) {
+
+            let c = text.charAt(i)
+
+            if (c === " ") {
+                xx += FONT_WIDTH * scale
+                continue
+            } else if (c === "\n") {
+                xx = x
+                yy += FONT_HEIGHT * scale
+                continue
+            }
+
+            let loc = FONT.indexOf(c)
+
+            let tx1 = Math.floor(loc % FONT_GRID) * FONT_COLUMN
+            let ty1 = Math.floor(loc / FONT_GRID) * FONT_ROW
+            let tx2 = tx1 + FONT_COLUMN
+            let ty2 = ty1 + FONT_ROW
+
+            Render.Image(buffer, xx, yy, FONT_WIDTH * scale, FONT_HEIGHT * scale, tx1, ty1, tx2, ty2)
+
+            xx += FONT_WIDTH * scale
+        }
     }
 }

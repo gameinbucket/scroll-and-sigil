@@ -71,27 +71,35 @@ class Application {
 
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
 
-        let s = 16.0
-        let w = 1.0 / 256.0
-        let h = 1.0 / 128.0
-        let sprite_cavern = new Map()
-        sprite_cavern["dirt"] = new Sprite(1 + 17 * 0, 1 + 17 * 0, s, s, w, h, 0, 0)
-        sprite_cavern["dirt light"] = new Sprite(1 + 17 * 0, 1 + 17 * 1, s, s, w, h, 0, 0)
-        sprite_cavern["dirt lightest"] = new Sprite(1 + 17 * 0, 1 + 17 * 2, s, s, w, h, 0, 0)
-        sprite_cavern["wall"] = new Sprite(1 + 17 * 1, 1 + 17 * 0, s, s, w, h, 0, 0)
-        sprite_cavern["wall edge"] = new Sprite(1 + 17 * 1, 1 + 17 * 1, s, s, w, h, 0, 0)
-        sprite_cavern["wall corner"] = new Sprite(1 + 17 * 1, 1 + 17 * 2, s, s, w, h, 0, 0)
-        sprite_cavern["stone floor"] = new Sprite(1 + 17 * 1, 1 + 17 * 3, s, s, w, h, 0, 0)
+        let sprites = new Map()
+        let inv = 1.0 / 128.0
 
-        let you_walk = [new Sprite(0, 0, 16, 30, 1.0 / 16.0, 1.0 / 30.0, 0, 0)]
-        let skeleton_walk = [new Sprite(0, 0, 16, 31, 1.0 / 16.0, 1.0 / 31.0, 0, 0)]
+        sprites["map"] = new Map()
+        sprites["map"]["dirt"] = new Sprite(0, 0, TILE_SIZE, TILE_SIZE, inv)
 
-        let world = new World(8, 3)
-        world.build(gl)
+        sprites["buttons"] = new Map()
+        sprites["buttons"]["menu"] = new Sprite(0, 0, 32, 32, inv, inv)
+        sprites["buttons"]["save"] = new Sprite(1 * 33, 0, 32, 32, inv, inv)
+        sprites["buttons"]["load"] = new Sprite(2 * 33, 0, 32, 32, inv, inv)
+        sprites["buttons"]["eraser"] = new Sprite(0, 1 * 33, 32, 32, inv, inv)
+        sprites["buttons"]["ground"] = new Sprite(1 * 33, 1 * 33, 32, 32, inv, inv)
+        sprites["buttons"]["wall"] = new Sprite(2 * 33, 1 * 33, 32, 32, inv, inv)
+        sprites["buttons"]["rail"] = new Sprite(0, 2 * 33, 32, 32, inv, inv)
+        sprites["buttons"]["you"] = new Sprite(1 * 33, 2 * 33, 32, 32, inv, inv)
+        sprites["buttons"]["skeleton"] = new Sprite(2 * 33, 2 * 33, 32, 32, inv, inv)
 
-        let player = new Thing(world, "you", you_walk, BLOCK_SIZE * (TILE_SIZE + 9), (BLOCK_SIZE + 1) * TILE_SIZE)
-        new Thing(world, "skeleton", skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 14), (BLOCK_SIZE + 1) * TILE_SIZE)
-        new Thing(world, "skeleton", skeleton_walk, BLOCK_SIZE * (TILE_SIZE + 64), (BLOCK_SIZE + 1) * TILE_SIZE)
+        sprites["you"] = new Map()
+        sprites["you"]["walk"] = [new Sprite(0, 0, 16, 30, inv)]
+
+        sprites["skeleton"] = new Map()
+        sprites["skeleton"]["walk"] = [new Sprite(0, 0, 16, 31, inv)]
+
+        let world = new World()
+        world.build(gl, localStorage.getItem("world"))
+
+        let player = new Thing(world, "you", sprites["you"], BLOCK_SIZE * (TILE_SIZE + 9), (BLOCK_SIZE + 1) * TILE_SIZE)
+        new Thing(world, "skeleton", sprites["skeleton"], BLOCK_SIZE * (TILE_SIZE + 14), (BLOCK_SIZE + 1) * TILE_SIZE)
+        new Thing(world, "skeleton", sprites["skeleton"], BLOCK_SIZE * (TILE_SIZE + 64), (BLOCK_SIZE + 1) * TILE_SIZE)
 
         window.onblur = function () {
             self.on = false

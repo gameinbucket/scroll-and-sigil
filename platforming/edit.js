@@ -12,6 +12,7 @@ class Application {
     }
     load_images(g, gl) {
         g.make_image(gl, "map", gl.CLAMP_TO_EDGE)
+        g.make_image(gl, "font", gl.CLAMP_TO_EDGE)
         g.make_image(gl, "buttons", gl.CLAMP_TO_EDGE)
         g.make_image(gl, "you", gl.CLAMP_TO_EDGE)
         g.make_image(gl, "skeleton", gl.CLAMP_TO_EDGE)
@@ -95,8 +96,11 @@ class Application {
         sprites["skeleton"] = new Map()
         sprites["skeleton"]["walk"] = [new Sprite(0, 0, 16, 31, inv)]
 
-        let world = new World(8, 3)
-        world.build(gl)
+        let world = new World()
+        Network.Request("resources/map.json", (data) => {
+            world.load(gl, sprites, data)
+            self.camera.y = 0.5 * world.block_h * GRID_SIZE
+        })
 
         window.onresize = function () {
             self.resize()
@@ -108,6 +112,9 @@ class Application {
         document.onmouseup = mouse_up
         document.onmousedown = mouse_down
         document.onmousemove = mouse_move
+        document.oncontextmenu = function () {
+            return false
+        }
 
         let btn = 32
         let pad = 10
@@ -120,12 +127,18 @@ class Application {
             new Button(this, sprites["buttons"]["wall"], "add.wall", pad, pad + 5 * (btn + pad), btn, btn),
             new Button(this, sprites["buttons"]["rail"], "add.rail", pad, pad + 6 * (btn + pad), btn, btn),
             new Button(this, sprites["buttons"]["you"], "add.you", pad, pad + 7 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["skeleton"], "add.skeleton", pad, pad + 8 * (btn + pad), btn, btn)
+            new Button(this, sprites["buttons"]["skeleton"], "add.skeleton", pad, pad + 8 * (btn + pad), btn, btn),
+            new Button(this, sprites["buttons"]["menu"], "move.cam", pad, pad + 9 * (btn + pad), btn, btn),
+            // new Button(this, sprites["buttons"]["skeleton"], "thing.conditions", pad + 1 * (btn + pad), pad, btn, btn),
+            // new Button(this, sprites["buttons"]["skeleton"], "thing.script", pad + 1 * (btn + pad), pad, btn, btn),
         ]
 
+        this.cli_input = ""
         this.on = true
         this.mouse_x = null
         this.mouse_y = null
+        this.mouse_previous_x = null
+        this.mouse_previous_y = null
         this.mouse_left = false
         this.action = null
         this.canvas = canvas
@@ -137,15 +150,21 @@ class Application {
         this.generic = generic
         this.world = world
         this.buttons = buttons
-        this.camera = {
-            x: 200,
-            y: 200
-        }
-
+        this.form = null
         this.resize()
+        this.camera = {
+            x: 0.5 * GRID_SIZE,
+            y: 0
+        }
     }
     key_up(event) {}
-    key_down(event) {}
+    key_down(event) {
+        let key = String.fromCharCode(event.keyCode);
+        if (/[a-zA-Z0-9-_ ]/.test(key)) {
+            this.cli_input += event.key
+            this.render()
+        }
+    }
     mouse_up(event) {
         if (event.button !== 0)
             return
@@ -156,7 +175,7 @@ class Application {
             return
         this.mouse_left = true
 
-        if (this.mouse_x < 10 + 10 + 32) {
+        if (this.mouse_x < 52 || this.mouse_y < 52) {
             for (let i = 0; i < this.buttons.length; i++) {
                 let button = this.buttons[i]
                 if (button.click(this.mouse_x, this.mouse_y)) {
@@ -170,14 +189,16 @@ class Application {
     edit_next_action(action) {
         switch (action) {
             case "save":
-                let saving = this.world.save()
-                console.log(saving)
-                localStorage.setItem("world", saving)
+                let save = this.world.save()
+                console.log(save)
+                localStorage.setItem("world", save)
+                Network.Post("save", save, () => {})
+                this.render()
                 break
             case "load":
                 let loading = localStorage.getItem("world")
                 if (loading === null) break
-                this.world.load(this.gl, loading)
+                this.world.load(this.gl, this.sprites, loading)
                 this.render()
                 break
             case "menu":
@@ -200,13 +221,11 @@ class Application {
             case "add.rail":
                 this.edit_set_tile(TILE_RAIL)
                 break
+            case "add.you":
+                this.edit_add_thing("you")
+                break
             case "add.skeleton":
-                let px = this.mouse_to_world_x()
-                if (px < 0 || px >= this.world.block_w * GRID_SIZE) return
-                let py = this.mouse_to_world_y()
-                if (py < 0 || py >= this.world.block_h * GRID_SIZE) return
-                new Thing(this.world, "skeleton", this.sprites["skeleton"], px, py)
-                this.render()
+                this.edit_add_thing("skeleton")
                 break
         }
     }
@@ -224,9 +243,20 @@ class Application {
             case "add.rail":
                 this.edit_set_tile(TILE_RAIL)
                 break
+            case "move.cam":
+                this.camera.x += this.mouse_previous_x - this.mouse_x
+                this.camera.y += this.mouse_previous_y - this.mouse_y
+                if (this.camera.x < 0) this.camera.x = 0
+                else if (this.camera.x > this.world.block_w * GRID_SIZE) this.camera.x = this.world.block_w * GRID_SIZE
+                if (this.camera.y < 0) this.camera.y = 0
+                else if (this.camera.y > this.world.block_h * GRID_SIZE) this.camera.y = this.world.block_h * GRID_SIZE
+                this.render()
+                break
         }
     }
     mouse_move(event) {
+        this.mouse_previous_x = this.mouse_x
+        this.mouse_previous_y = this.mouse_y
         this.mouse_x = event.clientX
         this.mouse_y = this.canvas.height - event.clientY
         if (this.mouse_left)
@@ -237,6 +267,14 @@ class Application {
     }
     mouse_to_world_y() {
         return this.mouse_y + this.camera.y - this.canvas.height * 0.5
+    }
+    edit_add_thing(id) {
+        let px = this.mouse_to_world_x()
+        if (px < 0 || px >= this.world.block_w * GRID_SIZE) return
+        let py = this.mouse_to_world_y()
+        if (py < 0 || py >= this.world.block_h * GRID_SIZE) return
+        new Thing(this.world, id, this.sprites[id], px, py)
+        this.render()
     }
     edit_set_tile(tile) {
         let px = this.mouse_to_world_x()
@@ -305,21 +343,27 @@ class Application {
         RenderSystem.BindAndDraw(gl, this.screen)
 
         gl.clearColor(0.5, 0.5, 0.5, 1)
-        gl.viewport(0, 0, 52, this.canvas.height)
-        gl.scissor(0, 0, 52, this.canvas.height)
-        // RenderSystem.SetView(gl, 0, 0, 52, frame.height)
+        RenderSystem.SetView(gl, 0, 0, 52, this.canvas.height)
         gl.clear(gl.COLOR_BUFFER_BIT)
         RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)
 
-        g.set_program(gl, "texture");
+        g.set_program(gl, "texture")
         g.set_orthographic(this.canvas_ortho, 0, 0)
-        g.update_mvp(gl);
-        generic.zero();
+        g.update_mvp(gl)
+        generic.zero()
         for (let i = 0; i < buttons.length; i++) {
-            buttons[i].draw(generic);
+            buttons[i].draw(generic)
         }
-        g.set_texture(gl, "buttons");
-        RenderSystem.UpdateAndDraw(gl, generic);
+        g.set_texture(gl, "buttons")
+        RenderSystem.UpdateAndDraw(gl, generic)
+
+        generic.zero()
+        Render.Print(generic, this.cli_input, 62, 50, 2)
+        g.set_texture(gl, "font")
+        RenderSystem.UpdateAndDraw(gl, generic)
+
+        if (this.form !== null)
+            this.form.render(g, gl, generic)
     }
 }
 

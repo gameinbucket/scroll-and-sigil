@@ -2,39 +2,49 @@ const GRID_SIZE = BLOCK_SIZE * TILE_SIZE
 const INV_GRID_SIZE = 1.0 / GRID_SIZE
 
 class World {
-    constructor(block_w, block_h) {
-        this.block_w = block_w
-        this.block_h = block_h
-        this.block_all = block_w * block_h
+    constructor() {
+        this.block_w = null
+        this.block_h = null
+        this.block_all = null
         this.blocks = []
         this.things = new Array(6)
         this.thing_count = 0
+    }
+    load(gl, sprites, data) {
+        let content = JSON.parse(data)
+        this.block_w = content["width"]
+        this.block_h = content["height"]
+        this.block_all = this.block_w * this.block_h
+        let tiles = content["tiles"]
+        let things = content["things"]
 
         let x = 0
         let y = 0
-        for (let i = 0; i < this.block_all; i++) {
-            this.blocks[i] = new Block(x, y)
+        let index = 0
+
+        for (let b = 0; b < this.block_all; b++) {
+            let block = new Block(x, y)
+            this.blocks[b] = block
+            for (let t = 0; t < BLOCK_TOTAL; t++) {
+                block.tiles[t] = tiles[index]
+                index++
+            }
             x++
             if (x == this.block_w) {
                 x = 0
                 y++
             }
         }
-    }
-    load(gl, data) {
-        let content = JSON.parse(data)
-        this.block_w = content["width"]
-        this.block_h = content["height"]
-        this.block_all = this.block_w * this.block_h
-        let tiles = content["tiles"]
-        let index = 0
-        for (let b = 0; b < this.block_all; b++) {
-            let block = this.blocks[b]
-            for (let t = 0; t < BLOCK_TOTAL; t++) {
-                block.tiles[t] = tiles[index]
-                index++
-            }
+
+        for (let t = 0; t < things.length; t++) {
+            let thing = things[t]
+            let id = thing["id"]
+            let sprite = sprites[id]
+            let x = thing["x"]
+            let y = thing["y"]
+            new Thing(this, id, sprite, x, y)
         }
+
         this.build(gl)
     }
     build(gl) {
@@ -43,13 +53,23 @@ class World {
         }
     }
     save() {
-        let concat = ""
-        concat += this.blocks[0].save()
+        let tile_data = ""
+        tile_data += this.blocks[0].save()
         for (let i = 1; i < this.blocks.length; i++) {
-            concat += ","
-            concat += this.blocks[i].save()
+            tile_data += ","
+            tile_data += this.blocks[i].save()
         }
-        return `{"width":${this.block_w}, "height":${this.block_h}, "tiles":[${concat}]}`
+
+        let thing_data = ""
+        if (this.thing_count > 0) {
+            thing_data += this.things[0].save()
+            for (let i = 1; i < this.thing_count; i++) {
+                thing_data += ","
+                thing_data += this.things[i].save()
+            }
+        }
+
+        return `{"width":${this.block_w},"height":${this.block_h},"tiles":[${tile_data}],"things":[${thing_data}]}`
     }
     get_tile(x, y) {
         let block_x = Math.floor(x * INV_BLOCK_SIZE)

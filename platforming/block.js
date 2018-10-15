@@ -13,27 +13,6 @@ class Block {
         this.y = py
         this.things = new Array()
         this.thing_count = 0
-
-        let x = 0
-        let y = 0
-        for (let i = 0; i < BLOCK_TOTAL; i++) {
-
-            let tile
-            if (py > 0 && px > 0 && px < 7) tile = TILE_NONE
-            else {
-                if (y == BLOCK_SIZE - 2) tile = TILE_GROUND
-                else if (y == BLOCK_SIZE - 1) tile = TILE_RAIL
-                else tile = TILE_WALL
-            }
-
-            this.tiles[i] = tile
-
-            x++
-            if (x == BLOCK_SIZE) {
-                x = 0
-                y++
-            }
-        }
     }
     save() {
         let concat = "" + this.tiles[0]

@@ -333,4 +333,7 @@ class Thing {
 			collided.splice(closest)
 		}
 	}
+	save() {
+		return `{"id":"${this.sprite_id}","x":${Math.floor(this.x)},"y":${Math.floor(this.y)}}`
+	}
 }
