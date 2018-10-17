@@ -44,6 +44,18 @@ class Application {
         this.frame = frame
         this.canvas_ortho = canvas_ortho
         this.draw_ortho = draw_ortho
+
+        let btn = 32
+        let pad = 10
+        let x = pad
+        let y = this.canvas.height - pad - btn
+        for (let i = 0; i < this.left_buttons.length; i++) {
+            this.left_buttons[i].put(x, y)
+            x += pad + btn
+            // y -= pad + btn
+        }
+
+        this.btn_move_cam.put(this.canvas.width - pad - btn, this.canvas.height - pad - btn)
     }
     constructor() {
         let self = this
@@ -117,21 +129,23 @@ class Application {
         }
 
         let btn = 32
-        let pad = 10
-        let buttons = [
-            new Button(this, sprites["buttons"]["menu"], "menu", pad, pad, btn, btn),
-            new Button(this, sprites["buttons"]["save"], "save", pad, pad + 1 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["load"], "load", pad, pad + 2 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["eraser"], "eraser", pad, pad + 3 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["ground"], "add.ground", pad, pad + 4 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["wall"], "add.wall", pad, pad + 5 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["rail"], "add.rail", pad, pad + 6 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["you"], "add.you", pad, pad + 7 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["skeleton"], "add.skeleton", pad, pad + 8 * (btn + pad), btn, btn),
-            new Button(this, sprites["buttons"]["menu"], "move.cam", pad, pad + 9 * (btn + pad), btn, btn),
-            // new Button(this, sprites["buttons"]["skeleton"], "thing.conditions", pad + 1 * (btn + pad), pad, btn, btn),
-            // new Button(this, sprites["buttons"]["skeleton"], "thing.script", pad + 1 * (btn + pad), pad, btn, btn),
+        let btn_move_cam = new Button(this, sprites["buttons"]["menu"], "move.cam", btn, btn)
+        let left_buttons = [
+            new Button(this, sprites["buttons"]["menu"], "menu", btn, btn),
+            new Button(this, sprites["buttons"]["save"], "save", btn, btn),
+            new Button(this, sprites["buttons"]["load"], "load", btn, btn),
+            new Button(this, sprites["buttons"]["eraser"], "eraser", btn, btn),
+            new Button(this, sprites["buttons"]["ground"], "add.ground", btn, btn),
+            new Button(this, sprites["buttons"]["wall"], "add.wall", btn, btn),
+            new Button(this, sprites["buttons"]["rail"], "add.rail", btn, btn),
+            new Button(this, sprites["buttons"]["you"], "add.you", btn, btn),
+            new Button(this, sprites["buttons"]["skeleton"], "add.skeleton", btn, btn)
         ]
+        let buttons = []
+        buttons.push(btn_move_cam)
+        buttons.push(...left_buttons)
+        // new Button(this, sprites["buttons"]["skeleton"], "thing.conditions", pad + 1 * (btn + pad), pad, btn, btn),
+        // new Button(this, sprites["buttons"]["skeleton"], "thing.script", pad + 1 * (btn + pad), pad, btn, btn),
 
         this.cli_input = ""
         this.on = true
@@ -139,7 +153,7 @@ class Application {
         this.mouse_y = null
         this.mouse_previous_x = null
         this.mouse_previous_y = null
-        this.mouse_left = false
+        this.mouse = false
         this.action = null
         this.canvas = canvas
         this.screen = screen
@@ -150,6 +164,8 @@ class Application {
         this.generic = generic
         this.world = world
         this.buttons = buttons
+        this.left_buttons = left_buttons
+        this.btn_move_cam = btn_move_cam
         this.form = null
         this.resize()
         this.camera = {
@@ -159,41 +175,65 @@ class Application {
     }
     key_up(event) {}
     key_down(event) {
-        let key = String.fromCharCode(event.keyCode);
-        if (/[a-zA-Z0-9-_ ]/.test(key)) {
-            this.cli_input += event.key
+        console.log(event)
+        if (event.key === "Backspace") {
+            this.cli_input = this.cli_input.substring(0, this.cli_input.length - 1)
+            event.preventDefault()
             this.render()
+        } else if (event.key === "Enter") {
+            if (this.cli_input.startsWith("save")) {
+                this.edit_save()
+            }
+            this.cli_input = ""
+            this.render()
+        } else {
+            let key = String.fromCharCode(event.keyCode);
+            if (/[a-zA-Z0-9-_ ]/.test(key)) {
+                this.cli_input += event.key
+                this.render()
+            }
         }
     }
     mouse_up(event) {
         if (event.button !== 0)
             return
-        this.mouse_left = false
+        this.mouse = false
     }
     mouse_down(event) {
         if (event.button !== 0)
             return
-        this.mouse_left = true
-
-        if (this.mouse_x < 52 || this.mouse_y < 52) {
-            for (let i = 0; i < this.buttons.length; i++) {
-                let button = this.buttons[i]
-                if (button.click(this.mouse_x, this.mouse_y)) {
-                    this.edit_next_action(button.action)
-                    break
-                }
+        this.mouse = true
+        let nop = true
+        for (let i = 0; i < this.buttons.length; i++) {
+            let button = this.buttons[i]
+            if (button.click(this.mouse_x, this.mouse_y)) {
+                this.edit_next_action(button.action)
+                nop = false
+                break
             }
-        } else
-            this.edit_action_on()
+        }
+        if (nop) this.edit_action_on()
+    }
+    edit_save() {
+        let save = this.world.save()
+        console.log(save)
+        localStorage.setItem("world", save)
+        // Network.Post("save", save, () => {})
+        let ref_data = new Blob([save], {
+            type: "text/plain"
+        })
+        let ref = document.createElement("a")
+        ref.style.display = "none"
+        ref.setAttribute("download", "world.json")
+        ref.setAttribute("href", window.URL.createObjectURL(ref_data))
+        document.body.appendChild(ref)
+        ref.click()
+        document.body.removeChild(ref)
     }
     edit_next_action(action) {
         switch (action) {
             case "save":
-                let save = this.world.save()
-                console.log(save)
-                localStorage.setItem("world", save)
-                Network.Post("save", save, () => {})
-                this.render()
+                this.edit_save()
                 break
             case "load":
                 let loading = localStorage.getItem("world")
@@ -259,7 +299,7 @@ class Application {
         this.mouse_previous_y = this.mouse_y
         this.mouse_x = event.clientX
         this.mouse_y = this.canvas.height - event.clientY
-        if (this.mouse_left)
+        if (this.mouse)
             this.edit_action_move()
     }
     mouse_to_world_x() {
@@ -342,10 +382,10 @@ class Application {
         g.set_texture_direct(gl, frame.textures[0])
         RenderSystem.BindAndDraw(gl, this.screen)
 
-        gl.clearColor(0.5, 0.5, 0.5, 1)
-        RenderSystem.SetView(gl, 0, 0, 52, this.canvas.height)
-        gl.clear(gl.COLOR_BUFFER_BIT)
-        RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)
+        // gl.clearColor(0.5, 0.5, 0.5, 1)
+        // RenderSystem.SetView(gl, 0, 0, 52, this.canvas.height)
+        // gl.clear(gl.COLOR_BUFFER_BIT)
+        // RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)
 
         g.set_program(gl, "texture")
         g.set_orthographic(this.canvas_ortho, 0, 0)
@@ -358,12 +398,9 @@ class Application {
         RenderSystem.UpdateAndDraw(gl, generic)
 
         generic.zero()
-        Render.Print(generic, this.cli_input, 62, 50, 2)
+        Render.Print(generic, this.cli_input, 10, 10, 2)
         g.set_texture(gl, "font")
         RenderSystem.UpdateAndDraw(gl, generic)
-
-        if (this.form !== null)
-            this.form.render(g, gl, generic)
     }
 }
 

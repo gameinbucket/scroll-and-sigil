@@ -1,12 +1,17 @@
 class Button {
-    constructor(app, sprite, action, x, y, w, h) {
+    constructor(app, sprite, action, w, h) {
         this.app = app
         this.sprite = sprite
         this.action = action
-        this.x = x
-        this.y = y
         this.w = w
         this.h = h
+        this.x = 0
+        this.y = 0
+    }
+    put(x, y) {
+        this.x = x
+        this.y = y
+        return this
     }
     click(x, y) {
         return x >= this.x && y >= this.y && x <= this.x + this.w && y <= this.y + this.h
