@@ -273,6 +273,7 @@ class Application {
         switch (this.action) {
             case "eraser":
                 this.edit_set_tile(TILE_NONE)
+                // TODO: remove sprites
                 break
             case "add.ground":
                 this.edit_set_tile(TILE_GROUND)
@@ -313,7 +314,28 @@ class Application {
         if (px < 0 || px >= this.world.block_w * GRID_SIZE) return
         let py = this.mouse_to_world_y()
         if (py < 0 || py >= this.world.block_h * GRID_SIZE) return
-        new Thing(this.world, id, this.sprites[id], px, py)
+
+        let bx = Math.floor(px * INV_GRID_SIZE)
+        let by = Math.floor(py * INV_GRID_SIZE)
+        let tx = Math.floor(px * INV_TILE_SIZE) % BLOCK_SIZE
+        let ty = Math.floor(py * INV_TILE_SIZE) % BLOCK_SIZE
+
+        let block = this.world.blocks[bx + by * this.world.block_w]
+        let tile = block.tiles[tx + ty * BLOCK_SIZE]
+
+        while (Tile.Empty(tile)) {
+            ty -= 1
+            if (ty < 0) {
+                ty += BLOCK_SIZE
+                by -= 1
+                if (by === -1)
+                    return
+                block = this.world.blocks[bx + by * this.world.block_w]
+            }
+            tile = block.tiles[tx + ty * BLOCK_SIZE]
+        }
+
+        new Thing(this.world, id, this.sprites[id], px, (ty + 1 + by * BLOCK_SIZE) * TILE_SIZE)
         this.render()
     }
     edit_set_tile(tile) {

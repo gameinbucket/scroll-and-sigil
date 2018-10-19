@@ -9,6 +9,7 @@ class World {
         this.blocks = []
         this.things = new Array(6)
         this.thing_count = 0
+        this.sprite_set = new Set()
     }
     load(gl, sprites, data) {
         let content = JSON.parse(data)
@@ -100,7 +101,6 @@ class World {
         }
         this.things[this.thing_count] = thing
         this.thing_count++
-        // todo: using thing uid keep track of sprite buffer overflow before rendering 
     }
     remove_thing(thing) {
         for (let i = 0; i < this.thing_count; i++) {
@@ -114,7 +114,7 @@ class World {
         }
     }
     render(g, gl, frame, x, y, sprite_buffers) {
-        let sprite_set = new Set()
+        this.sprite_set = new Set()
         for (let key in sprite_buffers) {
             sprite_buffers[key].zero()
         }
@@ -139,7 +139,7 @@ class World {
                 let mesh = block.mesh
                 if (mesh.vertex_pos > 0)
                     RenderSystem.BindAndDraw(gl, mesh)
-                block.render_things(sprite_set, sprite_buffers)
+                block.render_things(this.sprite_set, sprite_buffers)
             }
         }
 

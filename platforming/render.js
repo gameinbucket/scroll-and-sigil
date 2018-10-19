@@ -35,6 +35,30 @@ class Render {
         buffer.indices[buffer.index_pos++] = buffer.index_offset + 1
         buffer.index_offset += 4
     }
+    static Rectangle(buffer, x, y, width, height, red, green, blue) {
+        // TODO me
+        buffer.vertices[buffer.vertex_pos++] = x
+        buffer.vertices[buffer.vertex_pos++] = y
+        buffer.vertices[buffer.vertex_pos++] = left
+        buffer.vertices[buffer.vertex_pos++] = bottom
+
+        buffer.vertices[buffer.vertex_pos++] = x + width
+        buffer.vertices[buffer.vertex_pos++] = y
+        buffer.vertices[buffer.vertex_pos++] = right
+        buffer.vertices[buffer.vertex_pos++] = bottom
+
+        buffer.vertices[buffer.vertex_pos++] = x + width
+        buffer.vertices[buffer.vertex_pos++] = y + height
+        buffer.vertices[buffer.vertex_pos++] = right
+        buffer.vertices[buffer.vertex_pos++] = top
+
+        buffer.vertices[buffer.vertex_pos++] = x
+        buffer.vertices[buffer.vertex_pos++] = y + height
+        buffer.vertices[buffer.vertex_pos++] = left
+        buffer.vertices[buffer.vertex_pos++] = top
+
+        Render.Index4(buffer)
+    }
     static Image(buffer, x, y, width, height, left, top, right, bottom) {
         buffer.vertices[buffer.vertex_pos++] = x
         buffer.vertices[buffer.vertex_pos++] = y
