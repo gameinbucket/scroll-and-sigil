@@ -72,8 +72,8 @@ class Block {
             let sprite = thing.sprite[thing.frame]
             let x = thing.x - sprite.width * 0.5
             let y = thing.y
-            if (thing.mirror) Render.MirrorSprite(sprite_buffers[thing.sprite_id], x, y, sprite)
-            else Render.Sprite(sprite_buffers[thing.sprite_id], x, y, sprite)
+            if (thing.mirror) Render.MirrorSprite(sprite_buffers[thing.sprite_id], x - sprite.ox, y, sprite)
+            else Render.Sprite(sprite_buffers[thing.sprite_id], x + sprite.ox, y, sprite)
         }
     }
 }

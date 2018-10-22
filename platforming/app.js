@@ -89,17 +89,26 @@ class Application {
         sprites["buttons"]["skeleton"] = new Sprite(2 * 33, 2 * 33, 32, 32, inv, inv)
 
         sprites["you"] = new Map()
-        sprites["you"]["walk"] = [new Sprite(0, 0, 16, 30, inv)]
+        let you_walk = new Sprite(18, 0, 12, 31, inv)
+        sprites["you"]["walk"] = [new Sprite(0, 0, 16, 30, inv), you_walk, new Sprite(33, 0, 15, 30, inv), you_walk]
+        sprites["you"]["crouch"] = [new Sprite(51, 0, 16, 23, inv)]
+        sprites["you"]["hurt"] = [new Sprite(70, 0, 16, 29, inv)]
+        sprites["you"]["dead"] = [new Sprite(88, 0, 32, 15, inv)]
+        sprites["you"]["attack"] = [new Sprite(0, 32, 32, 30, inv, -8, 0), new Sprite(33, 32, 32, 30, inv, -8, 0), new Sprite(66, 32, 44, 29, inv, 14, 0)]
 
         sprites["skeleton"] = new Map()
         sprites["skeleton"]["walk"] = [new Sprite(0, 0, 16, 31, inv)]
 
         let world = new World()
-        world.build(gl, localStorage.getItem("world"))
-
-        let player = new Thing(world, "you", sprites["you"], BLOCK_SIZE * (TILE_SIZE + 9), (BLOCK_SIZE + 1) * TILE_SIZE)
-        new Thing(world, "skeleton", sprites["skeleton"], BLOCK_SIZE * (TILE_SIZE + 14), (BLOCK_SIZE + 1) * TILE_SIZE)
-        new Thing(world, "skeleton", sprites["skeleton"], BLOCK_SIZE * (TILE_SIZE + 64), (BLOCK_SIZE + 1) * TILE_SIZE)
+        Network.Request("resources/map.json", (data) => {
+            world.load(gl, sprites, data)
+            for (let i = 0; i < this.world.thing_count; i++) {
+                if (this.world.things[i].sprite_id === "you") {
+                    self.player = this.world.things[i]
+                    break
+                }
+            }
+        })
 
         window.onblur = function () {
             self.on = false
@@ -121,14 +130,13 @@ class Application {
 
         this.canvas = canvas
         this.screen = screen
-        this.player = player
+        this.player = null
         this.sprite_buffers = sprite_buffers
         this.on = true
         this.gl = gl
         this.g = g
         this.generic = generic
         this.world = world
-        this.sprite_cavern = sprite_cavern
 
         this.resize()
     }
@@ -145,6 +153,10 @@ class Application {
                 return
             }
         }
+        if (this.player === null) {
+            setTimeout(run, 500)
+            return
+        }
         document.body.appendChild(this.canvas)
         this.loop()
     }
@@ -156,36 +168,6 @@ class Application {
         requestAnimationFrame(loop)
     }
     update() {
-        const alternate = true
-
-        if (alternate) {
-            if (Input.Is("ArrowLeft")) this.player.move_left()
-            if (Input.Is("ArrowRight")) this.player.move_right()
-            if (Input.Is("ArrowDown")) this.player.crouch()
-            if (Input.Is("Control")) this.player.block()
-            if (Input.Is("a")) this.player.parry()
-            if (Input.Is(" ")) this.player.jump()
-            if (Input.Is("s")) this.player.dodge()
-            if (Input.Is("z")) this.player.light_attack()
-            if (Input.Is("x")) this.player.heavy_attack()
-            if (Input.Is("Shift")) this.player.sprint(true)
-            else this.player.sprint(false)
-        } else {
-            if (Input.Is("a")) this.player.move_left()
-            if (Input.Is("d")) this.player.move_right()
-            if (Input.Is("s")) this.player.crouch()
-            if (Input.Is("q")) this.player.block()
-            if (Input.Is("Control")) this.player.parry()
-            if (Input.Is("Shift")) this.player.sprint(true)
-            else this.player.sprint(false)
-            if (Input.Is(" ")) {
-                if (Input.Is("a") || Input.Is("d")) this.player.jump()
-                else this.player.dodge()
-            }
-            if (Input.Is("h")) this.player.light_attack()
-            if (Input.Is("u")) this.player.heavy_attack()
-        }
-
         this.world.update()
     }
     render() {

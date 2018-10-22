@@ -320,6 +320,8 @@ class Application {
         let tx = Math.floor(px * INV_TILE_SIZE) % BLOCK_SIZE
         let ty = Math.floor(py * INV_TILE_SIZE) % BLOCK_SIZE
 
+        // TODO: head of thing out of bounds
+
         let block = this.world.blocks[bx + by * this.world.block_w]
         let tile = block.tiles[tx + ty * BLOCK_SIZE]
 

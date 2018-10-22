@@ -1,6 +1,6 @@
-const ANIMATION_RATE = 8
+const ANIMATION_RATE = 4
+const ANIMATION_RATE_SLOW = 8
 const GRAVITY = 0.55
-const AIR_DRAG = 0.99
 
 class Resolution {
 	constructor() {
@@ -15,21 +15,21 @@ class Thing {
 		this.command
 		this.half_width = 6
 		this.height = 31
-		this.speed = 4
+		this.speed = 2
 		this.health = 1
-		this.sprinting = false
 		this.stamina = 100
 		this.mirror = false
 		this.animations = animations
-		this.sprite = animations["walk"]
 		this.sprite_id = sprite_id
+		this.state = "walk"
+		this.sprite = animations["walk"]
 		this.frame = 0
+		this.frame_modulo = 0
 		this.x = x
 		this.y = y
 		this.dx = 0
 		this.dy = 0
 		this.ground = false
-		this.timer = 0
 		world.add_thing(this)
 		this.block_borders()
 		this.add_to_blocks(world)
@@ -55,65 +55,77 @@ class Thing {
 		}
 	}
 	move_left() {
-		this.mirror = true
-		if (this.ground) {
-			if (this.sprinting) {
-				this.dx -= this.speed
-				this.stamina -= 1
-			} else this.dx -= this.speed * 0.25
-		} else
-			this.dx -= this.speed * 0.01
+		if (this.ground && this.state === "walk") {
+			this.mirror = true
+			this.dx = -this.speed
+			this.frame_modulo++
+			if (this.frame_modulo === ANIMATION_RATE) {
+				this.frame_modulo = 0
+				this.frame++
+				if (this.frame === this.sprite.length) {
+					this.frame = 0
+				}
+			}
+		}
 	}
 	move_right() {
-		this.mirror = false
-		if (this.ground) {
-			if (this.sprinting) {
-				this.dx += this.speed
-				this.stamina -= 1
-			} else this.dx += this.speed * 0.25
-		} else
-			this.dx += this.speed * 0.01
+		if (this.ground && this.state === "walk") {
+			this.mirror = false
+			this.dx = this.speed
+			this.frame_modulo++
+			if (this.frame_modulo === ANIMATION_RATE) {
+				this.frame_modulo = 0
+				this.frame++
+				if (this.frame === this.sprite.length) {
+					this.frame = 0
+				}
+			}
+		}
 	}
 	jump() {
-		if (!this.ground) return
+		if (this.state !== "walk" || !this.ground) return
 		this.ground = false
-		this.dy += 7.5
-		if (this.mirror) this.dx -= this.speed * 0.25
-		else this.dx += this.speed * 0.25
+		this.dy = 7.5
+		this.frame = 0
+		this.frame_modulo = 0
 	}
 	dodge() {
-		if (!this.ground) return
+		if (this.state !== "walk" || !this.ground) return
 		this.ground = false
-		this.dy += 4.5
-		if (this.mirror) this.dx += this.speed * 0.25
-		else this.dx -= this.speed * 0.25
+		this.dy = 4.5
+		if (this.mirror)
+			this.dx = this.speed * 0.25
+		else
+			this.dx = -this.speed * 0.25
 	}
 	block() {}
 	parry() {}
-	light_attack() {}
+	light_attack() {
+		if (this.state === "walk") {
+			this.state = "attack"
+			this.sprite = this.animations["attack"]
+			this.frame = 0
+			this.frame_modulo = 0
+		}
+	}
 	heavy_attack() {}
-	crouch() {}
-	sprint(on) {
-		// const slice = 10
-		// if (on) {
-		// 	if (this.timer == 0) this.timer = slice
-		// 	else if (this.timer < slice) {
-		// 		if (!Input.Is('a') && !Input.Is('d')) {
-		// 			this.timer = 0
-		// 			this.dodge()
-		// 		}
-		// 	} else this.timer++
-
-		// 	if (this.timer > slice) {
-		// 		this.sprinting = true
-		// 		// if (Input.Is('a') || Input.Is('d')) this.jump()
-		// 	}
-		// } else {
-		// 	if (this.timer > slice) this.timer = slice
-		// 	else if (this.timer > 0) this.timer--
-		// 	this.sprinting = false
-		// }
-		this.sprinting = on
+	crouch() {
+		if (this.ground) {
+			if (this.state === "walk") {
+				this.state = "crouch"
+				this.sprite = this.animations["crouch"]
+				this.frame = 0
+				this.frame_modulo = 0
+			}
+		}
+	}
+	stand() {
+		if (this.state === "crouch") {
+			this.state = "walk"
+			this.sprite = this.animations["walk"]
+			this.frame = 0
+			this.frame_modulo = 0
+		}
 	}
 	update(world) {
 		if (!this.ground) this.dy -= GRAVITY
@@ -124,17 +136,12 @@ class Thing {
 		// this.thing_collision(world)
 		this.block_borders()
 		this.add_to_blocks(world)
-		if (this.sprinting) {
-			if (this.stamina <= 0) this.sprinting = false
-		} else
+
+		if (this.stamina < 100)
 			this.stamina += 1
 
-		if (this.ground) {
+		if (this.ground)
 			this.dx = 0
-		} else {
-			this.dx *= AIR_DRAG
-			this.dy *= AIR_DRAG
-		}
 	}
 	tile_x_collision(world, res) {
 		let bottom_gy = Math.floor(this.y * INV_TILE_SIZE)
@@ -205,8 +212,6 @@ class Thing {
 		let dyy = new Resolution()
 		this.tile_x_collision(world, dxx)
 		this.tile_y_collision(world, dyy)
-
-		// TODO : falling off edge, stuck on right walls
 
 		let ground = false
 

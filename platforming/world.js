@@ -43,7 +43,10 @@ class World {
             let sprite = sprites[id]
             let x = thing["x"]
             let y = thing["y"]
-            new Thing(this, id, sprite, x, y)
+            if (id === "you")
+                new You(this, id, sprite, x, y)
+            else
+                new Thing(this, id, sprite, x, y)
         }
 
         this.build(gl)
