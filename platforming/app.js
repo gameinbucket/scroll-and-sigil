@@ -95,6 +95,7 @@ class Application {
         sprites["you"]["hurt"] = [new Sprite(70, 0, 16, 29, inv)]
         sprites["you"]["dead"] = [new Sprite(88, 0, 32, 15, inv)]
         sprites["you"]["attack"] = [new Sprite(0, 32, 32, 30, inv, -8, 0), new Sprite(33, 32, 32, 30, inv, -8, 0), new Sprite(66, 32, 44, 29, inv, 14, 0)]
+        sprites["you"]["crouch-attack"] = [new Sprite(78, 64, 32, 31, inv, -8, -8), new Sprite(45, 64, 32, 23, inv, -8, 0), new Sprite(0, 64, 44, 22, inv, 14, 0)]
 
         sprites["skeleton"] = new Map()
         sprites["skeleton"]["walk"] = [new Sprite(0, 0, 16, 31, inv)]

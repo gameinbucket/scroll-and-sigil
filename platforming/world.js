@@ -37,15 +37,17 @@ class World {
             }
         }
 
+        let you = null
         for (let t = 0; t < things.length; t++) {
             let thing = things[t]
             let id = thing["id"]
             let sprite = sprites[id]
             let x = thing["x"]
             let y = thing["y"]
-            if (id === "you")
-                new You(this, id, sprite, x, y)
-            else
+            if (id === "you") {
+                if (you === null)
+                    you = new You(this, id, sprite, x, y)
+            } else
                 new Thing(this, id, sprite, x, y)
         }
 

@@ -15,6 +15,18 @@ class You extends Thing {
                     this.frame_modulo = 0
                 }
             }
+        } else if (this.state === "crouch-attack") {
+            this.frame_modulo++
+            if (this.frame_modulo === ANIMATION_RATE_SLOW) {
+                this.frame_modulo = 0
+                this.frame++
+                if (this.frame === this.sprite.length) {
+                    this.state = "crouch"
+                    this.sprite = this.animations["crouch"]
+                    this.frame = 0
+                    this.frame_modulo = 0
+                }
+            }
         } else {
             let left = Input.Is("ArrowLeft")
             let right = Input.Is("ArrowRight")

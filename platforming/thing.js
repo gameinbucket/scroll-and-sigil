@@ -106,6 +106,11 @@ class Thing {
 			this.sprite = this.animations["attack"]
 			this.frame = 0
 			this.frame_modulo = 0
+		} else if (this.state === "crouch") {
+			this.state = "crouch-attack"
+			this.sprite = this.animations["crouch-attack"]
+			this.frame = 0
+			this.frame_modulo = 0
 		}
 	}
 	heavy_attack() {}
