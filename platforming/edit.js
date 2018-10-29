@@ -175,7 +175,6 @@ class Application {
     }
     key_up(event) {}
     key_down(event) {
-        console.log(event)
         if (event.key === "Backspace") {
             this.cli_input = this.cli_input.substring(0, this.cli_input.length - 1)
             event.preventDefault()
@@ -242,6 +241,28 @@ class Application {
                 this.render()
                 break
             case "menu":
+                let form = document.createElement("div")
+                form.style.position = "absolute"
+                form.style.left = "100px"
+                form.style.backgroundColor = "white"
+                form.style.top = "100px"
+                form.style.width = "100px"
+                form.style.height = "100px"
+                form.style.borderRadius = "5px"
+                form.style.zIndex = "1"
+                form.textContent = "menu"
+
+                let img = document.createElement("image")
+                img.src = "./resources/map.png"
+
+
+                let inp = document.createElement("input")
+                inp.setAttribute("type", "text")
+
+                form.appendChild(img)
+                form.appendChild(inp)
+
+                document.body.insertBefore(form, this.canvas)
                 break
             default:
                 this.action = action
