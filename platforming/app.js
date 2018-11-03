@@ -1,3 +1,6 @@
+const MUSIC = new Map()
+const SOUND = new Map()
+
 class Application {
     configure_opengl(gl) {
         gl.clearColor(0, 0, 0, 1)
@@ -89,8 +92,10 @@ class Application {
         sprites["buttons"]["skeleton"] = new Sprite(2 * 33, 2 * 33, 32, 32, inv, inv)
 
         sprites["you"] = new Map()
+        let you_idle = new Sprite(0, 0, 16, 30, inv)
         let you_walk = new Sprite(18, 0, 12, 31, inv)
-        sprites["you"]["walk"] = [new Sprite(0, 0, 16, 30, inv), you_walk, new Sprite(33, 0, 15, 30, inv), you_walk]
+        sprites["you"]["idle"] = [you_idle]
+        sprites["you"]["walk"] = [you_walk, new Sprite(33, 0, 15, 30, inv), you_walk, you_idle]
         sprites["you"]["crouch"] = [new Sprite(51, 0, 16, 23, inv)]
         sprites["you"]["hurt"] = [new Sprite(70, 0, 16, 29, inv)]
         sprites["you"]["dead"] = [new Sprite(88, 0, 32, 15, inv)]
@@ -98,7 +103,7 @@ class Application {
         sprites["you"]["crouch-attack"] = [new Sprite(78, 64, 32, 31, inv, -8, -8), new Sprite(45, 64, 32, 23, inv, -8, 0), new Sprite(0, 64, 44, 22, inv, 14, 0)]
 
         sprites["skeleton"] = new Map()
-        sprites["skeleton"]["walk"] = [new Sprite(0, 0, 16, 31, inv)]
+        sprites["skeleton"]["idle"] = [new Sprite(0, 0, 16, 31, inv)]
 
         let world = new World()
         Network.Request("resources/map.json", (data) => {
@@ -111,12 +116,20 @@ class Application {
             }
         })
 
+        MUSIC["melody"] = new Audio("resources/melody.wav")
+        SOUND["death"] = new Audio("resources/death.wav")
+        SOUND["sword"] = new Audio("resources/sword.wav")
+
+        MUSIC["melody"].loop = true
+
         window.onblur = function () {
             self.on = false
+            self.music.pause()
         }
 
         window.onfocus = function () {
             self.on = true
+            self.music.play()
         }
 
         window.onresize = function () {
@@ -138,6 +151,7 @@ class Application {
         this.g = g
         this.generic = generic
         this.world = world
+        this.music = MUSIC["melody"]
 
         this.resize()
     }
@@ -159,6 +173,7 @@ class Application {
             return
         }
         document.body.appendChild(this.canvas)
+        this.music.play()
         this.loop()
     }
     loop() {

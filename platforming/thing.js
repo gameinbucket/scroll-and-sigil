@@ -21,8 +21,8 @@ class Thing {
 		this.mirror = false
 		this.animations = animations
 		this.sprite_id = sprite_id
-		this.state = "walk"
-		this.sprite = animations["walk"]
+		this.state = "idle"
+		this.sprite = animations["idle"]
 		this.frame = 0
 		this.frame_modulo = 0
 		this.x = x
@@ -55,7 +55,13 @@ class Thing {
 		}
 	}
 	move_left() {
-		if (this.ground && this.state === "walk") {
+		if (!this.ground) return
+		if (this.state === "idle") {
+			this.mirror = true
+			this.dx = -this.speed
+			this.state = "walk"
+			this.sprite = this.animations["walk"]
+		} else if (this.state === "walk") {
 			this.mirror = true
 			this.dx = -this.speed
 			this.frame_modulo++
@@ -69,7 +75,13 @@ class Thing {
 		}
 	}
 	move_right() {
-		if (this.ground && this.state === "walk") {
+		if (!this.ground) return
+		if (this.state === "idle") {
+			this.mirror = false
+			this.dx = this.speed
+			this.state = "walk"
+			this.sprite = this.animations["walk"]
+		} else if (this.state === "walk") {
 			this.mirror = false
 			this.dx = this.speed
 			this.frame_modulo++
@@ -83,14 +95,18 @@ class Thing {
 		}
 	}
 	jump() {
-		if (this.state !== "walk" || !this.ground) return
+		if (!this.ground || (this.state !== "idle" && this.state !== "walk")) return
 		this.ground = false
 		this.dy = 7.5
 		this.frame = 0
 		this.frame_modulo = 0
+		// TODO: this.state = "jump" crouch mid air
+		if (this.state === "walk") {
+
+		}
 	}
 	dodge() {
-		if (this.state !== "walk" || !this.ground) return
+		if (!this.ground || (this.state !== "idle" && this.state !== "walk")) return
 		this.ground = false
 		this.dy = 4.5
 		if (this.mirror)
@@ -101,12 +117,14 @@ class Thing {
 	block() {}
 	parry() {}
 	light_attack() {
-		if (this.state === "walk") {
+		if (this.state === "idle" || this.state === "walk") {
+			SOUND["sword"].play()
 			this.state = "attack"
 			this.sprite = this.animations["attack"]
 			this.frame = 0
 			this.frame_modulo = 0
 		} else if (this.state === "crouch") {
+			SOUND["sword"].play()
 			this.state = "crouch-attack"
 			this.sprite = this.animations["crouch-attack"]
 			this.frame = 0
@@ -116,7 +134,7 @@ class Thing {
 	heavy_attack() {}
 	crouch() {
 		if (this.ground) {
-			if (this.state === "walk") {
+			if (this.state === "idle" || this.state === "walk") {
 				this.state = "crouch"
 				this.sprite = this.animations["crouch"]
 				this.frame = 0
@@ -126,8 +144,8 @@ class Thing {
 	}
 	stand() {
 		if (this.state === "crouch") {
-			this.state = "walk"
-			this.sprite = this.animations["walk"]
+			this.state = "idle"
+			this.sprite = this.animations["idle"]
 			this.frame = 0
 			this.frame_modulo = 0
 		}
@@ -312,7 +330,6 @@ class Thing {
 			this.y + this.height > b.y && this.y < b.y + b.height
 	}
 	thing_collision(world) {
-
 		let collided = new Array()
 		let searched = new Set()
 
