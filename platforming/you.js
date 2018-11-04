@@ -29,7 +29,7 @@ class You extends Thing {
     update(world) {
         if (this.state === "attack") {
             this.frame_modulo++
-            if (this.frame_modulo === ANIMATION_RATE_SLOW) {
+            if (this.frame_modulo === ANIMATION_RATE) {
                 this.frame_modulo = 0
                 this.frame++
                 if (this.frame === this.sprite.length) {
@@ -43,7 +43,7 @@ class You extends Thing {
             }
         } else if (this.state === "crouch-attack") {
             this.frame_modulo++
-            if (this.frame_modulo === ANIMATION_RATE_SLOW) {
+            if (this.frame_modulo === ANIMATION_RATE) {
                 this.frame_modulo = 0
                 this.frame++
                 if (this.frame === this.sprite.length) {
@@ -56,23 +56,33 @@ class You extends Thing {
                 }
             }
         } else {
-            let left = Input.Is("ArrowLeft")
-            let right = Input.Is("ArrowRight")
-            if (left && !right) {
-                this.move_left()
-            } else if (right && !left) {
-                this.move_right()
-            } else if (this.state === "walk") {
-                this.state = "idle"
-                this.sprite = this.animations["idle"]
-                this.frame = 0
-                this.frame_modulo = 0
+            if (!this.ground) {
+                if (this.move_air) {
+                    if (this.mirror) this.dx = -this.speed
+                    else this.dx = this.speed
+                }
+                if (this.dy < 0 && (this.state === "idle" || this.state === "walk")) {
+                    this.state = "idle"
+                    this.sprite = this.animations["idle"]
+                    this.frame = 0
+                    this.frame_modulo = 0
+                }
+            } else {
+                let left = Input.Is("ArrowLeft")
+                let right = Input.Is("ArrowRight")
+                if (left && !right) {
+                    this.move_left()
+                } else if (right && !left) {
+                    this.move_right()
+                } else if (this.state === "walk") {
+                    this.state = "idle"
+                    this.sprite = this.animations["idle"]
+                    this.frame = 0
+                    this.frame_modulo = 0
+                }
             }
 
-            if (Input.Is("ArrowDown"))
-                this.crouch()
-            else
-                this.stand()
+            this.crouch(Input.Is("ArrowDown"))
 
             if (Input.Is("Control")) this.block()
             if (Input.Is("v")) this.parry()
