@@ -10,6 +10,8 @@ class World {
         this.things = new Array(6)
         this.thing_count = 0
         this.sprite_set = new Set()
+        this.delete_things = new Array(2)
+        this.delete_thing_count = 0
     }
     load(gl, sprites, data) {
         let content = JSON.parse(data)
@@ -118,6 +120,17 @@ class World {
             }
         }
     }
+    delete_thing(thing) {
+        if (this.delete_thing_count === this.delete_things.length) {
+            let copy = new Array(this.delete_thing_count + 5)
+            for (let i = 0; i < this.delete_thing_count; i++) {
+                copy[i] = this.delete_things[i]
+            }
+            this.delete_things = copy
+        }
+        this.delete_things[this.delete_thing_count] = thing
+        this.delete_thing_count++
+    }
     render(g, gl, frame, x, y, sprite_buffers) {
         this.sprite_set = new Set()
         for (let key in sprite_buffers) {
@@ -157,6 +170,14 @@ class World {
         }
     }
     update() {
+        if (this.delete_thing_count > 0) {
+            for (let i = 0; i < this.delete_thing_count; i++) {
+                let deleting = this.delete_things[i]
+                deleting.remove_from_blocks(this)
+                this.remove_thing(deleting)
+            }
+            this.delete_thing_count = 0
+        }
         for (let i = 0; i < this.thing_count; i++) {
             this.things[i].update(this)
         }

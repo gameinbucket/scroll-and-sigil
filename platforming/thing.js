@@ -17,6 +17,7 @@ class Thing {
         this.speed = 2
         this.health = 1
         this.stamina = 100
+        this.attack = 1
         this.mirror = false
         this.animations = animations
         this.sprite_id = sprite_id
@@ -52,6 +53,10 @@ class Thing {
                 world.get_block(gx, gy).remove_thing(this)
             }
         }
+    }
+    death() {
+        SOUND["death"].play()
+        world.delete_thing(thing)
     }
     move_left() {
         if (!this.ground) return
@@ -159,8 +164,7 @@ class Thing {
         if (this.stamina < 100)
             this.stamina += 1
 
-        if (this.ground)
-            this.dx = 0
+        this.dx = 0
     }
     tile_x_collision(world, res) {
         let bottom_gy = Math.floor(this.y * INV_TILE_SIZE)
