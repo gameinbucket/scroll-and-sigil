@@ -103,10 +103,10 @@ class Application {
         sprites["buttons"]["skeleton"] = new Sprite(2 * 33, 2 * 33, 32, 32, inv, inv)
 
         sprites["you"] = new Map()
-        sprites["you"]["walk"] = [new Sprite(0, 0, 16, 30, inv)]
+        sprites["you"]["idle"] = [new Sprite(0, 0, 16, 30, inv)]
 
         sprites["skeleton"] = new Map()
-        sprites["skeleton"]["walk"] = [new Sprite(0, 0, 16, 31, inv)]
+        sprites["skeleton"]["idle"] = [new Sprite(0, 0, 16, 31, inv)]
 
         let world = new World()
         Network.Request("resources/map.json", (data) => {

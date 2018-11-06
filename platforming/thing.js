@@ -18,6 +18,7 @@ class Thing {
         this.health = 1
         this.stamina = 100
         this.attack = 1
+        this.reach = 24
         this.mirror = false
         this.animations = animations
         this.sprite_id = sprite_id
@@ -56,7 +57,7 @@ class Thing {
     }
     death() {
         SOUND["death"].play()
-        world.delete_thing(thing)
+        this.state = "death"
     }
     move_left() {
         if (!this.ground) return
@@ -149,6 +150,59 @@ class Thing {
                 this.frame = 0
                 this.frame_modulo = 0
             }
+        }
+    }
+    damage_scan(world) {
+        let collided = new Array()
+        let searched = new Set()
+
+        let boxes = [{
+            x: 0,
+            y: 24,
+            width: this.reach,
+            height: 10
+        }]
+
+        let left_gx = 0
+        let right_gx = 0
+        let bottom_gy = Math.floor(this.y * INV_GRID_SIZE)
+        let top_gy = Math.floor((this.y + this.height) * INV_GRID_SIZE)
+
+        if (this.mirror) {
+            for (let i in boxes) {
+                let box = boxes[i]
+                box.x = -(box.x + box.width)
+            }
+            left_gx = Math.floor(this.x * INV_GRID_SIZE)
+            right_gx = Math.floor((this.x + this.reach) * INV_GRID_SIZE)
+        } else {
+            left_gx = Math.floor((this.x - this.reach) * INV_GRID_SIZE)
+            right_gx = Math.floor(this.x * INV_GRID_SIZE)
+        }
+
+        for (let i in boxes) {
+            let box = boxes[i]
+            box.x += this.x
+            box.y += this.y
+        }
+
+        for (let gx = left_gx; gx <= right_gx; gx++) {
+            for (let gy = bottom_gy; gy <= top_gy; gy++) {
+                let block = world.get_block(gx, gy)
+                for (let i = 0; i < block.thing_count; i++) {
+                    let thing = block.things[i]
+                    if (thing === this || searched.has(thing)) continue
+                    if (thing.overlap_boxes(boxes)) collided.push(thing)
+                    searched.add(thing)
+                }
+            }
+        }
+
+        for (let i = 0; i < collided.length; i++) {
+            let thing = collided[i]
+            thing.health -= this.attack
+            if (thing.health < 1)
+                thing.death()
         }
     }
     update(world) {
@@ -324,9 +378,18 @@ class Thing {
             this.dy = 0
         }
     }
-    overlap_thing(b) {
-        return this.x + this.half_width > b.x - b.half_width && this.x - this.half_width < b.x + b.half_width &&
-            this.y + this.height > b.y && this.y < b.y + b.height
+    overlap_boxes(boxes) {
+        for (let i in boxes) {
+            let box = boxes[i]
+            if (this.x + this.half_width > box.x && this.x - this.half_width < box.x + box.width &&
+                this.y + this.height > box.y && this.y < box.y + box.height)
+                return true
+        }
+        return false
+    }
+    overlap_thing(thing) {
+        return this.x + this.half_width > thing.x - thing.half_width && this.x - this.half_width < thing.x + thing.half_width &&
+            this.y + this.height > thing.y && this.y < thing.y + b.height
     }
     thing_collision(world) {
         let collided = new Array()

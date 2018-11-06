@@ -46,11 +46,15 @@ class World {
             let sprite = sprites[id]
             let x = thing["x"]
             let y = thing["y"]
-            if (id === "you") {
-                if (you === null)
-                    you = new You(this, id, sprite, x, y)
-            } else
-                new Thing(this, id, sprite, x, y)
+            switch (id) {
+                case "you":
+                    if (you === null)
+                        you = new You(this, id, sprite, x, y)
+                    break
+                case "skeleton":
+                    new Skeleton(this, id, sprite, x, y)
+                    break
+            }
         }
 
         this.build(gl)

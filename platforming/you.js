@@ -2,31 +2,12 @@ class You extends Thing {
     constructor(world, sprite_id, animations, x, y) {
         super(world, sprite_id, animations, x, y)
     }
-    damage_scan(world) {
-        let collided = new Array()
-        let searched = new Set()
-
-        for (let gx = this.left_gx; gx <= this.right_gx; gx++) {
-            for (let gy = this.bottom_gy; gy <= this.top_gy; gy++) {
-                let block = world.get_block(gx, gy)
-                for (let i = 0; i < block.thing_count; i++) {
-                    let thing = block.things[i]
-                    if (thing === this || searched.has(thing)) continue
-                    if (this.overlap_thing(thing)) collided.push(thing)
-                    searched.add(thing)
-                }
-            }
-        }
-
-        for (let i = 0; i < collided.length; i++) {
-            let thing = collided[i]
-            thing.health -= this.attack
-            if (thing.health < 1) {
-                thing.death()
-            }
-        }
-    }
     update(world) {
+        if (this.state === "death") {
+            world.delete_thing(this)
+            super.update(world)
+            return
+        }
         if (!this.ground) {
             if (this.move_air) {
                 if (this.mirror) this.dx = -this.speed
