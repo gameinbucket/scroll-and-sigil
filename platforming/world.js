@@ -7,13 +7,13 @@ class World {
         this.block_h = null
         this.block_all = null
         this.blocks = []
+        this.sprite_set = new Set()
         this.things = new Array(6)
         this.thing_count = 0
-        this.sprite_set = new Set()
         this.delete_things = new Array(2)
         this.delete_thing_count = 0
     }
-    load(gl, sprites, data) {
+    load(gl, data) {
         let content = JSON.parse(data)
         this.block_w = content["width"]
         this.block_h = content["height"]
@@ -43,16 +43,15 @@ class World {
         for (let t = 0; t < things.length; t++) {
             let thing = things[t]
             let id = thing["id"]
-            let sprite = sprites[id]
             let x = thing["x"]
             let y = thing["y"]
             switch (id) {
                 case "you":
                     if (you === null)
-                        you = new You(this, id, sprite, x, y)
+                        you = new You(this, x, y)
                     break
                 case "skeleton":
-                    new Skeleton(this, id, sprite, x, y)
+                    new Skeleton(this, x, y)
                     break
             }
         }

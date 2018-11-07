@@ -10,20 +10,20 @@ class Resolution {
 }
 
 class Thing {
-    constructor(world, sprite_id, animations, x, y) {
+    constructor(world, id, x, y) {
         this.command
         this.half_width = 6
         this.height = 31
         this.speed = 2
-        this.health = 1
+        this.health = 2
         this.stamina = 100
         this.attack = 1
-        this.reach = 24
+        this.reach = 48
         this.mirror = false
-        this.animations = animations
-        this.sprite_id = sprite_id
+        this.animations = SPRITES[id]
+        this.sprite_id = id
         this.state = "idle"
-        this.sprite = animations["idle"]
+        this.sprite = this.animations["idle"]
         this.frame = 0
         this.frame_modulo = 0
         this.x = x
@@ -55,10 +55,7 @@ class Thing {
             }
         }
     }
-    death() {
-        SOUND["death"].play()
-        this.state = "death"
-    }
+    death() {}
     move_left() {
         if (!this.ground) return
         if (this.state === "idle") {
@@ -121,13 +118,11 @@ class Thing {
     parry() {}
     light_attack() {
         if (this.state === "idle" || this.state === "walk") {
-            SOUND["sword"].play()
             this.state = "attack"
             this.sprite = this.animations["attack"]
             this.frame = 0
             this.frame_modulo = 0
         } else if (this.state === "crouch") {
-            SOUND["sword"].play()
             this.state = "crouch-attack"
             this.sprite = this.animations["crouch-attack"]
             this.frame = 0
@@ -200,9 +195,7 @@ class Thing {
 
         for (let i = 0; i < collided.length; i++) {
             let thing = collided[i]
-            thing.health -= this.attack
-            if (thing.health < 1)
-                thing.death()
+            thing.damage(this.attack)
         }
     }
     update(world) {
@@ -389,7 +382,7 @@ class Thing {
     }
     overlap_thing(thing) {
         return this.x + this.half_width > thing.x - thing.half_width && this.x - this.half_width < thing.x + thing.half_width &&
-            this.y + this.height > thing.y && this.y < thing.y + b.height
+            this.y + this.height > thing.y && this.y < thing.y + thing.height
     }
     thing_collision(world) {
         let collided = new Array()

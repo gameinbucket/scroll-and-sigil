@@ -1,6 +1,15 @@
 class You extends Thing {
-    constructor(world, sprite_id, animations, x, y) {
-        super(world, sprite_id, animations, x, y)
+    constructor(world, x, y) {
+        super(world, "you", x, y)
+    }
+    damage(amount) {
+        if (this.health > 0) {
+            this.health -= amount
+            if (this.health < 1)
+                this.death()
+            else
+                SOUND["you-hurt"].play()
+        }
     }
     update(world) {
         if (this.state === "death") {
@@ -31,6 +40,7 @@ class You extends Thing {
                     this.frame = 0
                     this.frame_modulo = 0
                 } else if (this.frame === this.sprite.length - 1) {
+                    SOUND["you-whip"].play()
                     this.damage_scan(world)
                 }
             }
@@ -45,6 +55,7 @@ class You extends Thing {
                     this.frame = 0
                     this.frame_modulo = 0
                 } else if (this.frame === this.sprite.length - 1) {
+                    SOUND["you-whip"].play()
                     this.damage_scan(world)
                 }
             }

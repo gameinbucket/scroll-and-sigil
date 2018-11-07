@@ -1,5 +1,6 @@
 const MUSIC = new Map()
 const SOUND = new Map()
+const SPRITES = new Map()
 
 class Application {
     configure_opengl(gl) {
@@ -16,6 +17,7 @@ class Application {
         g.make_image(gl, "map", gl.CLAMP_TO_EDGE)
         g.make_image(gl, "you", gl.CLAMP_TO_EDGE)
         g.make_image(gl, "skeleton", gl.CLAMP_TO_EDGE)
+        g.make_image(gl, "doodad", gl.CLAMP_TO_EDGE)
     }
     resize() {
         let gl = this.gl
@@ -71,44 +73,35 @@ class Application {
         let sprite_buffers = new Map()
         sprite_buffers["you"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffers["skeleton"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffers["doodad"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
 
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
 
-        let sprites = new Map()
         let inv = 1.0 / 128.0
 
-        sprites["map"] = new Map()
-        sprites["map"]["dirt"] = new Sprite(0, 0, TILE_SIZE, TILE_SIZE, inv)
-
-        sprites["buttons"] = new Map()
-        sprites["buttons"]["menu"] = new Sprite(0, 0, 32, 32, inv, inv)
-        sprites["buttons"]["save"] = new Sprite(1 * 33, 0, 32, 32, inv, inv)
-        sprites["buttons"]["load"] = new Sprite(2 * 33, 0, 32, 32, inv, inv)
-        sprites["buttons"]["eraser"] = new Sprite(0, 1 * 33, 32, 32, inv, inv)
-        sprites["buttons"]["ground"] = new Sprite(1 * 33, 1 * 33, 32, 32, inv, inv)
-        sprites["buttons"]["wall"] = new Sprite(2 * 33, 1 * 33, 32, 32, inv, inv)
-        sprites["buttons"]["rail"] = new Sprite(0, 2 * 33, 32, 32, inv, inv)
-        sprites["buttons"]["you"] = new Sprite(1 * 33, 2 * 33, 32, 32, inv, inv)
-        sprites["buttons"]["skeleton"] = new Sprite(2 * 33, 2 * 33, 32, 32, inv, inv)
-
-        sprites["you"] = new Map()
+        SPRITES["you"] = new Map()
         let you_idle = new Sprite(0, 0, 16, 30, inv)
         let you_walk = new Sprite(18, 0, 12, 31, inv)
-        sprites["you"]["idle"] = [you_idle]
-        sprites["you"]["walk"] = [you_walk, new Sprite(33, 0, 15, 30, inv), you_walk, you_idle]
-        sprites["you"]["crouch"] = [new Sprite(51, 0, 16, 23, inv)]
-        sprites["you"]["hurt"] = [new Sprite(70, 0, 16, 29, inv)]
-        sprites["you"]["dead"] = [new Sprite(88, 0, 32, 15, inv)]
-        sprites["you"]["attack"] = [new Sprite(0, 32, 32, 30, inv, -8, 0), new Sprite(33, 32, 32, 30, inv, -8, 0), new Sprite(66, 32, 44, 29, inv, 14, 0)]
-        sprites["you"]["crouch-attack"] = [new Sprite(78, 64, 32, 31, inv, -8, -8), new Sprite(45, 64, 32, 23, inv, -8, 0), new Sprite(0, 64, 44, 22, inv, 14, 0)]
+        SPRITES["you"]["idle"] = [you_idle]
+        SPRITES["you"]["walk"] = [you_walk, new Sprite(33, 0, 15, 30, inv), you_walk, you_idle]
+        SPRITES["you"]["crouch"] = [new Sprite(51, 0, 16, 23, inv)]
+        SPRITES["you"]["hurt"] = [new Sprite(70, 0, 16, 29, inv)]
+        SPRITES["you"]["dead"] = [new Sprite(88, 0, 32, 15, inv)]
+        SPRITES["you"]["attack"] = [new Sprite(0, 32, 32, 30, inv, -8, 0), new Sprite(33, 32, 32, 30, inv, -8, 0), new Sprite(66, 32, 44, 29, inv, 14, 0)]
+        SPRITES["you"]["crouch-attack"] = [new Sprite(78, 64, 32, 31, inv, -8, -8), new Sprite(45, 64, 32, 23, inv, -8, 0), new Sprite(0, 64, 44, 22, inv, 14, 0)]
 
-        sprites["skeleton"] = new Map()
-        sprites["skeleton"]["idle"] = [new Sprite(0, 0, 16, 31, inv)]
-        sprites["skeleton"]["walk"] = [you_walk, new Sprite(33, 0, 15, 30, inv), you_walk, you_idle]
+        SPRITES["skeleton"] = new Map()
+        let skeleton_idle = new Sprite(0, 0, 16, 31, inv)
+        SPRITES["skeleton"]["idle"] = [skeleton_idle]
+        SPRITES["skeleton"]["walk"] = [new Sprite(17, 0, 16, 32, inv), skeleton_idle]
+        SPRITES["skeleton"]["death"] = [new Sprite(35, 0, 16, 16, inv), new Sprite(53, 0, 15, 7, inv)]
+
+        SPRITES["doodad"] = new Map()
+        SPRITES["doodad"]["bone"] = [new Sprite(0, 0, 15, 13, inv)]
 
         let world = new World()
         Network.Request("resources/map.json", (data) => {
-            world.load(gl, sprites, data)
+            world.load(gl, data)
             for (let i = 0; i < this.world.thing_count; i++) {
                 if (this.world.things[i].sprite_id === "you") {
                     self.player = this.world.things[i]
@@ -117,11 +110,12 @@ class Application {
             }
         })
 
-        MUSIC["melody"] = new Audio("resources/melody.wav")
-        SOUND["death"] = new Audio("resources/death.wav")
-        SOUND["sword"] = new Audio("resources/sword.wav")
-
+        MUSIC["melody"] = new Audio("resources/vampire-killer.ogg")
         MUSIC["melody"].loop = true
+
+        SOUND["destroy"] = new Audio("resources/destroy.wav")
+        SOUND["you-hurt"] = new Audio("resources/you-hurt.wav")
+        SOUND["you-whip"] = new Audio("resources/you-whip.wav")
 
         window.onblur = function () {
             self.on = false
