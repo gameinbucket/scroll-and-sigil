@@ -18,6 +18,7 @@ class Application {
         g.make_image(gl, "you", gl.CLAMP_TO_EDGE)
         g.make_image(gl, "skeleton", gl.CLAMP_TO_EDGE)
         g.make_image(gl, "doodad", gl.CLAMP_TO_EDGE)
+        g.make_image(gl, "item", gl.CLAMP_TO_EDGE)
     }
     resize() {
         let gl = this.gl
@@ -74,6 +75,7 @@ class Application {
         sprite_buffers["you"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffers["skeleton"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffers["doodad"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffers["item"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
 
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
 
@@ -82,11 +84,12 @@ class Application {
         SPRITES["you"] = new Map()
         let you_idle = new Sprite(0, 0, 16, 30, inv)
         let you_walk = new Sprite(18, 0, 12, 31, inv)
+        let you_hurt = new Sprite(70, 0, 16, 29, inv)
         SPRITES["you"]["idle"] = [you_idle]
         SPRITES["you"]["walk"] = [you_walk, new Sprite(33, 0, 15, 30, inv), you_walk, you_idle]
         SPRITES["you"]["crouch"] = [new Sprite(51, 0, 16, 23, inv)]
-        SPRITES["you"]["hurt"] = [new Sprite(70, 0, 16, 29, inv)]
-        SPRITES["you"]["dead"] = [new Sprite(88, 0, 32, 15, inv)]
+        SPRITES["you"]["hurt"] = [you_hurt]
+        SPRITES["you"]["death"] = [you_hurt, new Sprite(88, 0, 32, 15, inv)]
         SPRITES["you"]["attack"] = [new Sprite(0, 32, 32, 30, inv, -8, 0), new Sprite(33, 32, 32, 30, inv, -8, 0), new Sprite(66, 32, 44, 29, inv, 14, 0)]
         SPRITES["you"]["crouch-attack"] = [new Sprite(78, 64, 32, 31, inv, -8, -8), new Sprite(45, 64, 32, 23, inv, -8, 0), new Sprite(0, 64, 44, 22, inv, 14, 0)]
 
@@ -98,6 +101,10 @@ class Application {
 
         SPRITES["doodad"] = new Map()
         SPRITES["doodad"]["bone"] = [new Sprite(0, 0, 15, 13, inv)]
+        SPRITES["doodad"]["splat"] = [new Sprite(23, 0, 8, 10, inv), new Sprite(32, 0, 3, 13, inv), new Sprite(36, 0, 6, 13, inv), new Sprite(43, 0, 8, 15, inv)]
+
+        SPRITES["item"] = new Map()
+        SPRITES["item"]["water"] = [new Sprite(0, 0, 16, 16, inv)]
 
         let world = new World()
         Network.Request("resources/map.json", (data) => {
@@ -121,12 +128,10 @@ class Application {
             self.on = false
             self.music.pause()
         }
-
         window.onfocus = function () {
             self.on = true
             self.music.play()
         }
-
         window.onresize = function () {
             self.resize()
         }

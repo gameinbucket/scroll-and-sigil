@@ -4,13 +4,15 @@ class Skeleton extends Thing {
         this.target = null
         this.attack_timer = 0
     }
-    damage(amount) {
+    damage(world, amount) {
         if (this.health > 0) {
             this.health -= amount
             if (this.health < 1)
                 this.death()
-            else
+            else {
                 SOUND["you-hurt"].play()
+                new Splat(world, this.x, this.y + this.height * 0.5)
+            }
         }
     }
     death() {
@@ -37,8 +39,8 @@ class Skeleton extends Thing {
 
         }
         if (this.attack_timer === 0) {
-            new Bone(world, this.x, this.y)
-            this.attack_timer = 300
+            new Bone(world, this.x, this.y + this.height * 1.5)
+            this.attack_timer = 64
         } else
             this.attack_timer--
         // this.move_left()

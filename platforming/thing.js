@@ -55,6 +55,7 @@ class Thing {
             }
         }
     }
+    damage() {}
     death() {}
     move_left() {
         if (!this.ground) return
@@ -195,7 +196,7 @@ class Thing {
 
         for (let i = 0; i < collided.length; i++) {
             let thing = collided[i]
-            thing.damage(this.attack)
+            thing.damage(world, this.attack)
         }
     }
     update(world) {
@@ -204,14 +205,12 @@ class Thing {
         this.y += this.dy
         this.remove_from_blocks(world)
         this.tile_collision(world)
-        // this.thing_collision(world)
         this.block_borders()
         this.add_to_blocks(world)
+        this.dx = 0
 
         if (this.stamina < 100)
             this.stamina += 1
-
-        this.dx = 0
     }
     tile_x_collision(world, res) {
         let bottom_gy = Math.floor(this.y * INV_TILE_SIZE)
@@ -358,12 +357,15 @@ class Thing {
     resolve_collision_thing(b) {
         if (!this.overlap_thing(b)) return
 
-        if (Math.abs(this.old_x - b.x) > Math.abs(this.old_y - b.y)) {
-            if (this.old_x - b.x < 0) this.x = b.x - this.half_width - b.half_width
+        let old_x = this.x - this.dx
+        let old_y = this.y - this.dy
+
+        if (Math.abs(old_x - b.x) > Math.abs(old_y - b.y)) {
+            if (old_x - b.x < 0) this.x = b.x - this.half_width - b.half_width
             else this.x = b.x + this.half_width + b.half_width
             this.dx = 0
         } else {
-            if (this.old_y - b.y < 0) this.y = b.y - this.height
+            if (old_y - b.y < 0) this.y = b.y - this.height
             else {
                 this.y = b.y + b.height
                 this.ground = true
@@ -400,12 +402,14 @@ class Thing {
             }
         }
 
+        let old_x = this.x - this.dx
+        let old_y = this.y - this.dy
         while (collided.length > 0) {
             let closest = null
             let manhattan = Number.MAX_VALUE
             for (let i = 0; i < collided.length; i++) {
                 let thing = collided[i]
-                let dist = Math.abs(this.old_x - thing.x) + Math.abs(this.old_y - thing.y)
+                let dist = Math.abs(old_x - thing.x) + Math.abs(old_y - thing.y)
                 if (dist < manhattan) {
                     manhattan = dist
                     closest = thing

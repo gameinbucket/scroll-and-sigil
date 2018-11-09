@@ -2,18 +2,31 @@ class You extends Thing {
     constructor(world, x, y) {
         super(world, "you", x, y)
     }
-    damage(amount) {
+    damage(world, amount) {
         if (this.health > 0) {
             this.health -= amount
             if (this.health < 1)
                 this.death()
-            else
+            else {
                 SOUND["you-hurt"].play()
+                this.state = "damaged"
+            }
         }
+    }
+    death() {
+        SOUND["destroy"].play()
+        this.state = "death"
+        this.sprite = this.animations["death"]
     }
     update(world) {
         if (this.state === "death") {
-            world.delete_thing(this)
+            if (this.frame < this.sprite.length - 1) {
+                this.frame_modulo++
+                if (this.frame_modulo === ANIMATION_RATE) {
+                    this.frame_modulo = 0
+                    this.frame++
+                }
+            }
             super.update(world)
             return
         }
@@ -74,15 +87,15 @@ class You extends Thing {
                 this.move_air = false
             }
 
-            this.crouch(Input.Is("ArrowDown"))
-
-            if (Input.Is("Control")) this.block()
-            if (Input.Is("v")) this.parry()
             if (Input.Is(" ")) this.jump()
             if (Input.Is("c")) this.dodge()
-            if (Input.Is("z")) this.light_attack()
-            if (Input.Is("x")) this.heavy_attack()
         }
+
+        this.crouch(Input.Is("ArrowDown"))
+        if (Input.Is("Control")) this.block()
+        if (Input.Is("v")) this.parry()
+        if (Input.Is("z")) this.light_attack()
+        if (Input.Is("x")) this.heavy_attack()
 
         super.update(world)
     }

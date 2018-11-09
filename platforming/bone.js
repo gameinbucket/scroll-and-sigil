@@ -11,8 +11,8 @@ class Bone {
         this.frame_modulo = 0
         this.x = x
         this.y = y
-        this.dx = 0
-        this.dy = 0
+        this.dx = 1
+        this.dy = GRAVITY * 5
         world.add_thing(this)
         this.block_borders()
         this.add_to_blocks(world)
@@ -38,7 +38,7 @@ class Bone {
         }
     }
     update(world) {
-        this.dy = -GRAVITY
+        this.dy -= GRAVITY
         this.x += this.dx
         this.y += this.dy
         this.remove_from_blocks(world)
@@ -92,38 +92,27 @@ class Bone {
             world.delete_thing(this)
         }
     }
+    overlap_boxes(boxes) {}
     overlap_thing(thing) {
         return this.x + this.half_width > thing.x - thing.half_width && this.x - this.half_width < thing.x + thing.half_width &&
             this.y + this.height > thing.y && this.y < thing.y + thing.height
     }
     thing_collision(world) {
-        let collided = new Array()
         let searched = new Set()
-
         for (let gx = this.left_gx; gx <= this.right_gx; gx++) {
             for (let gy = this.bottom_gy; gy <= this.top_gy; gy++) {
                 let block = world.get_block(gx, gy)
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (searched.has(thing)) continue
-                    if (this.overlap_thing(thing)) collided.push(thing)
+                    if (this.overlap_thing(thing)) {
+                        thing.damage(1)
+                        world.delete_thing(this)
+                        return
+                    }
                     searched.add(thing)
                 }
             }
-        }
-
-        while (collided.length > 0) {
-            let closest = null
-            let manhattan = Number.MAX_VALUE
-            for (let i = 0; i < collided.length; i++) {
-                let thing = collided[i]
-                let dist = Math.abs(this.old_x - thing.x) + Math.abs(this.old_y - thing.y)
-                if (dist < manhattan) {
-                    manhattan = dist
-                    closest = thing
-                }
-            }
-            collided.splice(closest)
         }
     }
     save() {

@@ -53,6 +53,9 @@ class World {
                 case "skeleton":
                     new Skeleton(this, x, y)
                     break
+                case "water":
+                    new Water(this, x, y)
+                    break
             }
         }
 
@@ -181,8 +184,7 @@ class World {
             }
             this.delete_thing_count = 0
         }
-        for (let i = 0; i < this.thing_count; i++) {
+        for (let i = 0; i < this.thing_count; i++)
             this.things[i].update(this)
-        }
     }
 }
