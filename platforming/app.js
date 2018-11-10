@@ -19,6 +19,7 @@ class Application {
         g.make_image(gl, "skeleton", gl.CLAMP_TO_EDGE)
         g.make_image(gl, "doodad", gl.CLAMP_TO_EDGE)
         g.make_image(gl, "item", gl.CLAMP_TO_EDGE)
+        g.make_image(gl, "ui", gl.CLAMP_TO_EDGE)
     }
     resize() {
         let gl = this.gl
@@ -88,8 +89,8 @@ class Application {
         SPRITES["you"]["idle"] = [you_idle]
         SPRITES["you"]["walk"] = [you_walk, new Sprite(33, 0, 15, 30, inv), you_walk, you_idle]
         SPRITES["you"]["crouch"] = [new Sprite(51, 0, 16, 23, inv)]
-        SPRITES["you"]["hurt"] = [you_hurt]
-        SPRITES["you"]["death"] = [you_hurt, new Sprite(88, 0, 32, 15, inv)]
+        SPRITES["you"]["damaged"] = [you_hurt]
+        SPRITES["you"]["death"] = [new Sprite(88, 0, 32, 15, inv)]
         SPRITES["you"]["attack"] = [new Sprite(0, 32, 32, 30, inv, -8, 0), new Sprite(33, 32, 32, 30, inv, -8, 0), new Sprite(66, 32, 44, 29, inv, 14, 0)]
         SPRITES["you"]["crouch-attack"] = [new Sprite(78, 64, 32, 31, inv, -8, -8), new Sprite(45, 64, 32, 23, inv, -8, 0), new Sprite(0, 64, 44, 22, inv, 14, 0)]
 
@@ -120,6 +121,7 @@ class Application {
         MUSIC["melody"] = new Audio("resources/vampire-killer.ogg")
         MUSIC["melody"].loop = true
 
+        SOUND["pickup"] = new Audio("resources/you-whip.wav")
         SOUND["destroy"] = new Audio("resources/destroy.wav")
         SOUND["you-hurt"] = new Audio("resources/you-hurt.wav")
         SOUND["you-whip"] = new Audio("resources/you-whip.wav")
@@ -202,6 +204,14 @@ class Application {
         g.set_orthographic(this.draw_ortho, view_x, view_y)
         g.update_mvp(gl)
         this.world.render(g, gl, frame, player.x, player.y, this.sprite_buffers)
+
+        g.set_orthographic(this.draw_ortho, 0, 0)
+        g.update_mvp(gl)
+        g.set_texture(gl, "ui")
+        this.generic.zero()
+        Render.Image(this.generic, 5, 5, 32, 32, 0.0, 0.0, 32.0 / 128.0, 32.0 / 128.0)
+        Render.Image(this.generic, 42, 5, 32, 32, 33.0 / 128.0, 0.0, 65.0 / 128.0, 32.0 / 128.0)
+        RenderSystem.UpdateAndDraw(gl, this.generic)
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)

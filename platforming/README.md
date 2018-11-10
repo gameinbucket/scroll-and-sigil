@@ -2,5 +2,5 @@
 
 ## todo
 
-> invulnerable / no input when hit
 > sprite jittering
+> user interface

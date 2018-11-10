@@ -1,9 +1,8 @@
 class Bone {
-    constructor(world, x, y) {
-        this.half_width = 6
-        this.height = 31
-        this.speed = 2
-        this.mirror = false
+    constructor(world, x, y, mirror) {
+        this.half_width = 7
+        this.height = 13
+        this.mirror = mirror
         this.sprite_id = "doodad"
         this.animations = SPRITES["doodad"]
         this.sprite = this.animations["bone"]
@@ -11,7 +10,7 @@ class Bone {
         this.frame_modulo = 0
         this.x = x
         this.y = y
-        this.dx = 1
+        this.dx = mirror ? -2 : 2
         this.dy = GRAVITY * 5
         world.add_thing(this)
         this.block_borders()
@@ -106,7 +105,7 @@ class Bone {
                     let thing = block.things[i]
                     if (searched.has(thing)) continue
                     if (this.overlap_thing(thing)) {
-                        thing.damage(1)
+                        thing.damage(world, 1)
                         world.delete_thing(this)
                         return
                     }

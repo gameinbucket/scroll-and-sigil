@@ -11,7 +11,7 @@ class Resolution {
 
 class Thing {
     constructor(world, id, x, y) {
-        this.command
+        this.alliance = "none"
         this.half_width = 6
         this.height = 31
         this.speed = 2

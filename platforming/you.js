@@ -1,22 +1,46 @@
 class You extends Thing {
     constructor(world, x, y) {
         super(world, "you", x, y)
+        this.alliance = "good"
+        this.inventory = []
     }
     damage(world, amount) {
-        if (this.health > 0) {
+        if (this.health > 0 && this.state !== "damaged") {
             this.health -= amount
-            if (this.health < 1)
-                this.death()
-            else {
-                SOUND["you-hurt"].play()
-                this.state = "damaged"
-            }
+            SOUND["you-hurt"].play()
+            this.state = "damaged"
+            this.sprite = this.animations["damaged"]
+            this.frame = 0
+            this.frame_modulo = 0
+            this.dy = GRAVITY * 8
+            this.ground = false
         }
     }
     death() {
         SOUND["destroy"].play()
         this.state = "death"
         this.sprite = this.animations["death"]
+        this.frame = 0
+        this.frame_modulo = 0
+    }
+    take(world) {
+        if (!this.ground) return
+        let searched = new Set()
+        for (let gx = this.left_gx; gx <= this.right_gx; gx++) {
+            for (let gy = this.bottom_gy; gy <= this.top_gy; gy++) {
+                let block = world.get_block(gx, gy)
+                for (let i = 0; i < block.thing_count; i++) {
+                    let thing = block.things[i]
+                    if (thing.sprite_id !== "item" || searched.has(thing)) continue
+                    if (this.overlap_thing(thing)) {
+                        SOUND["pickup"].play()
+                        this.inventory.push(thing)
+                        world.delete_thing(thing)
+                        return
+                    }
+                }
+            }
+        }
     }
     update(world) {
         if (this.state === "death") {
@@ -28,6 +52,22 @@ class You extends Thing {
                 }
             }
             super.update(world)
+            return
+        }
+        if (this.state === "damaged") {
+            if (this.mirror) this.dx = 2
+            else this.dx = -2
+            super.update(world)
+            if (this.ground) {
+                if (this.health < 1)
+                    this.death()
+                else {
+                    this.state = "idle"
+                    this.sprite = this.animations["idle"]
+                    this.frame = 0
+                    this.frame_modulo = 0
+                }
+            }
             return
         }
         if (!this.ground) {
@@ -96,6 +136,7 @@ class You extends Thing {
         if (Input.Is("v")) this.parry()
         if (Input.Is("z")) this.light_attack()
         if (Input.Is("x")) this.heavy_attack()
+        if (Input.Is("a")) this.take(world)
 
         super.update(world)
     }

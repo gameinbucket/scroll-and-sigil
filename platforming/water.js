@@ -1,6 +1,8 @@
 class Water extends Thing {
     constructor(world, x, y) {
         super(world, "item", x, y)
+        this.half_width = 8
+        this.height = 16
         this.sprite = this.animations["water"]
     }
     update(world) {
@@ -10,8 +12,8 @@ class Water extends Thing {
         this.remove_from_blocks(world)
         this.tile_collision(world)
         this.block_borders()
-        this.thing_collision(world)
-        this.block_borders()
+        // this.thing_collision(world)
+        // this.block_borders()
         this.add_to_blocks(world)
         this.dx = 0
     }
