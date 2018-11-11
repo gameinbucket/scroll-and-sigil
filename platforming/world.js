@@ -12,6 +12,9 @@ class World {
         this.thing_count = 0
         this.delete_things = new Array(2)
         this.delete_thing_count = 0
+        this.threads = ["ai", "pathing"]
+        this.thread_index = 0
+        this.thread_id = ""
     }
     load(gl, data) {
         let content = JSON.parse(data)
@@ -176,6 +179,11 @@ class World {
         }
     }
     update() {
+        this.thread_id = this.threads[this.thread_index]
+        this.thread_index++
+        if (this.thread_index === this.threads.length)
+            this.thread_index = 0
+
         if (this.delete_thing_count > 0) {
             for (let i = 0; i < this.delete_thing_count; i++) {
                 let deleting = this.delete_things[i]

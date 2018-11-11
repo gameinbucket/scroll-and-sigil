@@ -15,8 +15,10 @@ class Thing {
         this.half_width = 6
         this.height = 31
         this.speed = 2
-        this.health = 2
-        this.stamina = 100
+        this.health_lim = 2
+        this.health = this.health_lim
+        this.stamina_lim = 100
+        this.stamina = this.stamina_lim
         this.attack = 1
         this.reach = 48
         this.mirror = false
@@ -98,7 +100,11 @@ class Thing {
         }
     }
     jump() {
-        if (!this.ground || (this.state !== "idle" && this.state !== "walk")) return
+        const min_stamina = 48
+        if (!this.ground) return
+        if (this.state !== "idle" && this.state !== "walk") return
+        if (this.stamina < min_stamina) return
+        this.stamina -= min_stamina
         this.ground = false
         this.dy = 7.5
         this.frame = 0
@@ -107,7 +113,11 @@ class Thing {
         this.move_air = this.state === "walk"
     }
     dodge() {
-        if (!this.ground || (this.state !== "idle" && this.state !== "walk")) return
+        const min_stamina = 48
+        if (!this.ground) return
+        if (this.state !== "idle" && this.state !== "walk") return
+        if (this.stamina < min_stamina) return
+        this.stamina -= min_stamina
         this.ground = false
         this.dy = 4.5
         if (this.mirror)
@@ -118,12 +128,16 @@ class Thing {
     block() {}
     parry() {}
     light_attack() {
+        const min_stamina = 48
+        if (this.stamina < min_stamina) return
         if (this.state === "idle" || this.state === "walk") {
+            this.stamina -= min_stamina
             this.state = "attack"
             this.sprite = this.animations["attack"]
             this.frame = 0
             this.frame_modulo = 0
         } else if (this.state === "crouch") {
+            this.stamina -= min_stamina
             this.state = "crouch-attack"
             this.sprite = this.animations["crouch-attack"]
             this.frame = 0
@@ -209,7 +223,7 @@ class Thing {
         this.add_to_blocks(world)
         this.dx = 0
 
-        if (this.stamina < 100)
+        if (this.stamina < this.stamina_lim)
             this.stamina += 1
     }
     tile_x_collision(world, res) {

@@ -55,9 +55,13 @@ class Skeleton extends Thing {
             super.update(world)
             return
         }
-        if (this.target === null) {
-            this.find_target(world)
-        } else {
+
+        if (world.thread_id === "ai") {
+            if (this.target === null)
+                this.find_target(world)
+        }
+
+        if (this.target !== null) {
             this.mirror = this.target.x < this.x
 
             if (this.mirror) this.move_left()
@@ -69,6 +73,7 @@ class Skeleton extends Thing {
             } else
                 this.attack_timer--
         }
+
         super.update(world)
     }
 }

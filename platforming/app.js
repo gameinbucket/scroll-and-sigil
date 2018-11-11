@@ -107,6 +107,12 @@ class Application {
         SPRITES["item"] = new Map()
         SPRITES["item"]["water"] = [new Sprite(0, 0, 16, 16, inv)]
 
+        SPRITES["ui"] = new Map()
+        SPRITES["ui"]["whip"] = new Sprite(66, 0, 20, 32, inv)
+        SPRITES["ui"]["water"] = new Sprite(87, 0, 20, 32, inv)
+        SPRITES["ui"]["health"] = new Sprite(27, 33, 1, 6, inv)
+        SPRITES["ui"]["stamina"] = new Sprite(29, 33, 1, 6, inv)
+
         let world = new World()
         Network.Request("resources/map.json", (data) => {
             world.load(gl, data)
@@ -209,8 +215,12 @@ class Application {
         g.update_mvp(gl)
         g.set_texture(gl, "ui")
         this.generic.zero()
-        Render.Image(this.generic, 5, 5, 32, 32, 0.0, 0.0, 32.0 / 128.0, 32.0 / 128.0)
-        Render.Image(this.generic, 42, 5, 32, 32, 33.0 / 128.0, 0.0, 65.0 / 128.0, 32.0 / 128.0)
+        Render.Sprite(this.generic, 20, 32, SPRITES["ui"]["whip"])
+        Render.Sprite(this.generic, 62, 32, SPRITES["ui"]["whip"])
+        Render.Sprite(this.generic, 41, 49, SPRITES["ui"]["water"])
+        Render.Sprite(this.generic, 41, 16, SPRITES["ui"]["water"])
+        Render.ImageSprite(this.generic, 20, frame.height - 26, SPRITES["ui"]["health"], (player.health / player.health_lim) * 100.0, 6)
+        Render.ImageSprite(this.generic, 20, frame.height - 33, SPRITES["ui"]["stamina"], (player.stamina / player.stamina_lim) * 100.0, 6)
         RenderSystem.UpdateAndDraw(gl, this.generic)
 
         RenderSystem.SetFrameBuffer(gl, null)
