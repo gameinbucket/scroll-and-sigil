@@ -3,10 +3,16 @@ class You extends Thing {
         super(world, "you", x, y)
         this.alliance = "good"
         this.inventory = []
+        this.view_inventory = false
+        this.health_reduce = 0
+        this.stamina_reduce = 0
     }
-    damage(world, amount) {
+    damage(_, amount) {
         if (this.health > 0 && this.state !== "damaged") {
+            this.health_reduce = this.health
             this.health -= amount
+            if (this.health < 0)
+                this.health = 0
             SOUND["you-hurt"].play()
             this.state = "damaged"
             this.sprite = this.animations["damaged"]
@@ -42,7 +48,41 @@ class You extends Thing {
             }
         }
     }
+    jump() {
+        const min_stamina = 24
+        if (!this.ground) return
+        if (this.state !== "idle" && this.state !== "walk") return
+        if (this.stamina < min_stamina) return
+        this.stamina_reduce = this.stamina
+        this.stamina -= min_stamina
+        this.ground = false
+        this.dy = 7.5
+        this.move_air = this.state === "walk"
+        this.frame = 0
+        this.frame_modulo = 0
+        this.sprite = this.animations["crouch"]
+    }
+    dodge() {
+        const min_stamina = 24
+        if (!this.ground) return
+        if (this.state !== "idle" && this.state !== "walk") return
+        if (this.stamina < min_stamina) return
+        this.stamina_reduce = this.stamina
+        this.stamina -= min_stamina
+        this.ground = false
+        this.dy = 5.5
+        if (this.mirror) this.dx = this.speed * 0.6
+        else this.dx = -this.speed * 0.6
+        this.frame = 0
+        this.frame_modulo = 0
+        this.sprite = this.animations["crouch"]
+    }
     update(world) {
+        if (this.health_reduce > this.health)
+            this.health_reduce--
+        if (this.stamina_reduce > this.stamina)
+            this.stamina_reduce--
+
         if (this.state === "death") {
             if (this.frame < this.sprite.length - 1) {
                 this.frame_modulo++
@@ -132,6 +172,7 @@ class You extends Thing {
         }
 
         this.crouch(Input.Is("ArrowDown"))
+        if (Input.Is("i")) this.view_inventory = !this.view_inventory
         if (Input.Is("Control")) this.block()
         if (Input.Is("v")) this.parry()
         if (Input.Is("z")) this.light_attack()

@@ -15,11 +15,11 @@ class Thing {
         this.half_width = 6
         this.height = 31
         this.speed = 2
-        this.health_lim = 2
+        this.health_lim = 50
         this.health = this.health_lim
-        this.stamina_lim = 100
+        this.stamina_lim = 50
         this.stamina = this.stamina_lim
-        this.attack = 1
+        this.attack = 20
         this.reach = 48
         this.mirror = false
         this.animations = SPRITES[id]
@@ -100,43 +100,27 @@ class Thing {
         }
     }
     jump() {
-        const min_stamina = 48
         if (!this.ground) return
         if (this.state !== "idle" && this.state !== "walk") return
-        if (this.stamina < min_stamina) return
-        this.stamina -= min_stamina
         this.ground = false
         this.dy = 7.5
-        this.frame = 0
-        this.frame_modulo = 0
-        this.sprite = this.animations["crouch"]
         this.move_air = this.state === "walk"
     }
-    dodge() {
-        const min_stamina = 48
-        if (!this.ground) return
-        if (this.state !== "idle" && this.state !== "walk") return
-        if (this.stamina < min_stamina) return
-        this.stamina -= min_stamina
-        this.ground = false
-        this.dy = 4.5
-        if (this.mirror)
-            this.dx = this.speed * 0.25
-        else
-            this.dx = -this.speed * 0.25
-    }
+    dodge() {}
     block() {}
     parry() {}
     light_attack() {
-        const min_stamina = 48
+        const min_stamina = 24
         if (this.stamina < min_stamina) return
         if (this.state === "idle" || this.state === "walk") {
+            this.stamina_reduce = this.stamina
             this.stamina -= min_stamina
             this.state = "attack"
             this.sprite = this.animations["attack"]
             this.frame = 0
             this.frame_modulo = 0
         } else if (this.state === "crouch") {
+            this.stamina_reduce = this.stamina
             this.stamina -= min_stamina
             this.state = "crouch-attack"
             this.sprite = this.animations["crouch-attack"]
@@ -221,7 +205,9 @@ class Thing {
         this.tile_collision(world)
         this.block_borders()
         this.add_to_blocks(world)
-        this.dx = 0
+
+        if (this.ground)
+            this.dx = 0
 
         if (this.stamina < this.stamina_lim)
             this.stamina += 1

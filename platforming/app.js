@@ -112,6 +112,8 @@ class Application {
         SPRITES["ui"]["water"] = new Sprite(87, 0, 20, 32, inv)
         SPRITES["ui"]["health"] = new Sprite(27, 33, 1, 6, inv)
         SPRITES["ui"]["stamina"] = new Sprite(29, 33, 1, 6, inv)
+        SPRITES["ui"]["reduce"] = new Sprite(31, 33, 1, 6, inv)
+        SPRITES["ui"]["gone"] = new Sprite(33, 33, 1, 6, inv)
 
         let world = new World()
         Network.Request("resources/map.json", (data) => {
@@ -127,7 +129,7 @@ class Application {
         MUSIC["melody"] = new Audio("resources/vampire-killer.ogg")
         MUSIC["melody"].loop = true
 
-        SOUND["pickup"] = new Audio("resources/you-whip.wav")
+        SOUND["pickup"] = new Audio("resources/pickup.wav")
         SOUND["destroy"] = new Audio("resources/destroy.wav")
         SOUND["you-hurt"] = new Audio("resources/you-hurt.wav")
         SOUND["you-whip"] = new Audio("resources/you-whip.wav")
@@ -219,8 +221,34 @@ class Application {
         Render.Sprite(this.generic, 62, 32, SPRITES["ui"]["whip"])
         Render.Sprite(this.generic, 41, 49, SPRITES["ui"]["water"])
         Render.Sprite(this.generic, 41, 16, SPRITES["ui"]["water"])
-        Render.ImageSprite(this.generic, 20, frame.height - 26, SPRITES["ui"]["health"], (player.health / player.health_lim) * 100.0, 6)
-        Render.ImageSprite(this.generic, 20, frame.height - 33, SPRITES["ui"]["stamina"], (player.stamina / player.stamina_lim) * 100.0, 6)
+
+        if (player.view_inventory) {
+
+        }
+
+        let health_bar = player.health
+        let health_gone = (player.health_lim - player.health)
+
+        let stamina_bar = player.stamina
+        let stamina_gone = (player.stamina_lim - player.stamina)
+
+        let x = 20
+        let y = 26
+        Render.ImageSprite(this.generic, x + health_bar, frame.height - y, SPRITES["ui"]["gone"], health_gone, 6)
+        if (player.health_reduce > player.health) {
+            let health_reduce = player.health_reduce - health_bar
+            Render.ImageSprite(this.generic, x + health_bar, frame.height - y, SPRITES["ui"]["reduce"], health_reduce, 6)
+        }
+        Render.ImageSprite(this.generic, x, frame.height - y, SPRITES["ui"]["health"], health_bar, 6)
+
+        y = 33
+        Render.ImageSprite(this.generic, x + stamina_bar, frame.height - y, SPRITES["ui"]["gone"], stamina_gone, 6)
+        if (player.stamina_reduce > player.stamina) {
+            let stamina_reduce = player.stamina_reduce - stamina_bar
+            Render.ImageSprite(this.generic, x + stamina_bar, frame.height - y, SPRITES["ui"]["reduce"], stamina_reduce, 6)
+        }
+        Render.ImageSprite(this.generic, x, frame.height - y, SPRITES["ui"]["stamina"], stamina_bar, 6)
+
         RenderSystem.UpdateAndDraw(gl, this.generic)
 
         RenderSystem.SetFrameBuffer(gl, null)

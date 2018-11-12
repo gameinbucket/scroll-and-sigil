@@ -5,6 +5,8 @@ class Skeleton extends Thing {
         this.alliance = "undead"
         this.target = null
         this.attack_timer = 0
+        this.wander_timer = 0
+        this.wait = false
     }
     damage(world, amount) {
         if (this.health > 0) {
@@ -32,13 +34,20 @@ class Skeleton extends Thing {
                 let block = world.get_block(gx, gy)
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
-                    if (thing.alliance === "good") {
+                    if (thing.alliance === "good" && thing.health > 0) {
                         this.target = thing
                         return
                     }
                 }
             }
         }
+    }
+    check_ground_gap(world) {
+        let gx
+        if (this.mirror) gx = Math.floor((this.x - this.half_width - this.speed) * INV_TILE_SIZE)
+        else gx = Math.floor((this.x + this.half_width + this.speed) * INV_TILE_SIZE)
+        let gy = Math.floor(this.y * INV_TILE_SIZE)
+        return !Tile.Empty(world.get_tile(gx, gy))
     }
     update(world) {
         if (this.state === "death") {
@@ -56,22 +65,61 @@ class Skeleton extends Thing {
             return
         }
 
+        if (!this.ground) {
+            if (this.move_air) {
+                if (this.mirror) this.dx = -this.speed
+                else this.dx = this.speed
+            }
+        }
+
         if (world.thread_id === "ai") {
             if (this.target === null)
                 this.find_target(world)
         }
 
-        if (this.target !== null) {
-            this.mirror = this.target.x < this.x
-
+        if (!this.wait) {
             if (this.mirror) this.move_left()
             else this.move_right()
+        }
 
-            if (this.attack_timer === 0) {
-                new Bone(world, this.x, this.y + this.height * 1.5, this.mirror)
-                this.attack_timer = 64
+        if (this.target === null) {
+            if (this.wander_timer === 0) {
+                let next = Math.random()
+                if (next > 0.9)
+                    this.wait = true
+                else {
+                    this.wait = false
+                    this.mirror = next > 0.45
+                }
+                this.wander_timer = Math.floor(Math.random() * 64 + 16)
             } else
-                this.attack_timer--
+                this.wander_timer--
+        } else {
+            if (world.thread_id === "ai") {
+                if (this.target.health < 1)
+                    this.target = null
+                else {
+                    if (this.x + this.half_width < this.target.x - this.target.half_width) {
+                        this.mirror = false
+                        this.wait = false
+                    } else if (this.x - this.half_width > this.target.x + this.target.half_width) {
+                        this.mirror = true
+                        this.wait = false
+                    } else
+                        this.wait = true
+
+                    if (this.check_ground_gap(world))
+                        this.jump()
+
+                    if (this.attack_timer === 0) {
+                        if (Math.abs(this.x - this.target.x) < 64) {
+                            new Bone(world, this.x, this.y + this.height * 1.5, this.mirror)
+                            this.attack_timer = 40
+                        }
+                    } else
+                        this.attack_timer--
+                }
+            }
         }
 
         super.update(world)

@@ -91,7 +91,7 @@ class Bone {
             world.delete_thing(this)
         }
     }
-    overlap_boxes(boxes) {}
+    overlap_boxes(_) {}
     overlap_thing(thing) {
         return this.x + this.half_width > thing.x - thing.half_width && this.x - this.half_width < thing.x + thing.half_width &&
             this.y + this.height > thing.y && this.y < thing.y + thing.height
@@ -105,7 +105,7 @@ class Bone {
                     let thing = block.things[i]
                     if (searched.has(thing)) continue
                     if (this.overlap_thing(thing)) {
-                        thing.damage(world, 1)
+                        thing.damage(world, 20)
                         world.delete_thing(this)
                         return
                     }
