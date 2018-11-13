@@ -3,9 +3,32 @@ class You extends Thing {
         super(world, "you", x, y)
         this.alliance = "good"
         this.inventory = []
+        this.inventory_size = 0
+        this.inventory_lim = 10
         this.view_inventory = false
         this.health_reduce = 0
         this.stamina_reduce = 0
+        this.sticky_jump = true
+        this.sticky_dodge = true
+        this.sticky_attack = true
+        this.sticky_inventory = true
+        this.sticky_search = true
+        this.sticky_item = true
+        this.sticky_skill = true
+        this.item = null
+        this.hand = null
+        this.offhand = null
+        this.head = null
+        this.body = null
+        this.arms = null
+        this.legs = null
+        this.skill = null
+        this.experience = 0
+        this.experience_ = 10
+        this.strength = 1
+        this.dexterity = 1
+        this.stat_points = 0
+        this.afflictions = []
     }
     damage(_, amount) {
         if (this.health > 0 && this.state !== "damaged") {
@@ -29,7 +52,66 @@ class You extends Thing {
         this.frame = 0
         this.frame_modulo = 0
     }
-    take(world) {
+    damage_scan(world) {
+        let item = this.hand
+        let collided = new Array()
+        let searched = new Set()
+
+        let boxes = [{
+            x: 0,
+            y: 24,
+            width: item.reach,
+            height: 10
+        }]
+
+        let left_gx = 0
+        let right_gx = 0
+        let bottom_gy = Math.floor(this.y * INV_GRID_SIZE)
+        let top_gy = Math.floor((this.y + this.height) * INV_GRID_SIZE)
+
+        if (this.mirror) {
+            for (let i in boxes) {
+                let box = boxes[i]
+                box.x = -(box.x + box.width)
+            }
+            left_gx = Math.floor(this.x * INV_GRID_SIZE)
+            right_gx = Math.floor((this.x + item.reach) * INV_GRID_SIZE)
+        } else {
+            left_gx = Math.floor((this.x - item.reach) * INV_GRID_SIZE)
+            right_gx = Math.floor(this.x * INV_GRID_SIZE)
+        }
+
+        for (let i in boxes) {
+            let box = boxes[i]
+            box.x += this.x
+            box.y += this.y
+        }
+
+        for (let gx = left_gx; gx <= right_gx; gx++) {
+            for (let gy = bottom_gy; gy <= top_gy; gy++) {
+                let block = world.get_block(gx, gy)
+                for (let i = 0; i < block.thing_count; i++) {
+                    let thing = block.things[i]
+                    if (thing === this || searched.has(thing)) continue
+                    if (thing.overlap_boxes(boxes)) collided.push(thing)
+                    searched.add(thing)
+                }
+            }
+        }
+
+        for (let i = 0; i < collided.length; i++) {
+            let thing = collided[i]
+            let damage = item.base_damage + item.strength_multiplier * this.strength + item.dexterity_multiplier * this.dexterity
+            thing.damage(world, damage)
+            this.experience += damage
+            if (this.experience > this.experience_lim) {
+                this.stat_points += 5
+                this.experience_lim = Math.floor(this.experience_lim * 1.5) + 5
+                SOUND["levelup"].play()
+            }
+        }
+    }
+    search(world) {
         if (!this.ground) return
         let searched = new Set()
         for (let gx = this.left_gx; gx <= this.right_gx; gx++) {
@@ -38,15 +120,24 @@ class You extends Thing {
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (thing.sprite_id !== "item" || searched.has(thing)) continue
-                    if (this.overlap_thing(thing)) {
+                    if (this.overlap_thing(thing) && this.inventory_size + thing.size <= this.inventory_lim) {
                         SOUND["pickup"].play()
                         this.inventory.push(thing)
+                        this.inventory_size += thing.size
                         world.delete_thing(thing)
                         return
                     }
                 }
             }
         }
+    }
+    use_item() {
+        if (this.item === null) return
+        this.item.use(this)
+    }
+    use_skill() {
+        if (this.skill === null) return
+        this.skill.use(this)
     }
     jump() {
         const min_stamina = 24
@@ -167,17 +258,60 @@ class You extends Thing {
                 this.move_air = false
             }
 
-            if (Input.Is(" ")) this.jump()
-            if (Input.Is("c")) this.dodge()
+            if (Input.Is(" ")) {
+                if (this.sticky_jump) {
+                    this.jump()
+                    this.sticky_jump = false
+                }
+            } else this.sticky_jump = true
+
+            if (Input.Is("c")) {
+                if (this.sticky_dodge) {
+                    this.dodge()
+                    this.sticky_dodge = false
+                }
+            } else this.sticky_dodge = true
         }
 
         this.crouch(Input.Is("ArrowDown"))
-        if (Input.Is("i")) this.view_inventory = !this.view_inventory
-        if (Input.Is("Control")) this.block()
         if (Input.Is("v")) this.parry()
-        if (Input.Is("z")) this.light_attack()
+        if (Input.Is("Control")) this.block()
         if (Input.Is("x")) this.heavy_attack()
-        if (Input.Is("a")) this.take(world)
+
+        if (Input.Is("i")) {
+            if (this.sticky_inventory) {
+                this.view_inventory = !this.view_inventory
+                this.sticky_inventory = false
+            }
+        } else this.sticky_inventory = true
+
+        if (Input.Is("z")) {
+            if (this.sticky_attack) {
+                this.light_attack()
+                this.sticky_attack = false
+            }
+        } else this.sticky_attack = true
+
+        if (Input.Is("a")) {
+            if (this.sticky_search) {
+                this.search(world)
+                this.sticky_search = false
+            }
+        } else this.sticky_search = true
+
+        if (Input.Is("e")) {
+            if (this.sticky_item) {
+                this.use_item()
+                this.sticky_item = false
+            }
+        } else this.sticky_item = true
+
+        if (Input.Is("f")) {
+            if (this.sticky_skill) {
+                this.use_skill()
+                this.sticky_skill = false
+            }
+        } else this.sticky_skill = true
 
         super.update(world)
     }

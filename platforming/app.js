@@ -71,12 +71,13 @@ class Application {
         this.load_programs(g, gl)
         this.load_images(g, gl)
 
-        let generic = RenderBuffer.Init(gl, 2, 0, 2, 1600, 2400)
+        let generic = RenderBuffer.Init(gl, 2, 0, 2, 800, 1200)
+        let generic2 = RenderBuffer.Init(gl, 2, 0, 2, 800, 1200)
         let sprite_buffers = new Map()
         sprite_buffers["you"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffers["skeleton"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffers["doodad"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
-        sprite_buffers["item"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffers["item"] = RenderBuffer.Init(gl, 2, 0, 2, 80, 120)
 
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
 
@@ -106,14 +107,23 @@ class Application {
 
         SPRITES["item"] = new Map()
         SPRITES["item"]["water"] = [new Sprite(0, 0, 16, 16, inv)]
+        SPRITES["item"]["whip"] = [new Sprite(17, 0, 17, 17, inv)]
+        SPRITES["item"]["musket"] = [new Sprite(35, 0, 15, 14, inv)]
+        SPRITES["item"]["helmet"] = [new Sprite(53, 0, 13, 15, inv)]
+        SPRITES["item"]["armor"] = [new Sprite(68, 0, 14, 15, inv)]
+        SPRITES["item"]["boots"] = [new Sprite(86, 0, 12, 13, inv)]
+        SPRITES["item"]["musket-ball"] = [new Sprite(100, 0, 8, 8, inv)]
+        SPRITES["item"]["gloves"] = [new Sprite(111, 0, 14, 15, inv)]
+        SPRITES["item"]["shield"] = [new Sprite(1, 19, 10, 15, inv)]
+        SPRITES["item"]["food"] = [new Sprite(14, 19, 13, 12, inv)]
+        SPRITES["item"]["roar"] = [new Sprite(29, 21, 14, 10, inv)]
 
         SPRITES["ui"] = new Map()
-        SPRITES["ui"]["whip"] = new Sprite(66, 0, 20, 32, inv)
-        SPRITES["ui"]["water"] = new Sprite(87, 0, 20, 32, inv)
         SPRITES["ui"]["health"] = new Sprite(27, 33, 1, 6, inv)
         SPRITES["ui"]["stamina"] = new Sprite(29, 33, 1, 6, inv)
         SPRITES["ui"]["reduce"] = new Sprite(31, 33, 1, 6, inv)
         SPRITES["ui"]["gone"] = new Sprite(33, 33, 1, 6, inv)
+        SPRITES["ui"]["panel"] = new Sprite(0, 0, 20, 32, inv)
 
         let world = new World()
         Network.Request("resources/map.json", (data) => {
@@ -133,6 +143,8 @@ class Application {
         SOUND["destroy"] = new Audio("resources/destroy.wav")
         SOUND["you-hurt"] = new Audio("resources/you-hurt.wav")
         SOUND["you-whip"] = new Audio("resources/you-whip.wav")
+        SOUND["levelup"] = new Audio("resources/levelup.wav")
+        SOUND["roar"] = new Audio("resources/destroy.wav")
 
         window.onblur = function () {
             self.on = false
@@ -160,6 +172,7 @@ class Application {
         this.gl = gl
         this.g = g
         this.generic = generic
+        this.generic2 = generic2
         this.world = world
         this.music = MUSIC["melody"]
 
@@ -217,13 +230,35 @@ class Application {
         g.update_mvp(gl)
         g.set_texture(gl, "ui")
         this.generic.zero()
-        Render.Sprite(this.generic, 20, 32, SPRITES["ui"]["whip"])
-        Render.Sprite(this.generic, 62, 32, SPRITES["ui"]["whip"])
-        Render.Sprite(this.generic, 41, 49, SPRITES["ui"]["water"])
-        Render.Sprite(this.generic, 41, 16, SPRITES["ui"]["water"])
-
+        this.generic2.zero()
         if (player.view_inventory) {
+            let inventory = player.inventory
+            let frame_half_width = frame.width * 0.5
+            let frame_half_height = frame.height * 0.5
+            let columns = 8
+            let half_items = columns * 21 * 0.5
+            let x = frame_half_width - half_items
+            let y = frame_half_height - 16
+            for (let index = 0; index < inventory.length; index++) {
+                Render.Sprite(this.generic, x + index % columns * 21, y + Math.floor(index / columns) * 33, SPRITES["ui"]["panel"])
 
+                let sprite = inventory[index].sprite[0]
+                Render.Sprite(this.generic2, x + index % columns * 21 + 10 - sprite.width * 0.5, y + Math.floor(index / columns) * 33 + 16 - sprite.height * 0.5, sprite)
+            }
+            y += 33
+            Render.Sprite(this.generic, x + 0 * 21, y, SPRITES["ui"]["panel"])
+            Render.Sprite(this.generic, x + 1 * 21, y, SPRITES["ui"]["panel"])
+            Render.Sprite(this.generic, x + 2 * 21, y, SPRITES["ui"]["panel"])
+            Render.Sprite(this.generic, x + 3 * 21, y, SPRITES["ui"]["panel"])
+            Render.Sprite(this.generic, x + 4 * 21, y, SPRITES["ui"]["panel"])
+            Render.Sprite(this.generic, x + 5 * 21, y, SPRITES["ui"]["panel"])
+            Render.Sprite(this.generic, x + 6 * 21, y, SPRITES["ui"]["panel"])
+            Render.Sprite(this.generic, x + 7 * 21, y, SPRITES["ui"]["panel"])
+        } else {
+            Render.Sprite(this.generic, 20, 32, SPRITES["ui"]["panel"])
+            Render.Sprite(this.generic, 62, 32, SPRITES["ui"]["panel"])
+            Render.Sprite(this.generic, 41, 49, SPRITES["ui"]["panel"])
+            Render.Sprite(this.generic, 41, 16, SPRITES["ui"]["panel"])
         }
 
         let health_bar = player.health
@@ -250,6 +285,37 @@ class Application {
         Render.ImageSprite(this.generic, x, frame.height - y, SPRITES["ui"]["stamina"], stamina_bar, 6)
 
         RenderSystem.UpdateAndDraw(gl, this.generic)
+
+        g.set_texture(gl, "item")
+        if (player.view_inventory) {
+            RenderSystem.UpdateAndDraw(gl, this.generic2)
+        } else {
+            if (player.hand !== null) {
+                let sprite = player.hand.sprite[0]
+                let x = 20 + 10 - sprite.width * 0.5
+                let y = 32 + 16 - sprite.height * 0.5
+                Render.Sprite(this.generic2, x, y, sprite)
+            }
+            if (player.offhand !== null) {
+                let sprite = player.offhand.sprite[0]
+                let x = 62 + 10 - sprite.width * 0.5
+                let y = 32 + 16 - sprite.height * 0.5
+                Render.Sprite(this.generic2, x, y, sprite)
+            }
+            if (player.item !== null) {
+                let sprite = player.item.sprite[0]
+                let x = 41 + 10 - sprite.width * 0.5
+                let y = 16 + 16 - sprite.height * 0.5
+                Render.Sprite(this.generic2, x, y, sprite)
+            }
+            if (player.skill !== null) {
+                let sprite = player.skill.sprite[0]
+                let x = 41 + 10 - sprite.width * 0.5
+                let y = 49 + 16 - sprite.height * 0.5
+                Render.Sprite(this.generic2, x, y, sprite)
+            }
+        }
+        RenderSystem.UpdateAndDraw(gl, this.generic2)
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)

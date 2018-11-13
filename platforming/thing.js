@@ -19,8 +19,6 @@ class Thing {
         this.health = this.health_lim
         this.stamina_lim = 50
         this.stamina = this.stamina_lim
-        this.attack = 20
-        this.reach = 48
         this.mirror = false
         this.animations = SPRITES[id]
         this.sprite_id = id
@@ -111,6 +109,7 @@ class Thing {
     parry() {}
     light_attack() {
         const min_stamina = 24
+        if (this.hand === null) return
         if (this.stamina < min_stamina) return
         if (this.state === "idle" || this.state === "walk") {
             this.stamina_reduce = this.stamina
@@ -209,7 +208,7 @@ class Thing {
         if (this.ground)
             this.dx = 0
 
-        if (this.stamina < this.stamina_lim)
+        if (this.stamina < this.stamina_lim && this.stamina_reduce <= this.stamina)
             this.stamina += 1
     }
     tile_x_collision(world, res) {

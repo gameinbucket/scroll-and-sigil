@@ -59,6 +59,36 @@ class World {
                 case "water":
                     new Water(this, x, y)
                     break
+                case "roar":
+                    new Roar(this, x, y)
+                    break
+                case "whip":
+                    new Whip(this, x, y)
+                    break
+                case "musket":
+                    new Musket(this, x, y)
+                    break
+                case "helmet":
+                    new Helmet(this, x, y)
+                    break
+                case "armor":
+                    new Armor(this, x, y)
+                    break
+                case "boots":
+                    new Boots(this, x, y)
+                    break
+                case "gloves":
+                    new Gloves(this, x, y)
+                    break
+                case "musket-ball":
+                    new MusketBall(this, x, y)
+                    break
+                case "shield":
+                    new Shield(this, x, y)
+                    break
+                case "food":
+                    new Food(this, x, y)
+                    break
             }
         }
 
