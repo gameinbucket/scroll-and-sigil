@@ -33,13 +33,7 @@ class Roar extends Item {
         if (thing.stamina < min_stamina) return
         thing.stamina_reduce = thing.stamina
         thing.stamina -= min_stamina
-
-        SOUND["roar"].play()
-        let affect = {
-            strength: 1,
-            time: 3600
-        }
-        thing.afflictions.push(affect)
+        thing.afflict(new RoarAffliction())
     }
 }
 
