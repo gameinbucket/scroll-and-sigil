@@ -36,6 +36,7 @@ class Bone {
             }
         }
     }
+    damage() {}
     update(world) {
         this.dy -= GRAVITY
         this.x += this.dx

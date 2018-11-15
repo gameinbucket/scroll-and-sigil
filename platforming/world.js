@@ -24,6 +24,9 @@ class World {
         let tiles = content["tiles"]
         let things = content["things"]
 
+        let background_color = content["background-color"]
+        gl.clearColor(background_color[0] / 255.0, background_color[1] / 255.0, background_color[2] / 255.0, 1.0)
+
         let x = 0
         let y = 0
         let index = 0

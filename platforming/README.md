@@ -10,9 +10,13 @@
 > inventory screen
 > background textures
 > learning ai
-> skills / levels
-> input key off after action
-> editor defines tiles/items without hardcoding
+> editor defines tiles / items without hardcoding
+> infinite level moving
+> save game
+> death screen
+> stairs
+> elevators
+> customizable appearance
 
 ## stats list
 

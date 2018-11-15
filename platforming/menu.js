@@ -2,6 +2,9 @@ class Menu {
     constructor(thing) {
         this.thing = thing
 
+        SOUND["open-inventory"].currentTime = 0
+        SOUND["open-inventory"].play()
+
         this.menu_overview = 0
         this.menu_inventory = 1
 
@@ -16,6 +19,8 @@ class Menu {
     select() {
         if (Input.Is("ArrowLeft")) {
             if (this.sticky_left) {
+                SOUND["menu-select"].currentTime = 0
+                SOUND["menu-select"].play()
                 if (this.select_index > 0)
                     this.select_index--
                 this.sticky_left = false
@@ -24,6 +29,8 @@ class Menu {
 
         if (Input.Is("ArrowRight")) {
             if (this.sticky_right) {
+                SOUND["menu-select"].currentTime = 0
+                SOUND["menu-select"].play()
                 if (this.select_index < this.select_lim - 1)
                     this.select_index++
                 this.sticky_right = false
@@ -63,7 +70,8 @@ class Menu {
                                 this.thing.skill = item
                                 break
                         }
-                        break
+                        SOUND["equip"].currentTime = 0
+                        SOUND["equip"].play()
                 }
                 this.sticky_enter = false
             }

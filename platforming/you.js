@@ -118,7 +118,7 @@ class You extends Thing {
             if (this.experience > this.experience_lim) {
                 this.stat_points += 5
                 this.experience_lim = Math.floor(this.experience_lim * 1.5) + 5
-                SOUND["levelup"].play()
+                SOUND["level-up"].play()
             }
         }
     }
@@ -132,8 +132,8 @@ class You extends Thing {
                     let thing = block.things[i]
                     if (thing.sprite_id !== "item" || searched.has(thing)) continue
                     if (this.overlap_thing(thing) && this.inventory_size + thing.size <= this.inventory_lim) {
-                        SOUND["pickup"].currentTime = 0
-                        SOUND["pickup"].play()
+                        SOUND["pick-up"].currentTime = 0
+                        SOUND["pick-up"].play()
                         this.inventory.push(thing)
                         this.inventory_size += thing.size
                         world.delete_thing(thing)
