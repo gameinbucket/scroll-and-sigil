@@ -63,6 +63,7 @@ class Application {
             let music = config["music"]
             let sound = config["sound"]
             let sprites = config["sprites"]
+            let tiles = config["tiles"]
 
             for (let index = 0; index < shaders.length; index++)
                 g.make_program(gl, shaders[index])
@@ -88,9 +89,20 @@ class Application {
                 for (let jindex = 0; jindex < animations.length; jindex++) {
                     let animation = animations[jindex]
                     let animation_name = animation["name"]
-                    let frame = animation["frames"]
-                    SPRITES[name][animation_name] = [new Sprite(frame[0], frame[1], frame[2], frame[3], size)]
+                    let frames = animation["frames"]
+                    SPRITES[name][animation_name] = []
+                    for (let kindex = 0; kindex < frames.length; kindex++)
+                        SPRITES[name][animation_name].push(new Sprite(frames[kindex], size))
                 }
+            }
+
+            for (let index = 0; index < tiles.length; index++) {
+                let tile = tiles[index]
+                let texture = tile["texture"]
+                let empty = tile["empty"]
+                if (texture === null) TILE_TEXTURE.push(null)
+                else TILE_TEXTURE.push(Sprite.Build(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
+                TILE_EMPTY.push(empty)
             }
 
             self.music = MUSIC["melody"]

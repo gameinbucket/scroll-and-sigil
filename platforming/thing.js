@@ -219,11 +219,11 @@ class Thing {
         if (this.dx > 0) {
             let gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
             for (let gy = bottom_gy; gy <= top_gy; gy++) {
-                if (Tile.Empty(world.get_tile(gx, gy)))
+                if (TILE_EMPTY[world.get_tile(gx, gy)])
                     continue
                 res.resolve = true
                 res.delta = gx * TILE_SIZE - this.half_width
-                if (!Tile.Empty(world.get_tile(gx - 1, gy))) {
+                if (!TILE_EMPTY[world.get_tile(gx - 1, gy)]) {
                     res.finite = false
                     return
                 }
@@ -232,11 +232,11 @@ class Thing {
             let gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
             for (let gy = bottom_gy; gy <= top_gy; gy++) {
                 let tile = world.get_tile(gx, gy)
-                if (Tile.Empty(tile))
+                if (TILE_EMPTY[tile])
                     continue
                 res.resolve = true
                 res.delta = (gx + 1) * TILE_SIZE + this.half_width
-                if (!Tile.Empty(world.get_tile(gx + 1, gy))) {
+                if (!TILE_EMPTY[world.get_tile(gx + 1, gy)]) {
                     res.finite = false
                     return
                 }
@@ -253,11 +253,11 @@ class Thing {
         } else {
             let gy = Math.floor(this.y * INV_TILE_SIZE)
             for (let gx = left_gx; gx <= right_gx; gx++) {
-                if (Tile.Empty(world.get_tile(gx, gy)))
+                if (TILE_EMPTY[world.get_tile(gx, gy)])
                     continue
                 res.resolve = true
                 res.delta = (gy + 1) * TILE_SIZE
-                if (!Tile.Empty(world.get_tile(gx, gy + 1))) {
+                if (!TILE_EMPTY[world.get_tile(gx, gy + 1)]) {
                     res.finite = false
                     return
                 }
@@ -270,7 +270,7 @@ class Thing {
         let gy = Math.floor((this.y - 1) * INV_TILE_SIZE)
         for (let gx = left_gx; gx <= right_gx; gx++) {
             let t = world.get_tile(gx, gy)
-            if (Tile.Empty(t))
+            if (TILE_EMPTY[t])
                 continue
             return true
         }

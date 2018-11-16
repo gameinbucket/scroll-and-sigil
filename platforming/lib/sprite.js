@@ -1,15 +1,20 @@
 class Sprite {
-    constructor(left, top, width, height, inverse_sheet, ox = 0, oy = 0) {
-        this.width = width
-        this.height = height
+    constructor(data, size) {
+        this.width = data[2]
+        this.height = data[3]
 
-        this.left = left * inverse_sheet
-        this.top = top * inverse_sheet
-        this.right = (left + width) * inverse_sheet
-        this.bottom = (top + height) * inverse_sheet
+        this.left = data[0] * size
+        this.top = data[1] * size
+        this.right = (data[0] + this.width) * size
+        this.bottom = (data[1] + this.height) * size
 
-        this.ox = ox
-        this.oy = oy
+        if (data.length > 4) {
+            this.ox = data[4]
+            this.oy = data[5]
+        } else {
+            this.ox = 0
+            this.oy = 0
+        }
     }
     static Build(left, top, width, height, sheet_size) {
         return [

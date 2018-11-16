@@ -10,7 +10,6 @@
 > inventory screen
 > background textures
 > learning ai
-> editor defines tiles / items without hardcoding
 > infinite level moving
 > save game
 > death screen

@@ -47,7 +47,7 @@ class Skeleton extends Thing {
         if (this.mirror) gx = Math.floor((this.x - this.half_width - this.speed) * INV_TILE_SIZE)
         else gx = Math.floor((this.x + this.half_width + this.speed) * INV_TILE_SIZE)
         let gy = Math.floor(this.y * INV_TILE_SIZE)
-        return !Tile.Empty(world.get_tile(gx, gy))
+        return !TILE_EMPTY[world.get_tile(gx, gy)]
     }
     update(world) {
         if (this.state === "death") {

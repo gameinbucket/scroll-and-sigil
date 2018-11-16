@@ -53,18 +53,18 @@ class Bone {
         if (this.dx > 0) {
             let gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
             for (let gy = bottom_gy; gy <= top_gy; gy++) {
-                if (Tile.Empty(world.get_tile(gx, gy)))
+                if (TILE_EMPTY[world.get_tile(gx, gy)])
                     continue
-                if (!Tile.Empty(world.get_tile(gx - 1, gy)))
+                if (!TILE_EMPTY[world.get_tile(gx - 1, gy)])
                     return true
             }
         } else {
             let gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
             for (let gy = bottom_gy; gy <= top_gy; gy++) {
                 let tile = world.get_tile(gx, gy)
-                if (Tile.Empty(tile))
+                if (TILE_EMPTY[tile])
                     continue
-                if (!Tile.Empty(world.get_tile(gx + 1, gy)))
+                if (!TILE_EMPTY[world.get_tile(gx + 1, gy)])
                     return true
             }
         }
@@ -79,9 +79,9 @@ class Bone {
         } else {
             let gy = Math.floor(this.y * INV_TILE_SIZE)
             for (let gx = left_gx; gx <= right_gx; gx++) {
-                if (Tile.Empty(world.get_tile(gx, gy)))
+                if (TILE_EMPTY[world.get_tile(gx, gy)])
                     continue
-                if (!Tile.Empty(world.get_tile(gx, gy + 1)))
+                if (!TILE_EMPTY[world.get_tile(gx, gy + 1)])
                     return true
             }
         }

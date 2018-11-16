@@ -346,7 +346,7 @@ class Application {
         let block = this.world.blocks[bx + by * this.world.block_w]
         let tile = block.tiles[tx + ty * BLOCK_SIZE]
 
-        while (Tile.Empty(tile)) {
+        while (TILE_EMPTY[tile]) {
             ty -= 1
             if (ty < 0) {
                 ty += BLOCK_SIZE

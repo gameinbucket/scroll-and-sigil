@@ -55,7 +55,7 @@ class Block {
             for (let y = 0; y < BLOCK_SIZE; y++) {
                 let tile = this.get_tile(x, y)
                 if (tile !== TILE_NONE) {
-                    let texture = Tile.Texture(tile)
+                    let texture = TILE_TEXTURE[tile]
                     Render.Image(BLOCK_MESH, xx, yy, TILE_SIZE, TILE_SIZE, texture[0], texture[1], texture[2], texture[3])
                 }
                 yy += TILE_SIZE
