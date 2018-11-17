@@ -119,7 +119,7 @@ class Application {
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
 
         let world = new World()
-        Network.Request("resources/map.json", (data) => {
+        Network.Request("resources/world.json", (data) => {
             world.load(gl, data)
             for (let i = 0; i < this.world.thing_count; i++) {
                 if (this.world.things[i].sprite_id === "you") {

@@ -1,0 +1,53 @@
+{
+    "textures": ["buttons"],
+    "sprites": [{
+        "name": "buttons",
+        "size": 128,
+        "animations": [{
+            "name": "menu",
+            "frames": [
+                [0, 0, 32, 32]
+            ]
+        }, {
+            "name": "save",
+            "frames": [
+                [33, 0, 32, 32]
+            ]
+        }, {
+            "name": "load",
+            "frames": [
+                [66, 0, 32, 32]
+            ]
+        }, {
+            "name": "eraser",
+            "frames": [
+                [0, 33, 32, 32]
+            ]
+        }, {
+            "name": "ground",
+            "frames": [
+                [33, 33, 32, 32]
+            ]
+        }, {
+            "name": "wall",
+            "frames": [
+                [66, 33, 32, 32]
+            ]
+        }, {
+            "name": "rail",
+            "frames": [
+                [0, 66, 32, 32]
+            ]
+        }, {
+            "name": "you",
+            "frames": [
+                [33, 66, 32, 32]
+            ]
+        }, {
+            "name": "skeleton",
+            "frames": [
+                [66, 66, 32, 32]
+            ]
+        }]
+    }]
+}

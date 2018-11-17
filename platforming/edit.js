@@ -1,21 +1,11 @@
+const SPRITES = new Map()
+
 class Application {
     configure_opengl(gl) {
-        gl.clearColor(0, 0, 0, 1)
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
         gl.disable(gl.CULL_FACE)
         gl.disable(gl.BLEND)
         gl.disable(gl.DEPTH_TEST)
-        gl.enable(gl.SCISSOR_TEST)
-    }
-    load_programs(g, gl) {
-        g.make_program(gl, "texture")
-    }
-    load_images(g, gl) {
-        g.make_image(gl, "map", gl.CLAMP_TO_EDGE)
-        g.make_image(gl, "font", gl.CLAMP_TO_EDGE)
-        g.make_image(gl, "buttons", gl.CLAMP_TO_EDGE)
-        g.make_image(gl, "you", gl.CLAMP_TO_EDGE)
-        g.make_image(gl, "skeleton", gl.CLAMP_TO_EDGE)
     }
     resize() {
         let gl = this.gl
@@ -75,42 +65,91 @@ class Application {
         let g = new RenderSystem()
 
         this.configure_opengl(gl)
-        this.load_programs(g, gl)
-        this.load_images(g, gl)
+
+        this.ready = false
+        Network.Request("resources/config.json", (data) => {
+            let config = JSON.parse(data)
+            let shaders = config["shaders"]
+            let textures = config["textures"]
+            let sprites = config["sprites"]
+            let tiles = config["tiles"]
+
+            for (let index = 0; index < shaders.length; index++)
+                g.make_program(gl, shaders[index])
+
+            for (let index = 0; index < textures.length; index++)
+                g.make_image(gl, textures[index], gl.CLAMP_TO_EDGE)
+
+            for (let index = 0; index < sprites.length; index++) {
+                let sprite = sprites[index]
+                let name = sprite["name"]
+                let size = 1.0 / sprite["size"]
+                let animations = sprite["animations"]
+                SPRITES[name] = new Map()
+                for (let jindex = 0; jindex < animations.length; jindex++) {
+                    let animation = animations[jindex]
+                    let animation_name = animation["name"]
+                    let frames = animation["frames"]
+                    SPRITES[name][animation_name] = []
+                    for (let kindex = 0; kindex < frames.length; kindex++)
+                        SPRITES[name][animation_name].push(new Sprite(frames[kindex], size))
+                }
+            }
+
+            for (let index = 0; index < tiles.length; index++) {
+                let tile = tiles[index]
+                let texture = tile["texture"]
+                let empty = tile["empty"]
+                if (texture === null) TILE_TEXTURE.push(null)
+                else TILE_TEXTURE.push(Sprite.Build(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
+                TILE_EMPTY.push(empty)
+            }
+
+            self.ready = true
+        })
+
+        this.ready2 = false
+        Network.Request("resources/config-edit.json", (data) => {
+            let config = JSON.parse(data)
+            let textures = config["textures"]
+            let sprites = config["sprites"]
+
+            for (let index = 0; index < textures.length; index++)
+                g.make_image(gl, textures[index], gl.CLAMP_TO_EDGE)
+
+            for (let index = 0; index < sprites.length; index++) {
+                let sprite = sprites[index]
+                let name = sprite["name"]
+                let size = 1.0 / sprite["size"]
+                let animations = sprite["animations"]
+                SPRITES[name] = new Map()
+                for (let jindex = 0; jindex < animations.length; jindex++) {
+                    let animation = animations[jindex]
+                    let animation_name = animation["name"]
+                    let frames = animation["frames"]
+                    SPRITES[name][animation_name] = []
+                    for (let kindex = 0; kindex < frames.length; kindex++)
+                        SPRITES[name][animation_name].push(new Sprite(frames[kindex], size))
+                }
+            }
+
+            self.ready2 = true
+        })
+
 
         let generic = RenderBuffer.Init(gl, 2, 0, 2, 6400, 9600)
         let sprite_buffers = new Map()
+        // TODO automate these
         sprite_buffers["you"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffers["skeleton"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffers["doodad"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffers["item"] = RenderBuffer.Init(gl, 2, 0, 2, 80, 120)
 
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
 
-        let sprites = new Map()
-        let inv = 1.0 / 128.0
-
-        sprites["map"] = new Map()
-        sprites["map"]["dirt"] = new Sprite(0, 0, TILE_SIZE, TILE_SIZE, inv)
-
-        sprites["buttons"] = new Map()
-        sprites["buttons"]["menu"] = new Sprite(0, 0, 32, 32, inv, inv)
-        sprites["buttons"]["save"] = new Sprite(1 * 33, 0, 32, 32, inv, inv)
-        sprites["buttons"]["load"] = new Sprite(2 * 33, 0, 32, 32, inv, inv)
-        sprites["buttons"]["eraser"] = new Sprite(0, 1 * 33, 32, 32, inv, inv)
-        sprites["buttons"]["ground"] = new Sprite(1 * 33, 1 * 33, 32, 32, inv, inv)
-        sprites["buttons"]["wall"] = new Sprite(2 * 33, 1 * 33, 32, 32, inv, inv)
-        sprites["buttons"]["rail"] = new Sprite(0, 2 * 33, 32, 32, inv, inv)
-        sprites["buttons"]["you"] = new Sprite(1 * 33, 2 * 33, 32, 32, inv, inv)
-        sprites["buttons"]["skeleton"] = new Sprite(2 * 33, 2 * 33, 32, 32, inv, inv)
-
-        sprites["you"] = new Map()
-        sprites["you"]["idle"] = [new Sprite(0, 0, 16, 30, inv)]
-
-        sprites["skeleton"] = new Map()
-        sprites["skeleton"]["idle"] = [new Sprite(0, 0, 16, 31, inv)]
-
         let world = new World()
         Network.Request("resources/map.json", (data) => {
-            world.load(gl, sprites, data)
+            world.load(gl, data)
             self.camera.y = 0.5 * world.block_h * GRID_SIZE
         })
 
@@ -129,23 +168,21 @@ class Application {
         }
 
         let btn = 32
-        let btn_move_cam = new Button(this, sprites["buttons"]["menu"], "move.cam", btn, btn)
+        let btn_move_cam = new Button(this, "menu", "move.cam", btn, btn)
         let left_buttons = [
-            new Button(this, sprites["buttons"]["menu"], "menu", btn, btn),
-            new Button(this, sprites["buttons"]["save"], "save", btn, btn),
-            new Button(this, sprites["buttons"]["load"], "load", btn, btn),
-            new Button(this, sprites["buttons"]["eraser"], "eraser", btn, btn),
-            new Button(this, sprites["buttons"]["ground"], "add.ground", btn, btn),
-            new Button(this, sprites["buttons"]["wall"], "add.wall", btn, btn),
-            new Button(this, sprites["buttons"]["rail"], "add.rail", btn, btn),
-            new Button(this, sprites["buttons"]["you"], "add.you", btn, btn),
-            new Button(this, sprites["buttons"]["skeleton"], "add.skeleton", btn, btn)
+            new Button(this, "menu", "menu", btn, btn),
+            new Button(this, "save", "save", btn, btn),
+            new Button(this, "load", "load", btn, btn),
+            new Button(this, "eraser", "eraser", btn, btn),
+            new Button(this, "ground", "add.ground", btn, btn),
+            new Button(this, "wall", "add.wall", btn, btn),
+            new Button(this, "rail", "add.rail", btn, btn),
+            new Button(this, "you", "add.you", btn, btn),
+            new Button(this, "skeleton", "add.skeleton", btn, btn)
         ]
         let buttons = []
         buttons.push(btn_move_cam)
         buttons.push(...left_buttons)
-        // new Button(this, sprites["buttons"]["skeleton"], "thing.conditions", pad + 1 * (btn + pad), pad, btn, btn),
-        // new Button(this, sprites["buttons"]["skeleton"], "thing.script", pad + 1 * (btn + pad), pad, btn, btn),
 
         this.cli_input = ""
         this.on = true
@@ -157,7 +194,6 @@ class Application {
         this.action = null
         this.canvas = canvas
         this.screen = screen
-        this.sprites = sprites
         this.sprite_buffers = sprite_buffers
         this.gl = gl
         this.g = g
@@ -237,32 +273,10 @@ class Application {
             case "load":
                 let loading = localStorage.getItem("world")
                 if (loading === null) break
-                this.world.load(this.gl, this.sprites, loading)
+                this.world.load(this.gl, this.SPRITES, loading)
                 this.render()
                 break
             case "menu":
-                let form = document.createElement("div")
-                form.style.position = "absolute"
-                form.style.left = "100px"
-                form.style.backgroundColor = "white"
-                form.style.top = "100px"
-                form.style.width = "100px"
-                form.style.height = "100px"
-                form.style.borderRadius = "5px"
-                form.style.zIndex = "1"
-                form.textContent = "menu"
-
-                let img = document.createElement("image")
-                img.src = "./resources/map.png"
-
-
-                let inp = document.createElement("input")
-                inp.setAttribute("type", "text")
-
-                form.appendChild(img)
-                form.appendChild(inp)
-
-                document.body.insertBefore(form, this.canvas)
                 break
             default:
                 this.action = action
@@ -294,7 +308,7 @@ class Application {
         switch (this.action) {
             case "eraser":
                 this.edit_set_tile(TILE_NONE)
-                // TODO: remove sprites
+                // TODO: remove SPRITES
                 break
             case "add.ground":
                 this.edit_set_tile(TILE_GROUND)
@@ -358,7 +372,7 @@ class Application {
             tile = block.tiles[tx + ty * BLOCK_SIZE]
         }
 
-        new Thing(this.world, id, this.sprites[id], px, (ty + 1 + by * BLOCK_SIZE) * TILE_SIZE)
+        // TODO: new Thing(this.world, id, this.SPRITES[id], px, (ty + 1 + by * BLOCK_SIZE) * TILE_SIZE)
         this.render()
     }
     edit_set_tile(tile) {
@@ -395,10 +409,20 @@ class Application {
                 return
             }
         }
+        if (!this.ready) {
+            setTimeout(run, 500)
+            return
+        }
+        if (!this.ready2) {
+            setTimeout(run, 500)
+            return
+        }
         document.body.appendChild(this.canvas)
         this.render()
     }
     render() {
+        if (!this.ready) return
+
         let g = this.g
         let gl = this.gl
         let frame = this.frame
@@ -426,11 +450,6 @@ class Application {
         g.update_mvp(gl)
         g.set_texture_direct(gl, frame.textures[0])
         RenderSystem.BindAndDraw(gl, this.screen)
-
-        // gl.clearColor(0.5, 0.5, 0.5, 1)
-        // RenderSystem.SetView(gl, 0, 0, 52, this.canvas.height)
-        // gl.clear(gl.COLOR_BUFFER_BIT)
-        // RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)
 
         g.set_program(gl, "texture")
         g.set_orthographic(this.canvas_ortho, 0, 0)

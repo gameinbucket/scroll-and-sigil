@@ -17,7 +17,7 @@ class Button {
         return x >= this.x && y >= this.y && x <= this.x + this.w && y <= this.y + this.h
     }
     draw(buffer) {
-        let sprite = this.sprite;
+        let sprite = SPRITES["buttons"][this.sprite][0];
         Render.Image(buffer, this.x, this.y, this.w, this.h, sprite.left, sprite.top, sprite.right, sprite.bottom)
     }
 }
