@@ -103,7 +103,7 @@ class WorldState {
         g.set_program(gl, "texture")
         g.set_orthographic(draw_ortho, view_x, view_y)
         g.update_mvp(gl)
-        world.render(g, gl, frame, player.x, player.y, sprite_buffers)
+        world.render(g, frame, player.x, player.y, sprite_buffers)
 
         g.set_orthographic(draw_ortho, 0, 0)
         g.update_mvp(gl)

@@ -1,4 +1,4 @@
-const RESOURCES = 'resources/'
+const RESOURCES = "resources/"
 class RenderSystem {
     constructor() {
         this.v = Matrix.Make()
@@ -9,10 +9,10 @@ class RenderSystem {
 
         this.program
         this.program_name
-        this.mvp_location = []
-        this.texture_location = []
-        this.shaders = []
-        this.textures = []
+        this.mvp_location = new Map()
+        this.texture_location = new Map()
+        this.shaders = new Map()
+        this.textures = new Map()
     }
     set_texture(gl, name) {
         gl.activeTexture(gl.TEXTURE0)
@@ -147,47 +147,34 @@ class RenderSystem {
         }
         RenderSystem.UpdateFrameBuffer(gl, frame)
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE)
-            console.error('framebuffer error')
+            console.error("framebuffer error")
     }
-    make_program(gl, name) {
-        let self = this
-        let data = new Array(2)
-        let completed = 0
-
-        this.shaders[name] = null
-
-        function partial(id, text) {
-            data[id] = text
-            completed++
-            if (completed === 2) {
-                let program = RenderSystem.CompileProgram(gl, data[0], data[1])
-                self.shaders[name] = program
-                self.mvp_location[name] = gl.getUniformLocation(program, 'u_mvp')
-                self.texture_location[name] = gl.getUniformLocation(program, 'u_texture0')
-            }
-        }
-
-        Network.Get(RESOURCES + name + '.v', 0, partial)
-        Network.Get(RESOURCES + name + '.f', 1, partial)
+    async make_program(gl, name) {
+        let vertex = await Network.Request(RESOURCES + name + ".v")
+        let fragment = await Network.Request(RESOURCES + name + ".f")
+        let program = RenderSystem.CompileProgram(gl, vertex, fragment)
+        this.shaders[name] = program
+        this.mvp_location[name] = gl.getUniformLocation(program, "u_mvp")
+        this.texture_location[name] = gl.getUniformLocation(program, "u_texture0")
     }
-    make_image(gl, name, wrap) {
-        let self = this
-        this.textures[name] = null
-
+    async make_image(gl, name, wrap) {
         let texture = gl.createTexture()
         texture.image = new Image()
-        texture.image.onload = function () {
-            gl.bindTexture(gl.TEXTURE_2D, texture)
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image)
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap)
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap)
-            gl.bindTexture(gl.TEXTURE_2D, null)
+        texture.image.src = RESOURCES + name + ".png"
 
-            self.textures[name] = texture
-        }
-        texture.image.src = RESOURCES + name + '.png'
+        await new Promise(function (resolve) {
+            texture.image.onload = resolve
+        })
+
+        gl.bindTexture(gl.TEXTURE_2D, texture)
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap)
+        gl.bindTexture(gl.TEXTURE_2D, null)
+
+        this.textures[name] = texture
     }
     static CompileProgram(gl, v, f) {
         let vert = RenderSystem.CompileShader(gl, v, gl.VERTEX_SHADER)
@@ -197,7 +184,7 @@ class RenderSystem {
         gl.attachShader(program, frag)
         gl.linkProgram(program)
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            console.error(v + ', ' + f)
+            console.error(v + ", " + f)
             console.error(gl.getProgramInfoLog(program))
         }
         return program

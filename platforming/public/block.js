@@ -64,7 +64,7 @@ class Block {
         }
         this.mesh = RenderBuffer.InitCopy(gl, BLOCK_MESH)
     }
-    render_things(sprite_set, sprite_buffers) {
+    render_things(sprite_set, sprite_buffer) {
         for (let i = 0; i < this.thing_count; i++) {
             let thing = this.things[i]
             if (sprite_set.has(thing)) continue
@@ -72,8 +72,9 @@ class Block {
             let sprite = thing.sprite[thing.frame]
             let x = thing.x - sprite.width * 0.5
             let y = thing.y + sprite.oy
-            if (thing.mirror) Render.MirrorSprite(sprite_buffers[thing.sprite_id], x - sprite.ox, y, sprite)
-            else Render.Sprite(sprite_buffers[thing.sprite_id], x + sprite.ox, y, sprite)
+
+            if (thing.mirror) Render.MirrorSprite(sprite_buffer[thing.sprite_id], x - sprite.ox, y, sprite)
+            else Render.Sprite(sprite_buffer[thing.sprite_id], x + sprite.ox, y, sprite)
         }
     }
 }

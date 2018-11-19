@@ -35,7 +35,6 @@
     }],
     "sprites": [{
         "name": "you",
-        "size": 128,
         "animations": [{
             "name": "idle",
             "frames": [
@@ -81,7 +80,6 @@
         }]
     }, {
         "name": "item",
-        "size": 128,
         "animations": [{
             "name": "water",
             "frames": [
@@ -140,7 +138,6 @@
         }]
     }, {
         "name": "doodad",
-        "size": 128,
         "animations": [{
             "name": "bone",
             "frames": [
@@ -157,7 +154,6 @@
         }]
     }, {
         "name": "ui",
-        "size": 128,
         "animations": [{
             "name": "health",
             "frames": [
@@ -191,7 +187,6 @@
         }]
     }, {
         "name": "skeleton",
-        "size": 128,
         "animations": [{
             "name": "idle",
             "frames": [

@@ -1,5 +1,8 @@
 class RenderBuffer {
     constructor() {
+        this.position
+        this.color
+        this.texture
         this.vao
         this.vbo
         this.ebo
@@ -11,6 +14,9 @@ class RenderBuffer {
     }
     static Init(gl, position, color, texture, vertex_limit, index_limit) {
         let buffer = new RenderBuffer()
+        buffer.position = position
+        buffer.color = color
+        buffer.texture = texture
         buffer.vertex_pos = 0
         buffer.index_pos = 0
         buffer.index_offset = 0
@@ -29,15 +35,24 @@ class RenderBuffer {
         return buffer
     }
     static Copy(from, to) {
-        for (let i = 0; i < from.vertex_pos; i++) {
+        for (let i = 0; i < from.vertex_pos; i++)
             to.vertices[i] = from.vertices[i]
-        }
-        for (let i = 0; i < from.index_pos; i++) {
+
+        for (let i = 0; i < from.index_pos; i++)
             to.indices[i] = from.indices[i]
-        }
+
         to.vertex_pos = from.vertex_pos
         to.index_pos = from.index_pos
         to.index_offset = from.index_offset
+    }
+    static Expand(gl, source) {
+        let buffer = new RenderBuffer();
+        buffer.vertices = new Float32Array(source.vertices.length * 2)
+        buffer.indices = new Uint32Array(source.indices.length * 2)
+        RenderBuffer.Copy(source, buffer)
+        RenderSystem.MakeVao(gl, buffer, source.position, source.color, source.texture)
+        RenderSystem.UpdateVao(gl, buffer)
+        return buffer
     }
     zero() {
         this.vertex_pos = 0

@@ -2,12 +2,15 @@ const GRID_SIZE = BLOCK_SIZE * TILE_SIZE
 const INV_GRID_SIZE = 1.0 / GRID_SIZE
 
 class World {
-    constructor() {
+    constructor(gl) {
+        this.gl = gl
         this.block_w = null
         this.block_h = null
         this.block_all = null
         this.blocks = []
         this.sprite_set = new Set()
+        this.sprite_buffer = new Map()
+        this.sprite_count = new Map()
         this.things = new Array(6)
         this.thing_count = 0
         this.delete_things = new Array(2)
@@ -16,7 +19,7 @@ class World {
         this.thread_index = 0
         this.thread_id = ""
     }
-    load(gl, data) {
+    load(data) {
         let content = JSON.parse(data)
         this.block_w = content["width"]
         this.block_h = content["height"]
@@ -25,7 +28,7 @@ class World {
         let things = content["things"]
 
         let background_color = content["background-color"]
-        gl.clearColor(background_color[0] / 255.0, background_color[1] / 255.0, background_color[2] / 255.0, 1.0)
+        this.gl.clearColor(background_color[0] / 255.0, background_color[1] / 255.0, background_color[2] / 255.0, 1.0)
 
         let x = 0
         let y = 0
@@ -52,6 +55,8 @@ class World {
             let x = thing["x"]
             let y = thing["y"]
             switch (id) {
+                // TODO: how to not need this?
+                // TODO: things need proper base classes, and actual unique id
                 case "you":
                     if (you === null)
                         you = new You(this, x, y)
@@ -95,12 +100,11 @@ class World {
             }
         }
 
-        this.build(gl)
+        this.build()
     }
-    build(gl) {
-        for (let i = 0; i < this.block_all; i++) {
-            this.blocks[i].build_mesh(gl)
-        }
+    build() {
+        for (let i = 0; i < this.block_all; i++)
+            this.blocks[i].build_mesh(this.gl)
     }
     save() {
         let tile_data = ""
@@ -150,6 +154,17 @@ class World {
         }
         this.things[this.thing_count] = thing
         this.thing_count++
+
+        let count = this.sprite_count[thing.sprite_id]
+        if (count) {
+            this.sprite_count[thing.sprite_id] = count + 1
+            if ((count + 2) * 16 > this.sprite_buffer[thing.sprite_id].vertices.length) {
+                this.sprite_buffer[thing.sprite_id] = RenderBuffer.Expand(this.gl, this.sprite_buffer[thing.sprite_id])
+            }
+        } else {
+            this.sprite_count[thing.sprite_id] = 1
+            this.sprite_buffer[thing.sprite_id] = RenderBuffer.Init(this.gl, 2, 0, 2, 40, 60)
+        }
     }
     remove_thing(thing) {
         for (let i = 0; i < this.thing_count; i++) {
@@ -173,12 +188,7 @@ class World {
         this.delete_things[this.delete_thing_count] = thing
         this.delete_thing_count++
     }
-    render(g, gl, frame, x, y, sprite_buffers) {
-        this.sprite_set = new Set()
-        for (let key in sprite_buffers) {
-            sprite_buffers[key].zero()
-        }
-
+    render(g, frame, x, y) {
         let hw = frame.width * 0.5
         let hh = frame.height * 0.5
 
@@ -192,22 +202,27 @@ class World {
         if (c_lim >= this.block_w) c_lim = this.block_w - 1
         if (r_lim >= this.block_h) r_lim = this.block_h - 1
 
-        g.set_texture(gl, "map")
+        let sprite_buffer = this.sprite_buffer
+        g.set_texture(this.gl, "map")
+        this.sprite_set.clear()
+        for (let key in sprite_buffer)
+            sprite_buffer[key].zero()
+
         for (let gy = r_min; gy <= r_lim; gy++) {
             for (let gx = c_min; gx <= c_lim; gx++) {
                 let block = this.blocks[gx + gy * this.block_w]
                 let mesh = block.mesh
                 if (mesh.vertex_pos > 0)
-                    RenderSystem.BindAndDraw(gl, mesh)
-                block.render_things(this.sprite_set, sprite_buffers)
+                    RenderSystem.BindAndDraw(this.gl, mesh)
+                block.render_things(this.sprite_set, sprite_buffer)
             }
         }
 
-        for (let key in sprite_buffers) {
-            let buffer = sprite_buffers[key]
+        for (let key in sprite_buffer) {
+            let buffer = sprite_buffer[key]
             if (buffer.vertex_pos > 0) {
-                g.set_texture(gl, key)
-                RenderSystem.UpdateAndDraw(gl, buffer)
+                g.set_texture(this.gl, key)
+                RenderSystem.UpdateAndDraw(this.gl, buffer)
             }
         }
     }

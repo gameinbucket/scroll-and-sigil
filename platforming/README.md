@@ -15,7 +15,7 @@
 > death screen
 > stairs
 > elevators
-> customizable appearance
+> customizable character appearance 
 
 ## stats list
 

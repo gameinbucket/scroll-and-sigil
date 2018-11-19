@@ -1,12 +1,12 @@
 class Sprite {
-    constructor(data, size) {
+    constructor(data, width, height) {
         this.width = data[2]
         this.height = data[3]
 
-        this.left = data[0] * size
-        this.top = data[1] * size
-        this.right = (data[0] + this.width) * size
-        this.bottom = (data[1] + this.height) * size
+        this.left = data[0] * width
+        this.top = data[1] * height
+        this.right = (data[0] + this.width) * width
+        this.bottom = (data[1] + this.height) * height
 
         if (data.length > 4) {
             this.ox = data[4]

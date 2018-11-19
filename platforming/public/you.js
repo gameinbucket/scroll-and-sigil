@@ -1,6 +1,7 @@
 class You extends Thing {
     constructor(world, x, y) {
         super(world, "you", x, y)
+        this.stairs = false // TODO
         this.alliance = "good"
         this.inventory = []
         this.inventory_size = 0
@@ -266,6 +267,8 @@ class You extends Thing {
                 }
             }
         } else if (this.ground) {
+            let up = this.menu === null && Input.Is("ArrowUp")
+            let down = this.menu === null && Input.Is("ArrowDown") // TODO
             let left = this.menu === null && Input.Is("ArrowLeft")
             let right = this.menu === null && Input.Is("ArrowRight")
             if (left && !right) {

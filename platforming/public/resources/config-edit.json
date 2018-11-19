@@ -2,7 +2,6 @@
     "textures": ["buttons"],
     "sprites": [{
         "name": "buttons",
-        "size": 128,
         "animations": [{
             "name": "menu",
             "frames": [
