@@ -1,9 +1,9 @@
 class Item extends Thing {
-    constructor(world, id, x, y) {
-        super(world, "item", x, y)
+    constructor(world, uid, x, y) {
+        super(world, uid, "item", x, y)
         this.half_width = 8
         this.height = 16
-        this.sprite = this.animations[id]
+        this.sprite = this.animations[uid]
     }
     update(world) {
         if (!this.ground) this.dy -= GRAVITY

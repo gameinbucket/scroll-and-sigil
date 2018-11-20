@@ -1,6 +1,6 @@
-class Skeleton extends Thing {
+class Skeleton extends Living {
     constructor(world, x, y) {
-        super(world, "skeleton", x, y)
+        super(world, "skeleton", "skeleton", x, y)
         this.speed = 0.25
         this.alliance = "undead"
         this.target = null

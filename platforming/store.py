@@ -1,4 +1,5 @@
 import os
+import json
 import socketserver
 import http.server
 
@@ -51,10 +52,10 @@ class FileServer(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             data_len = int(self.headers["Content-Length"])
-            data = self.rfile.read(data_len).decode("utf-8")
+            raw = self.rfile.read(data_len).decode("utf-8")
             if self.path == "/api/store/load":
                 try:
-                    with open("maps/" + data + ".json", "rb") as get:
+                    with open("maps/" + raw + ".json", "rb") as get:
                         self.send_response(200)
                         self.send_header("Content-type", mime[".json"])
                         self.end_headers()
@@ -66,8 +67,10 @@ class FileServer(http.server.BaseHTTPRequestHandler):
                     self.wfile.write(b"map not found")
             elif self.path == "/api/store/save":
                 try:
-                    with open("maps/" + data + ".json", "w+") as post:
-                        post.write(data)
+                    data = json.loads(raw)
+                    name = data["name"]
+                    with open("maps/" + name + ".json", "w+") as post:
+                        post.write(raw)
                         self.send_response(200)
                         self.send_header("Content-type", "text/plain")
                         self.end_headers()

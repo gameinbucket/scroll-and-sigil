@@ -1,6 +1,6 @@
 class Splat extends Thing {
     constructor(world, x, y) {
-        super(world, "doodad", x, y)
+        super(world, "splat", "doodad", x, y)
         this.sprite = this.animations["splat"]
     }
     update(world) {

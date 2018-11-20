@@ -4,6 +4,9 @@ const INV_GRID_SIZE = 1.0 / GRID_SIZE
 class World {
     constructor(gl) {
         this.gl = gl
+        this.red = 0
+        this.green = 0
+        this.blue = 0
         this.block_w = null
         this.block_h = null
         this.block_all = null
@@ -20,7 +23,23 @@ class World {
         this.thread_id = ""
     }
     load(data) {
-        let content = JSON.parse(data)
+        let content
+        try {
+            content = JSON.parse(data)
+        } catch (err) {
+            console.log("Failed to parse world", data)
+            return
+        }
+
+        this.blocks = []
+        this.sprite_set.clear()
+        this.sprite_buffer.clear()
+        this.sprite_count.clear()
+        this.things = new Array(6)
+        this.thing_count = 0
+        this.delete_things = new Array(2)
+        this.delete_thing_count = 0
+
         this.block_w = content["width"]
         this.block_h = content["height"]
         this.block_all = this.block_w * this.block_h
@@ -28,7 +47,10 @@ class World {
         let things = content["things"]
 
         let background_color = content["background-color"]
-        this.gl.clearColor(background_color[0] / 255.0, background_color[1] / 255.0, background_color[2] / 255.0, 1.0)
+        this.red = background_color[0]
+        this.blue = background_color[1]
+        this.green = background_color[2]
+        this.gl.clearColor(this.red / 255.0, this.green / 255.0, this.blue / 255.0, 1.0)
 
         let x = 0
         let y = 0
@@ -106,7 +128,7 @@ class World {
         for (let i = 0; i < this.block_all; i++)
             this.blocks[i].build_mesh(this.gl)
     }
-    save() {
+    save(name) {
         let tile_data = ""
         tile_data += this.blocks[0].save()
         for (let i = 1; i < this.blocks.length; i++) {
@@ -123,7 +145,7 @@ class World {
             }
         }
 
-        return `{"width":${this.block_w},"height":${this.block_h},"tiles":[${tile_data}],"things":[${thing_data}]}`
+        return `{"name":"${name}","width":${this.block_w},"height":${this.block_h},"background-color": [${this.red}, ${this.green}, ${this.blue}],"tiles":[${tile_data}],"things":[${thing_data}]}`
     }
     get_tile(x, y) {
         let block_x = Math.floor(x * INV_BLOCK_SIZE)

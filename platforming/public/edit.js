@@ -161,7 +161,7 @@ class Application {
 
         await Promise.all(requests)
 
-        let data = await Network.Send("api/store/load", "map")
+        let data = await Network.Send("api/store/load", "world")
         this.world.load(data)
         this.camera.y = 0.5 * this.world.block_h * GRID_SIZE
     }
@@ -252,8 +252,11 @@ class Application {
         if (nop) this.edit_action_on()
     }
     edit_save() {
-        let data = this.world.save()
-        Network.Send("api/store/save", "data")
+        if (this.cli_input !== "") {
+            let data = this.world.save(this.cli_input)
+            this.cli_input = ""
+            Network.Send("api/store/save", data)
+        }
     }
     edit_next_action(action) {
         switch (action) {
@@ -261,10 +264,15 @@ class Application {
                 this.edit_save()
                 break
             case "load":
-                Network.Send("api/store/load", "mymap").then(function (data) {
-                    this.world.load(data)
-                    this.render()
-                })
+                if (this.cli_input !== "") {
+                    let self = this
+                    Network.Send("api/store/load", this.cli_input).then(function (data) {
+                        self.world.load(data)
+                        self.render()
+                    }).catch(function (data) {
+                        console.log(data)
+                    })
+                }
                 break
             case "menu":
                 break
@@ -411,7 +419,6 @@ class Application {
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
 
-        gl.clearColor(0, 0, 0, 1)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
         gl.clear(gl.COLOR_BUFFER_BIT)
         g.set_program(gl, "texture")

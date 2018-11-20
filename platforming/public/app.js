@@ -117,10 +117,10 @@ class Application {
 
         this.music = MUSIC["melody"]
 
-        data = await Network.Request("resources/map.json")
+        data = await Network.Send("api/store/load", "world")
         this.world.load(data)
         for (let index = 0; index < this.world.thing_count; index++) {
-            if (this.world.things[index].sprite_id === "you") {
+            if (this.world.things[index].uid === "you") {
                 this.player = this.world.things[index]
                 break
             }
@@ -165,7 +165,6 @@ class Application {
         let self = this
         window.onresize = function () {
             self.resize()
-            self.render()
         }
         document.body.appendChild(this.canvas)
         this.music.play()

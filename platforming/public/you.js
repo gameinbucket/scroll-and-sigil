@@ -1,6 +1,6 @@
-class You extends Thing {
+class You extends Living {
     constructor(world, x, y) {
-        super(world, "you", x, y)
+        super(world, "you", "you", x, y)
         this.stairs = false // TODO
         this.alliance = "good"
         this.inventory = []
