@@ -99,6 +99,8 @@ class WorldState {
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
+
+        gl.clearColor(world.red / 255.0, world.green / 255.0, world.blue / 255.0, 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT)
         g.set_program(gl, "texture")
         g.set_orthographic(draw_ortho, view_x, view_y)

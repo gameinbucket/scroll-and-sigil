@@ -24,7 +24,6 @@ class Application {
 
         let world = new World(gl)
 
-        document.onkeyup = key_up
         document.onkeydown = key_down
         document.onmouseup = mouse_up
         document.onmousedown = mouse_down
@@ -33,25 +32,7 @@ class Application {
             return false
         }
 
-        let btn = 32
-        let btn_move_cam = new Button(this, "menu", "move.cam", btn, btn)
-        let left_buttons = [
-            new Button(this, "menu", "menu", btn, btn),
-            new Button(this, "save", "save", btn, btn),
-            new Button(this, "load", "load", btn, btn),
-            new Button(this, "eraser", "eraser", btn, btn),
-            new Button(this, "ground", "add.ground", btn, btn),
-            new Button(this, "wall", "add.wall", btn, btn),
-            new Button(this, "rail", "add.rail", btn, btn),
-            new Button(this, "you", "add.you", btn, btn),
-            new Button(this, "skeleton", "add.skeleton", btn, btn)
-        ]
-        let buttons = []
-        buttons.push(btn_move_cam)
-        buttons.push(...left_buttons)
-
         this.cli_input = ""
-        this.on = true
         this.mouse_x = null
         this.mouse_y = null
         this.mouse_previous_x = null
@@ -65,12 +46,9 @@ class Application {
         this.generic = generic
         this.generic2 = generic2
         this.world = world
-        this.buttons = buttons
-        this.left_buttons = left_buttons
-        this.btn_move_cam = btn_move_cam
-        this.form = null
-        this.tile_select = null // TODO
-        this.thing_select = null // TODO
+        this.buttons = new Map()
+        this.tile_select = TILE_NONE
+        this.thing_select = null
         this.camera = {
             x: 0.5 * GRID_SIZE,
             y: 0
@@ -161,9 +139,34 @@ class Application {
 
         await Promise.all(requests)
 
+        this.init_buttons()
+
         let data = await Network.Send("api/store/load", "world")
         this.world.load(data)
         this.camera.y = 0.5 * this.world.block_h * GRID_SIZE
+    }
+    init_buttons() {
+        let left_buttons = [
+            new Button(this, "buttons", "menu", "menu"),
+            new Button(this, "buttons", "save", "save"),
+            new Button(this, "buttons", "load", "load"),
+            new Button(this, "buttons", "regular", "select.tile"),
+
+            // new Button(this, "buttons", "regular", "add.block"), // TODO
+            // new Button(this, "buttons", "regular", "remove.block"), // TODO
+
+            // new Button(this, "eraser", "eraser", btn, btn),
+            // new Button(this, "ground", "add.ground", btn, btn),
+            // new Button(this, "wall", "add.wall", btn, btn),
+            // new Button(this, "rail", "add.rail", btn, btn),
+            // new Button(this, "you", "add.you", btn, btn),
+            // new Button(this, "skeleton", "add.skeleton", btn, btn)
+        ]
+
+        let right_buttons = [new Button(this, "buttons", "menu", "move.cam")]
+
+        this.buttons["right"] = right_buttons
+        this.buttons["left"] = left_buttons
     }
     configure_opengl(gl) {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -199,19 +202,21 @@ class Application {
         this.canvas_ortho = canvas_ortho
         this.draw_ortho = draw_ortho
 
-        let btn = 32
         let pad = 10
+
+        let left_buttons = this.buttons["left"]
         let x = pad
-        let y = this.canvas.height - pad - btn
-        for (let i = 0; i < this.left_buttons.length; i++) {
-            this.left_buttons[i].put(x, y)
-            x += pad + btn
+        let y = this.canvas.height - pad - left_buttons[0].height
+        for (let index = 0; index < left_buttons.length; index++) {
+            let button = left_buttons[index]
+            button.put(x, y)
+            x += pad + button.width
             // y -= pad + btn
         }
 
-        this.btn_move_cam.put(this.canvas.width - pad - btn, this.canvas.height - pad - btn)
+        let right_buttons = this.buttons["right"]
+        right_buttons[0].put(this.canvas.width - pad - right_buttons[0].width, this.canvas.height - pad - right_buttons[0].height)
     }
-    key_up(_) {}
     key_down(event) {
         if (event.key === "Backspace") {
             this.cli_input = this.cli_input.substring(0, this.cli_input.length - 1)
@@ -220,6 +225,13 @@ class Application {
         } else if (event.key === "Enter") {
             if (this.cli_input.startsWith("save")) {
                 this.edit_save()
+            }
+            if (this.cli_input.startsWith("add tile")) {
+                let tile = this.cli_input.substring("add tile".length).trim()
+                if (tile.startsWith("stairs right")) {
+                    this.tile_select = TILE_STAIRS_RIGHT
+                    this.action = "place.tile"
+                }
             }
             this.cli_input = ""
             this.render()
@@ -241,14 +253,21 @@ class Application {
             return
         this.mouse = true
         let nop = true
-        for (let i = 0; i < this.buttons.length; i++) {
-            let button = this.buttons[i]
-            if (button.click(this.mouse_x, this.mouse_y)) {
-                this.edit_next_action(button.action)
-                nop = false
-                break
+
+        for (let key in this.buttons) {
+            let group = this.buttons[key]
+            for (let index; index < group.length; index++) {
+                let button = group[index]
+                if (button.click(this.mouse_x, this.mouse_y)) {
+                    button.active = true
+                    this.edit_next_action(button.action)
+                    nop = false
+                    break
+                } else
+                    button.active = false
             }
         }
+
         if (nop) this.edit_action_on()
     }
     edit_save() {
@@ -276,12 +295,24 @@ class Application {
                 break
             case "menu":
                 break
+            case "select.tile":
+                let buttons = [
+                    new Button(this, "buttons", "menu", "menu"),
+                    new Button(this, "buttons", "save", "save"),
+                    new Button(this, "buttons", "load", "load"),
+                    new Button(this, "buttons", "regular", "select.tile"),
+                ]
+                this.buttons["select.tile"] = buttons
             default:
                 this.action = action
+                this.render()
         }
     }
     edit_action_on() {
         switch (this.action) {
+            case "place.tile":
+                this.edit_set_tile(this.tile_select)
+                break
             case "eraser":
                 this.edit_set_tile(TILE_NONE)
                 break
@@ -370,7 +401,13 @@ class Application {
             tile = block.tiles[tx + ty * BLOCK_SIZE]
         }
 
-        // TODO: new Thing(this.world, id, this.SPRITES[id], px, (ty + 1 + by * BLOCK_SIZE) * TILE_SIZE)
+        let py = (ty + 1 + by * BLOCK_SIZE) * TILE_SIZE
+
+        if (id === "skeleton")
+            new Skeleton(this.world, px, py)
+        else if (id === "you")
+            new You(this.world, px, py)
+
         this.render()
     }
     edit_set_tile(tile) {
@@ -410,7 +447,6 @@ class Application {
         let gl = this.gl
         let frame = this.frame
         let camera = this.camera
-        let buttons = this.buttons
         let generic = this.generic
         let generic2 = this.generic2
 
@@ -438,25 +474,30 @@ class Application {
         g.set_orthographic(this.canvas_ortho, 0, 0)
         g.update_mvp(gl)
         generic.zero()
-        for (let i = 0; i < buttons.length; i++)
-            buttons[i].draw(generic)
-        g.set_texture(gl, "buttons")
-        RenderSystem.UpdateAndDraw(gl, generic)
-
-        //
-        generic.zero()
-        generic2.zero()
-        for (let i = 1; i < TILE_TEXTURE.length; i++) {
-            Render.Sprite(generic, 40 + (TILE_SIZE + 5) * i, frame.height - 100, SPRITES["buttons"]["ground"][0])
-            let texture = TILE_TEXTURE[i]
-            Render.Image(generic2, 40 + (TILE_SIZE + 5) * i, frame.height - 100, TILE_SIZE, TILE_SIZE, texture[0], texture[1], texture[2], texture[3])
+        for (let key in this.buttons) {
+            let group = this.buttons[key]
+            for (let index; index < group.length; index++) {
+                let button = group[index]
+                button.draw(generic, generic)
+            }
         }
-
         g.set_texture(gl, "buttons")
         RenderSystem.UpdateAndDraw(gl, generic)
-        g.set_texture(gl, "map")
-        RenderSystem.UpdateAndDraw(gl, generic2)
-        //
+
+        if (this.action === "select.tile") {
+            generic.zero()
+            generic2.zero()
+            for (let i = 1; i < TILE_TEXTURE.length; i++) {
+                Render.Sprite(generic, 40 + (TILE_SIZE + 5) * i, frame.height - 100, SPRITES["buttons"]["ground"][0])
+                let texture = TILE_TEXTURE[i]
+                Render.Image(generic2, 40 + (TILE_SIZE + 5) * i, frame.height - 100, TILE_SIZE, TILE_SIZE, texture[0], texture[1], texture[2], texture[3])
+            }
+
+            g.set_texture(gl, "buttons")
+            RenderSystem.UpdateAndDraw(gl, generic)
+            g.set_texture(gl, "map")
+            RenderSystem.UpdateAndDraw(gl, generic2)
+        }
 
         generic.zero()
         Render.Print(generic, this.cli_input, 10, 10, 2)

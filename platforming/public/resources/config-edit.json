@@ -3,6 +3,16 @@
     "sprites": [{
         "name": "buttons",
         "animations": [{
+            "name": "regular",
+            "frames": [
+                [33, 33, 32, 32]
+            ]
+        }, {
+            "name": "active",
+            "frames": [
+                [66, 33, 32, 32]
+            ]
+        }, {
             "name": "menu",
             "frames": [
                 [0, 0, 32, 32]
