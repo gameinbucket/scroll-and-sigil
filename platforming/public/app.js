@@ -1,6 +1,6 @@
-const MUSIC = new Map()
-const SOUND = new Map()
-const SPRITES = new Map()
+const MUSIC = {}
+const SOUND = {}
+const SPRITES = {}
 
 class Application {
     constructor() {
@@ -95,7 +95,7 @@ class Application {
             let width = 1.0 / texture.image.width
             let height = 1.0 / texture.image.height
             let animations = sprite["animations"]
-            SPRITES[name] = new Map()
+            SPRITES[name] = {}
             for (let jindex = 0; jindex < animations.length; jindex++) {
                 let animation = animations[jindex]
                 let animation_name = animation["name"]

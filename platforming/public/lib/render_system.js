@@ -9,10 +9,10 @@ class RenderSystem {
 
         this.program
         this.program_name
-        this.mvp_location = new Map()
-        this.texture_location = new Map()
-        this.shaders = new Map()
-        this.textures = new Map()
+        this.mvp_location = {}
+        this.texture_location = {}
+        this.shaders = {}
+        this.textures = {}
     }
     set_texture(gl, name) {
         gl.activeTexture(gl.TEXTURE0)

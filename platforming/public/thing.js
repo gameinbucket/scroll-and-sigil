@@ -269,7 +269,7 @@ class Thing {
             collided.splice(closest)
         }
     }
-    save() {
-        return `{"id":"${this.uid}","x":${Math.floor(this.x)},"y":${Math.floor(this.y)}}`
+    save(x, y) {
+        return `{"id":"${this.uid}","x":${Math.floor(this.x - x)},"y":${Math.floor(this.y - y)}}`
     }
 }

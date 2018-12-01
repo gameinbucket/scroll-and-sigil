@@ -1,6 +1,7 @@
 class You extends Living {
     constructor(world, x, y) {
         super(world, "you", "you", x, y)
+        this.gx = Math.floor(this.x * INV_GRID_SIZE)
         this.stairs = false // TODO
         this.alliance = "good"
         this.inventory = []
@@ -346,6 +347,13 @@ class You extends Living {
         } else
             this.menu.select()
 
+        let gy = this.bottom_gy
         super.update(world)
+        let gx = Math.floor(this.x * INV_GRID_SIZE)
+
+        if (this.gx !== gx || this.bottom_gy !== gy) {
+            world.theme(gx, this.bottom_gy)
+            this.gx = gx
+        }
     }
 }

@@ -1,4 +1,4 @@
-const SPRITES = new Map()
+const SPRITES = {}
 
 class Application {
     constructor() {
@@ -19,8 +19,13 @@ class Application {
         this.configure_opengl(gl)
 
         let generic = RenderBuffer.Init(gl, 2, 0, 2, 6400, 9600)
-        let generic2 = RenderBuffer.Init(gl, 2, 0, 2, 800, 1200)
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
+
+        let sprite_buffer = {}
+        sprite_buffer["buttons"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffer["you"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffer["skeleton"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffer["map"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
 
         let world = new World(gl)
 
@@ -44,9 +49,10 @@ class Application {
         this.gl = gl
         this.g = g
         this.generic = generic
-        this.generic2 = generic2
+        this.sprite_buffer = sprite_buffer
         this.world = world
-        this.buttons = new Map()
+        this.buttons = {}
+        this.active_buttons = []
         this.tile_select = TILE_NONE
         this.thing_select = null
         this.camera = {
@@ -84,7 +90,7 @@ class Application {
                 let width = 1.0 / texture.image.width
                 let height = 1.0 / texture.image.height
                 let animations = sprite["animations"]
-                SPRITES[name] = new Map()
+                SPRITES[name] = {}
                 for (let jindex = 0; jindex < animations.length; jindex++) {
                     let animation = animations[jindex]
                     let animation_name = animation["name"]
@@ -95,12 +101,16 @@ class Application {
                 }
             }
 
+            SPRITES["map"] = {}
             for (let index = 0; index < tiles.length; index++) {
                 let tile = tiles[index]
                 let texture = tile["texture"]
                 let empty = tile["empty"]
                 if (texture === null) TILE_TEXTURE.push(null)
-                else TILE_TEXTURE.push(Sprite.Build(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
+                else {
+                    TILE_TEXTURE.push(Sprite.Build(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
+                    SPRITES["map"][tile["name"]] = [new Sprite([texture[0], texture[1], TILE_SIZE, TILE_SIZE], TILE_SPRITE_SIZE, TILE_SPRITE_SIZE)]
+                }
                 TILE_EMPTY.push(empty)
             }
         }())
@@ -125,7 +135,7 @@ class Application {
                 let width = 1.0 / texture.image.width
                 let height = 1.0 / texture.image.height
                 let animations = sprite["animations"]
-                SPRITES[name] = new Map()
+                SPRITES[name] = {}
                 for (let jindex = 0; jindex < animations.length; jindex++) {
                     let animation = animations[jindex]
                     let animation_name = animation["name"]
@@ -139,34 +149,11 @@ class Application {
 
         await Promise.all(requests)
 
-        this.init_buttons()
+        Editing.InitButtons(this)
 
-        let data = await Network.Send("api/store/load", "world")
+        let data = await Network.Send("api/store/load", "template")
         this.world.load(data)
-        this.camera.y = 0.5 * this.world.block_h * GRID_SIZE
-    }
-    init_buttons() {
-        let left_buttons = [
-            new Button(this, "buttons", "menu", "menu"),
-            new Button(this, "buttons", "save", "save"),
-            new Button(this, "buttons", "load", "load"),
-            new Button(this, "buttons", "regular", "select.tile"),
-
-            // new Button(this, "buttons", "regular", "add.block"), // TODO
-            // new Button(this, "buttons", "regular", "remove.block"), // TODO
-
-            // new Button(this, "eraser", "eraser", btn, btn),
-            // new Button(this, "ground", "add.ground", btn, btn),
-            // new Button(this, "wall", "add.wall", btn, btn),
-            // new Button(this, "rail", "add.rail", btn, btn),
-            // new Button(this, "you", "add.you", btn, btn),
-            // new Button(this, "skeleton", "add.skeleton", btn, btn)
-        ]
-
-        let right_buttons = [new Button(this, "buttons", "menu", "move.cam")]
-
-        this.buttons["right"] = right_buttons
-        this.buttons["left"] = left_buttons
+        this.camera.y = 0.5 * this.world.height * GRID_SIZE
     }
     configure_opengl(gl) {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -211,7 +198,6 @@ class Application {
             let button = left_buttons[index]
             button.put(x, y)
             x += pad + button.width
-            // y -= pad + btn
         }
 
         let right_buttons = this.buttons["right"]
@@ -228,7 +214,10 @@ class Application {
             }
             if (this.cli_input.startsWith("add tile")) {
                 let tile = this.cli_input.substring("add tile".length).trim()
-                if (tile.startsWith("stairs right")) {
+                if (tile.startsWith("wall")) {
+                    this.tile_select = TILE_WALL
+                    this.action = "place.tile"
+                } else if (tile.startsWith("stairs right")) {
                     this.tile_select = TILE_STAIRS_RIGHT
                     this.action = "place.tile"
                 }
@@ -256,56 +245,41 @@ class Application {
 
         for (let key in this.buttons) {
             let group = this.buttons[key]
-            for (let index; index < group.length; index++) {
+            for (let index = 0; index < group.length; index++) {
                 let button = group[index]
                 if (button.click(this.mouse_x, this.mouse_y)) {
-                    button.active = true
-                    this.edit_next_action(button.action)
+                    button.activate(button)
                     nop = false
-                    break
-                } else
-                    button.active = false
+                }
             }
         }
 
-        if (nop) this.edit_action_on()
+        if (nop) {
+            for (let i in this.active_buttons) {
+                let button = this.active_buttons[i]
+                if (button.on !== null)
+                    button.on(button)
+            }
+        }
+    }
+    mouse_move(event) {
+        this.mouse_previous_x = this.mouse_x
+        this.mouse_previous_y = this.mouse_y
+        this.mouse_x = event.clientX
+        this.mouse_y = this.canvas.height - event.clientY
+        if (this.mouse) {
+            for (let i in this.active_buttons) {
+                let button = this.active_buttons[i]
+                if (button.drag !== null)
+                    button.drag(button)
+            }
+        }
     }
     edit_save() {
         if (this.cli_input !== "") {
             let data = this.world.save(this.cli_input)
             this.cli_input = ""
             Network.Send("api/store/save", data)
-        }
-    }
-    edit_next_action(action) {
-        switch (action) {
-            case "save":
-                this.edit_save()
-                break
-            case "load":
-                if (this.cli_input !== "") {
-                    let self = this
-                    Network.Send("api/store/load", this.cli_input).then(function (data) {
-                        self.world.load(data)
-                        self.render()
-                    }).catch(function (data) {
-                        console.log(data)
-                    })
-                }
-                break
-            case "menu":
-                break
-            case "select.tile":
-                let buttons = [
-                    new Button(this, "buttons", "menu", "menu"),
-                    new Button(this, "buttons", "save", "save"),
-                    new Button(this, "buttons", "load", "load"),
-                    new Button(this, "buttons", "regular", "select.tile"),
-                ]
-                this.buttons["select.tile"] = buttons
-            default:
-                this.action = action
-                this.render()
         }
     }
     edit_action_on() {
@@ -349,23 +323,8 @@ class Application {
                 this.edit_set_tile(TILE_RAIL)
                 break
             case "move.cam":
-                this.camera.x += this.mouse_previous_x - this.mouse_x
-                this.camera.y += this.mouse_previous_y - this.mouse_y
-                if (this.camera.x < 0) this.camera.x = 0
-                else if (this.camera.x > this.world.block_w * GRID_SIZE) this.camera.x = this.world.block_w * GRID_SIZE
-                if (this.camera.y < 0) this.camera.y = 0
-                else if (this.camera.y > this.world.block_h * GRID_SIZE) this.camera.y = this.world.block_h * GRID_SIZE
-                this.render()
                 break
         }
-    }
-    mouse_move(event) {
-        this.mouse_previous_x = this.mouse_x
-        this.mouse_previous_y = this.mouse_y
-        this.mouse_x = event.clientX
-        this.mouse_y = this.canvas.height - event.clientY
-        if (this.mouse)
-            this.edit_action_move()
     }
     mouse_to_world_x() {
         return this.mouse_x + this.camera.x - this.canvas.width * 0.5
@@ -375,9 +334,9 @@ class Application {
     }
     edit_add_thing(id) {
         let px = this.mouse_to_world_x()
-        if (px < 0 || px >= this.world.block_w * GRID_SIZE) return
+        if (px < 0 || px >= this.world.width * GRID_SIZE) return
         let py = this.mouse_to_world_y()
-        if (py < 0 || py >= this.world.block_h * GRID_SIZE) return
+        if (py < 0 || py >= this.world.height * GRID_SIZE) return
 
         let bx = Math.floor(px * INV_GRID_SIZE)
         let by = Math.floor(py * INV_GRID_SIZE)
@@ -386,7 +345,7 @@ class Application {
 
         // TODO: head of thing out of bounds
 
-        let block = this.world.blocks[bx + by * this.world.block_w]
+        let block = this.world.blocks[bx + by * this.world.width]
         let tile = block.tiles[tx + ty * BLOCK_SIZE]
 
         while (TILE_EMPTY[tile]) {
@@ -396,12 +355,12 @@ class Application {
                 by -= 1
                 if (by === -1)
                     return
-                block = this.world.blocks[bx + by * this.world.block_w]
+                block = this.world.blocks[bx + by * this.world.width]
             }
             tile = block.tiles[tx + ty * BLOCK_SIZE]
         }
 
-        let py = (ty + 1 + by * BLOCK_SIZE) * TILE_SIZE
+        py = (ty + 1 + by * BLOCK_SIZE) * TILE_SIZE
 
         if (id === "skeleton")
             new Skeleton(this.world, px, py)
@@ -412,16 +371,16 @@ class Application {
     }
     edit_set_tile(tile) {
         let px = this.mouse_to_world_x()
-        if (px < 0 || px >= this.world.block_w * GRID_SIZE) return
+        if (px < 0 || px >= this.world.width * GRID_SIZE) return
         let py = this.mouse_to_world_y()
-        if (py < 0 || py >= this.world.block_h * GRID_SIZE) return
+        if (py < 0 || py >= this.world.height * GRID_SIZE) return
 
         let bx = Math.floor(px * INV_GRID_SIZE)
         let by = Math.floor(py * INV_GRID_SIZE)
         let tx = Math.floor(px * INV_TILE_SIZE) % BLOCK_SIZE
         let ty = Math.floor(py * INV_TILE_SIZE) % BLOCK_SIZE
 
-        let block = this.world.blocks[bx + by * this.world.block_w]
+        let block = this.world.blocks[bx + by * this.world.width]
         let index = tx + ty * BLOCK_SIZE
         let existing = block.tiles[index]
 
@@ -448,7 +407,7 @@ class Application {
         let frame = this.frame
         let camera = this.camera
         let generic = this.generic
-        let generic2 = this.generic2
+        let sprite_buffer = this.sprite_buffer
 
         let view_x = -Math.floor(camera.x - frame.width * 0.5)
         let view_y = -Math.floor(camera.y - frame.height * 0.5)
@@ -473,31 +432,42 @@ class Application {
         g.set_program(gl, "texture")
         g.set_orthographic(this.canvas_ortho, 0, 0)
         g.update_mvp(gl)
+
         generic.zero()
+        for (let key in sprite_buffer)
+            sprite_buffer[key].zero()
+
         for (let key in this.buttons) {
             let group = this.buttons[key]
-            for (let index; index < group.length; index++) {
-                let button = group[index]
-                button.draw(generic, generic)
-            }
+            for (let index = 0; index < group.length; index++)
+                group[index].draw(generic, sprite_buffer)
         }
+
         g.set_texture(gl, "buttons")
         RenderSystem.UpdateAndDraw(gl, generic)
 
-        if (this.action === "select.tile") {
-            generic.zero()
-            generic2.zero()
-            for (let i = 1; i < TILE_TEXTURE.length; i++) {
-                Render.Sprite(generic, 40 + (TILE_SIZE + 5) * i, frame.height - 100, SPRITES["buttons"]["ground"][0])
-                let texture = TILE_TEXTURE[i]
-                Render.Image(generic2, 40 + (TILE_SIZE + 5) * i, frame.height - 100, TILE_SIZE, TILE_SIZE, texture[0], texture[1], texture[2], texture[3])
+        for (let key in sprite_buffer) {
+            let buffer = sprite_buffer[key]
+            if (buffer.vertex_pos > 0) {
+                g.set_texture(this.gl, key)
+                RenderSystem.UpdateAndDraw(this.gl, buffer)
             }
-
-            g.set_texture(gl, "buttons")
-            RenderSystem.UpdateAndDraw(gl, generic)
-            g.set_texture(gl, "map")
-            RenderSystem.UpdateAndDraw(gl, generic2)
         }
+
+        // if (this.action === "select.tile") {
+        //     generic.zero()
+        //     generic2.zero()
+        //     for (let i = 1; i < TILE_TEXTURE.length; i++) {
+        //         Render.Sprite(generic, 40 + (TILE_SIZE + 5) * i, frame.height - 100, SPRITES["buttons"]["ground"][0])
+        //         let texture = TILE_TEXTURE[i]
+        //         Render.Image(generic2, 40 + (TILE_SIZE + 5) * i, frame.height - 100, TILE_SIZE, TILE_SIZE, texture[0], texture[1], texture[2], texture[3])
+        //     }
+
+        //     g.set_texture(gl, "buttons")
+        //     RenderSystem.UpdateAndDraw(gl, generic)
+        //     g.set_texture(gl, "map")
+        //     RenderSystem.UpdateAndDraw(gl, generic2)
+        // }
 
         generic.zero()
         Render.Print(generic, this.cli_input, 10, 10, 2)

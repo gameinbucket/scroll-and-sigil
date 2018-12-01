@@ -4,16 +4,13 @@ const INV_GRID_SIZE = 1.0 / GRID_SIZE
 class World {
     constructor(gl) {
         this.gl = gl
-        this.red = 0
-        this.green = 0
-        this.blue = 0
-        this.block_w = null
-        this.block_h = null
-        this.block_all = null
         this.blocks = []
+        this.width = 0
+        this.height = 0
+        this.global_blocks = {}
         this.sprite_set = new Set()
-        this.sprite_buffer = new Map()
-        this.sprite_count = new Map()
+        this.sprite_buffer = {}
+        this.sprite_count = {}
         this.things = new Array(6)
         this.thing_count = 0
         this.delete_things = new Array(2)
@@ -31,128 +28,160 @@ class World {
             return
         }
 
+        let you = null
+
         this.blocks = []
+        this.width = 0
+        this.height = 0
+        this.global_blocks = {}
         this.sprite_set.clear()
-        this.sprite_buffer.clear()
-        this.sprite_count.clear()
+        this.sprite_buffer = {}
+        this.sprite_count = {}
         this.things = new Array(6)
         this.thing_count = 0
         this.delete_things = new Array(2)
         this.delete_thing_count = 0
 
-        this.block_w = content["width"]
-        this.block_h = content["height"]
-        this.block_all = this.block_w * this.block_h
-        let tiles = content["tiles"]
-        let things = content["things"]
+        let blocks = content["blocks"]
+        for (let b = 0; b < blocks.length; b++) {
+            let block = blocks[b]
+            let bx = block["x"]
+            let by = block["y"]
+            let color = block["color"]
+            let music = block["music"]
+            let tiles = block["tiles"]
 
-        let background_color = content["background-color"]
-        this.red = background_color[0]
-        this.blue = background_color[1]
-        this.green = background_color[2]
-        this.gl.clearColor(this.red / 255.0, this.green / 255.0, this.blue / 255.0, 1.0)
+            if (bx >= this.width) this.width = bx + 1
+            if (by >= this.height) this.height = by + 1
 
-        let x = 0
-        let y = 0
-        let index = 0
+            block = new Block(bx, by)
+            block.red = color[0]
+            block.blue = color[1]
+            block.green = color[2]
+            block.music = music
 
-        for (let b = 0; b < this.block_all; b++) {
-            let block = new Block(x, y)
-            this.blocks[b] = block
-            for (let t = 0; t < BLOCK_TOTAL; t++) {
-                block.tiles[t] = tiles[index]
-                index++
-            }
-            x++
-            if (x == this.block_w) {
-                x = 0
-                y++
+            for (let t = 0; t < BLOCK_TOTAL; t++)
+                block.tiles[t] = tiles[t]
+
+            this.global_blocks[bx + "/" + by] = block
+        }
+
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height; y++) {
+                let i = x + y * this.width
+                let key = x + "/" + y
+                if (key in this.global_blocks)
+                    this.blocks[i] = this.global_blocks[key]
+                else
+                    this.blocks[i] = new Block(x, y)
             }
         }
 
-        let you = null
-        for (let t = 0; t < things.length; t++) {
-            let thing = things[t]
-            let id = thing["id"]
-            let x = thing["x"]
-            let y = thing["y"]
-            switch (id) {
-                // TODO: how to not need this?
-                // TODO: things need proper base classes, and actual unique id
-                case "you":
-                    if (you === null)
-                        you = new You(this, x, y)
-                    break
-                case "skeleton":
-                    new Skeleton(this, x, y)
-                    break
-                case "water":
-                    new Water(this, x, y)
-                    break
-                case "roar":
-                    new Roar(this, x, y)
-                    break
-                case "whip":
-                    new Whip(this, x, y)
-                    break
-                case "musket":
-                    new Musket(this, x, y)
-                    break
-                case "helmet":
-                    new Helmet(this, x, y)
-                    break
-                case "armor":
-                    new Armor(this, x, y)
-                    break
-                case "boots":
-                    new Boots(this, x, y)
-                    break
-                case "gloves":
-                    new Gloves(this, x, y)
-                    break
-                case "musket-ball":
-                    new MusketBall(this, x, y)
-                    break
-                case "shield":
-                    new Shield(this, x, y)
-                    break
-                case "food":
-                    new Food(this, x, y)
-                    break
+        for (let b = 0; b < blocks.length; b++) {
+            let block = blocks[b]
+            let bx = block["x"]
+            let by = block["y"]
+            let things = block["things"]
+
+            let px = bx * GRID_SIZE
+            let py = by * GRID_SIZE
+
+            for (let t = 0; t < things.length; t++) {
+                let thing = things[t]
+                let id = thing["id"]
+                let x = thing["x"] + px
+                let y = thing["y"] + py
+                switch (id) {
+                    case "you":
+                        if (you === null)
+                            you = new You(this, x, y)
+                        break
+                    case "skeleton":
+                        new Skeleton(this, x, y)
+                        break
+                    case "water":
+                        new Water(this, x, y)
+                        break
+                    case "roar":
+                        new Roar(this, x, y)
+                        break
+                    case "whip":
+                        new Whip(this, x, y)
+                        break
+                    case "musket":
+                        new Musket(this, x, y)
+                        break
+                    case "helmet":
+                        new Helmet(this, x, y)
+                        break
+                    case "armor":
+                        new Armor(this, x, y)
+                        break
+                    case "boots":
+                        new Boots(this, x, y)
+                        break
+                    case "gloves":
+                        new Gloves(this, x, y)
+                        break
+                    case "musket-ball":
+                        new MusketBall(this, x, y)
+                        break
+                    case "shield":
+                        new Shield(this, x, y)
+                        break
+                    case "food":
+                        new Food(this, x, y)
+                        break
+                }
             }
+        }
+
+        if (you !== null) {
+            let bx = Math.floor(you.x * INV_GRID_SIZE)
+            let by = Math.floor(you.y * INV_GRID_SIZE)
+
+            // this.center(bx, by)
+            this.theme(bx, by)
         }
 
         this.build()
     }
+    // center(bx, by) {
+    //     for (let y = 0; y < WORLD_SIZE; y++) {
+    //         for (let x = 0; x < WORLD_SIZE; x++) {
+    //             let i = x + y * WORLD_SIZE
+    //             let key = x + "/" + y
+    //             if (this.global_blocks.has(key))
+    //                 this.blocks[i] = this.global_blocks[key]
+    //             else
+    //                 this.blocks[i] = new Block(x, y)
+    //         }
+    //     }
+    // }
+    theme(bx, by) {
+        let block = this.get_block(bx, by)
+        this.gl.clearColor(block.red / 255.0, block.green / 255.0, block.blue / 255.0, 1.0)
+    }
     build() {
-        for (let i = 0; i < this.block_all; i++)
+        for (let i = 0; i < this.blocks.length; i++)
             this.blocks[i].build_mesh(this.gl)
     }
     save(name) {
-        let tile_data = ""
-        tile_data += this.blocks[0].save()
+        let data = `{"name":"${name}","blocks":[`
+        data += this.blocks[0].save()
         for (let i = 1; i < this.blocks.length; i++) {
-            tile_data += ","
-            tile_data += this.blocks[i].save()
+            data += ","
+            data += this.blocks[i].save()
         }
-
-        let thing_data = ""
-        if (this.thing_count > 0) {
-            thing_data += this.things[0].save()
-            for (let i = 1; i < this.thing_count; i++) {
-                thing_data += ","
-                thing_data += this.things[i].save()
-            }
-        }
-
-        return `{"name":"${name}","width":${this.block_w},"height":${this.block_h},"background-color": [${this.red}, ${this.green}, ${this.blue}],"tiles":[${tile_data}],"things":[${thing_data}]}`
+        data += "]}"
+        return data;
     }
     get_tile(x, y) {
         let block_x = Math.floor(x * INV_BLOCK_SIZE)
         let block_y = Math.floor(y * INV_BLOCK_SIZE)
         let tile_x = x % BLOCK_SIZE
         let tile_y = y % BLOCK_SIZE
-        let block = this.blocks[block_x + block_y * this.block_w]
+        let block = this.blocks[block_x + block_y * this.width]
         return block.tiles[tile_x + tile_y * BLOCK_SIZE]
     }
     set_tile(x, y, tile) {
@@ -160,12 +189,15 @@ class World {
         let block_y = Math.floor(y * INV_BLOCK_SIZE)
         let tile_x = x % BLOCK_SIZE
         let tile_y = y % BLOCK_SIZE
-        let block = this.blocks[block_x + block_y * this.block_w]
+        let block = this.blocks[block_x + block_y * this.width]
         block.tiles[tile_x + tile_y * BLOCK_SIZE] = tile
     }
     get_block(x, y) {
-        return this.blocks[x + y * this.block_w]
+        return this.blocks[x + y * this.width]
     }
+    // get_global_block(x, y) {
+    //     return this.global_blocks[x + "/" + y]
+    // }
     add_thing(thing) {
         if (this.thing_count === this.things.length) {
             let copy = new Array(this.thing_count + 5)
@@ -221,8 +253,8 @@ class World {
 
         if (c_min < 0) c_min = 0
         if (r_min < 0) r_min = 0
-        if (c_lim >= this.block_w) c_lim = this.block_w - 1
-        if (r_lim >= this.block_h) r_lim = this.block_h - 1
+        if (c_lim >= this.width) c_lim = this.width - 1
+        if (r_lim >= this.height) r_lim = this.height - 1
 
         let sprite_buffer = this.sprite_buffer
         g.set_texture(this.gl, "map")
@@ -232,7 +264,7 @@ class World {
 
         for (let gy = r_min; gy <= r_lim; gy++) {
             for (let gx = c_min; gx <= c_lim; gx++) {
-                let block = this.blocks[gx + gy * this.block_w]
+                let block = this.blocks[gx + gy * this.width]
                 let mesh = block.mesh
                 if (mesh.vertex_pos > 0)
                     RenderSystem.BindAndDraw(this.gl, mesh)

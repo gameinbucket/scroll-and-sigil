@@ -5,8 +5,12 @@ const BLOCK_MESH = new RenderCopy(2, 0, 2, BLOCK_TOTAL * 4, BLOCK_TOTAL * 6)
 
 class Block {
     constructor(px, py) {
+        this.red = 88
+        this.green = 248
+        this.blue = 156
+        this.music = "vampire"
         this.tiles = new Uint8Array(BLOCK_TOTAL)
-        this.mesh
+        this.mesh = null
         this.begin_side = new Array(6)
         this.count_side = new Array(6)
         this.x = px
@@ -15,12 +19,23 @@ class Block {
         this.thing_count = 0
     }
     save() {
-        let concat = "" + this.tiles[0]
+        let data = `{"x":${this.x},"y":${this.y},"color":[${this.red}, ${this.green}, ${this.blue}],"music":"${this.music}","tiles":[` + this.tiles[0]
         for (let i = 1; i < BLOCK_TOTAL; i++) {
-            concat += ","
-            concat += this.tiles[i]
+            data += ","
+            data += this.tiles[i]
         }
-        return concat + ""
+        data += `],"things":[`
+        if (this.thing_count > 0) {
+            let x = this.x * GRID_SIZE
+            let y = this.y * GRID_SIZE
+            data += this.things[0].save(x, y)
+            for (let i = 1; i < this.thing_count; i++) {
+                data += ","
+                data += this.things[i].save(x, y)
+            }
+        }
+        data += "]}"
+        return data
     }
     get_tile(x, y) {
         return this.tiles[x + y * BLOCK_SIZE]

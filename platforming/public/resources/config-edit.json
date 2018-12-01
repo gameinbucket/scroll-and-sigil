@@ -3,59 +3,39 @@
     "sprites": [{
         "name": "buttons",
         "animations": [{
-            "name": "regular",
-            "frames": [
-                [33, 33, 32, 32]
-            ]
-        }, {
-            "name": "active",
-            "frames": [
-                [66, 33, 32, 32]
-            ]
-        }, {
-            "name": "menu",
-            "frames": [
-                [0, 0, 32, 32]
-            ]
-        }, {
             "name": "save",
             "frames": [
-                [33, 0, 32, 32]
+                [0, 0, 16, 16]
             ]
         }, {
             "name": "load",
             "frames": [
-                [66, 0, 32, 32]
+                [16, 0, 16, 16]
             ]
         }, {
-            "name": "eraser",
+            "name": "folder",
             "frames": [
-                [0, 33, 32, 32]
+                [32, 0, 16, 16]
             ]
         }, {
-            "name": "ground",
+            "name": "open-folder",
             "frames": [
-                [33, 33, 32, 32]
+                [48, 0, 16, 16]
             ]
         }, {
-            "name": "wall",
+            "name": "things",
             "frames": [
-                [66, 33, 32, 32]
+                [64, 0, 16, 16]
             ]
         }, {
-            "name": "rail",
+            "name": "move",
             "frames": [
-                [0, 66, 32, 32]
+                [80, 0, 16, 16]
             ]
         }, {
-            "name": "you",
+            "name": "select",
             "frames": [
-                [33, 66, 32, 32]
-            ]
-        }, {
-            "name": "skeleton",
-            "frames": [
-                [66, 66, 32, 32]
+                [96, 0, 16, 16]
             ]
         }]
     }]
