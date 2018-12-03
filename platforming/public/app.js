@@ -69,7 +69,7 @@ class Application {
         let sprites = config["sprites"]
         let tiles = config["tiles"]
 
-        let promises = new Array(shaders.length + textures.length)
+        let promises = []
 
         for (let index = 0; index < shaders.length; index++)
             promises.push(g.make_program(gl, shaders[index]))
@@ -140,8 +140,8 @@ class Application {
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
 
-        let canvas_ortho = Matrix.Make()
-        let draw_ortho = Matrix.Make()
+        let canvas_ortho = []
+        let draw_ortho = []
 
         let scale = 0.5
         let draw_width = canvas.width * scale

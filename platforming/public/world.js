@@ -11,9 +11,9 @@ class World {
         this.sprite_set = new Set()
         this.sprite_buffer = {}
         this.sprite_count = {}
-        this.things = new Array(6)
+        this.things = []
         this.thing_count = 0
-        this.delete_things = new Array(2)
+        this.delete_things = []
         this.delete_thing_count = 0
         this.threads = ["ai", "pathing"]
         this.thread_index = 0
@@ -37,9 +37,9 @@ class World {
         this.sprite_set.clear()
         this.sprite_buffer = {}
         this.sprite_count = {}
-        this.things = new Array(6)
+        this.things = []
         this.thing_count = 0
-        this.delete_things = new Array(2)
+        this.delete_things = []
         this.delete_thing_count = 0
 
         let blocks = content["blocks"]
@@ -199,13 +199,6 @@ class World {
     //     return this.global_blocks[x + "/" + y]
     // }
     add_thing(thing) {
-        if (this.thing_count === this.things.length) {
-            let copy = new Array(this.thing_count + 5)
-            for (let i = 0; i < this.thing_count; i++) {
-                copy[i] = this.things[i]
-            }
-            this.things = copy
-        }
         this.things[this.thing_count] = thing
         this.thing_count++
 
@@ -232,13 +225,6 @@ class World {
         }
     }
     delete_thing(thing) {
-        if (this.delete_thing_count === this.delete_things.length) {
-            let copy = new Array(this.delete_thing_count + 5)
-            for (let i = 0; i < this.delete_thing_count; i++) {
-                copy[i] = this.delete_things[i]
-            }
-            this.delete_things = copy
-        }
         this.delete_things[this.delete_thing_count] = thing
         this.delete_thing_count++
     }

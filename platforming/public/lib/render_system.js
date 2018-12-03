@@ -1,11 +1,11 @@
 const RESOURCES = "resources/"
 class RenderSystem {
     constructor() {
-        this.v = Matrix.Make()
-        this.mv = Matrix.Make()
-        this.mvp = Matrix.Make()
-        this.ip = Matrix.Make()
-        this.iv = Matrix.Make()
+        this.v = []
+        this.mv = []
+        this.mvp = []
+        this.ip = []
+        this.iv = []
 
         this.program
         this.program_name

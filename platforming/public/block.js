@@ -11,11 +11,11 @@ class Block {
         this.music = "vampire"
         this.tiles = new Uint8Array(BLOCK_TOTAL)
         this.mesh = null
-        this.begin_side = new Array(6)
-        this.count_side = new Array(6)
+        this.begin_side = []
+        this.count_side = []
         this.x = px
         this.y = py
-        this.things = new Array()
+        this.things = []
         this.thing_count = 0
     }
     save() {
@@ -41,13 +41,6 @@ class Block {
         return this.tiles[x + y * BLOCK_SIZE]
     }
     add_thing(thing) {
-        if (this.thing_count === this.things.length) {
-            let copy = new Array(this.thing_count + 3)
-            for (let i = 0; i < this.thing_count; i++) {
-                copy[i] = this.things[i]
-            }
-            this.things = copy
-        }
         this.things[this.thing_count] = thing
         this.thing_count++
     }

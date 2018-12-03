@@ -1,6 +1,22 @@
 const ANIMATION_RATE = 8
 const GRAVITY = 0.55
 
+const THING_LIST = [
+    "you",
+    "skeleton",
+    "water",
+    "roar",
+    "whip",
+    "musket",
+    "helmet",
+    "armor",
+    "boots",
+    "gloves",
+    "musket-ball",
+    "shield",
+    "food"
+]
+
 class Resolution {
     constructor() {
         this.resolve = false
@@ -237,7 +253,7 @@ class Thing {
             this.y + this.height > thing.y && this.y < thing.y + thing.height
     }
     thing_collision(world) {
-        let collided = new Array()
+        let collided = []
         let searched = new Set()
 
         for (let gx = this.left_gx; gx <= this.right_gx; gx++) {

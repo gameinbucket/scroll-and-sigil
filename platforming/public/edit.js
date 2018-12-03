@@ -13,6 +13,8 @@ class Application {
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
 
+        document.body.style.cursor = "url(\"resources/cursor.png\"), default"
+
         let gl = canvas.getContext("webgl2")
         let g = new RenderSystem()
 
@@ -28,6 +30,17 @@ class Application {
         sprite_buffer["map"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
 
         let world = new World(gl)
+
+        let form_list = [
+            new EditMain("main", "0", "0", "200", "fill", 127, 255, 127),
+            new EditWorld("world", "uid$main", "0", "fill", "200", 255, 127, 127),
+        ]
+
+        let forms = new Map()
+        for (let i in form_list) {
+            let form = form_list[i]
+            forms.set(form.uid, form)
+        }
 
         document.onkeydown = key_down
         document.onmouseup = mouse_up
@@ -51,10 +64,7 @@ class Application {
         this.generic = generic
         this.sprite_buffer = sprite_buffer
         this.world = world
-        this.buttons = {}
-        this.active_buttons = []
-        this.tile_select = TILE_NONE
-        this.thing_select = null
+        this.forms = forms
         this.camera = {
             x: 0.5 * GRID_SIZE,
             y: 0
@@ -73,7 +83,7 @@ class Application {
             let sprites = config["sprites"]
             let tiles = config["tiles"]
 
-            let promises = new Array(shaders.length + textures.length)
+            let promises = []
 
             for (let index = 0; index < shaders.length; index++)
                 promises.push(g.make_program(gl, shaders[index]))
@@ -121,7 +131,7 @@ class Application {
             let textures = config["textures"]
             let sprites = config["sprites"]
 
-            let promises = new Array(textures.length)
+            let promises = []
 
             for (let index = 0; index < textures.length; index++)
                 promises.push(g.make_image(gl, textures[index], gl.CLAMP_TO_EDGE))
@@ -160,6 +170,7 @@ class Application {
         gl.disable(gl.CULL_FACE)
         gl.disable(gl.BLEND)
         gl.disable(gl.DEPTH_TEST)
+        gl.enable(gl.SCISSOR_TEST)
     }
     resize() {
         let gl = this.gl
@@ -169,8 +180,8 @@ class Application {
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
 
-        let canvas_ortho = Matrix.Make()
-        let draw_ortho = Matrix.Make()
+        let canvas_ortho = []
+        let draw_ortho = []
 
         let scale = 1.0
         let draw_width = canvas.width * scale
@@ -189,48 +200,37 @@ class Application {
         this.canvas_ortho = canvas_ortho
         this.draw_ortho = draw_ortho
 
-        let pad = 10
-
-        let left_buttons = this.buttons["left"]
-        let x = pad
-        let y = this.canvas.height - pad - left_buttons[0].height
-        for (let index = 0; index < left_buttons.length; index++) {
-            let button = left_buttons[index]
-            button.put(x, y)
-            x += pad + button.width
-        }
-
-        let right_buttons = this.buttons["right"]
-        right_buttons[0].put(this.canvas.width - pad - right_buttons[0].width, this.canvas.height - pad - right_buttons[0].height)
+        for (let form of this.forms.values())
+            form.resize(this.forms, frame)
     }
     key_down(event) {
-        if (event.key === "Backspace") {
-            this.cli_input = this.cli_input.substring(0, this.cli_input.length - 1)
-            event.preventDefault()
-            this.render()
-        } else if (event.key === "Enter") {
-            if (this.cli_input.startsWith("save")) {
-                this.edit_save()
-            }
-            if (this.cli_input.startsWith("add tile")) {
-                let tile = this.cli_input.substring("add tile".length).trim()
-                if (tile.startsWith("wall")) {
-                    this.tile_select = TILE_WALL
-                    this.action = "place.tile"
-                } else if (tile.startsWith("stairs right")) {
-                    this.tile_select = TILE_STAIRS_RIGHT
-                    this.action = "place.tile"
-                }
-            }
-            this.cli_input = ""
-            this.render()
-        } else {
-            let key = String.fromCharCode(event.keyCode);
-            if (/[a-zA-Z0-9-_ ]/.test(key)) {
-                this.cli_input += event.key
-                this.render()
-            }
-        }
+        // if (event.key === "Backspace") {
+        //     this.cli_input = this.cli_input.substring(0, this.cli_input.length - 1)
+        //     event.preventDefault()
+        //     this.render()
+        // } else if (event.key === "Enter") {
+        //     if (this.cli_input.startsWith("save")) {
+        //         this.edit_save()
+        //     }
+        //     if (this.cli_input.startsWith("add tile")) {
+        //         let tile = this.cli_input.substring("add tile".length).trim()
+        //         if (tile.startsWith("wall")) {
+        //             this.tile_select = TILE_WALL
+        //             this.action = "place.tile"
+        //         } else if (tile.startsWith("stairs right")) {
+        //             this.tile_select = TILE_STAIRS_RIGHT
+        //             this.action = "place.tile"
+        //         }
+        //     }
+        //     this.cli_input = ""
+        //     this.render()
+        // } else {
+        //     let key = String.fromCharCode(event.keyCode);
+        //     if (/[a-zA-Z0-9-_ ]/.test(key)) {
+        //         this.cli_input += event.key
+        //         this.render()
+        //     }
+        // }
     }
     mouse_up(event) {
         if (event.button !== 0)
@@ -243,23 +243,17 @@ class Application {
         this.mouse = true
         let nop = true
 
-        for (let key in this.buttons) {
-            let group = this.buttons[key]
-            for (let index = 0; index < group.length; index++) {
-                let button = group[index]
-                if (button.click(this.mouse_x, this.mouse_y)) {
-                    button.activate(button)
-                    nop = false
-                }
+        for (let form of this.forms.values()) {
+            if (form.inside(this.mouse_x, this.mouse_y)) {
+                form.on(this.mouse_x, this.mouse_y)
+                nop = false
+                break
             }
         }
 
         if (nop) {
-            for (let i in this.active_buttons) {
-                let button = this.active_buttons[i]
-                if (button.on !== null)
-                    button.on(button)
-            }
+            for (let form of this.forms.values())
+                form.nop(this, this.mouse_x, this.mouse_y)
         }
     }
     mouse_move(event) {
@@ -268,10 +262,16 @@ class Application {
         this.mouse_x = event.clientX
         this.mouse_y = this.canvas.height - event.clientY
         if (this.mouse) {
-            for (let i in this.active_buttons) {
-                let button = this.active_buttons[i]
-                if (button.drag !== null)
-                    button.drag(button)
+            let nop = true
+            for (let form of this.forms.values()) {
+                if (form.inside(this.mouse_x, this.mouse_y)) {
+                    nop = false
+                    break
+                }
+            }
+            if (nop) {
+                for (let form of this.forms.values())
+                    form.drag(this, this.mouse_x, this.mouse_y)
             }
         }
     }
@@ -282,113 +282,11 @@ class Application {
             Network.Send("api/store/save", data)
         }
     }
-    edit_action_on() {
-        switch (this.action) {
-            case "place.tile":
-                this.edit_set_tile(this.tile_select)
-                break
-            case "eraser":
-                this.edit_set_tile(TILE_NONE)
-                break
-            case "add.ground":
-                this.edit_set_tile(TILE_GROUND)
-                break
-            case "add.wall":
-                this.edit_set_tile(TILE_WALL)
-                break
-            case "add.rail":
-                this.edit_set_tile(TILE_RAIL)
-                break
-            case "add.you":
-                this.edit_add_thing("you")
-                break
-            case "add.skeleton":
-                this.edit_add_thing("skeleton")
-                break
-        }
-    }
-    edit_action_move() {
-        switch (this.action) {
-            case "eraser":
-                this.edit_set_tile(TILE_NONE)
-                // TODO: remove SPRITES
-                break
-            case "add.ground":
-                this.edit_set_tile(TILE_GROUND)
-                break
-            case "add.wall":
-                this.edit_set_tile(TILE_WALL)
-                break
-            case "add.rail":
-                this.edit_set_tile(TILE_RAIL)
-                break
-            case "move.cam":
-                break
-        }
-    }
     mouse_to_world_x() {
         return this.mouse_x + this.camera.x - this.canvas.width * 0.5
     }
     mouse_to_world_y() {
         return this.mouse_y + this.camera.y - this.canvas.height * 0.5
-    }
-    edit_add_thing(id) {
-        let px = this.mouse_to_world_x()
-        if (px < 0 || px >= this.world.width * GRID_SIZE) return
-        let py = this.mouse_to_world_y()
-        if (py < 0 || py >= this.world.height * GRID_SIZE) return
-
-        let bx = Math.floor(px * INV_GRID_SIZE)
-        let by = Math.floor(py * INV_GRID_SIZE)
-        let tx = Math.floor(px * INV_TILE_SIZE) % BLOCK_SIZE
-        let ty = Math.floor(py * INV_TILE_SIZE) % BLOCK_SIZE
-
-        // TODO: head of thing out of bounds
-
-        let block = this.world.blocks[bx + by * this.world.width]
-        let tile = block.tiles[tx + ty * BLOCK_SIZE]
-
-        while (TILE_EMPTY[tile]) {
-            ty -= 1
-            if (ty < 0) {
-                ty += BLOCK_SIZE
-                by -= 1
-                if (by === -1)
-                    return
-                block = this.world.blocks[bx + by * this.world.width]
-            }
-            tile = block.tiles[tx + ty * BLOCK_SIZE]
-        }
-
-        py = (ty + 1 + by * BLOCK_SIZE) * TILE_SIZE
-
-        if (id === "skeleton")
-            new Skeleton(this.world, px, py)
-        else if (id === "you")
-            new You(this.world, px, py)
-
-        this.render()
-    }
-    edit_set_tile(tile) {
-        let px = this.mouse_to_world_x()
-        if (px < 0 || px >= this.world.width * GRID_SIZE) return
-        let py = this.mouse_to_world_y()
-        if (py < 0 || py >= this.world.height * GRID_SIZE) return
-
-        let bx = Math.floor(px * INV_GRID_SIZE)
-        let by = Math.floor(py * INV_GRID_SIZE)
-        let tx = Math.floor(px * INV_TILE_SIZE) % BLOCK_SIZE
-        let ty = Math.floor(py * INV_TILE_SIZE) % BLOCK_SIZE
-
-        let block = this.world.blocks[bx + by * this.world.width]
-        let index = tx + ty * BLOCK_SIZE
-        let existing = block.tiles[index]
-
-        if (tile !== existing) {
-            block.tiles[index] = tile
-            block.build_mesh(this.gl)
-            this.render()
-        }
     }
     async run() {
         await this.init()
@@ -408,6 +306,8 @@ class Application {
         let camera = this.camera
         let generic = this.generic
         let sprite_buffer = this.sprite_buffer
+
+        this.world.theme(0, 0)
 
         let view_x = -Math.floor(camera.x - frame.width * 0.5)
         let view_y = -Math.floor(camera.y - frame.height * 0.5)
@@ -433,19 +333,13 @@ class Application {
         g.set_orthographic(this.canvas_ortho, 0, 0)
         g.update_mvp(gl)
 
-        generic.zero()
         for (let key in sprite_buffer)
             sprite_buffer[key].zero()
 
-        for (let key in this.buttons) {
-            let group = this.buttons[key]
-            for (let index = 0; index < group.length; index++)
-                group[index].draw(generic, sprite_buffer)
-        }
+        for (let form of this.forms.values())
+            form.draw(gl, sprite_buffer)
 
-        g.set_texture(gl, "buttons")
-        RenderSystem.UpdateAndDraw(gl, generic)
-
+        RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
         for (let key in sprite_buffer) {
             let buffer = sprite_buffer[key]
             if (buffer.vertex_pos > 0) {
@@ -453,26 +347,6 @@ class Application {
                 RenderSystem.UpdateAndDraw(this.gl, buffer)
             }
         }
-
-        // if (this.action === "select.tile") {
-        //     generic.zero()
-        //     generic2.zero()
-        //     for (let i = 1; i < TILE_TEXTURE.length; i++) {
-        //         Render.Sprite(generic, 40 + (TILE_SIZE + 5) * i, frame.height - 100, SPRITES["buttons"]["ground"][0])
-        //         let texture = TILE_TEXTURE[i]
-        //         Render.Image(generic2, 40 + (TILE_SIZE + 5) * i, frame.height - 100, TILE_SIZE, TILE_SIZE, texture[0], texture[1], texture[2], texture[3])
-        //     }
-
-        //     g.set_texture(gl, "buttons")
-        //     RenderSystem.UpdateAndDraw(gl, generic)
-        //     g.set_texture(gl, "map")
-        //     RenderSystem.UpdateAndDraw(gl, generic2)
-        // }
-
-        generic.zero()
-        Render.Print(generic, this.cli_input, 10, 10, 2)
-        g.set_texture(gl, "font")
-        RenderSystem.UpdateAndDraw(gl, generic)
     }
 }
 

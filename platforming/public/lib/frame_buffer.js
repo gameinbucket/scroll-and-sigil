@@ -12,8 +12,8 @@ class FrameBuffer {
         this.linear = linear
         this.depth = depth
         this.depthTexture
-        this.textures = new Array(format.length)
-        this.drawBuffers = new Array(format.length)
+        this.textures = []
+        this.drawBuffers = []
         RenderSystem.MakeFrameBuffer(gl, this)
     }
     static Resize(gl, buffer, width, height) {

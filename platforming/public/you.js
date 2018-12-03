@@ -67,7 +67,7 @@ class You extends Living {
     }
     damage_scan(world) {
         let item = this.hand
-        let collided = new Array()
+        let collided = []
         let searched = new Set()
 
         let boxes = [{

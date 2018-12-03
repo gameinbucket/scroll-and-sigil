@@ -1,9 +1,6 @@
-MATRIX_TEMP = new Array(16)
-MATRIX_COPIED = new Array(16)
+MATRIX_TEMP = []
+MATRIX_COPIED = []
 class Matrix {
-    static Make() {
-        return new Array(16)
-    }
     static Identity(matrix) {
         matrix[0] = 1.0
         matrix[1] = 0.0

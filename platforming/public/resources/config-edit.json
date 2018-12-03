@@ -18,17 +18,17 @@
                 [32, 0, 16, 16]
             ]
         }, {
-            "name": "open-folder",
+            "name": "open.folder",
             "frames": [
                 [48, 0, 16, 16]
             ]
         }, {
-            "name": "things",
+            "name": "world",
             "frames": [
                 [64, 0, 16, 16]
             ]
         }, {
-            "name": "move",
+            "name": "camera",
             "frames": [
                 [80, 0, 16, 16]
             ]

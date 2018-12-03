@@ -99,7 +99,7 @@ class Living extends Thing {
         }
     }
     damage_scan(world) {
-        let collided = new Array()
+        let collided = []
         let searched = new Set()
 
         let boxes = [{

@@ -13,3 +13,23 @@ const TILE_WATER = 7
 const TILE_SPRITE_SIZE = 1.0 / 128.0
 const TILE_TEXTURE = []
 const TILE_EMPTY = []
+
+const TILE_LIST = [
+    "ground",
+    "rails-right",
+    "stairs-right",
+    "rail",
+    "wall",
+    "water-top",
+    "water",
+]
+
+const TILE_MAP = {
+    "ground": 1,
+    "rails-right": 2,
+    "stairs-right": 3,
+    "rail": 4,
+    "wall": 5,
+    "water-top": 6,
+    "water": 7,
+}
