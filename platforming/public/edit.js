@@ -65,6 +65,7 @@ class Application {
         this.sprite_buffer = sprite_buffer
         this.world = world
         this.forms = forms
+        this.active_form = form_list[0]
         this.camera = {
             x: 0.5 * GRID_SIZE,
             y: 0
@@ -159,8 +160,6 @@ class Application {
 
         await Promise.all(requests)
 
-        Editing.InitButtons(this)
-
         let data = await Network.Send("api/store/load", "template")
         this.world.load(data)
         this.camera.y = 0.5 * this.world.height * GRID_SIZE
@@ -245,15 +244,17 @@ class Application {
 
         for (let form of this.forms.values()) {
             if (form.inside(this.mouse_x, this.mouse_y)) {
-                form.on(this.mouse_x, this.mouse_y)
+                if (form.on(this, this.mouse_x, this.mouse_y))
+                    this.active_form = form
                 nop = false
                 break
             }
         }
 
         if (nop) {
-            for (let form of this.forms.values())
-                form.nop(this, this.mouse_x, this.mouse_y)
+            this.active_form.nop(this, this.mouse_x, this.mouse_y)
+            // for (let form of this.forms.values())
+            //     form.nop(this, this.mouse_x, this.mouse_y)
         }
     }
     mouse_move(event) {
@@ -270,8 +271,9 @@ class Application {
                 }
             }
             if (nop) {
-                for (let form of this.forms.values())
-                    form.drag(this, this.mouse_x, this.mouse_y)
+                this.active_form.drag(this, this.mouse_x, this.mouse_y)
+                // for (let form of this.forms.values())
+                //     form.drag(this, this.mouse_x, this.mouse_y)
             }
         }
     }
@@ -304,7 +306,6 @@ class Application {
         let gl = this.gl
         let frame = this.frame
         let camera = this.camera
-        let generic = this.generic
         let sprite_buffer = this.sprite_buffer
 
         this.world.theme(0, 0)

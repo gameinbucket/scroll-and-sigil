@@ -195,9 +195,6 @@ class World {
     get_block(x, y) {
         return this.blocks[x + y * this.width]
     }
-    // get_global_block(x, y) {
-    //     return this.global_blocks[x + "/" + y]
-    // }
     add_thing(thing) {
         this.things[this.thing_count] = thing
         this.thing_count++

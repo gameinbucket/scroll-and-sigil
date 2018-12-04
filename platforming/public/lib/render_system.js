@@ -108,7 +108,7 @@ class RenderSystem {
     }
     static UpdateFrameBuffer(gl, frame) {
         gl.bindFramebuffer(gl.FRAMEBUFFER, frame.fbo)
-        for (let i = 0; i < frame.textures.length; i++) {
+        for (let i = 0; i < frame.format.length; i++) {
             gl.bindTexture(gl.TEXTURE_2D, frame.textures[i])
             gl.texImage2D(gl.TEXTURE_2D, 0, frame.internalFormat[i], frame.width, frame.height, 0, frame.format[i], frame.type[i], null)
         }
@@ -120,7 +120,7 @@ class RenderSystem {
     static MakeFrameBuffer(gl, frame) {
         frame.fbo = gl.createFramebuffer()
         gl.bindFramebuffer(gl.FRAMEBUFFER, frame.fbo)
-        for (let i = 0; i < frame.textures.length; i++) {
+        for (let i = 0; i < frame.format.length; i++) {
             frame.textures[i] = gl.createTexture()
             gl.bindTexture(gl.TEXTURE_2D, frame.textures[i])
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -133,9 +133,9 @@ class RenderSystem {
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
             }
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, frame.textures[i], 0)
-            frame.drawBuffers[i] = gl.COLOR_ATTACHMENT0 + i
+            frame.draw_buffers[i] = gl.COLOR_ATTACHMENT0 + i
         }
-        gl.drawBuffers(frame.drawBuffers)
+        gl.drawBuffers(frame.draw_buffers)
         if (frame.depth) {
             frame.depthTexture = gl.createTexture()
             gl.bindTexture(gl.TEXTURE_2D, frame.depthTexture)

@@ -120,9 +120,8 @@ class Matrix {
         MATRIX_TEMP[14] = 0.0
         MATRIX_TEMP[15] = 1.0
 
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 16; i++)
             MATRIX_COPIED[i] = matrix[i]
-        }
 
         Matrix.Multiply(matrix, MATRIX_COPIED, MATRIX_TEMP)
     }
@@ -150,9 +149,8 @@ class Matrix {
         MATRIX_TEMP[14] = 0.0
         MATRIX_TEMP[15] = 1.0
 
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 16; i++)
             MATRIX_COPIED[i] = matrix[i]
-        }
 
         Matrix.Multiply(matrix, MATRIX_COPIED, MATRIX_TEMP)
     }
@@ -180,9 +178,8 @@ class Matrix {
         MATRIX_TEMP[14] = 0.0
         MATRIX_TEMP[15] = 1.0
 
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 16; i++)
             MATRIX_COPIED[i] = matrix[i]
-        }
 
         Matrix.Multiply(matrix, MATRIX_COPIED, MATRIX_TEMP)
     }
@@ -277,8 +274,7 @@ class Matrix {
 
         let det = 1.0 / (MATRIX_COPIED[0] * matrix[0] + MATRIX_COPIED[1] * matrix[1] + MATRIX_COPIED[2] * matrix[2] + MATRIX_COPIED[3] * matrix[3])
 
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 16; i++)
             matrix[i] *= det
-        }
     }
 }

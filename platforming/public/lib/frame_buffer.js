@@ -13,7 +13,7 @@ class FrameBuffer {
         this.depth = depth
         this.depthTexture
         this.textures = []
-        this.drawBuffers = []
+        this.draw_buffers = []
         RenderSystem.MakeFrameBuffer(gl, this)
     }
     static Resize(gl, buffer, width, height) {

@@ -18,7 +18,7 @@
                 [32, 0, 16, 16]
             ]
         }, {
-            "name": "open.folder",
+            "name": "open-folder",
             "frames": [
                 [48, 0, 16, 16]
             ]

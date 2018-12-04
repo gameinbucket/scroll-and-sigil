@@ -11,8 +11,6 @@ class Block {
         this.music = "vampire"
         this.tiles = new Uint8Array(BLOCK_TOTAL)
         this.mesh = null
-        this.begin_side = []
-        this.count_side = []
         this.x = px
         this.y = py
         this.things = []
