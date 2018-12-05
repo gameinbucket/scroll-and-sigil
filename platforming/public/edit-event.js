@@ -1,5 +1,5 @@
 class Editing {
-    static SetTile(edit, tile) {
+    static SetTile(edit, tile, force_draw = false) {
         let px = edit.mouse_to_world_x()
         let py = edit.mouse_to_world_y()
 
@@ -31,12 +31,11 @@ class Editing {
                     block.build_mesh(edit.gl)
                     for (let i = 0; i < block.thing_count; i++)
                         block.things[i].x += offset
-                    world.global_blocks[x + "/" + y] = block
                 }
             }
 
             edit.camera.x += offset
-            Editing.SetTile(edit, tile)
+            Editing.SetTile(edit, tile, true)
             return
         } else if (px >= world.width * GRID_SIZE) {
             let new_width = Math.floor(px * INV_GRID_SIZE) + 1
@@ -57,9 +56,7 @@ class Editing {
             world.blocks = new_blocks
             world.width = new_width
 
-            for (let x = 0; x < world.width; x++)
-                for (let y = 0; y < world.height; y++)
-                    world.global_blocks[x + "/" + y] = world.blocks[x + y * world.width]
+            force_draw = true
         }
 
         if (py < 0) {
@@ -88,12 +85,11 @@ class Editing {
                     block.build_mesh(edit.gl)
                     for (let i = 0; i < block.thing_count; i++)
                         block.things[i].y += offset
-                    world.global_blocks[x + "/" + y] = block
                 }
             }
 
             edit.camera.y += offset
-            Editing.SetTile(edit, tile)
+            Editing.SetTile(edit, tile, true)
             return
         } else if (py >= world.height * GRID_SIZE) {
             let new_height = Math.floor(py * INV_GRID_SIZE) + 1
@@ -114,9 +110,7 @@ class Editing {
             world.blocks = new_blocks
             world.height = new_height
 
-            for (let x = 0; x < world.width; x++)
-                for (let y = 0; y < world.height; y++)
-                    world.global_blocks[x + "/" + y] = world.blocks[x + y * world.width]
+            force_draw = true
         }
 
         let bx = Math.floor(px * INV_GRID_SIZE)
@@ -132,9 +126,10 @@ class Editing {
             block.tiles[index] = tile
             block.build_mesh(edit.gl)
             edit.render()
-        }
+        } else if (force_draw)
+            edit.render()
     }
-    static AddThing(edit, id) {
+    static AddThing(edit, thing) {
         let px = edit.mouse_to_world_x()
         if (px < 0 || px >= edit.world.width * GRID_SIZE) return
         let py = edit.mouse_to_world_y()
@@ -144,8 +139,6 @@ class Editing {
         let by = Math.floor(py * INV_GRID_SIZE)
         let tx = Math.floor(px * INV_TILE_SIZE) % BLOCK_SIZE
         let ty = Math.floor(py * INV_TILE_SIZE) % BLOCK_SIZE
-
-        // TODO: head of thing out of bounds -> expand map
 
         let block = edit.world.blocks[bx + by * edit.world.width]
         let tile = block.tiles[tx + ty * BLOCK_SIZE]
@@ -164,10 +157,8 @@ class Editing {
 
         py = (ty + 1 + by * BLOCK_SIZE) * TILE_SIZE
 
-        if (id === "skeleton")
-            new Skeleton(edit.world, px, py)
-        else if (id === "you")
-            new You(edit.world, px, py)
+        thing.get(edit.world, px, py)
+        // TODO: head of thing out of bounds -> expand map
 
         edit.render()
     }

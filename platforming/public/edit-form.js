@@ -52,16 +52,14 @@ class EditForm {
         } else if (this.h_pos === "fill")
             this.height = frame.height - this.y
         else if (this.h_pos === "min")
-            this.height = this.min_height_y()
+            this.height = this.min_height()
         else
             this.height = parseInt(this.h_pos)
 
         if (this.y_pos === "top")
             this.y = frame.height - this.height
     }
-    min_height_y() {
-        return 100
-    }
+    min_height() {}
     inside(x, y) {
         return x >= this.x && y >= this.y && x <= this.x + this.width && y <= this.y + this.height
     }
@@ -80,6 +78,9 @@ class EditMain extends EditForm {
     constructor(uid, x, y, width, height, red, green, blue) {
         super(uid, x, y, width, height, red, green, blue)
         this.select = "world"
+    }
+    min_height() {
+        return BUTTON_SIZE
     }
     draw(gl, sprite_buffer) {
         this.clear(gl)
@@ -158,7 +159,7 @@ class EditFolder extends EditForm {
 
         let size = 2
         let x = this.x + 10
-        let y = this.y + this.height - FONT_HEIGHT * size
+        let y = this.y + this.height - FONT_HEIGHT * size - Math.floor((BUTTON_SIZE - FONT_HEIGHT * size) * 0.5)
         Render.Print(sprite_buffer["font"], "tiles", x, y, size)
 
         y -= BUTTON_SIZE
@@ -188,28 +189,33 @@ class EditWorld extends EditForm {
         this.tile_select = TILE_WALL
         this.thing_select = "skeleton"
     }
+    min_height() {
+        return BUTTON_SIZE
+    }
     draw(gl, sprite_buffer) {
         this.clear(gl)
-
         let x = this.x
-
+        let y = this.y + this.height - BUTTON_SIZE
+        let sprite = SPRITES["buttons"]["eraser"][0]
+        Render.Image(sprite_buffer["buttons"], x, y, BUTTON_SIZE, BUTTON_SIZE, sprite.left, sprite.top, sprite.right, sprite.bottom)
+        x += BUTTON_SIZE
         if (this.menu === "tiles") {
-            for (let key in TILE_LIST) {
-                let tile = TILE_LIST[key]
-                let sprite = SPRITES["map"][tile][0]
-                let w = BUTTON_SIZE
-                let h = BUTTON_SIZE
-                let y = this.y + this.height - h
-                Render.Image(sprite_buffer["map"], x, y, w, h, sprite.left, sprite.top, sprite.right, sprite.bottom)
-                x += w
+            for (let i in TILE_LIST) {
+                let tile = TILE_LIST[i]
+                sprite = SPRITES["map"][tile][0]
+                Render.Image(sprite_buffer["map"], x, y, BUTTON_SIZE, BUTTON_SIZE, sprite.left, sprite.top, sprite.right, sprite.bottom)
+                x += BUTTON_SIZE
             }
         } else if (this.menu === "things") {
-            for (let key in SPRITE_LIST) {
-                let sprite = SPRITES[key][SPRITE_LIST[key]][0]
+            for (let i in THING_LIST) {
+                let thing = THING_LIST[i]
+                let texture = thing["texture"]
+                let animation = thing["animation"]
+                let sprite = SPRITES[texture][animation][0]
                 let w = BUTTON_SIZE
                 let h = BUTTON_SIZE
                 let y = this.y + this.height - h
-                Render.Image(sprite_buffer[key], x, y, w, h, sprite.left, sprite.top, sprite.right, sprite.bottom)
+                Render.Image(sprite_buffer[texture], x, y, w, h, sprite.left, sprite.top, sprite.right, sprite.bottom)
                 x += w
             }
         }
@@ -223,14 +229,18 @@ class EditWorld extends EditForm {
 
         if (gy === 0) {
             if (this.menu === "tiles") {
-                if (gx < TILE_LIST.length) {
-                    this.tile_select = gx + 1
+                if (gx < TILE_LIST.length + 1) {
+                    this.tile_select = gx
                     return true
                 }
             } else if (this.menu === "things") {
-                if (gx < THING_LIST.length) {
-                    this.thing_select = THING_LIST[gx]
-                    return true
+                if (gx === 0) this.thing_select = "eraser"
+                else {
+                    gx--
+                    if (gx < THING_LIST.length) {
+                        this.thing_select = THING_LIST[gx]
+                        return true
+                    }
                 }
             }
         }

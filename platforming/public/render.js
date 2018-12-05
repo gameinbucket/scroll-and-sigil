@@ -35,6 +35,33 @@ class Render {
         buffer.indices[buffer.index_pos++] = buffer.index_offset + 1
         buffer.index_offset += 4
     }
+    static Color(buffer, x, y, width, height, red, green, blue) {
+        buffer.vertices[buffer.vertex_pos++] = x
+        buffer.vertices[buffer.vertex_pos++] = y
+        buffer.vertices[buffer.vertex_pos++] = red
+        buffer.vertices[buffer.vertex_pos++] = green
+        buffer.vertices[buffer.vertex_pos++] = blue
+
+        buffer.vertices[buffer.vertex_pos++] = x + width
+        buffer.vertices[buffer.vertex_pos++] = y
+        buffer.vertices[buffer.vertex_pos++] = red
+        buffer.vertices[buffer.vertex_pos++] = green
+        buffer.vertices[buffer.vertex_pos++] = blue
+
+        buffer.vertices[buffer.vertex_pos++] = x + width
+        buffer.vertices[buffer.vertex_pos++] = y + height
+        buffer.vertices[buffer.vertex_pos++] = red
+        buffer.vertices[buffer.vertex_pos++] = green
+        buffer.vertices[buffer.vertex_pos++] = blue
+
+        buffer.vertices[buffer.vertex_pos++] = x
+        buffer.vertices[buffer.vertex_pos++] = y + height
+        buffer.vertices[buffer.vertex_pos++] = red
+        buffer.vertices[buffer.vertex_pos++] = green
+        buffer.vertices[buffer.vertex_pos++] = blue
+
+        Render.Index4(buffer)
+    }
     static Image(buffer, x, y, width, height, left, top, right, bottom) {
         buffer.vertices[buffer.vertex_pos++] = x
         buffer.vertices[buffer.vertex_pos++] = y

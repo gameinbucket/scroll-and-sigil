@@ -1,36 +1,103 @@
 const ANIMATION_RATE = 8
 const GRAVITY = 0.55
 
-const THING_LIST = [
-    "you",
-    "skeleton",
-    "water",
-    "roar",
-    "whip",
-    "musket",
-    "helmet",
-    "armor",
-    "boots",
-    "gloves",
-    "musket-ball",
-    "shield",
-    "food"
-]
+const THING_LIST = [{
+    id: "you",
+    texture: "you",
+    animation: "idle",
+    get: (world, x, y) => {
+        return new You(world, x, y)
+    }
+}, {
+    id: "skeleton",
+    texture: "skeleton",
+    animation: "idle",
+    get: (world, x, y) => {
+        return new Skeleton(world, x, y)
+    }
+}, {
+    id: "water",
+    texture: "item",
+    animation: "water",
+    get: (world, x, y) => {
+        return new Water(world, x, y)
+    }
+}, {
+    id: "roar",
+    texture: "item",
+    animation: "roar",
+    get: (world, x, y) => {
+        return new Roar(world, x, y)
+    }
+}, {
+    id: "whip",
+    texture: "item",
+    animation: "whip",
+    get: (world, x, y) => {
+        return new Whip(world, x, y)
+    }
+}, {
+    id: "musket",
+    texture: "item",
+    animation: "musket",
+    get: (world, x, y) => {
+        return new Musket(world, x, y)
+    }
+}, {
+    id: "helmet",
+    texture: "item",
+    animation: "helmet",
+    get: (world, x, y) => {
+        return new Helmet(world, x, y)
+    }
+}, {
+    id: "armor",
+    texture: "item",
+    animation: "armor",
+    get: (world, x, y) => {
+        return new Armor(world, x, y)
+    }
+}, {
+    id: "boots",
+    texture: "item",
+    animation: "boots",
+    get: (world, x, y) => {
+        return new Boots(world, x, y)
+    }
+}, {
+    id: "gloves",
+    texture: "item",
+    animation: "gloves",
+    get: (world, x, y) => {
+        return new Gloves(world, x, y)
+    }
+}, {
+    id: "mustket-ball",
+    texture: "item",
+    animation: "musket-ball",
+    get: (world, x, y) => {
+        return new MusketBall(world, x, y)
+    }
+}, {
+    id: "shield",
+    texture: "item",
+    animation: "shield",
+    get: (world, x, y) => {
+        return new Shield(world, x, y)
+    }
+}, {
+    id: "food",
+    texture: "item",
+    animation: "food",
+    get: (world, x, y) => {
+        return new Food(world, x, y)
+    }
+}]
 
-const SPRITE_LIST = {
-    "you": "idle",
-    "skeleton": "idle",
-    "item": "water",
-    "item": "roar",
-    "item": "whip",
-    "item": "musket",
-    "item": "helmet",
-    "item": "armor",
-    "item": "boots",
-    "item": "gloves",
-    "item": "musket-ball",
-    "item": "shield",
-    "item": "food"
+const THING_MAP = {}
+for (let i in THING_LIST) {
+    let item = THING_LIST[i]
+    THING_MAP[item.id] = item
 }
 
 class Resolution {

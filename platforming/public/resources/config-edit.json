@@ -1,4 +1,5 @@
 {
+    "shaders": ["color"],
     "textures": ["buttons"],
     "sprites": [{
         "name": "buttons",
@@ -36,6 +37,11 @@
             "name": "select",
             "frames": [
                 [96, 0, 16, 16]
+            ]
+        }, {
+            "name": "eraser",
+            "frames": [
+                [112, 0, 16, 16]
             ]
         }]
     }]

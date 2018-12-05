@@ -35,6 +35,13 @@ class Block {
         data += "]}"
         return data
     }
+    is_empty() {
+        for (let i = 0; i < BLOCK_TOTAL; i++) {
+            if (this.tiles[i] !== TILE_NONE)
+                return false
+        }
+        return true
+    }
     get_tile(x, y) {
         return this.tiles[x + y * BLOCK_SIZE]
     }

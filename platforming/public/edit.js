@@ -21,13 +21,14 @@ class Application {
         this.configure_opengl(gl)
 
         let generic = RenderBuffer.Init(gl, 2, 0, 2, 6400, 9600)
+        let colors = RenderBuffer.Init(gl, 2, 3, 0, 6400, 9600)
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
 
         let sprite_buffer = {}
         sprite_buffer["buttons"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffer["you"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffer["skeleton"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
-        sprite_buffer["item"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffer["item"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
         sprite_buffer["map"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
         sprite_buffer["font"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
 
@@ -36,21 +37,13 @@ class Application {
         let form_list = [
             new EditMain("main", "0", "top", "200", "min", 127, 255, 127),
             new EditFolder("folder", "0", "0", "same$main", "to$main", 127, 127, 255),
-            new EditWorld("world", "same$main", "0", "fill", "48", 255, 127, 127),
+            new EditWorld("world", "same$main", "0", "fill", "min", 255, 127, 127),
         ]
 
         let forms = new Map()
         for (let i in form_list) {
             let form = form_list[i]
             forms.set(form.uid, form)
-        }
-
-        document.onkeydown = key_down
-        document.onmouseup = mouse_up
-        document.onmousedown = mouse_down
-        document.onmousemove = mouse_move
-        document.oncontextmenu = function () {
-            return false
         }
 
         this.cli_input = ""
@@ -65,6 +58,7 @@ class Application {
         this.gl = gl
         this.g = g
         this.generic = generic
+        this.colors = colors
         this.sprite_buffer = sprite_buffer
         this.world = world
         this.forms = forms
@@ -132,10 +126,14 @@ class Application {
         requests.push(async function () {
             let data = await Network.Request("resources/config-edit.json")
             let config = JSON.parse(data)
+            let shaders = config["shaders"]
             let textures = config["textures"]
             let sprites = config["sprites"]
 
             let promises = []
+
+            for (let index = 0; index < shaders.length; index++)
+                promises.push(g.make_program(gl, shaders[index]))
 
             for (let index = 0; index < textures.length; index++)
                 promises.push(g.make_image(gl, textures[index], gl.CLAMP_TO_EDGE))
@@ -238,11 +236,8 @@ class Application {
             }
         }
 
-        if (nop) {
+        if (nop)
             this.active_form.nop(this, this.mouse_x, this.mouse_y)
-            // for (let form of this.forms.values())
-            //     form.nop(this, this.mouse_x, this.mouse_y)
-        }
     }
     mouse_move(event) {
         this.mouse_previous_x = this.mouse_x
@@ -257,11 +252,8 @@ class Application {
                     break
                 }
             }
-            if (nop) {
+            if (nop)
                 this.active_form.drag(this, this.mouse_x, this.mouse_y)
-                // for (let form of this.forms.values())
-                //     form.drag(this, this.mouse_x, this.mouse_y)
-            }
         }
     }
     mouse_to_world_x() {
@@ -273,6 +265,13 @@ class Application {
     async run() {
         await this.init()
         let self = this
+        document.onkeydown = key_down
+        document.onmouseup = mouse_up
+        document.onmousedown = mouse_down
+        document.onmousemove = mouse_move
+        document.oncontextmenu = function () {
+            return false
+        }
         window.onresize = function () {
             self.resize()
             self.render()
@@ -288,17 +287,19 @@ class Application {
         let camera = this.camera
         let sprite_buffer = this.sprite_buffer
 
-        this.world.theme(0, 0)
-
         let view_x = -Math.floor(camera.x - frame.width * 0.5)
         let view_y = -Math.floor(camera.y - frame.height * 0.5)
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
 
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
+        gl.clearColor(0, 0, 0, 1)
         gl.clear(gl.COLOR_BUFFER_BIT)
-        g.set_program(gl, "texture")
+        g.set_program(gl, "color")
         g.set_orthographic(this.draw_ortho, view_x, view_y)
+        g.update_mvp(gl)
+        this.world_background(frame, camera.x, camera.y)
+        g.set_program(gl, "texture")
         g.update_mvp(gl)
         this.world.render(g, frame, camera.x, camera.y)
 
@@ -328,6 +329,34 @@ class Application {
                 RenderSystem.UpdateAndDraw(this.gl, buffer)
             }
         }
+    }
+    world_background(frame, x, y) {
+        let colors = this.colors
+        let world = this.world
+
+        colors.zero()
+
+        let hw = frame.width * 0.5
+        let hh = frame.height * 0.5
+
+        let c_min = Math.floor((x - hw) * INV_GRID_SIZE)
+        let c_lim = Math.floor((x + hw) * INV_GRID_SIZE)
+        let r_min = Math.floor((y - hh) * INV_GRID_SIZE)
+        let r_lim = Math.floor((y + hh) * INV_GRID_SIZE)
+
+        if (c_min < 0) c_min = 0
+        if (r_min < 0) r_min = 0
+        if (c_lim >= world.width) c_lim = world.width - 1
+        if (r_lim >= world.height) r_lim = world.height - 1
+
+        for (let gy = r_min; gy <= r_lim; gy++) {
+            for (let gx = c_min; gx <= c_lim; gx++) {
+                let block = world.blocks[gx + gy * world.width]
+                Render.Color(colors, gx * GRID_SIZE, gy * GRID_SIZE, GRID_SIZE, GRID_SIZE, block.red / 255.0, block.green / 255.0, block.blue / 255.0)
+            }
+        }
+
+        RenderSystem.UpdateAndDraw(this.gl, colors)
     }
 }
 

@@ -7,7 +7,6 @@ class World {
         this.blocks = []
         this.width = 0
         this.height = 0
-        this.global_blocks = {}
         this.sprite_set = new Set()
         this.sprite_buffer = {}
         this.sprite_count = {}
@@ -33,7 +32,6 @@ class World {
         this.blocks = []
         this.width = 0
         this.height = 0
-        this.global_blocks = {}
         this.sprite_set.clear()
         this.sprite_buffer = {}
         this.sprite_count = {}
@@ -43,16 +41,32 @@ class World {
         this.delete_thing_count = 0
 
         let blocks = content["blocks"]
+
+        let left = null
+        let right = null
+        let top = null
+        let bottom = null
         for (let b = 0; b < blocks.length; b++) {
             let block = blocks[b]
             let bx = block["x"]
             let by = block["y"]
+
+            if (left === null || bx < left) left = bx
+            if (right === null || by < bottom) bottom = by
+            if (top === null || bx > right) right = bx
+            if (bottom === null || by > top) top = by
+        }
+
+        this.width = right - left + 1
+        this.height = top - bottom + 1
+
+        for (let b = 0; b < blocks.length; b++) {
+            let block = blocks[b]
+            let bx = block["x"] - left
+            let by = block["y"] - bottom
             let color = block["color"]
             let music = block["music"]
             let tiles = block["tiles"]
-
-            if (bx >= this.width) this.width = bx + 1
-            if (by >= this.height) this.height = by + 1
 
             block = new Block(bx, by)
             block.red = color[0]
@@ -63,24 +77,21 @@ class World {
             for (let t = 0; t < BLOCK_TOTAL; t++)
                 block.tiles[t] = tiles[t]
 
-            this.global_blocks[bx + "/" + by] = block
+            this.blocks[bx + by * this.width] = block
         }
 
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height; y++) {
                 let i = x + y * this.width
-                let key = x + "/" + y
-                if (key in this.global_blocks)
-                    this.blocks[i] = this.global_blocks[key]
-                else
+                if (this.blocks[i] === null || this.blocks[i] === undefined)
                     this.blocks[i] = new Block(x, y)
             }
         }
 
         for (let b = 0; b < blocks.length; b++) {
             let block = blocks[b]
-            let bx = block["x"]
-            let by = block["y"]
+            let bx = block["x"] - left
+            let by = block["y"] - bottom
             let things = block["things"]
 
             let px = bx * GRID_SIZE
@@ -91,73 +102,17 @@ class World {
                 let id = thing["id"]
                 let x = thing["x"] + px
                 let y = thing["y"] + py
-                switch (id) {
-                    case "you":
-                        if (you === null)
-                            you = new You(this, x, y)
-                        break
-                    case "skeleton":
-                        new Skeleton(this, x, y)
-                        break
-                    case "water":
-                        new Water(this, x, y)
-                        break
-                    case "roar":
-                        new Roar(this, x, y)
-                        break
-                    case "whip":
-                        new Whip(this, x, y)
-                        break
-                    case "musket":
-                        new Musket(this, x, y)
-                        break
-                    case "helmet":
-                        new Helmet(this, x, y)
-                        break
-                    case "armor":
-                        new Armor(this, x, y)
-                        break
-                    case "boots":
-                        new Boots(this, x, y)
-                        break
-                    case "gloves":
-                        new Gloves(this, x, y)
-                        break
-                    case "musket-ball":
-                        new MusketBall(this, x, y)
-                        break
-                    case "shield":
-                        new Shield(this, x, y)
-                        break
-                    case "food":
-                        new Food(this, x, y)
-                        break
-                }
+                let item = THING_MAP[id]
+                if (id === "you") {
+                    if (you === null)
+                        you = item.get(this, x, y)
+                } else
+                    item.get(this, x, y)
             }
-        }
-
-        if (you !== null) {
-            let bx = Math.floor(you.x * INV_GRID_SIZE)
-            let by = Math.floor(you.y * INV_GRID_SIZE)
-
-            // this.center(bx, by)
-            this.theme(bx, by)
         }
 
         this.build()
     }
-    // center(bx, by) {
-    //     for (let y = 0; y < WORLD_SIZE; y++) {
-    //         for (let x = 0; x < WORLD_SIZE; x++) {
-    //             let i = x + y * WORLD_SIZE
-    //             let key = x + "/" + y
-    //             if (this.global_blocks.has(key))
-    //                 this.blocks[i] = this.global_blocks[key]
-    //             else
-    //                 this.blocks[i] = new Block(x, y)
-    //         }
-    //     }
-    // }
     theme(bx, by) {
         let block = this.get_block(bx, by)
         this.gl.clearColor(block.red / 255.0, block.green / 255.0, block.blue / 255.0, 1.0)
@@ -168,11 +123,13 @@ class World {
     }
     save(name) {
         let data = `{"name":"${name}","blocks":[`
-        data += this.blocks[0].save()
-        for (let i = 1; i < this.blocks.length; i++) {
-            data += ","
-            data += this.blocks[i].save()
+        let block_data = []
+        for (let i = 0; i < this.blocks.length; i++) {
+            let block = this.blocks[i]
+            if (block.is_empty()) continue
+            block_data.push(block.save())
         }
+        data += block_data.join(",")
         data += "]}"
         return data;
     }
