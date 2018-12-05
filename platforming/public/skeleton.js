@@ -29,6 +29,12 @@ class Skeleton extends Living {
         let right_gx = Math.floor((this.x + 32) * INV_GRID_SIZE)
         let bottom_gy = Math.floor((this.y - 32) * INV_GRID_SIZE)
         let top_gy = Math.floor((this.y + 32) * INV_GRID_SIZE)
+
+        if (left_gx < 0) left_gx = 0
+        if (bottom_gy < 0) bottom_gy = 0
+        if (right_gx >= world.width) right_gx = world.width - 1
+        if (top_gy >= world.height) top_gy = world.height - 1
+
         for (let gx = left_gx; gx <= right_gx; gx++) {
             for (let gy = bottom_gy; gy <= top_gy; gy++) {
                 let block = world.get_block(gx, gy)

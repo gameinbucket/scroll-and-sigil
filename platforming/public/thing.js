@@ -17,6 +17,22 @@ const THING_LIST = [
     "food"
 ]
 
+const SPRITE_LIST = {
+    "you": "idle",
+    "skeleton": "idle",
+    "item": "water",
+    "item": "roar",
+    "item": "whip",
+    "item": "musket",
+    "item": "helmet",
+    "item": "armor",
+    "item": "boots",
+    "item": "gloves",
+    "item": "musket-ball",
+    "item": "shield",
+    "item": "food"
+}
+
 class Resolution {
     constructor() {
         this.resolve = false

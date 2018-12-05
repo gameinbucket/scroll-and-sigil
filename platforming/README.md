@@ -15,6 +15,7 @@
 > death screen
 > stairs
 > elevators
+> save rendered block images to large virtual texture to significantly reduce draw calls
 > customizable character appearance 
 
 ## stats list

@@ -27,13 +27,16 @@ class Application {
         sprite_buffer["buttons"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffer["you"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffer["skeleton"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
+        sprite_buffer["item"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
         sprite_buffer["map"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
+        sprite_buffer["font"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
 
         let world = new World(gl)
 
         let form_list = [
-            new EditMain("main", "0", "0", "200", "fill", 127, 255, 127),
-            new EditWorld("world", "uid$main", "0", "fill", "200", 255, 127, 127),
+            new EditMain("main", "0", "top", "200", "min", 127, 255, 127),
+            new EditFolder("folder", "0", "0", "same$main", "to$main", 127, 127, 255),
+            new EditWorld("world", "same$main", "0", "fill", "48", 255, 127, 127),
         ]
 
         let forms = new Map()
@@ -203,33 +206,17 @@ class Application {
             form.resize(this.forms, frame)
     }
     key_down(event) {
-        // if (event.key === "Backspace") {
-        //     this.cli_input = this.cli_input.substring(0, this.cli_input.length - 1)
-        //     event.preventDefault()
-        //     this.render()
-        // } else if (event.key === "Enter") {
-        //     if (this.cli_input.startsWith("save")) {
-        //         this.edit_save()
-        //     }
-        //     if (this.cli_input.startsWith("add tile")) {
-        //         let tile = this.cli_input.substring("add tile".length).trim()
-        //         if (tile.startsWith("wall")) {
-        //             this.tile_select = TILE_WALL
-        //             this.action = "place.tile"
-        //         } else if (tile.startsWith("stairs right")) {
-        //             this.tile_select = TILE_STAIRS_RIGHT
-        //             this.action = "place.tile"
-        //         }
-        //     }
-        //     this.cli_input = ""
-        //     this.render()
-        // } else {
-        //     let key = String.fromCharCode(event.keyCode);
-        //     if (/[a-zA-Z0-9-_ ]/.test(key)) {
-        //         this.cli_input += event.key
-        //         this.render()
-        //     }
-        // }
+        if (event.key === "Backspace") {
+            this.cli_input = this.cli_input.substring(0, this.cli_input.length - 1)
+            event.preventDefault()
+            this.render()
+        } else {
+            let key = String.fromCharCode(event.keyCode);
+            if (/[a-zA-Z0-9-_ ]/.test(key)) {
+                this.cli_input += event.key
+                this.render()
+            }
+        }
     }
     mouse_up(event) {
         if (event.button !== 0)
@@ -275,13 +262,6 @@ class Application {
                 // for (let form of this.forms.values())
                 //     form.drag(this, this.mouse_x, this.mouse_y)
             }
-        }
-    }
-    edit_save() {
-        if (this.cli_input !== "") {
-            let data = this.world.save(this.cli_input)
-            this.cli_input = ""
-            Network.Send("api/store/save", data)
         }
     }
     mouse_to_world_x() {

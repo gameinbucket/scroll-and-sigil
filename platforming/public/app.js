@@ -117,7 +117,7 @@ class Application {
 
         this.music = MUSIC["melody"]
 
-        data = await Network.Send("api/store/load", "world")
+        data = await Network.Send("api/store/load", "map")
         this.world.load(data)
         for (let index = 0; index < this.world.thing_count; index++) {
             if (this.world.things[index].uid === "you") {

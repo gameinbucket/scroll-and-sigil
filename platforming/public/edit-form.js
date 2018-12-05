@@ -15,25 +15,52 @@ class EditForm {
         this.blue = blue / 256.0
     }
     resize(forms, frame) {
-        if (this.x_pos.endsWith("%")) this.x = Math.floor(frame.width * parseInt(this.x_pos.substring(0, this.x_pos.length - 1)))
-        else if (this.x_pos.startsWith("uid$")) {
-            let parent = forms.get(this.x_pos.substring(4))
+        if (this.x_pos.endsWith("%"))
+            this.x = Math.floor(frame.width * parseInt(this.x_pos.substring(0, this.x_pos.length - 1)))
+        else if (this.x_pos.startsWith("same$")) {
+            let parent = forms.get(this.x_pos.substring(5))
             this.x = parent.x + parent.width
-        } else this.x = parseInt(this.x_pos)
+        } else
+            this.x = parseInt(this.x_pos)
 
-        if (this.w_pos.endsWith("%")) this.width = Math.floor(frame.width * parseInt(this.w_pos.substring(0, this.w_pos.length - 1)))
-        else if (this.w_pos === "fill") this.width = frame.width - this.x
-        else this.width = parseInt(this.w_pos)
+        if (this.w_pos.endsWith("%"))
+            this.width = Math.floor(frame.width * parseInt(this.w_pos.substring(0, this.w_pos.length - 1)))
+        else if (this.w_pos.startsWith("same$")) {
+            let parent = forms.get(this.w_pos.substring(5))
+            this.width = parent.width
+        } else if (this.w_pos === "fill")
+            this.width = frame.width - this.x
+        else
+            this.width = parseInt(this.w_pos)
 
-        if (this.y_pos.endsWith("%")) this.y = Math.floor(frame.height * parseInt(this.y_pos.substring(0, this.y_pos.length - 1)))
-        else if (this.y_pos.startsWith("uid$")) {
-            let parent = forms[this.y_pos.substring(4)]
+        if (this.y_pos.endsWith("%"))
+            this.y = Math.floor(frame.height * parseInt(this.y_pos.substring(0, this.y_pos.length - 1)))
+        else if (this.y_pos.startsWith("same$")) {
+            let parent = forms.get(this.y_pos.substring(5))
             this.y = parent.y + parent.height
-        } else this.y = parseInt(this.y_pos)
+        } else if (this.y_pos === "top") {} else
+            this.y = parseInt(this.y_pos)
 
-        if (this.h_pos.endsWith("%")) this.height = Math.floor(frame.height * parseInt(this.h_pos.substring(0, this.h_pos.length - 1)))
-        else if (this.h_pos === "fill") this.height = frame.height - this.y
-        else this.height = parseInt(this.h_pos)
+        if (this.h_pos.endsWith("%"))
+            this.height = Math.floor(frame.height * parseInt(this.h_pos.substring(0, this.h_pos.length - 1)))
+        else if (this.h_pos.startsWith("same$")) {
+            let parent = forms.get(this.h_pos.substring(5))
+            this.height = parent.height
+        } else if (this.h_pos.startsWith("to$")) {
+            let parent = forms.get(this.h_pos.substring(3))
+            this.height = parent.y
+        } else if (this.h_pos === "fill")
+            this.height = frame.height - this.y
+        else if (this.h_pos === "min")
+            this.height = this.min_height_y()
+        else
+            this.height = parseInt(this.h_pos)
+
+        if (this.y_pos === "top")
+            this.y = frame.height - this.height
+    }
+    min_height_y() {
+        return 100
     }
     inside(x, y) {
         return x >= this.x && y >= this.y && x <= this.x + this.width && y <= this.y + this.height
@@ -81,13 +108,28 @@ class EditMain extends EditForm {
         let gy = Math.floor(local_y / BUTTON_SIZE)
 
         if (gy === 0) {
-            if (gx === 0) edit.forms.get("world").menu = "tiles"
-            else if (gx === 1) edit.forms.get("world").menu = "things"
-            else if (gx === 3) {
+            if (gx === 0) {
+                if (edit.cli_input !== "") {
+                    let data = edit.world.save(edit.cli_input)
+                    edit.cli_input = ""
+                    Network.Send("api/store/save", data)
+                } else
+                    console.log("Please name map")
+            } else if (gx === 1) {
+                if (edit.cli_input !== "") {
+                    Network.Send("api/store/load", edit.cli_input).then(function (data) {
+                        edit.world.load(data)
+                        edit.render()
+                    }).catch(function (data) {
+                        console.log(data)
+                    })
+                    edit.cli_input = ""
+                } else
+                    console.log("Please name map")
+            } else if (gx === 2) {} else if (gx === 3) {
                 this.select = "camera"
                 return true
             }
-            edit.render()
         }
 
         return false
@@ -102,6 +144,40 @@ class EditMain extends EditForm {
             else if (edit.camera.y > edit.world.height * GRID_SIZE) edit.camera.y = edit.world.height * GRID_SIZE
             edit.render()
         }
+    }
+}
+
+class EditFolder extends EditForm {
+    constructor(uid, x, y, width, height, red, green, blue) {
+        super(uid, x, y, width, height, red, green, blue)
+        this.menu = "world"
+        this.select = "tiles"
+    }
+    draw(gl, sprite_buffer) {
+        this.clear(gl)
+
+        let size = 2
+        let x = this.x + 10
+        let y = this.y + this.height - FONT_HEIGHT * size
+        Render.Print(sprite_buffer["font"], "tiles", x, y, size)
+
+        y -= BUTTON_SIZE
+        Render.Print(sprite_buffer["font"], "things", x, y, size)
+    }
+    on(edit, x, y) {
+        let local_y = this.height - (y - this.y)
+        let gy = Math.floor(local_y / BUTTON_SIZE)
+
+        if (this.menu === "world") {
+            if (gy < 2) {
+                if (gy === 0) this.select = "tiles"
+                else if (gy === 1) this.select = "things"
+                edit.forms.get("world").menu = this.select
+                edit.render()
+            }
+        }
+
+        return false
     }
 }
 
@@ -128,12 +204,12 @@ class EditWorld extends EditForm {
                 x += w
             }
         } else if (this.menu === "things") {
-            for (let _ in THING_LIST) {
-                let sprite = SPRITES["map"]["wall"][0]
+            for (let key in SPRITE_LIST) {
+                let sprite = SPRITES[key][SPRITE_LIST[key]][0]
                 let w = BUTTON_SIZE
                 let h = BUTTON_SIZE
                 let y = this.y + this.height - h
-                Render.Image(sprite_buffer["map"], x, y, w, h, sprite.left, sprite.top, sprite.right, sprite.bottom)
+                Render.Image(sprite_buffer[key], x, y, w, h, sprite.left, sprite.top, sprite.right, sprite.bottom)
                 x += w
             }
         }
@@ -168,6 +244,7 @@ class EditWorld extends EditForm {
             Editing.AddThing(edit, this.thing_select)
     }
     drag(edit) {
-        this.nop(edit)
+        if (this.menu === "tiles")
+            Editing.SetTile(edit, this.tile_select)
     }
 }
