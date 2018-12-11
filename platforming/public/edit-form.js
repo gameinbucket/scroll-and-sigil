@@ -188,6 +188,7 @@ class EditWorld extends EditForm {
         this.menu = "tiles"
         this.tile_select = TILE_WALL
         this.thing_select = "skeleton"
+        this.thing = null
     }
     min_height() {
         return BUTTON_SIZE
@@ -207,6 +208,10 @@ class EditWorld extends EditForm {
                 x += BUTTON_SIZE
             }
         } else if (this.menu === "things") {
+            let sprite = SPRITES["buttons"]["camera"][0]
+            Render.Image(sprite_buffer["buttons"], x, y, BUTTON_SIZE, BUTTON_SIZE, sprite.left, sprite.top, sprite.right, sprite.bottom)
+            x += BUTTON_SIZE
+
             for (let i in THING_LIST) {
                 let thing = THING_LIST[i]
                 let texture = thing["texture"]
@@ -235,8 +240,9 @@ class EditWorld extends EditForm {
                 }
             } else if (this.menu === "things") {
                 if (gx === 0) this.thing_select = "eraser"
+                else if (gx === 1) this.thing_select = "move"
                 else {
-                    gx--
+                    gx -= 2
                     if (gx < THING_LIST.length) {
                         this.thing_select = THING_LIST[gx]
                         return true
@@ -249,12 +255,19 @@ class EditWorld extends EditForm {
     }
     nop(edit) {
         if (this.menu === "tiles")
-            Editing.SetTile(edit, this.tile_select) // TODO: add fill block with tile option
-        else if (this.menu === "things")
-            Editing.AddThing(edit, this.thing_select)
+            Editing.SetTile(edit, this.tile_select)
+        else if (this.menu === "things") {
+            if (this.thing_select === "eraser") Editing.RemoveThing(edit)
+            else if (this.thing_select === "move") Editing.SelectThing(edit)
+            else Editing.AddThing(edit, this.thing_select)
+        }
     }
     drag(edit) {
         if (this.menu === "tiles")
             Editing.SetTile(edit, this.tile_select)
+        else if (this.menu === "things") {
+            if (this.thing_select === "eraser") Editing.RemoveThing(edit)
+            else if (this.thing_select === "move") Editing.MoveThing(edit)
+        }
     }
 }

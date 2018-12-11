@@ -162,4 +162,68 @@ class Editing {
 
         edit.render()
     }
+    static RemoveThing(edit) {
+        let px = edit.mouse_to_world_x()
+        if (px < 0 || px >= edit.world.width * GRID_SIZE) return
+        let py = edit.mouse_to_world_y()
+        if (py < 0 || py >= edit.world.height * GRID_SIZE) return
+
+        let bx = Math.floor(px * INV_GRID_SIZE)
+        let by = Math.floor(py * INV_GRID_SIZE)
+        let block = edit.world.blocks[bx + by * edit.world.width]
+
+        let change = false
+
+        for (let i = 0; i < block.thing_count; i++) {
+            let thing = block.things[i]
+            if (thing.x + thing.half_width > px && thing.x - thing.half_width < px &&
+                thing.y + thing.height > py && thing.y < py) {
+
+                thing.remove_from_blocks(edit.world)
+                edit.world.remove_thing(thing)
+
+                console.log("you not deleting?", thing)
+                change = true
+            }
+        }
+
+        if (change)
+            edit.render()
+    }
+    static SelectThing(edit) {
+        let px = edit.mouse_to_world_x()
+        if (px < 0 || px >= edit.world.width * GRID_SIZE) return
+        let py = edit.mouse_to_world_y()
+        if (py < 0 || py >= edit.world.height * GRID_SIZE) return
+
+        let bx = Math.floor(px * INV_GRID_SIZE)
+        let by = Math.floor(py * INV_GRID_SIZE)
+        let block = edit.world.blocks[bx + by * edit.world.width]
+
+        for (let i = 0; i < block.thing_count; i++) {
+            let thing = block.things[i]
+            if (thing.x + thing.half_width > px && thing.x - thing.half_width < px &&
+                thing.y + thing.height > py && thing.y < py) {
+
+                edit.thing = thing
+                return
+            }
+        }
+        edit.thing = null
+    }
+    static MoveThing(edit) {
+        if (edit.thing === null)
+            return
+
+        let world = edit.world
+        let thing = edit.thing
+        thing.x += edit.mouse_x - edit.mouse_previous_x
+        thing.y += edit.mouse_y - edit.mouse_previous_y
+        thing.remove_from_blocks(world)
+        thing.tile_collision(world)
+        thing.block_borders()
+        thing.add_to_blocks(world)
+
+        edit.render()
+    }
 }
