@@ -125,10 +125,10 @@ class Application {
                 break
             }
         }
+
         let bx = Math.floor(this.player.x * INV_GRID_SIZE)
         let by = Math.floor(this.player.y * INV_GRID_SIZE)
-        // this.center(bx, by)
-        this.theme(bx, by)
+        this.world.theme(bx, by)
     }
     configure_opengl(gl) {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)

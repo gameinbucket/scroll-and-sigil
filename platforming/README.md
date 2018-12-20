@@ -5,8 +5,6 @@
 > damage jump opposite direction of source
 > editor sprite hit boxes
 > editor sprite offsets
-> editor erase tiles, sprites
-> editor drag sprites to new positions
 > sprite sheet packing
 > sprite jittering
 > inventory screen
@@ -14,11 +12,12 @@
 > learning ai
 > infinite level moving
 > save game
-> death screen
+> death screen / reload
 > stairs
 > elevators
 > save rendered block images to large virtual texture to significantly reduce draw calls
 > customizable character appearance
+> dodging allows pass through interaction
 
 ## stats list
 

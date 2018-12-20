@@ -41,12 +41,29 @@
                 [0, 0, 16, 30]
             ]
         }, {
+            "name": "dodge",
+            "frames": [
+                [121, 0, 16, 32]
+            ]
+        }, {
             "name": "walk",
             "frames": [
                 [18, 0, 12, 31],
                 [33, 0, 15, 30],
                 [18, 0, 12, 31],
                 [0, 0, 16, 30]
+            ]
+        }, {
+            "name": "stair-up",
+            "frames": [
+                [138, 0, 15, 31],
+                [18, 0, 12, 31]
+            ]
+        }, {
+            "name": "stair-down",
+            "frames": [
+                [154, 0, 16, 31],
+                [18, 0, 12, 31]
             ]
         }, {
             "name": "crouch",
@@ -237,6 +254,14 @@
     }, {
         "name": "water",
         "texture": [68, 17],
+        "empty": true
+    }, {
+        "name": "rails-left",
+        "texture": [85, 0],
+        "empty": true
+    }, {
+        "name": "stairs-left",
+        "texture": [85, 17],
         "empty": true
     }]
 }

@@ -239,9 +239,13 @@ class EditWorld extends EditForm {
                     return true
                 }
             } else if (this.menu === "things") {
-                if (gx === 0) this.thing_select = "eraser"
-                else if (gx === 1) this.thing_select = "move"
-                else {
+                if (gx === 0) {
+                    this.thing_select = "eraser"
+                    return true
+                } else if (gx === 1) {
+                    this.thing_select = "move"
+                    return true
+                } else {
                     gx -= 2
                     if (gx < THING_LIST.length) {
                         this.thing_select = THING_LIST[gx]

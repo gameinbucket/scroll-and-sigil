@@ -2,7 +2,7 @@ class You extends Living {
     constructor(world, x, y) {
         super(world, "you", "you", x, y)
         this.gx = Math.floor(this.x * INV_GRID_SIZE)
-        this.stairs = false // TODO
+        this.substate = ""
         this.alliance = "good"
         this.inventory = []
         this.inventory_size = 0
@@ -40,7 +40,7 @@ class You extends Living {
         this.poison_resist = 0 // todo
     }
     damage(_, amount) {
-        if (this.health > 0 && this.state !== "damaged") {
+        if (this.health > 0 && this.state !== "damaged" && this.state !== "dodge") {
             this.health_reduce = this.health
             this.health -= amount
             if (this.health < 0)
@@ -167,6 +167,34 @@ class You extends Living {
         this.frame_modulo = 0
         this.sprite = this.animations["crouch"]
     }
+    dodge_left() {
+        const min_stamina = 24
+        if (!this.ground) return
+        if (this.state !== "idle" && this.state !== "walk") return
+        if (this.stamina < min_stamina) return
+        this.stamina_reduce = this.stamina
+        this.stamina -= min_stamina
+        this.dx = -0.6
+        this.mirror = true
+        this.state = "dodge"
+        this.sprite = this.animations["dodge"]
+        this.frame = 0
+        this.frame_modulo = 0
+    }
+    dodge_right() {
+        const min_stamina = 24
+        if (!this.ground) return
+        if (this.state !== "idle" && this.state !== "walk") return
+        if (this.stamina < min_stamina) return
+        this.stamina_reduce = this.stamina
+        this.stamina -= min_stamina
+        this.dx = 0.6
+        this.mirror = false
+        this.state = "dodge"
+        this.sprite = this.animations["dodge"]
+        this.frame = 0
+        this.frame_modulo = 0
+    }
     dodge() {
         const min_stamina = 24
         if (!this.ground) return
@@ -174,13 +202,65 @@ class You extends Living {
         if (this.stamina < min_stamina) return
         this.stamina_reduce = this.stamina
         this.stamina -= min_stamina
-        this.ground = false
-        this.dy = 5.5
-        if (this.mirror) this.dx = this.speed * 0.6
-        else this.dx = -this.speed * 0.6
+        this.state = "dodge"
+        this.sprite = this.animations["dodge"]
         this.frame = 0
         this.frame_modulo = 0
-        this.sprite = this.animations["crouch"]
+    }
+    stair_up(world) {
+        // once on stairs, finishes 2 step animation so that idle is one leg up / down (continues moving slightly after releasing key)
+        // when close to edge, finishes 2 step animation and places player into regular idle off stair animation
+        // once on stairs, both up/right or down/left keys work
+        // buffer zone not on stairs where pressing up will automove character to beginning of stairs to walk
+
+        let left_gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
+        let right_gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
+        let gy = Math.floor(this.y * INV_TILE_SIZE)
+        for (let gx = left_gx; gx <= right_gx; gx++) {
+            let t = world.get_tile(gx, gy)
+            if (t === TILE_STAIRS_RIGHT) {
+                this.state = "stairs"
+                this.substate = "upright"
+                this.sprite = this.animations["stair-up"]
+                this.frame = 0
+                this.frame_modulo = 0
+                this.mirror = false
+                return
+            } else if (t === TILE_STAIRS_LEFT) {
+                this.state = "stairs"
+                this.substate = "upleft"
+                this.sprite = this.animations["stair-up"]
+                this.frame = 0
+                this.frame_modulo = 0
+                this.mirror = true
+                return
+            }
+        }
+    }
+    stair_down(world) {
+        let left_gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
+        let right_gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
+        let gy = Math.floor((this.y - 1) * INV_TILE_SIZE)
+        for (let gx = left_gx; gx <= right_gx; gx++) {
+            let t = world.get_tile(gx, gy)
+            if (t === TILE_STAIRS_RIGHT) {
+                this.state = "stairs"
+                this.substate = "downleft"
+                this.sprite = this.animations["stair-down"]
+                this.frame = 0
+                this.frame_modulo = 0
+                this.mirror = true
+                return
+            } else if (t === TILE_STAIRS_LEFT) {
+                this.state = "stairs"
+                this.substate = "downright"
+                this.sprite = this.animations["stair-down"]
+                this.frame = 0
+                this.frame_modulo = 0
+                this.mirror = false
+                return
+            }
+        }
     }
     update(world) {
         if (this.health_reduce > this.health)
@@ -209,6 +289,110 @@ class You extends Living {
             return
         }
 
+        if (this.state === "dodge") {
+            this.frame_modulo++
+            if (this.frame_modulo == 32) {
+                this.state = "idle"
+                this.sprite = this.animations["idle"]
+                this.frame = 0
+                this.frame_modulo = 0
+            }
+            super.update(world)
+            return
+        }
+
+        if (this.state === "stairs") {
+            let flag = false
+
+            if (this.substate === "upright") {
+                let left_gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
+                let right_gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
+                let gy = Math.floor(this.y * INV_TILE_SIZE)
+                for (let gx = left_gx; gx <= right_gx; gx++) {
+                    let t = world.get_tile(gx, gy)
+                    if (t === TILE_STAIRS_RIGHT) {
+                        flag = true
+                        break
+                    }
+                }
+            } else if (this.substate === "upleft") {
+                let left_gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
+                let right_gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
+                let gy = Math.floor(this.y * INV_TILE_SIZE)
+                for (let gx = left_gx; gx <= right_gx; gx++) {
+                    let t = world.get_tile(gx, gy)
+                    if (t === TILE_STAIRS_LEFT) {
+                        flag = true
+                        break
+                    }
+                }
+            } else if (this.substate === "downright") {
+                let left_gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
+                let right_gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
+                let gy = Math.floor((this.y - 1) * INV_TILE_SIZE)
+                for (let gx = left_gx; gx <= right_gx; gx++) {
+                    let t = world.get_tile(gx, gy)
+                    if (t === TILE_STAIRS_RIGHT) {
+                        flag = true
+                        break
+                    }
+                }
+            } else {
+                let left_gx = Math.floor((this.x - this.half_width) * INV_TILE_SIZE)
+                let right_gx = Math.floor((this.x + this.half_width) * INV_TILE_SIZE)
+                let gy = Math.floor((this.y - 1) * INV_TILE_SIZE)
+                for (let gx = left_gx; gx <= right_gx; gx++) {
+                    let t = world.get_tile(gx, gy)
+                    if (t === TILE_STAIRS_LEFT) {
+                        flag = true
+                        break
+                    }
+                }
+            }
+
+            if (flag) {
+                this.frame_modulo++
+                if (this.frame_modulo === ANIMATION_RATE) {
+                    this.frame_modulo = 0
+                    this.frame++
+                    if (this.frame === this.sprite.length) {
+                        this.frame = 0
+                        this.frame_modulo = 0
+                    }
+                }
+
+                if (this.stamina < this.stamina_lim && this.stamina_reduce <= this.stamina)
+                    this.stamina += 1
+
+                if (this.substate === "upright") {
+                    this.x += 1
+                    this.y += 1
+                } else if (this.substate === "upleft") {
+                    this.x -= 1
+                    this.y += 1
+                } else if (this.substate === "downright") {
+                    this.x += 1
+                    this.y -= 1
+                } else {
+                    this.x -= 1
+                    this.y -= 1
+                }
+
+                this.remove_from_blocks(world)
+                this.tile_collision(world)
+                this.block_borders()
+                this.add_to_blocks(world)
+            } else {
+                this.state = "idle"
+                this.sprite = this.animations["idle"]
+                this.frame = 0
+                this.frame_modulo = 0
+                super.update(world)
+            }
+
+            return
+        }
+
         if (this.state === "damaged") {
             if (this.mirror) this.dx = 2
             else this.dx = -2
@@ -225,6 +409,7 @@ class You extends Living {
             }
             return
         }
+
         if (!this.ground) {
             if (this.move_air) {
                 if (this.mirror) this.dx = -this.speed
@@ -237,6 +422,7 @@ class You extends Living {
                 this.frame_modulo = 0
             }
         }
+
         if (this.state === "attack") {
             this.frame_modulo++
             if (this.frame_modulo === ANIMATION_RATE) {
@@ -269,10 +455,15 @@ class You extends Living {
             }
         } else if (this.ground) {
             let up = this.menu === null && Input.Is("ArrowUp")
-            let down = this.menu === null && Input.Is("ArrowDown") // TODO
+            let down = this.menu === null && Input.Is("ArrowDown")
             let left = this.menu === null && Input.Is("ArrowLeft")
             let right = this.menu === null && Input.Is("ArrowRight")
-            if (left && !right) {
+
+            if (up && !down) {
+                this.stair_up(world)
+            } else if (down && !up) {
+                this.stair_down(world)
+            } else if (left && !right) {
                 this.move_left()
             } else if (right && !left) {
                 this.move_right()
@@ -294,7 +485,9 @@ class You extends Living {
 
                 if (Input.Is("c")) {
                     if (this.sticky_dodge) {
-                        this.dodge()
+                        if (left && !right) this.dodge_left()
+                        else if (right && !left) this.dodge_right()
+                        else this.dodge()
                         this.sticky_dodge = false
                     }
                 } else this.sticky_dodge = true

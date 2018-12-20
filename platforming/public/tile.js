@@ -9,6 +9,8 @@ const TILE_RAIL = 4
 const TILE_WALL = 5
 const TILE_WATER_TOP = 6
 const TILE_WATER = 7
+const TILE_RAILS_LEFT = 8
+const TILE_STAIRS_LEFT = 9
 
 const TILE_SPRITE_SIZE = 1.0 / 128.0
 const TILE_TEXTURE = []
@@ -22,6 +24,8 @@ const TILE_LIST = [
     "wall",
     "water-top",
     "water",
+    "rails-left",
+    "stairs-left",
 ]
 
 const TILE_MAP = {
@@ -32,4 +36,6 @@ const TILE_MAP = {
     "wall": 5,
     "water-top": 6,
     "water": 7,
+    "rails-left": 8,
+    "stairs-left": 9,
 }

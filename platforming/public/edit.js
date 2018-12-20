@@ -37,7 +37,7 @@ class Application {
         let form_list = [
             new EditMain("main", "0", "top", "200", "min", 127, 255, 127),
             new EditFolder("folder", "0", "0", "same$main", "to$main", 127, 127, 255),
-            new EditWorld("world", "same$main", "0", "fill", "min", 255, 127, 127),
+            new EditWorld("world", "same$main", "top", "fill", "min", 255, 127, 127),
         ]
 
         let forms = new Map()
