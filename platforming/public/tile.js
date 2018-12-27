@@ -1,4 +1,5 @@
 const TILE_SIZE = 16
+const TILE_SIZE_HALF = TILE_SIZE * 0.5
 const INV_TILE_SIZE = 1.0 / TILE_SIZE
 
 const TILE_NONE = 0

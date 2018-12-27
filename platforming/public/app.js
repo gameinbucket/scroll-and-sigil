@@ -36,7 +36,7 @@ class Application {
         window.onfocus = function () {
             self.on = true
             if (self.music)
-                self.music.play()
+                self.music.play().then(() => {}).catch((_) => {})
         }
 
         document.onkeyup = Input.KeyUp
@@ -171,7 +171,6 @@ class Application {
             self.resize()
         }
         document.body.appendChild(this.canvas)
-        this.music.play()
         this.resize()
         this.loop()
     }

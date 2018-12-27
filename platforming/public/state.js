@@ -76,6 +76,7 @@ class MenuState {
 class WorldState {
     constructor(app) {
         this.app = app
+        app.music.play().then(() => {}).catch((_) => {})
     }
     update() {
         this.app.world.update()
@@ -94,6 +95,9 @@ class WorldState {
         let screen = this.app.screen
         let world = this.app.world
 
+        // must use floor to avoid tiles jittering
+        // -(player.y - frame.height * 0.5)
+        // -Math.floor(player.y) + Math.floor(frame.height * 0.5)
         let view_x = -Math.floor(player.x - frame.width * 0.5)
         let view_y = -Math.floor(player.y - frame.height * 0.5)
 
