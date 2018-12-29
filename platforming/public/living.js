@@ -146,7 +146,7 @@ class Living extends Thing {
 
         for (let i = 0; i < collided.length; i++) {
             let thing = collided[i]
-            thing.damage(world, this.attack)
+            thing.damage(world, this, this.attack)
         }
     }
     update(world) {

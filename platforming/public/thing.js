@@ -124,6 +124,7 @@ class Thing {
         this.dx = 0
         this.dy = 0
         this.ground = false
+        this.ignore = false
         world.add_thing(this)
         this.block_borders()
         this.add_to_blocks(world)

@@ -2,7 +2,6 @@
 
 ## todo
 
-> damage jump opposite direction of source
 > editor sprite hit boxes
 > editor sprite offsets
 > sprite sheet packing
@@ -17,7 +16,6 @@
 > elevators
 > save rendered block images to large virtual texture to significantly reduce draw calls
 > customizable character appearance
-> dodging allows pass through interaction
 
 ## stats list
 

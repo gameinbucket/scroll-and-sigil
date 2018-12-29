@@ -10,6 +10,9 @@ class Bone extends Thing {
     }
     damage() {}
     update(world) {
+
+        // TODO: make bone go through doding state
+
         this.dy -= GRAVITY
         this.x += this.dx
         this.y += this.dy
@@ -71,9 +74,9 @@ class Bone extends Thing {
                 let block = world.get_block(gx, gy)
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
-                    if (searched.has(thing)) continue
+                    if (thing.ignore || searched.has(thing)) continue
                     if (this.overlap_thing(thing)) {
-                        thing.damage(world, 20)
+                        thing.damage(world, this, 20)
                         world.delete_thing(this)
                         return
                     }

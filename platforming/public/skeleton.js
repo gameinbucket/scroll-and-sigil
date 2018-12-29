@@ -8,7 +8,7 @@ class Skeleton extends Living {
         this.wander_timer = 0
         this.wait = false
     }
-    damage(world, amount) {
+    damage(world, thing, amount) {
         if (this.health > 0) {
             this.health -= amount
             if (this.health < 1)
