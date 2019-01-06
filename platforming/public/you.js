@@ -33,6 +33,7 @@ class You extends Living {
         this.afflictions = []
         this.target_x = 0
         this.dodge_delta = 0
+        this.charge_attack = false
         this.pierce_resist = 0 // todo
         this.crush_resist = 0 // todo
         this.slash_resist = 0 // todo
@@ -42,12 +43,10 @@ class You extends Living {
         this.poison_resist = 0 // todo
     }
     damage(_, thing, amount) {
-        if (this.health === 0 || this.ignore)
-            return
+        if (this.health === 0 || this.ignore) return
         this.health_reduce = this.health
         this.health -= amount
-        if (this.health < 0)
-            this.health = 0
+        if (this.health < 0) this.health = 0
         SOUND["you-hurt"].play()
         this.state = "damaged"
         this.sprite = this.animations["damaged"]
@@ -564,33 +563,69 @@ class You extends Living {
         }
 
         if (this.state === "attack") {
-            this.frame_modulo++
-            if (this.frame_modulo === ANIMATION_RATE) {
-                this.frame_modulo = 0
-                this.frame++
-                if (this.frame === this.sprite.length) {
-                    this.state = "idle"
-                    this.sprite = this.animations["idle"]
-                    this.frame = 0
+            if (this.charge_attack) {
+                if (Input.Is("z")) {
+                    this.stamina -= 1
+                    if (this.stamina <= 0) {
+                        this.stamina = 0
+                        this.charge_attack = false
+                        this.state = "idle"
+                        this.sprite = this.animations["idle"]
+                        this.frame = 0
+                        this.frame_modulo = 0
+                    }
+                } else
+                    this.charge_attack = false
+            }
+            if (!this.charge_attack) {
+                this.frame_modulo++
+                if (this.frame_modulo === ANIMATION_RATE) {
                     this.frame_modulo = 0
-                } else if (this.frame === this.sprite.length - 1) {
-                    SOUND["you-whip"].play()
-                    this.damage_scan(world)
+                    this.frame++
+                    if (this.frame === this.sprite.length) {
+                        this.state = "idle"
+                        this.sprite = this.animations["idle"]
+                        this.frame = 0
+                        this.frame_modulo = 0
+                    } else if (this.frame === 1) {
+                        if (Input.Is("z")) this.charge_attack = true
+                    } else if (this.frame === this.sprite.length - 1) {
+                        SOUND["you-whip"].play()
+                        this.damage_scan(world)
+                    }
                 }
             }
         } else if (this.state === "crouch-attack") {
-            this.frame_modulo++
-            if (this.frame_modulo === ANIMATION_RATE) {
-                this.frame_modulo = 0
-                this.frame++
-                if (this.frame === this.sprite.length) {
-                    this.state = "crouch"
-                    this.sprite = this.animations["crouch"]
-                    this.frame = 0
+            if (this.charge_attack) {
+                if (Input.Is("z")) {
+                    this.stamina -= 1
+                    if (this.stamina <= 0) {
+                        this.stamina = 0
+                        this.charge_attack = false
+                        this.state = "idle"
+                        this.sprite = this.animations["idle"]
+                        this.frame = 0
+                        this.frame_modulo = 0
+                    }
+                } else
+                    this.charge_attack = false
+            }
+            if (!this.charge_attack) {
+                this.frame_modulo++
+                if (this.frame_modulo === ANIMATION_RATE) {
                     this.frame_modulo = 0
-                } else if (this.frame === this.sprite.length - 1) {
-                    SOUND["you-whip"].play()
-                    this.damage_scan(world)
+                    this.frame++
+                    if (this.frame === this.sprite.length) {
+                        this.state = "crouch"
+                        this.sprite = this.animations["crouch"]
+                        this.frame = 0
+                        this.frame_modulo = 0
+                    } else if (this.frame === 1) {
+                        if (Input.Is("z")) this.charge_attack = true
+                    } else if (this.frame === this.sprite.length - 1) {
+                        SOUND["you-whip"].play()
+                        this.damage_scan(world)
+                    }
                 }
             }
         } else if (this.ground) {

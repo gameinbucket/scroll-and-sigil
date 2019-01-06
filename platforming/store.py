@@ -80,6 +80,8 @@ class FileServer(http.server.BaseHTTPRequestHandler):
                     self.send_header("Content-type", "text/plain")
                     self.end_headers()
                     self.wfile.write(b"map not saved")
+            elif self.path == "/api/hitbox":
+                pass
             else:
                 self.send_response(404)
                 self.send_header("Content-type", "text/plain")

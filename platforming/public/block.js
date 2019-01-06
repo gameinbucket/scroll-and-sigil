@@ -77,6 +77,30 @@ class Block {
         }
         this.mesh = RenderBuffer.InitCopy(gl, BLOCK_MESH)
     }
+    build_texture(gl) {
+        BLOCK_MESH.zero()
+        for (let x = 0; x < BLOCK_SIZE; x++) {
+            for (let y = 0; y < BLOCK_SIZE; y++) {
+                let tile = this.get_tile(x, y)
+                if (tile === TILE_NONE) continue
+                let texture = TILE_TEXTURE[tile]
+                Render.Image(BLOCK_MESH, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, texture[0], texture[1], texture[2], texture[3])
+            }
+        }
+
+        let mesh = RenderBuffer.InitCopy(gl, BLOCK_MESH)
+        let size = BLOCK_SIZE * TILE_SIZE
+        let texture = make_blank_texture()
+
+        RenderSystem.SetFrameBuffer(gl, null)
+        RenderSystem.SetView(gl, 0, 0, size, size)
+        g.set_program(gl, "texture")
+        g.set_orthographic(canvas_ortho, 0, 0)
+        g.update_mvp(gl)
+        RenderSystem.BindAndDraw(this.gl, mesh)
+
+        return texture
+    }
     render_things(sprite_set, sprite_buffer) {
         for (let i = 0; i < this.thing_count; i++) {
             let thing = this.things[i]

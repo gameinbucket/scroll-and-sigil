@@ -2,7 +2,10 @@
 
 ## todo
 
-> editor sprite hit boxes
+> multiple attack animations
+> tap attack for quick, hold for charged
+> save rendered block images to large virtual texture to significantly reduce draw calls
+> automatic sprite hit boxes
 > editor sprite offsets
 > sprite sheet packing
 > sprite jittering
@@ -14,7 +17,6 @@
 > death screen / reload
 > stairs
 > elevators
-> save rendered block images to large virtual texture to significantly reduce draw calls
 > customizable character appearance
 
 ## stats list

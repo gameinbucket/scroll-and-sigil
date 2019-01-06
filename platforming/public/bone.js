@@ -10,9 +10,6 @@ class Bone extends Thing {
     }
     damage() {}
     update(world) {
-
-        // TODO: make bone go through doding state
-
         this.dy -= GRAVITY
         this.x += this.dx
         this.y += this.dy
