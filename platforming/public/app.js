@@ -60,7 +60,7 @@ class Application {
         let g = this.g
         let gl = this.gl
 
-        let data = await Network.Request("resources/config.json")
+        let data = await Network.Request("resources/config/config.json")
         let config = JSON.parse(data)
         let shaders = config["shaders"]
         let textures = config["textures"]
@@ -81,12 +81,12 @@ class Application {
 
         for (let index = 0; index < music.length; index++) {
             let iter = music[index]
-            MUSIC[iter["name"]] = new Audio("resources/" + iter["path"])
+            MUSIC[iter["name"]] = new Audio("resources/music/" + iter["path"])
             MUSIC[iter["name"]].loop = true
         }
 
         for (let index = 0; index < sound.length; index++)
-            SOUND[sound[index]["name"]] = new Audio("resources/" + sound[index]["path"])
+            SOUND[sound[index]["name"]] = new Audio("resources/sound/" + sound[index]["path"])
 
         for (let index = 0; index < sprites.length; index++) {
             let sprite = sprites[index]

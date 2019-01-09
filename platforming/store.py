@@ -80,8 +80,24 @@ class FileServer(http.server.BaseHTTPRequestHandler):
                     self.send_header("Content-type", "text/plain")
                     self.end_headers()
                     self.wfile.write(b"map not saved")
-            elif self.path == "/api/hitbox":
-                pass
+            elif self.path == "/api/sprites/list":
+                try:
+                    if os.path.isdir("public/resources/sprites/" + raw):
+                        sprite_list = list()
+                        for f in os.listdir("public/resources/sprites/" + raw):
+                            sprite_list.append(f)
+                        self.send_response(200)
+                        self.send_header("Content-type", "text/plain")
+                        self.end_headers()
+                        sprite_string = ", ".join(sprite_list)
+                        self.wfile.write(str.encode(sprite_string))
+                    else:
+                        raise FileNotFoundError()
+                except FileNotFoundError:
+                    self.send_response(404)
+                    self.send_header("Content-type", "text/plain")
+                    self.end_headers()
+                    self.wfile.write(b"sprite not found")
             else:
                 self.send_response(404)
                 self.send_header("Content-type", "text/plain")

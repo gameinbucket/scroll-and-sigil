@@ -13,7 +13,7 @@ class Application {
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
 
-        document.body.style.cursor = "url(\"resources/cursor.png\"), default"
+        document.body.style.cursor = "url(\"resources/textures/cursor.png\"), default"
 
         let gl = canvas.getContext("webgl2")
         let g = new RenderSystem()
@@ -74,7 +74,7 @@ class Application {
         let requests = []
 
         requests.push(async function () {
-            let data = await Network.Request("resources/config.json")
+            let data = await Network.Request("resources/config/config.json")
             let config = JSON.parse(data)
             let shaders = config["shaders"]
             let textures = config["textures"]
@@ -124,7 +124,7 @@ class Application {
         }())
 
         requests.push(async function () {
-            let data = await Network.Request("resources/config-edit.json")
+            let data = await Network.Request("resources/config/config-edit.json")
             let config = JSON.parse(data)
             let shaders = config["shaders"]
             let textures = config["textures"]

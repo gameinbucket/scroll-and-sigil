@@ -34,6 +34,7 @@ class You extends Living {
         this.target_x = 0
         this.dodge_delta = 0
         this.charge_attack = false
+        this.charge_multiplier = 1.0
         this.pierce_resist = 0 // todo
         this.crush_resist = 0 // todo
         this.slash_resist = 0 // todo
@@ -117,7 +118,7 @@ class You extends Living {
 
         for (let i = 0; i < collided.length; i++) {
             let thing = collided[i]
-            let damage = item.base_damage + item.strength_multiplier * this.strength + item.dexterity_multiplier * this.dexterity
+            let damage = item.base_damage * this.charge_multiplier + item.strength_multiplier * this.strength + item.dexterity_multiplier * this.dexterity
             thing.damage(world, damage)
             this.experience += damage
             if (this.experience > this.experience_lim) {
@@ -257,8 +258,10 @@ class You extends Living {
     update(world) {
         if (this.health_reduce > this.health)
             this.health_reduce--
+
         if (this.stamina_reduce > this.stamina)
             this.stamina_reduce--
+
         for (let index = 0; index < this.afflictions.length; index++) {
             let afflict = this.afflictions[index]
             afflict.time--
@@ -565,6 +568,7 @@ class You extends Living {
         if (this.state === "attack") {
             if (this.charge_attack) {
                 if (Input.Is("z")) {
+                    this.charge_multiplier += 0.01
                     this.stamina -= 1
                     if (this.stamina <= 0) {
                         this.stamina = 0
@@ -588,7 +592,9 @@ class You extends Living {
                         this.frame = 0
                         this.frame_modulo = 0
                     } else if (this.frame === 1) {
-                        if (Input.Is("z")) this.charge_attack = true
+                        this.charge_multiplier = 1.0
+                        if (Input.Is("z"))
+                            this.charge_attack = true
                     } else if (this.frame === this.sprite.length - 1) {
                         SOUND["you-whip"].play()
                         this.damage_scan(world)
@@ -598,6 +604,7 @@ class You extends Living {
         } else if (this.state === "crouch-attack") {
             if (this.charge_attack) {
                 if (Input.Is("z")) {
+                    this.charge_multiplier += 0.01
                     this.stamina -= 1
                     if (this.stamina <= 0) {
                         this.stamina = 0
@@ -621,7 +628,9 @@ class You extends Living {
                         this.frame = 0
                         this.frame_modulo = 0
                     } else if (this.frame === 1) {
-                        if (Input.Is("z")) this.charge_attack = true
+                        this.charge_multiplier = 1.0
+                        if (Input.Is("z"))
+                            this.charge_attack = true
                     } else if (this.frame === this.sprite.length - 1) {
                         SOUND["you-whip"].play()
                         this.damage_scan(world)
