@@ -2,6 +2,7 @@ import os
 import json
 import socketserver
 import http.server
+import base64
 
 mime = {
     ".f": "text/plain",
@@ -29,13 +30,13 @@ class FileServer(http.server.BaseHTTPRequestHandler):
             path = os.path.abspath("public" + self.path)
             if os.path.commonprefix((path, cwd)) == cwd:
                 try:
-                    with open(path, "rb") as get:
+                    with open(path, "rb") as fh:
                         self.send_response(200)
                         extension = path.rfind(".")
                         mime_type = mime[path[extension:]]
                         self.send_header("Content-type", mime_type)
                         self.end_headers()
-                        self.wfile.write(get.read())
+                        self.wfile.write(fh.read())
                 except FileNotFoundError:
                     self.send_response(404)
                     self.send_header("Content-type", "text/plain")
@@ -55,11 +56,11 @@ class FileServer(http.server.BaseHTTPRequestHandler):
             raw = self.rfile.read(data_len).decode("utf-8")
             if self.path == "/api/store/load":
                 try:
-                    with open("maps/" + raw + ".json", "rb") as get:
+                    with open("maps/" + raw + ".json", "rb") as fh:
                         self.send_response(200)
                         self.send_header("Content-type", mime[".json"])
                         self.end_headers()
-                        self.wfile.write(get.read())
+                        self.wfile.write(fh.read())
                 except FileNotFoundError:
                     self.send_response(404)
                     self.send_header("Content-type", "text/plain")
@@ -69,8 +70,8 @@ class FileServer(http.server.BaseHTTPRequestHandler):
                 try:
                     data = json.loads(raw)
                     name = data["name"]
-                    with open("maps/" + name + ".json", "w+") as post:
-                        post.write(raw)
+                    with open("maps/" + name + ".json", "w+") as fh:
+                        fh.write(raw)
                         self.send_response(200)
                         self.send_header("Content-type", "text/plain")
                         self.end_headers()
@@ -84,20 +85,42 @@ class FileServer(http.server.BaseHTTPRequestHandler):
                 try:
                     if os.path.isdir("public/resources/sprites/" + raw):
                         sprite_list = list()
-                        for f in os.listdir("public/resources/sprites/" + raw):
-                            sprite_list.append(f)
+                        for item in os.listdir("public/resources/sprites/" + raw):
+                            sprite_list.append(item)
                         self.send_response(200)
                         self.send_header("Content-type", "text/plain")
                         self.end_headers()
                         sprite_string = ", ".join(sprite_list)
                         self.wfile.write(str.encode(sprite_string))
                     else:
-                        raise FileNotFoundError()
-                except FileNotFoundError:
+                        raise Exception()
+                except Exception as err:
                     self.send_response(404)
                     self.send_header("Content-type", "text/plain")
                     self.end_headers()
                     self.wfile.write(b"sprite not found")
+                    raise err
+            elif self.path == "/api/sprites/save":
+                try:
+                    data = json.loads(raw)
+                    name = data["name"]
+                    image = str.encode(data["base64"])
+                    del data["base64"]
+                    raw = json.dumps(data)
+                    with open("public/resources/config/" + name + ".json", "w+") as fh:
+                        fh.write(raw)
+                        self.send_response(200)
+                        self.send_header("Content-type", "text/plain")
+                        self.end_headers()
+                        self.wfile.write(b"saved sprite")
+                    with open("public/resources/textures/" + name + ".png", "wb") as fh:
+                        fh.write(base64.decodebytes(image))
+                except Exception as err:
+                    self.send_response(404)
+                    self.send_header("Content-type", "text/plain")
+                    self.end_headers()
+                    self.wfile.write(b"sprite not saved")
+                    raise err
             else:
                 self.send_response(404)
                 self.send_header("Content-type", "text/plain")

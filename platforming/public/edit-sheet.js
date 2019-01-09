@@ -23,41 +23,38 @@ async function process() {
     if (data === "sprite not found") return
 
     let sprites = data.split(", ")
-    let images = []
     let promises = []
+    let textures = []
 
     for (let index = 0; index < sprites.length; index++) {
         let image = new Image()
         image.src = "resources/sprites/" + name + "/" + sprites[index]
         promises.push(new Promise(function (resolve) {
-            image.onload = resolve
+            image.onload = function () {
+                let canvas = document.createElement("canvas")
+                let context = canvas.getContext("2d")
+                let width = image.width
+                let height = image.height
+                let name = image.src
+
+                name = name.substring(name.lastIndexOf("/") + 1)
+                name = name.substring(0, name.indexOf("."))
+                name = name.replace(/-/g, ".")
+
+                canvas.width = width
+                canvas.height = height
+                context.drawImage(image, 0, 0)
+
+                let data = context.getImageData(0, 0, width, height)
+                textures.push(new TextureData(name, image, data.data, width, height))
+
+                resolve()
+            }
         }))
-        images.push(image)
     }
 
     await Promise.all(promises)
 
-    let textures = []
-
-    for (let index = 0; index < images.length; index++) {
-        let image = images[index]
-        let canvas = document.createElement("canvas")
-        let context = canvas.getContext("2d")
-        let width = image.width
-        let height = image.height
-        let name = image.src
-
-        name = name.substring(name.lastIndexOf("/") + 1)
-        name = name.substring(0, name.indexOf("."))
-        name = name.replace(/-/g, ".")
-
-        canvas.width = width
-        canvas.height = height
-        context.drawImage(image, 0, 0)
-
-        let data = context.getImageData(0, 0, width, height)
-        textures.push(new TextureData(name, image, data.data, width, height))
-    }
-
-    Sprites.Process(atlas.value, textures)
+    let json = Sprites.Process(atlas.value, textures)
+    Network.Send("api/sprites/save", json)
 }

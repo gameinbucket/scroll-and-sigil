@@ -11,11 +11,13 @@ class Sprites {
     static Process(atlas, textures) {
         if (textures.length === 0) return
 
+        const limit = 256
         let sprites = []
         let x = 0
         let y = 0
+        let atlas_width = 0
         let atlas_height = 0
-        let json = `{"name":"${atlas}", "sprites":[`
+        let json = ""
 
         for (let index = 0; index < textures.length; index++) {
             let texture = textures[index]
@@ -24,27 +26,39 @@ class Sprites {
             let boxes = Boxes.Process(texture.data, width, height)
             let name = texture.name
 
+            if (x + width + 1 > limit) {
+                atlas_width = x - 1
+                x = 0
+                y = atlas_height + 1
+            }
+
             sprites.push(new Sprite(x, y, texture, boxes))
 
             if (index > 0) json += ", "
-            json += `{"name":"${name}", "atlas":[${x}, 0, ${width}, ${height}], "boxes":[${Boxes.JSON(boxes)}]}`
+            json += `{"name":"${name}", "atlas":[${x}, ${y}, ${width}, ${height}], "boxes":[${Boxes.JSON(boxes)}]}`
 
             x += width + 1
 
-            if (height > atlas_height)
-                atlas_height = height
+            if (y + height > atlas_height)
+                atlas_height = y + height
         }
 
-        let atlas_width = x - 1
-        json += `], "width":${atlas_width}, "height":${atlas_height}}`
-        console.log(json)
+        atlas_width = Math.max(atlas_width, x - 1)
 
-        Sprites.Paint(sprites, atlas_width, atlas_height)
+        atlas_width = Math.pow(2, Math.ceil(Math.log(atlas_width) / Math.log(2)))
+        atlas_height = Math.pow(2, Math.ceil(Math.log(atlas_height) / Math.log(2)))
+
+        const prefix = "data:image/png;base64,"
+        let canvas = Sprites.Paint(sprites, atlas_width, atlas_height)
+        let url = canvas.toDataURL()
+        url = url.substring(prefix.length)
 
         for (let index = 0; index < sprites.length; index++) {
             let sprite = sprites[index]
             Boxes.Paint(sprite.boxes, sprite.texture_data.width, sprite.texture_data.height)
         }
+
+        return `{"name":"${atlas}", "width":${atlas_width}, "height":${atlas_height}, "sprites":[${json}], "base64":"${url}"}`
     }
     static Paint(sprites, width, height) {
         let canvas = document.createElement("canvas")
@@ -61,5 +75,7 @@ class Sprites {
         }
 
         document.body.appendChild(canvas)
+
+        return canvas
     }
 }
