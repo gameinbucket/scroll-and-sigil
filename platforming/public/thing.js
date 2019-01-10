@@ -74,7 +74,7 @@ const THING_LIST = [{
 }, {
     id: "mustket-ball",
     texture: "item",
-    animation: "musket-ball",
+    animation: "musket.ball",
     get: (world, x, y) => {
         return new MusketBall(world, x, y)
     }
@@ -114,8 +114,10 @@ class Thing {
         this.height = 31
         this.uid = uid
         this.animations = SPRITES[sprite_name]
+        this.sprite_boxes = SPRITE_BOXES[sprite_name]
         this.sprite_id = sprite_name
-        this.sprite = this.animations["idle"]
+        this.sprite_state = "idle"
+        this.sprite = this.animations[this.sprite_state]
         this.mirror = false
         this.frame = 0
         this.frame_modulo = 0
@@ -304,41 +306,88 @@ class Thing {
         if (dyy.resolve) this.ground = ground
         else if (this.ground) this.ground = this.check_ground(world)
     }
-    resolve_collision_thing(b) {
-        if (!this.overlap_thing(b)) return
+    resolve_collision_thing(thing) {
+        if (!this.overlap(thing)) return
+        if (!Thing.overlap_boxes(this.boxes(), thing.boxes())) return
 
         let old_x = this.x - this.dx
         let old_y = this.y - this.dy
 
-        if (Math.abs(old_x - b.x) > Math.abs(old_y - b.y)) {
-            if (old_x - b.x < 0) this.x = b.x - this.half_width - b.half_width
-            else this.x = b.x + this.half_width + b.half_width
+        if (Math.abs(old_x - thing.x) > Math.abs(old_y - thing.y)) {
+            if (old_x - thing.x < 0) this.x = thing.x - this.half_width - thing.half_width
+            else this.x = thing.x + this.half_width + thing.half_width
             this.dx = 0
         } else {
-            if (old_y - b.y < 0) this.y = b.y - this.height
+            if (old_y - thing.y < 0) this.y = thing.y - this.height
             else {
-                this.y = b.y + b.height
+                this.y = thing.y + thing.height
                 this.ground = true
             }
             this.dy = 0
         }
     }
-    overlap_boxes(boxes) {
-        for (let i in boxes) {
-            let box = boxes[i]
-            if (this.x + this.half_width > box.x && this.x - this.half_width < box.x + box.width &&
-                this.y + this.height > box.y && this.y < box.y + box.height)
-                return true
+    boxes() {
+        let boxes = SPRITE_BOXES[this.sprite_id][this.sprite_state][this.frame].slice()
+
+        let sprite = this.sprite[this.frame]
+        let x = this.x - sprite.width * 0.5
+        let y = this.y + sprite.oy
+
+        if (this.mirror) {
+            x -= sprite.ox
+            for (let index = 0; index < boxes.length; index++) {
+                let box = boxes[index]
+                box[0] = -(box[0] + box[2])
+            }
+        } else
+            x += sprite.ox
+
+        for (let index = 0; index < boxes.length; index++) {
+            let box = boxes[index].slice()
+            box[0] += x
+            box[1] += y
+            boxes[index] = box
+        }
+
+        return boxes
+    }
+    overlap(thing) {
+        let self_sprite = this.sprite[this.frame]
+        let self_x = this.x - self_sprite.width * 0.5
+        let self_y = this.y + self_sprite.oy
+
+        if (this.mirror) self_x -= self_sprite.ox
+        else self_x += self_sprite.ox
+
+        let thing_sprite = thing.sprite[thing.frame]
+        let thing_x = thing.x - thing_sprite.width * 0.5
+        let thing_y = thing.y + thing_sprite.oy
+
+        if (thing.mirror) thing_x -= thing_sprite.ox
+        else thing_x += thing_sprite.ox
+
+        return self_x + self_sprite.width > thing_x && self_x < thing_x + thing_sprite.width &&
+            self_y + self_sprite.height > thing_y && self_y < thing.y + thing_sprite.height
+
+        // return this.x + this.half_width > thing.x - thing.half_width && this.x - this.half_width < thing.x + thing.half_width &&
+        //     this.y + this.height > thing.y && this.y < thing.y + thing.height
+    }
+    static overlap_boxes(a, b) {
+        for (let i = 0; i < a.length; i++) {
+            let box_a = a[i]
+            for (let j = 0; j < b.length; j++) {
+                let box_b = b[j]
+                if (box_a[0] + box_a[2] > box_b[0] && box_a[0] < box_b[0] + box_b[2] &&
+                    box_a[1] + box_a[3] > box_b[1] && box_a[1] < box_b[1] + box_b[3])
+                    return true
+            }
         }
         return false
-    }
-    overlap_thing(thing) {
-        return this.x + this.half_width > thing.x - thing.half_width && this.x - this.half_width < thing.x + thing.half_width &&
-            this.y + this.height > thing.y && this.y < thing.y + thing.height
     }
     thing_collision(world) {
         let collided = []
         let searched = new Set()
+        let boxes = this.boxes()
 
         for (let gx = this.left_gx; gx <= this.right_gx; gx++) {
             for (let gy = this.bottom_gy; gy <= this.top_gy; gy++) {
@@ -346,7 +395,8 @@ class Thing {
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (searched.has(thing)) continue
-                    if (this.overlap_thing(thing)) collided.push(thing)
+                    if (this.overlap(thing) && Thing.overlap_boxes(boxes, thing.boxes()))
+                        collided.push(thing)
                     searched.add(thing)
                 }
             }

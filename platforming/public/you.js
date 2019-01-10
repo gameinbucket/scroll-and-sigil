@@ -43,14 +43,15 @@ class You extends Living {
         this.fire_resist = 0 // todo
         this.poison_resist = 0 // todo
     }
-    damage(_, thing, amount) {
+    damage(world, thing, amount) {
         if (this.health === 0 || this.ignore) return
         this.health_reduce = this.health
         this.health -= amount
         if (this.health < 0) this.health = 0
-        SOUND["you-hurt"].play()
+        SOUND["you.hurt"].play()
         this.state = "damaged"
-        this.sprite = this.animations["damaged"]
+        this.sprite_state = "damaged"
+        this.sprite = this.animations[this.sprite_state]
         this.frame = 0
         this.frame_modulo = 0
         this.dy = GRAVITY * 8
@@ -61,7 +62,8 @@ class You extends Living {
     death() {
         SOUND["destroy"].play()
         this.state = "death"
-        this.sprite = this.animations["death"]
+        this.sprite_state = "death"
+        this.sprite = this.animations[this.sprite_state]
         this.frame = 0
         this.frame_modulo = 0
     }
@@ -71,38 +73,20 @@ class You extends Living {
     }
     damage_scan(world) {
         let item = this.hand
-        let collided = []
         let searched = new Set()
+        let boxes = this.boxes()
 
-        let boxes = [{
-            x: 0,
-            y: 24,
-            width: item.reach,
-            height: 10
-        }]
+        let sprite = this.sprite[this.frame]
+        let x = this.x - sprite.width * 0.5
+        let y = this.y + sprite.oy
 
-        let left_gx = 0
-        let right_gx = 0
-        let bottom_gy = Math.floor(this.y * INV_GRID_SIZE)
-        let top_gy = Math.floor((this.y + this.height) * INV_GRID_SIZE)
+        if (this.mirror) x -= sprite.ox
+        else x += sprite.ox
 
-        if (this.mirror) {
-            for (let i in boxes) {
-                let box = boxes[i]
-                box.x = -(box.x + box.width)
-            }
-            left_gx = Math.floor(this.x * INV_GRID_SIZE)
-            right_gx = Math.floor((this.x + item.reach) * INV_GRID_SIZE)
-        } else {
-            left_gx = Math.floor((this.x - item.reach) * INV_GRID_SIZE)
-            right_gx = Math.floor(this.x * INV_GRID_SIZE)
-        }
-
-        for (let i in boxes) {
-            let box = boxes[i]
-            box.x += this.x
-            box.y += this.y
-        }
+        let left_gx = Math.floor(x * INV_GRID_SIZE)
+        let right_gx = Math.floor((x + sprite.width) * INV_GRID_SIZE)
+        let bottom_gy = Math.floor(y * INV_GRID_SIZE)
+        let top_gy = Math.floor((y + sprite.height) * INV_GRID_SIZE)
 
         for (let gx = left_gx; gx <= right_gx; gx++) {
             for (let gy = bottom_gy; gy <= top_gy; gy++) {
@@ -110,21 +94,18 @@ class You extends Living {
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (thing === this || searched.has(thing)) continue
-                    if (thing.overlap_boxes(boxes)) collided.push(thing)
+                    if (this.overlap(thing) && Thing.overlap_boxes(boxes, thing.boxes())) {
+                        let damage = item.base_damage * this.charge_multiplier + item.strength_multiplier * this.strength + item.dexterity_multiplier * this.dexterity
+                        thing.damage(world, this, damage)
+                        this.experience += damage
+                        if (this.experience > this.experience_lim) {
+                            this.stat_points += 5
+                            this.experience_lim = Math.floor(this.experience_lim * 1.5) + 5
+                            SOUND["level.up"].play()
+                        }
+                    }
                     searched.add(thing)
                 }
-            }
-        }
-
-        for (let i = 0; i < collided.length; i++) {
-            let thing = collided[i]
-            let damage = item.base_damage * this.charge_multiplier + item.strength_multiplier * this.strength + item.dexterity_multiplier * this.dexterity
-            thing.damage(world, damage)
-            this.experience += damage
-            if (this.experience > this.experience_lim) {
-                this.stat_points += 5
-                this.experience_lim = Math.floor(this.experience_lim * 1.5) + 5
-                SOUND["level-up"].play()
             }
         }
     }
@@ -137,9 +118,9 @@ class You extends Living {
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (thing.sprite_id !== "item" || searched.has(thing)) continue
-                    if (this.overlap_thing(thing) && this.inventory_size + thing.size <= this.inventory_lim) {
-                        SOUND["pick-up"].currentTime = 0
-                        SOUND["pick-up"].play()
+                    if (this.overlap(thing) && this.inventory_size + thing.size <= this.inventory_lim) {
+                        SOUND["pick.up"].currentTime = 0
+                        SOUND["pick.up"].play()
                         this.inventory.push(thing)
                         this.inventory_size += thing.size
                         world.delete_thing(thing)
@@ -169,7 +150,8 @@ class You extends Living {
         this.move_air = this.state === "walk"
         this.frame = 0
         this.frame_modulo = 0
-        this.sprite = this.animations["crouch"]
+        this.sprite_state = "crouch"
+        this.sprite = this.animations[this.sprite_state]
     }
     dodge_left() {
         const min_stamina = 24
@@ -183,7 +165,8 @@ class You extends Living {
         this.state = "dodge"
         this.substate = "left"
         this.dodge_delta = 2
-        this.sprite = this.animations["dodge"]
+        this.sprite_state = "dodge"
+        this.sprite = this.animations[this.sprite_state]
         this.frame = 0
         this.frame_modulo = 0
     }
@@ -199,7 +182,8 @@ class You extends Living {
         this.state = "dodge"
         this.substate = "right"
         this.dodge_delta = 2
-        this.sprite = this.animations["dodge"]
+        this.sprite_state = "dodge"
+        this.sprite = this.animations[this.sprite_state]
         this.frame = 0
         this.frame_modulo = 0
     }
@@ -213,7 +197,8 @@ class You extends Living {
         this.ignore = true
         this.state = "dodge"
         this.substate = ""
-        this.sprite = this.animations["dodge"]
+        this.sprite_state = "dodge"
+        this.sprite = this.animations[this.sprite_state]
         this.frame = 0
         this.frame_modulo = 0
     }
@@ -289,7 +274,8 @@ class You extends Living {
             if (this.frame_modulo == 32) {
                 this.ignore = false
                 this.state = "idle"
-                this.sprite = this.animations["idle"]
+                this.sprite_state = "idle"
+                this.sprite = this.animations[this.sprite_state]
                 this.frame = 0
                 this.frame_modulo = 0
             } else {
@@ -312,7 +298,8 @@ class You extends Living {
                     if (dist === 0) {
                         this.x = this.target_x
                         this.state = "stairs"
-                        this.sprite = this.animations["stair-up"]
+                        this.sprite_state = "stair.up"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame = 0
                         this.frame_modulo = 0
                         if (this.substate === "upleft") {
@@ -326,7 +313,8 @@ class You extends Living {
                         this.mirror = true
                         if (-dist < this.speed) this.dx = dist
                         else this.dx = -this.speed
-                        this.sprite = this.animations["walk"]
+                        this.sprite_state = "walk"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame_modulo++
                         if (this.frame_modulo === ANIMATION_RATE) {
                             this.frame_modulo = 0
@@ -338,7 +326,8 @@ class You extends Living {
                         this.mirror = false
                         if (dist < this.speed) this.dx = dist
                         else this.dx = this.speed
-                        this.sprite = this.animations["walk"]
+                        this.sprite_state = "walk"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame_modulo++
                         if (this.frame_modulo === ANIMATION_RATE) {
                             this.frame_modulo = 0
@@ -349,7 +338,8 @@ class You extends Living {
                     }
                 } else {
                     this.state = "idle"
-                    this.sprite = this.animations["idle"]
+                    this.sprite_state = "idle"
+                    this.sprite = this.animations[this.sprite_state]
                     this.frame = 0
                     this.frame_modulo = 0
                 }
@@ -359,7 +349,8 @@ class You extends Living {
                     if (dist === 0) {
                         this.x = this.target_x
                         this.state = "stairs"
-                        this.sprite = this.animations["stair-down"]
+                        this.sprite_state = "stair.down"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame = 0
                         this.frame_modulo = 0
                         if (this.substate === "downleft") {
@@ -373,7 +364,8 @@ class You extends Living {
                         this.mirror = true
                         if (-dist < this.speed) this.dx = dist
                         else this.dx = -this.speed
-                        this.sprite = this.animations["walk"]
+                        this.sprite_state = "walk"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame_modulo++
                         if (this.frame_modulo === ANIMATION_RATE) {
                             this.frame_modulo = 0
@@ -385,7 +377,8 @@ class You extends Living {
                         this.mirror = false
                         if (dist < this.speed) this.dx = dist
                         else this.dx = this.speed
-                        this.sprite = this.animations["walk"]
+                        this.sprite_state = "walk"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame_modulo++
                         if (this.frame_modulo === ANIMATION_RATE) {
                             this.frame_modulo = 0
@@ -396,7 +389,8 @@ class You extends Living {
                     }
                 } else {
                     this.state = "idle"
-                    this.sprite = this.animations["idle"]
+                    this.sprite_state = "idle"
+                    this.sprite = this.animations[this.sprite_state]
                     this.frame = 0
                     this.frame_modulo = 0
                 }
@@ -414,7 +408,8 @@ class You extends Living {
             if (dist === 0) {
                 if (Math.floor(this.y) % TILE_SIZE == 0 && this.check_ground(world)) {
                     this.state = "idle"
-                    this.sprite = this.animations["idle"]
+                    this.sprite_state = "idle"
+                    this.sprite = this.animations[this.sprite_state]
                     this.frame = 0
                     this.frame_modulo = 0
                     return
@@ -431,12 +426,14 @@ class You extends Living {
                     } else if (this.substate === "upright") {
                         this.target_x += TILE_SIZE_HALF
                     } else if (this.substate === "downleft") {
-                        this.sprite = this.animations["stair-up"]
+                        this.sprite_state = "stair.up"
+                        this.sprite = this.animations[this.sprite_state]
                         this.substate = "upright"
                         this.mirror = false
                         this.target_x += TILE_SIZE_HALF
                     } else if (this.substate === "downright") {
-                        this.sprite = this.animations["stair-up"]
+                        this.sprite_state = "stair.up"
+                        this.sprite = this.animations[this.sprite_state]
                         this.substate = "upleft"
                         this.mirror = true
                         this.target_x -= TILE_SIZE_HALF
@@ -444,12 +441,14 @@ class You extends Living {
                     this.frame_modulo = 0
                 } else if (down && !up) {
                     if (this.substate === "upleft") {
-                        this.sprite = this.animations["stair-down"]
+                        this.sprite_state = "stair.down"
+                        this.sprite = this.animations[this.sprite_state]
                         this.substate = "downright"
                         this.mirror = false
                         this.target_x += TILE_SIZE_HALF
                     } else if (this.substate === "upright") {
-                        this.sprite = this.animations["stair-down"]
+                        this.sprite_state = "stair.down"
+                        this.sprite = this.animations[this.sprite_state]
                         this.substate = "downleft"
                         this.mirror = true
                         this.target_x -= TILE_SIZE_HALF
@@ -461,11 +460,13 @@ class You extends Living {
                     this.frame_modulo = 0
                 } else if (left && !right) {
                     if (this.substate === "upright") {
-                        this.sprite = this.animations["stair-down"]
+                        this.sprite_state = "stair.down"
+                        this.sprite = this.animations[this.sprite_state]
                         this.substate = "downleft"
                         this.mirror = true
                     } else if (this.substate === "downright") {
-                        this.sprite = this.animations["stair-up"]
+                        this.sprite_state = "stair.up"
+                        this.sprite = this.animations[this.sprite_state]
                         this.substate = "upleft"
                         this.mirror = true
                     }
@@ -473,11 +474,13 @@ class You extends Living {
                     this.frame_modulo = 0
                 } else if (right && !left) {
                     if (this.substate === "upleft") {
-                        this.sprite = this.animations["stair-down"]
+                        this.sprite_state = "stair.down"
+                        this.sprite = this.animations[this.sprite_state]
                         this.substate = "downright"
                         this.mirror = false
                     } else if (this.substate === "downleft") {
-                        this.sprite = this.animations["stair-up"]
+                        this.sprite_state = "stair.up"
+                        this.sprite = this.animations[this.sprite_state]
                         this.substate = "upright"
                         this.mirror = false
                     }
@@ -511,7 +514,8 @@ class You extends Living {
 
                     if (Math.floor(this.y) % TILE_SIZE == 0 && this.check_ground(world)) {
                         this.state = "idle"
-                        this.sprite = this.animations["idle"]
+                        this.sprite_state = "idle"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame = 0
                         this.frame_modulo = 0
                     }
@@ -521,7 +525,8 @@ class You extends Living {
 
                     if (Math.floor(this.y) % TILE_SIZE == 0 && this.check_ground(world)) {
                         this.state = "idle"
-                        this.sprite = this.animations["idle"]
+                        this.sprite_state = "idle"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame = 0
                         this.frame_modulo = 0
                     }
@@ -543,7 +548,8 @@ class You extends Living {
                 if (this.health < 1) this.death()
                 else {
                     this.state = "idle"
-                    this.sprite = this.animations["idle"]
+                    this.sprite_state = "idle"
+                    this.sprite = this.animations[this.sprite_state]
                     this.frame = 0
                     this.frame_modulo = 0
                     this.ignore = false
@@ -559,7 +565,8 @@ class You extends Living {
             }
             if (this.dy < 0 && (this.state === "idle" || this.state === "walk")) {
                 this.state = "idle"
-                this.sprite = this.animations["idle"]
+                this.sprite_state = "idle"
+                this.sprite = this.animations[this.sprite_state]
                 this.frame = 0
                 this.frame_modulo = 0
             }
@@ -574,7 +581,8 @@ class You extends Living {
                         this.stamina = 0
                         this.charge_attack = false
                         this.state = "idle"
-                        this.sprite = this.animations["idle"]
+                        this.sprite_state = "idle"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame = 0
                         this.frame_modulo = 0
                     }
@@ -588,7 +596,8 @@ class You extends Living {
                     this.frame++
                     if (this.frame === this.sprite.length) {
                         this.state = "idle"
-                        this.sprite = this.animations["idle"]
+                        this.sprite_state = "idle"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame = 0
                         this.frame_modulo = 0
                     } else if (this.frame === 1) {
@@ -596,12 +605,12 @@ class You extends Living {
                         if (Input.Is("z"))
                             this.charge_attack = true
                     } else if (this.frame === this.sprite.length - 1) {
-                        SOUND["you-whip"].play()
+                        SOUND["you.whip"].play()
                         this.damage_scan(world)
                     }
                 }
             }
-        } else if (this.state === "crouch-attack") {
+        } else if (this.state === "crouch.attack") {
             if (this.charge_attack) {
                 if (Input.Is("z")) {
                     this.charge_multiplier += 0.01
@@ -610,7 +619,8 @@ class You extends Living {
                         this.stamina = 0
                         this.charge_attack = false
                         this.state = "idle"
-                        this.sprite = this.animations["idle"]
+                        this.sprite_state = "idle"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame = 0
                         this.frame_modulo = 0
                     }
@@ -624,7 +634,8 @@ class You extends Living {
                     this.frame++
                     if (this.frame === this.sprite.length) {
                         this.state = "crouch"
-                        this.sprite = this.animations["crouch"]
+                        this.sprite_state = "crouch"
+                        this.sprite = this.animations[this.sprite_state]
                         this.frame = 0
                         this.frame_modulo = 0
                     } else if (this.frame === 1) {
@@ -632,7 +643,7 @@ class You extends Living {
                         if (Input.Is("z"))
                             this.charge_attack = true
                     } else if (this.frame === this.sprite.length - 1) {
-                        SOUND["you-whip"].play()
+                        SOUND["you.whip"].play()
                         this.damage_scan(world)
                     }
                 }
@@ -653,7 +664,8 @@ class You extends Living {
                 this.move_right()
             } else if (this.state === "walk") {
                 this.state = "idle"
-                this.sprite = this.animations["idle"]
+                this.sprite_state = "idle"
+                this.sprite = this.animations[this.sprite_state]
                 this.frame = 0
                 this.frame_modulo = 0
                 this.move_air = false

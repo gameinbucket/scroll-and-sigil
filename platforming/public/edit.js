@@ -1,4 +1,5 @@
 const SPRITES = {}
+const SPRITE_BOXES = {}
 
 class Application {
     constructor() {
@@ -13,7 +14,7 @@ class Application {
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
 
-        document.body.style.cursor = "url(\"resources/textures/cursor.png\"), default"
+        document.body.style.cursor = "url(\"textures/cursor.png\"), default"
 
         let gl = canvas.getContext("webgl2")
         let g = new RenderSystem()
@@ -74,7 +75,7 @@ class Application {
         let requests = []
 
         requests.push(async function () {
-            let data = await Network.Request("resources/config/config.json")
+            let data = await Network.Request("json/resources.json")
             let config = JSON.parse(data)
             let shaders = config["shaders"]
             let textures = config["textures"]
@@ -94,18 +95,35 @@ class Application {
             for (let index = 0; index < sprites.length; index++) {
                 let sprite = sprites[index]
                 let name = sprite["name"]
+
+                let sprite_json = await Network.Request("json/" + name + ".json")
+                let sprite_data = JSON.parse(sprite_json)["sprites"]
+
                 let texture = g.textures[name]
                 let width = 1.0 / texture.image.width
                 let height = 1.0 / texture.image.height
                 let animations = sprite["animations"]
+
                 SPRITES[name] = {}
+                SPRITE_BOXES[name] = {}
+
                 for (let jindex = 0; jindex < animations.length; jindex++) {
                     let animation = animations[jindex]
                     let animation_name = animation["name"]
                     let frames = animation["frames"]
+
                     SPRITES[name][animation_name] = []
-                    for (let kindex = 0; kindex < frames.length; kindex++)
-                        SPRITES[name][animation_name].push(new Sprite(frames[kindex], width, height))
+                    SPRITE_BOXES[name][animation_name] = []
+
+                    for (let kindex = 0; kindex < frames.length; kindex++) {
+                        let sprite_frame_name = frames[kindex]
+                        let frame_data = sprite_data[sprite_frame_name]
+                        let lookup = frame_data["atlas"]
+                        let boxes = frame_data["boxes"]
+
+                        SPRITES[name][animation_name].push(new Sprite(lookup, width, height))
+                        SPRITE_BOXES[name][animation_name].push(boxes)
+                    }
                 }
             }
 
@@ -124,7 +142,7 @@ class Application {
         }())
 
         requests.push(async function () {
-            let data = await Network.Request("resources/config/config-edit.json")
+            let data = await Network.Request("json/resources-edit.json")
             let config = JSON.parse(data)
             let shaders = config["shaders"]
             let textures = config["textures"]
@@ -161,7 +179,7 @@ class Application {
 
         await Promise.all(requests)
 
-        let data = await Network.Send("api/store/load", "template")
+        let data = await Network.Request("maps/template.json")
         this.world.load(data)
         this.camera.y = 0.5 * this.world.height * GRID_SIZE
     }

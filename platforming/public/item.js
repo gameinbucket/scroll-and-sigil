@@ -3,7 +3,8 @@ class Item extends Thing {
         super(world, uid, "item", x, y)
         this.half_width = 8
         this.height = 16
-        this.sprite = this.animations[uid]
+        this.sprite_state = uid
+        this.sprite = this.animations[this.sprite_state]
     }
     update(world) {
         if (!this.ground) this.dy -= GRAVITY
@@ -53,7 +54,6 @@ class Whip extends Item {
         this.base_damage = 18
         this.strength_multiplier = 1
         this.dexterity_multiplier = 1
-        this.reach = 48
     }
 }
 
@@ -99,7 +99,7 @@ class Musket extends Item {
 
 class MusketBall extends Item {
     constructor(world, x, y) {
-        super(world, "musket-ball", x, y)
+        super(world, "musket.ball", x, y)
         this.slot = "ammo"
         this.size = 0
     }

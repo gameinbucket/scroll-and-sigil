@@ -149,8 +149,8 @@ class RenderSystem {
             console.error("framebuffer error")
     }
     async make_program(gl, name) {
-        let vertex = await Network.Request("resources/shaders/" + name + ".v")
-        let fragment = await Network.Request("resources/shaders/" + name + ".f")
+        let vertex = await Network.Request("shaders/" + name + ".v")
+        let fragment = await Network.Request("shaders/" + name + ".f")
         let program = RenderSystem.CompileProgram(gl, vertex, fragment)
         this.shaders[name] = program
         this.mvp_location[name] = gl.getUniformLocation(program, "u_mvp")
@@ -159,7 +159,7 @@ class RenderSystem {
     async make_image(gl, name, wrap) {
         let texture = gl.createTexture()
         texture.image = new Image()
-        texture.image.src = "resources/textures/" + name + ".png"
+        texture.image.src = "textures/" + name + ".png"
 
         await new Promise(function (resolve) {
             texture.image.onload = resolve

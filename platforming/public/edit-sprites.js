@@ -35,7 +35,7 @@ class Sprites {
             sprites.push(new Sprite(x, y, texture, boxes))
 
             if (index > 0) json += ", "
-            json += `{"name":"${name}", "atlas":[${x}, ${y}, ${width}, ${height}], "boxes":[${Boxes.JSON(boxes)}]}`
+            json += `"${name}":{"atlas":[${x}, ${y}, ${width}, ${height}], "boxes":[${Boxes.JSON(boxes)}]}`
 
             x += width + 1
 
@@ -58,7 +58,7 @@ class Sprites {
             Boxes.Paint(sprite.boxes, sprite.texture_data.width, sprite.texture_data.height)
         }
 
-        return `{"name":"${atlas}", "width":${atlas_width}, "height":${atlas_height}, "sprites":[${json}], "base64":"${url}"}`
+        return `{"name":"${atlas}", "sprites":{${json}}, "base64":"${url}"}`
     }
     static Paint(sprites, width, height) {
         let canvas = document.createElement("canvas")

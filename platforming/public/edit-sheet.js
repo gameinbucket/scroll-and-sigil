@@ -28,7 +28,7 @@ async function process() {
 
     for (let index = 0; index < sprites.length; index++) {
         let image = new Image()
-        image.src = "resources/sprites/" + name + "/" + sprites[index]
+        image.src = "sprites/" + name + "/" + sprites[index]
         promises.push(new Promise(function (resolve) {
             image.onload = function () {
                 let canvas = document.createElement("canvas")

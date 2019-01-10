@@ -4,7 +4,8 @@ class Bone extends Thing {
         this.half_width = 7
         this.height = 13
         this.mirror = mirror
-        this.sprite = this.animations["bone"]
+        this.sprite_state = "bone"
+        this.sprite = this.animations[this.sprite_state]
         this.dx = mirror ? -2 : 2
         this.dy = GRAVITY * 5
     }
@@ -63,16 +64,16 @@ class Bone extends Thing {
         if (this.tile_x_collision(world) || this.tile_y_collision(world))
             world.delete_thing(this)
     }
-    overlap_boxes(_) {}
     thing_collision(world) {
         let searched = new Set()
+        let boxes = this.boxes()
         for (let gx = this.left_gx; gx <= this.right_gx; gx++) {
             for (let gy = this.bottom_gy; gy <= this.top_gy; gy++) {
                 let block = world.get_block(gx, gy)
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (thing.ignore || searched.has(thing)) continue
-                    if (this.overlap_thing(thing)) {
+                    if (this.overlap(thing) && Thing.overlap_boxes(boxes, thing.boxes())) {
                         thing.damage(world, this, 20)
                         world.delete_thing(this)
                         return

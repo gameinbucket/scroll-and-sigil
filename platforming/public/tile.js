@@ -19,8 +19,8 @@ const TILE_EMPTY = []
 
 const TILE_LIST = [
     "ground",
-    "rails-right",
-    "stairs-right",
+    "rails.right",
+    "stairs.right",
     "rail",
     "wall",
     "water-top",
@@ -31,8 +31,8 @@ const TILE_LIST = [
 
 const TILE_MAP = {
     "ground": 1,
-    "rails-right": 2,
-    "stairs-right": 3,
+    "rails.right": 2,
+    "stairs.right": 3,
     "rail": 4,
     "wall": 5,
     "water-top": 6,

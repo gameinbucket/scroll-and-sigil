@@ -1,7 +1,8 @@
 class Splat extends Thing {
     constructor(world, x, y) {
         super(world, "splat", "doodad", x, y)
-        this.sprite = this.animations["splat"]
+        this.sprite_state = "splat"
+        this.sprite = this.animations[this.sprite_state]
     }
     update(world) {
         this.frame_modulo++

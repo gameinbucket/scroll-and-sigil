@@ -54,23 +54,11 @@ class FileServer(http.server.BaseHTTPRequestHandler):
         try:
             data_len = int(self.headers["Content-Length"])
             raw = self.rfile.read(data_len).decode("utf-8")
-            if self.path == "/api/store/load":
-                try:
-                    with open("maps/" + raw + ".json", "rb") as fh:
-                        self.send_response(200)
-                        self.send_header("Content-type", mime[".json"])
-                        self.end_headers()
-                        self.wfile.write(fh.read())
-                except FileNotFoundError:
-                    self.send_response(404)
-                    self.send_header("Content-type", "text/plain")
-                    self.end_headers()
-                    self.wfile.write(b"map not found")
-            elif self.path == "/api/store/save":
+            if self.path == "/api/store/save":
                 try:
                     data = json.loads(raw)
                     name = data["name"]
-                    with open("maps/" + name + ".json", "w+") as fh:
+                    with open("public/maps/" + name + ".json", "w+") as fh:
                         fh.write(raw)
                         self.send_response(200)
                         self.send_header("Content-type", "text/plain")
@@ -83,9 +71,9 @@ class FileServer(http.server.BaseHTTPRequestHandler):
                     self.wfile.write(b"map not saved")
             elif self.path == "/api/sprites/list":
                 try:
-                    if os.path.isdir("public/resources/sprites/" + raw):
+                    if os.path.isdir("public/sprites/" + raw):
                         sprite_list = list()
-                        for item in os.listdir("public/resources/sprites/" + raw):
+                        for item in os.listdir("public/sprites/" + raw):
                             sprite_list.append(item)
                         self.send_response(200)
                         self.send_header("Content-type", "text/plain")
@@ -107,13 +95,13 @@ class FileServer(http.server.BaseHTTPRequestHandler):
                     image = str.encode(data["base64"])
                     del data["base64"]
                     raw = json.dumps(data)
-                    with open("public/resources/config/" + name + ".json", "w+") as fh:
+                    with open("public/json/" + name + ".json", "w+") as fh:
                         fh.write(raw)
                         self.send_response(200)
                         self.send_header("Content-type", "text/plain")
                         self.end_headers()
                         self.wfile.write(b"saved sprite")
-                    with open("public/resources/textures/" + name + ".png", "wb") as fh:
+                    with open("public/textures/" + name + ".png", "wb") as fh:
                         fh.write(base64.decodebytes(image))
                 except Exception as err:
                     self.send_response(404)

@@ -118,7 +118,7 @@ class EditMain extends EditForm {
                     console.log("Please name map")
             } else if (gx === 1) {
                 if (edit.cli_input !== "") {
-                    Network.Send("api/store/load", edit.cli_input).then(function (data) {
+                    Network.Request("maps/" + edit.cli_input + ".json").then(function (data) {
                         edit.world.load(data)
                         edit.render()
                     }).catch(function (data) {

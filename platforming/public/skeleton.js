@@ -14,7 +14,7 @@ class Skeleton extends Living {
             if (this.health < 1)
                 this.death()
             else {
-                SOUND["you-hurt"].play()
+                SOUND["you.hurt"].play()
                 new Splat(world, this.x, this.y + this.height * 0.5)
             }
         }
@@ -22,7 +22,8 @@ class Skeleton extends Living {
     death() {
         SOUND["destroy"].play()
         this.state = "death"
-        this.sprite = this.animations["death"]
+        this.sprite_state = "death"
+        this.sprite = this.animations[this.sprite_state]
     }
     find_target(world) {
         let left_gx = Math.floor((this.x - 32) * INV_GRID_SIZE)

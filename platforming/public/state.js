@@ -113,13 +113,13 @@ class WorldState {
 
         g.set_orthographic(draw_ortho, 0, 0)
         g.update_mvp(gl)
-        g.set_texture(gl, "ui")
+        g.set_texture(gl, "interface")
         generic.zero()
 
-        Render.Sprite(generic, 20, 32, SPRITES["ui"]["panel"][0])
-        Render.Sprite(generic, 62, 32, SPRITES["ui"]["panel"][0])
-        Render.Sprite(generic, 41, 49, SPRITES["ui"]["panel"][0])
-        Render.Sprite(generic, 41, 16, SPRITES["ui"]["panel"][0])
+        Render.Sprite(generic, 20, 32, SPRITES["interface"]["panel"][0])
+        Render.Sprite(generic, 62, 32, SPRITES["interface"]["panel"][0])
+        Render.Sprite(generic, 41, 49, SPRITES["interface"]["panel"][0])
+        Render.Sprite(generic, 41, 16, SPRITES["interface"]["panel"][0])
 
         let health_bar = player.health
         let health_gone = (player.health_lim - player.health)
@@ -129,20 +129,20 @@ class WorldState {
 
         let x = 20
         let y = 26
-        Render.ImageSprite(generic, x + health_bar, frame.height - y, SPRITES["ui"]["gone"][0], health_gone, 6)
+        Render.ImageSprite(generic, x + health_bar, frame.height - y, SPRITES["interface"]["gone"][0], health_gone, 6)
         if (player.health_reduce > player.health) {
             let health_reduce = player.health_reduce - health_bar
-            Render.ImageSprite(generic, x + health_bar, frame.height - y, SPRITES["ui"]["reduce"][0], health_reduce, 6)
+            Render.ImageSprite(generic, x + health_bar, frame.height - y, SPRITES["interface"]["reduce"][0], health_reduce, 6)
         }
-        Render.ImageSprite(generic, x, frame.height - y, SPRITES["ui"]["health"][0], health_bar, 6)
+        Render.ImageSprite(generic, x, frame.height - y, SPRITES["interface"]["health"][0], health_bar, 6)
 
         y = 33
-        Render.ImageSprite(generic, x + stamina_bar, frame.height - y, SPRITES["ui"]["gone"][0], stamina_gone, 6)
+        Render.ImageSprite(generic, x + stamina_bar, frame.height - y, SPRITES["interface"]["gone"][0], stamina_gone, 6)
         if (player.stamina_reduce > player.stamina) {
             let stamina_reduce = player.stamina_reduce - stamina_bar
-            Render.ImageSprite(generic, x + stamina_bar, frame.height - y, SPRITES["ui"]["reduce"][0], stamina_reduce, 6)
+            Render.ImageSprite(generic, x + stamina_bar, frame.height - y, SPRITES["interface"]["reduce"][0], stamina_reduce, 6)
         }
-        Render.ImageSprite(generic, x, frame.height - y, SPRITES["ui"]["stamina"][0], stamina_bar, 6)
+        Render.ImageSprite(generic, x, frame.height - y, SPRITES["interface"]["stamina"][0], stamina_bar, 6)
 
         RenderSystem.UpdateAndDraw(gl, generic)
 
