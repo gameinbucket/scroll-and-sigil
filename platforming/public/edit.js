@@ -33,7 +33,7 @@ class Application {
         sprite_buffer["map"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
         sprite_buffer["font"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
 
-        let world = new World(gl)
+        let world = new World(g, gl)
 
         let form_list = [
             new EditMain("main", "0", "top", "200", "min", 127, 255, 127),
@@ -54,6 +54,7 @@ class Application {
         this.mouse_previous_y = null
         this.mouse = false
         this.action = null
+        this.frame = null
         this.canvas = canvas
         this.screen = screen
         this.gl = gl
@@ -208,18 +209,20 @@ class Application {
         Matrix.Orthographic(draw_ortho, 0.0, draw_width, 0.0, draw_height, 0.0, 1.0)
         Matrix.Orthographic(canvas_ortho, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
 
-        let frame = new FrameBuffer(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], false, true)
+        if (this.frame === null)
+            this.frame = FrameBuffer.Make(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "no.depth")
+        else
+            FrameBuffer.Resize(gl, this.frame, draw_width, draw_height)
 
         screen.zero()
         Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0)
         RenderSystem.UpdateVao(gl, screen)
 
-        this.frame = frame
         this.canvas_ortho = canvas_ortho
         this.draw_ortho = draw_ortho
 
         for (let form of this.forms.values())
-            form.resize(this.forms, frame)
+            form.resize(this.forms, this.frame)
     }
     key_down(event) {
         if (event.key === "Backspace") {
@@ -319,7 +322,7 @@ class Application {
         this.world_background(frame, camera.x, camera.y)
         g.set_program(gl, "texture")
         g.update_mvp(gl)
-        this.world.render(g, frame, camera.x, camera.y)
+        this.world.render(g, frame, camera.x, camera.y, this.generic)
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, this.canvas.width, this.canvas.height)

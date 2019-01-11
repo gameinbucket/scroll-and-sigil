@@ -27,7 +27,7 @@ class Application {
         let generic2 = RenderBuffer.Init(gl, 2, 0, 2, 800, 1200)
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
 
-        let world = new World(gl)
+        let world = new World(g, gl)
 
         window.onblur = function () {
             self.on = false
@@ -46,6 +46,7 @@ class Application {
         document.onmousedown = Input.MouseDown
         document.onmousemove = Input.MouseMove
 
+        this.frame = null
         this.canvas = canvas
         this.screen = screen
         this.player = null
@@ -179,13 +180,15 @@ class Application {
         Matrix.Orthographic(draw_ortho, 0.0, draw_width, 0.0, draw_height, 0.0, 1.0)
         Matrix.Orthographic(canvas_ortho, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
 
-        let frame = new FrameBuffer(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], false, true)
+        if (this.frame === null)
+            this.frame = FrameBuffer.Make(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "no.depth")
+        else
+            FrameBuffer.Resize(gl, this.frame, draw_width, draw_height)
 
         screen.zero()
         Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0)
         RenderSystem.UpdateVao(gl, screen)
 
-        this.frame = frame
         this.canvas_ortho = canvas_ortho
         this.draw_ortho = draw_ortho
     }

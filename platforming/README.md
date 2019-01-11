@@ -5,9 +5,8 @@
 > multiple attack animations
 > tap attack for quick, hold for charged
 > save rendered block images to large virtual texture to significantly reduce draw calls
-> automatic sprite hit boxes
+    texture covers multiple blocks, flag for setting if binding is available
 > editor sprite offsets
-> sprite sheet packing
 > sprite jittering
 > inventory screen
 > background textures

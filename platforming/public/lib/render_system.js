@@ -106,19 +106,16 @@ class RenderSystem {
         }
     }
     static UpdateFrameBuffer(gl, frame) {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, frame.fbo)
         for (let i = 0; i < frame.format.length; i++) {
             gl.bindTexture(gl.TEXTURE_2D, frame.textures[i])
             gl.texImage2D(gl.TEXTURE_2D, 0, frame.internalFormat[i], frame.width, frame.height, 0, frame.format[i], frame.type[i], null)
         }
         if (frame.depth) {
-            gl.bindTexture(gl.TEXTURE_2D, frame.depthTexture)
+            gl.bindTexture(gl.TEXTURE_2D, frame.depth_texture)
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH24_STENCIL8, frame.width, frame.height, 0, gl.DEPTH_STENCIL, gl.UNSIGNED_INT_24_8, null)
         }
     }
-    static MakeFrameBuffer(gl, frame) {
-        frame.fbo = gl.createFramebuffer()
-        gl.bindFramebuffer(gl.FRAMEBUFFER, frame.fbo)
+    static TextureFrameBuffer(gl, frame) {
         for (let i = 0; i < frame.format.length; i++) {
             frame.textures[i] = gl.createTexture()
             gl.bindTexture(gl.TEXTURE_2D, frame.textures[i])
@@ -136,15 +133,20 @@ class RenderSystem {
         }
         gl.drawBuffers(frame.draw_buffers)
         if (frame.depth) {
-            frame.depthTexture = gl.createTexture()
-            gl.bindTexture(gl.TEXTURE_2D, frame.depthTexture)
+            frame.depth_texture = gl.createTexture()
+            gl.bindTexture(gl.TEXTURE_2D, frame.depth_texture)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, frame.depthTexture, 0)
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, frame.depth_texture, 0)
         }
         RenderSystem.UpdateFrameBuffer(gl, frame)
+    }
+    static MakeFrameBuffer(gl, frame) {
+        frame.fbo = gl.createFramebuffer()
+        gl.bindFramebuffer(gl.FRAMEBUFFER, frame.fbo)
+        RenderSystem.TextureFrameBuffer(gl, frame)
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE)
             console.error("framebuffer error")
     }
@@ -174,18 +176,6 @@ class RenderSystem {
         gl.bindTexture(gl.TEXTURE_2D, null)
 
         this.textures[name] = texture
-    }
-    async make_blank_texture(gl, width, height) {
-        let texture = gl.createTexture()
-        gl.bindTexture(gl.TEXTURE_2D, texture)
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, gl.RGBA, gl.UNSIGNED_BYTE, 0)
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-        gl.bindTexture(gl.TEXTURE_2D, null)
-
-        return texture
     }
     static CompileProgram(gl, v, f) {
         let vert = RenderSystem.CompileShader(gl, v, gl.VERTEX_SHADER)

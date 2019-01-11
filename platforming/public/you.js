@@ -94,7 +94,7 @@ class You extends Living {
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (thing === this || searched.has(thing)) continue
-                    if (this.overlap(thing) && Thing.overlap_boxes(boxes, thing.boxes())) {
+                    if (this.overlap(thing) && Thing.OverlapBoxes(boxes, thing.boxes())) {
                         let damage = item.base_damage * this.charge_multiplier + item.strength_multiplier * this.strength + item.dexterity_multiplier * this.dexterity
                         thing.damage(world, this, damage)
                         this.experience += damage

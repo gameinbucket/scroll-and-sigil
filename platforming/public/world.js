@@ -1,8 +1,6 @@
-const GRID_SIZE = BLOCK_SIZE * TILE_SIZE
-const INV_GRID_SIZE = 1.0 / GRID_SIZE
-
 class World {
-    constructor(gl) {
+    constructor(g, gl) {
+        this.g = g
         this.gl = gl
         this.blocks = []
         this.width = 0
@@ -17,6 +15,9 @@ class World {
         this.threads = ["ai", "pathing"]
         this.thread_index = 0
         this.thread_id = ""
+        this.red = 0.0
+        this.green = 0.0
+        this.blue = 0.0
     }
     load(data) {
         let content
@@ -115,11 +116,14 @@ class World {
     }
     theme(bx, by) {
         let block = this.get_block(bx, by)
-        this.gl.clearColor(block.red / 255.0, block.green / 255.0, block.blue / 255.0, 1.0)
+        this.red = block.red / 255.0
+        this.green = block.green / 255.0
+        this.blue = block.blue / 255.0
     }
     build() {
         for (let i = 0; i < this.blocks.length; i++)
-            this.blocks[i].build_mesh(this.gl)
+            this.blocks[i].build_texture(this.g, this.gl)
+        // this.blocks[i].build_mesh(this.gl)
     }
     save(name) {
         let data = `{"name":"${name}","blocks":[`
@@ -182,7 +186,7 @@ class World {
         this.delete_things[this.delete_thing_count] = thing
         this.delete_thing_count++
     }
-    render(g, frame, x, y) {
+    render(g, frame, x, y, generic) {
         let hw = frame.width * 0.5
         let hh = frame.height * 0.5
 
@@ -191,24 +195,35 @@ class World {
         let r_min = Math.floor((y - hh) * INV_GRID_SIZE)
         let r_lim = Math.floor((y + hh) * INV_GRID_SIZE)
 
+        let sprite_set = this.sprite_set
+        let sprite_buffer = this.sprite_buffer
+
         if (c_min < 0) c_min = 0
         if (r_min < 0) r_min = 0
         if (c_lim >= this.width) c_lim = this.width - 1
         if (r_lim >= this.height) r_lim = this.height - 1
 
-        let sprite_buffer = this.sprite_buffer
-        g.set_texture(this.gl, "map")
-        this.sprite_set.clear()
+        sprite_set.clear()
         for (let key in sprite_buffer)
             sprite_buffer[key].zero()
 
+        g.set_texture(this.gl, "map")
         for (let gy = r_min; gy <= r_lim; gy++) {
             for (let gx = c_min; gx <= c_lim; gx++) {
                 let block = this.blocks[gx + gy * this.width]
-                let mesh = block.mesh
-                if (mesh.vertex_pos > 0)
-                    RenderSystem.BindAndDraw(this.gl, mesh)
-                block.render_things(this.sprite_set, sprite_buffer)
+                // let mesh = block.mesh
+                // if (mesh.vertex_pos > 0)
+                //     RenderSystem.BindAndDraw(this.gl, mesh)
+
+                let texture = block.texture
+                if (texture !== null) {
+                    g.set_texture_direct(this.gl, texture)
+                    generic.zero()
+                    Render.Image(generic, gx * GRID_SIZE, gy * GRID_SIZE, GRID_SIZE, GRID_SIZE, 0.0, 1.0, 1.0, 0.0)
+                    RenderSystem.UpdateAndDraw(this.gl, generic)
+                }
+
+                block.render_things(sprite_set, sprite_buffer)
             }
         }
 

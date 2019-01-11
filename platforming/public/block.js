@@ -1,7 +1,11 @@
 const BLOCK_SIZE = 8
 const INV_BLOCK_SIZE = 1.0 / BLOCK_SIZE
 const BLOCK_TOTAL = BLOCK_SIZE * BLOCK_SIZE
+const GRID_SIZE = BLOCK_SIZE * TILE_SIZE
+const INV_GRID_SIZE = 1.0 / GRID_SIZE
 const BLOCK_MESH = new RenderCopy(2, 0, 2, BLOCK_TOTAL * 4, BLOCK_TOTAL * 6)
+const BLOCK_FRAME = new FrameBuffer()
+const BLOCK_ORTHO = []
 
 class Block {
     constructor(px, py) {
@@ -10,7 +14,8 @@ class Block {
         this.blue = 156
         this.music = "vampire"
         this.tiles = new Uint8Array(BLOCK_TOTAL)
-        this.mesh = null
+        // this.mesh = null
+        this.texture = null
         this.x = px
         this.y = py
         this.things = []
@@ -77,7 +82,7 @@ class Block {
         }
         this.mesh = RenderBuffer.InitCopy(gl, BLOCK_MESH)
     }
-    build_texture(gl) {
+    build_texture(g, gl) {
         BLOCK_MESH.zero()
         for (let x = 0; x < BLOCK_SIZE; x++) {
             for (let y = 0; y < BLOCK_SIZE; y++) {
@@ -88,18 +93,28 @@ class Block {
             }
         }
 
+        if (BLOCK_MESH.vertex_pos === 0) return
         let mesh = RenderBuffer.InitCopy(gl, BLOCK_MESH)
-        let size = BLOCK_SIZE * TILE_SIZE
-        let texture = make_blank_texture()
 
-        RenderSystem.SetFrameBuffer(gl, null)
-        RenderSystem.SetView(gl, 0, 0, size, size)
+        if (BLOCK_ORTHO.length === 0) {
+            Matrix.Orthographic(BLOCK_ORTHO, 0.0, GRID_SIZE, 0.0, GRID_SIZE, 0.0, 1.0)
+            BLOCK_FRAME.set(GRID_SIZE, GRID_SIZE, [gl.RGBA], [gl.RGBA], [gl.UNSIGNED_BYTE], "nearest", "no.depth")
+            RenderSystem.MakeFrameBuffer(gl, BLOCK_FRAME)
+        } else {
+            RenderSystem.SetFrameBuffer(gl, BLOCK_FRAME.fbo)
+            RenderSystem.TextureFrameBuffer(gl, BLOCK_FRAME)
+        }
+
+        RenderSystem.SetView(gl, 0, 0, GRID_SIZE, GRID_SIZE)
+        gl.clearColor(0.0, 0.0, 0.0, 0.0)
+        gl.clear(gl.COLOR_BUFFER_BIT)
         g.set_program(gl, "texture")
-        g.set_orthographic(canvas_ortho, 0, 0)
+        g.set_orthographic(BLOCK_ORTHO, 0, 0)
         g.update_mvp(gl)
-        RenderSystem.BindAndDraw(this.gl, mesh)
+        g.set_texture(gl, "map")
+        RenderSystem.BindAndDraw(gl, mesh)
 
-        return texture
+        this.texture = BLOCK_FRAME.textures[0]
     }
     render_things(sprite_set, sprite_buffer) {
         for (let i = 0; i < this.thing_count; i++) {
@@ -107,8 +122,8 @@ class Block {
             if (sprite_set.has(thing)) continue
             sprite_set.add(thing)
             let sprite = thing.sprite[thing.frame]
-            let x = Math.floor(thing.x - sprite.width * 0.5) // thing.x - sprite.width * 0.5
-            let y = Math.floor(thing.y + sprite.oy) // thing.y + sprite.oy
+            let x = Math.floor(thing.x - sprite.width * 0.5)
+            let y = Math.floor(thing.y + sprite.oy)
 
             if (thing.mirror) Render.MirrorSprite(sprite_buffer[thing.sprite_id], x - sprite.ox, y, sprite)
             else Render.Sprite(sprite_buffer[thing.sprite_id], x + sprite.ox, y, sprite)

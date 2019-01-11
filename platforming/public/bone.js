@@ -73,7 +73,7 @@ class Bone extends Thing {
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (thing.ignore || searched.has(thing)) continue
-                    if (this.overlap(thing) && Thing.overlap_boxes(boxes, thing.boxes())) {
+                    if (this.overlap(thing) && Thing.OverlapBoxes(boxes, thing.boxes())) {
                         thing.damage(world, this, 20)
                         world.delete_thing(this)
                         return

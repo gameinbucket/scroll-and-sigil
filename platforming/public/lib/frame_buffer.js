@@ -1,24 +1,39 @@
 class FrameBuffer {
-    constructor(gl, width, height, internalFormat, format, type, linear, depth) {
+    constructor() {
+        this.fbo
+        this.internalFormat
+        this.format
+        this.type
+        this.width
+        this.height
+        this.linear
+        this.depth
+        this.depth_texture
+        this.textures = []
+        this.draw_buffers = []
+    }
+    set(width, height, internalFormat, format, type, linear, depth) {
         if (format.length !== internalFormat.length || format.length !== type.length) {
             console.error('framebuffer invalid')
         }
-        this.fbo
         this.internalFormat = internalFormat
         this.format = format
         this.type = type
         this.width = width
         this.height = height
-        this.linear = linear
-        this.depth = depth
-        this.depthTexture
-        this.textures = []
-        this.draw_buffers = []
-        RenderSystem.MakeFrameBuffer(gl, this)
+        this.linear = linear === "linear"
+        this.depth = depth === "depth"
     }
-    static Resize(gl, buffer, width, height) {
-        buffer.width = width
-        buffer.height = height
-        RenderSystem.UpdateFrameBuffer(gl, buffer)
+    static Make(gl, width, height, internalFormat, format, type, linear, depth) {
+        let frame = new FrameBuffer()
+        frame.set(width, height, internalFormat, format, type, linear, depth)
+        RenderSystem.MakeFrameBuffer(gl, frame)
+        return frame
+    }
+    static Resize(gl, frame, width, height) {
+        frame.width = width
+        frame.height = height
+        RenderSystem.SetFrameBuffer(gl, frame)
+        RenderSystem.UpdateFrameBuffer(gl, frame)
     }
 }

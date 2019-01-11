@@ -308,7 +308,7 @@ class Thing {
     }
     resolve_collision_thing(thing) {
         if (!this.overlap(thing)) return
-        if (!Thing.overlap_boxes(this.boxes(), thing.boxes())) return
+        if (!Thing.OverlapBoxes(this.boxes(), thing.boxes())) return
 
         let old_x = this.x - this.dx
         let old_y = this.y - this.dy
@@ -368,11 +368,8 @@ class Thing {
 
         return self_x + self_sprite.width > thing_x && self_x < thing_x + thing_sprite.width &&
             self_y + self_sprite.height > thing_y && self_y < thing.y + thing_sprite.height
-
-        // return this.x + this.half_width > thing.x - thing.half_width && this.x - this.half_width < thing.x + thing.half_width &&
-        //     this.y + this.height > thing.y && this.y < thing.y + thing.height
     }
-    static overlap_boxes(a, b) {
+    static OverlapBoxes(a, b) {
         for (let i = 0; i < a.length; i++) {
             let box_a = a[i]
             for (let j = 0; j < b.length; j++) {
@@ -395,7 +392,7 @@ class Thing {
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (searched.has(thing)) continue
-                    if (this.overlap(thing) && Thing.overlap_boxes(boxes, thing.boxes()))
+                    if (this.overlap(thing) && Thing.OverlapBoxes(boxes, thing.boxes()))
                         collided.push(thing)
                     searched.add(thing)
                 }

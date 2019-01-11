@@ -89,27 +89,23 @@ class WorldState {
         let player = this.app.player
         let generic = this.app.generic
         let generic2 = this.app.generic2
-        let sprite_buffers = this.app.sprite_buffers
         let canvas_ortho = this.app.canvas_ortho
         let draw_ortho = this.app.draw_ortho
         let screen = this.app.screen
         let world = this.app.world
 
-        // must use floor to avoid tiles jittering
-        // -(player.y - frame.height * 0.5)
-        // -Math.floor(player.y) + Math.floor(frame.height * 0.5)
         let view_x = -Math.floor(player.x - frame.width * 0.5)
         let view_y = -Math.floor(player.y - frame.height * 0.5)
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
 
-        gl.clearColor(world.red / 255.0, world.green / 255.0, world.blue / 255.0, 1.0)
+        gl.clearColor(world.red, world.green, world.blue, 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT)
         g.set_program(gl, "texture")
         g.set_orthographic(draw_ortho, view_x, view_y)
         g.update_mvp(gl)
-        world.render(g, frame, player.x, player.y, sprite_buffers)
+        world.render(g, frame, player.x, player.y, generic)
 
         g.set_orthographic(draw_ortho, 0, 0)
         g.update_mvp(gl)
