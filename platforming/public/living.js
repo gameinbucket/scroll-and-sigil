@@ -4,8 +4,7 @@ class Living extends Thing {
         this.state = "idle"
         this.alliance = "none"
         this.speed = 2
-        this.health_lim = 50
-        this.health = this.health_lim
+        this.health = 0
         this.stamina_lim = 50
         this.stamina = this.stamina_lim
     }
@@ -60,7 +59,7 @@ class Living extends Thing {
         this.move_air = this.state === "walk"
     }
     dodge() {}
-    block() {}
+    shield() {}
     parry() {}
     light_attack() {
         const min_stamina = 24

@@ -33,7 +33,7 @@ class FrameBuffer {
     static Resize(gl, frame, width, height) {
         frame.width = width
         frame.height = height
-        RenderSystem.SetFrameBuffer(gl, frame)
+        RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.UpdateFrameBuffer(gl, frame)
     }
 }

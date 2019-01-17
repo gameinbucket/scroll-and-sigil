@@ -1,7 +1,7 @@
 const MUSIC = {}
 const SOUND = {}
-const SPRITES = {}
-const SPRITE_BOXES = {}
+const SPRITE_DATA = {}
+const SPRITE_ANIMATIONS = {}
 
 class Application {
     constructor() {
@@ -25,6 +25,7 @@ class Application {
 
         let generic = RenderBuffer.Init(gl, 2, 0, 2, 800, 1200)
         let generic2 = RenderBuffer.Init(gl, 2, 0, 2, 800, 1200)
+        let colored = RenderBuffer.Init(gl, 2, 3, 2, 800, 1200)
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
 
         let world = new World(g, gl)
@@ -55,6 +56,7 @@ class Application {
         this.g = g
         this.generic = generic
         this.generic2 = generic2
+        this.colored = colored
         this.world = world
         this.state = new MenuState(this)
     }
@@ -103,19 +105,21 @@ class Application {
             let height = 1.0 / texture.image.height
             let animations = sprite["animations"]
 
-            SPRITES[name] = {}
-            SPRITE_BOXES[name] = {}
+            SPRITE_DATA[name] = {}
+            SPRITE_ANIMATIONS[name] = {}
 
             for (let jindex = 0; jindex < animations.length; jindex++) {
                 let animation = animations[jindex]
                 let animation_name = animation["name"]
                 let frames = animation["frames"]
 
-                SPRITES[name][animation_name] = []
-                SPRITE_BOXES[name][animation_name] = []
+                SPRITE_ANIMATIONS[name][animation_name] = frames
 
                 for (let kindex = 0; kindex < frames.length; kindex++) {
                     let sprite_frame_name = frames[kindex]
+
+                    if (sprite_frame_name in SPRITE_DATA) continue
+
                     let frame_data = sprite_data[sprite_frame_name]
                     let lookup = frame_data["atlas"]
                     let boxes = frame_data["boxes"]
@@ -126,8 +130,7 @@ class Application {
                         lookup.push(offset[1])
                     }
 
-                    SPRITES[name][animation_name].push(new Sprite(lookup, width, height))
-                    SPRITE_BOXES[name][animation_name].push(boxes)
+                    SPRITE_DATA[name][sprite_frame_name] = new Sprite(lookup, boxes, width, height)
                 }
             }
         }
@@ -181,7 +184,7 @@ class Application {
         Matrix.Orthographic(canvas_ortho, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
 
         if (this.frame === null)
-            this.frame = FrameBuffer.Make(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "no.depth")
+            this.frame = FrameBuffer.Make(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "depth")
         else
             FrameBuffer.Resize(gl, this.frame, draw_width, draw_height)
 

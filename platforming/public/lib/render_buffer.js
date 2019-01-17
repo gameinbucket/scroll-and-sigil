@@ -35,23 +35,25 @@ class RenderBuffer {
         return buffer
     }
     static Copy(from, to) {
-        for (let i = 0; i < from.vertex_pos; i++)
-            to.vertices[i] = from.vertices[i]
-
-        for (let i = 0; i < from.index_pos; i++)
-            to.indices[i] = from.indices[i]
+        for (let i = 0; i < from.vertex_pos; i++) to.vertices[i] = from.vertices[i]
+        for (let i = 0; i < from.index_pos; i++) to.indices[i] = from.indices[i]
 
         to.vertex_pos = from.vertex_pos
         to.index_pos = from.index_pos
         to.index_offset = from.index_offset
     }
-    static Expand(gl, source) {
-        let buffer = new RenderBuffer();
-        buffer.vertices = new Float32Array(source.vertices.length * 2)
-        buffer.indices = new Uint32Array(source.indices.length * 2)
-        RenderBuffer.Copy(source, buffer)
-        RenderSystem.MakeVao(gl, buffer, source.position, source.color, source.texture)
+    static Expand(gl, buffer) {
+        let vertices = buffer.vertices
+        let indices = buffer.vertices
+
+        buffer.vertices = new Float32Array(buffer.vertices.length * 2)
+        buffer.indices = new Uint32Array(buffer.indices.length * 2)
+
+        for (let i = 0; i < buffer.vertex_pos; i++) buffer.vertices[i] = vertices[i]
+        for (let i = 0; i < buffer.index_pos; i++) buffer.indices[i] = indices[i]
+
         RenderSystem.UpdateVao(gl, buffer)
+
         return buffer
     }
     zero() {

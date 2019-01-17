@@ -57,12 +57,6 @@ class Menu {
                             case "body":
                                 this.thing.body = item
                                 break
-                            case "arms":
-                                this.thing.arms = item
-                                break
-                            case "legs":
-                                this.thing.legs = item
-                                break
                             case "item":
                                 this.thing.item = item
                                 break
@@ -103,8 +97,8 @@ class Menu {
                     let half_items = columns * 21 * 0.5
                     let x = frame_half_width - half_items
                     let y = frame_half_height - 16
-                    Render.Sprite(generic, x + 0 * 21, y, SPRITES["interface"][this.select_index === 0 ? "select.panel" : "panel"][0])
-                    Render.Sprite(generic, x + 1 * 21, y, SPRITES["interface"][this.select_index === 1 ? "select.panel" : "panel"][0])
+                    Render.Sprite(generic, x + 0 * 21, y, SPRITE_DATA["interface"][this.select_index === 0 ? "select.panel" : "panel"])
+                    Render.Sprite(generic, x + 1 * 21, y, SPRITE_DATA["interface"][this.select_index === 1 ? "select.panel" : "panel"])
                 }
                 break
             case this.menu_inventory:
@@ -114,16 +108,16 @@ class Menu {
                     let x = 20
                     let y = frame.height - 71
                     if (inventory.length === 0) {
-                        Render.Sprite(generic, x, y, SPRITES["interface"]["panel"][0])
+                        Render.Sprite(generic, x, y, SPRITE_DATA["interface"]["panel"])
                     } else {
                         for (let index = 0; index < inventory.length; index++) {
                             let px = x + index % columns * 21
                             let py = y + Math.floor(index / columns) * 33
 
                             if (this.select_index === index)
-                                Render.Sprite(generic, px, py, SPRITES["interface"]["select.panel"][0])
+                                Render.Sprite(generic, px, py, SPRITE_DATA["interface"]["select.panel"])
                             else
-                                Render.Sprite(generic, px, py, SPRITES["interface"]["panel"][0])
+                                Render.Sprite(generic, px, py, SPRITE_DATA["interface"]["panel"])
 
                             let sprite = inventory[index].sprite[0]
                             Render.Sprite(generic2, x + index % columns * 21 + 10 - sprite.width * 0.5, y + Math.floor(index / columns) * 33 + 16 - sprite.height * 0.5, sprite)
@@ -131,10 +125,10 @@ class Menu {
                     }
 
                     x = frame.width - 40
-                    Render.Sprite(generic, x, y, SPRITES["interface"]["panel"][0])
-                    Render.Sprite(generic, x - 1 * 21, y, SPRITES["interface"]["panel"][0])
-                    Render.Sprite(generic, x - 2 * 21, y, SPRITES["interface"]["panel"][0])
-                    Render.Sprite(generic, x - 3 * 21, y, SPRITES["interface"]["panel"][0])
+                    Render.Sprite(generic, x, y, SPRITE_DATA["interface"]["panel"])
+                    Render.Sprite(generic, x - 1 * 21, y, SPRITE_DATA["interface"]["panel"])
+                    Render.Sprite(generic, x - 2 * 21, y, SPRITE_DATA["interface"]["panel"])
+                    Render.Sprite(generic, x - 3 * 21, y, SPRITE_DATA["interface"]["panel"])
 
                     if (this.thing.head !== null) {
                         let sprite = this.thing.head.sprite[0]
@@ -142,21 +136,10 @@ class Menu {
                         let py = y + 16 - sprite.height * 0.5
                         Render.Sprite(generic2, px, py, sprite)
                     }
+
                     if (this.thing.body !== null) {
                         let sprite = this.thing.body.sprite[0]
                         let px = x + 10 - 1 * 21 - sprite.width * 0.5
-                        let py = y + 16 - sprite.height * 0.5
-                        Render.Sprite(generic2, px, py, sprite)
-                    }
-                    if (this.thing.arms !== null) {
-                        let sprite = this.thing.arms.sprite[0]
-                        let px = x + 10 - 2 * 21 - sprite.width * 0.5
-                        let py = y + 16 - sprite.height * 0.5
-                        Render.Sprite(generic2, px, py, sprite)
-                    }
-                    if (this.thing.legs !== null) {
-                        let sprite = this.thing.legs.sprite[0]
-                        let px = x + 10 - 3 * 21 - sprite.width * 0.5
                         let py = y + 16 - sprite.height * 0.5
                         Render.Sprite(generic2, px, py, sprite)
                     }

@@ -122,8 +122,8 @@ class World {
     }
     build() {
         for (let i = 0; i < this.blocks.length; i++)
-            this.blocks[i].build_texture(this.g, this.gl)
-        // this.blocks[i].build_mesh(this.gl)
+            //    this.blocks[i].build_texture(this.g, this.gl)
+            this.blocks[i].build_mesh(this.gl)
     }
     save(name) {
         let data = `{"name":"${name}","blocks":[`
@@ -168,16 +168,15 @@ class World {
             }
         } else {
             this.sprite_count[thing.sprite_id] = 1
-            this.sprite_buffer[thing.sprite_id] = RenderBuffer.Init(this.gl, 2, 0, 2, 40, 60)
+            this.sprite_buffer[thing.sprite_id] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
         }
     }
     remove_thing(thing) {
         for (let i = 0; i < this.thing_count; i++) {
             if (this.things[i] === thing) {
-                for (let j = i; j < this.thing_count - 1; j++) {
-                    this.things[j] = this.things[j + 1]
-                }
+                for (let j = i; j < this.thing_count - 1; j++) this.things[j] = this.things[j + 1]
                 this.thing_count--
+                this.sprite_count[thing.sprite_id]--
                 break
             }
         }
@@ -187,6 +186,8 @@ class World {
         this.delete_thing_count++
     }
     render(g, frame, x, y, generic) {
+
+        let gl = this.gl
         let hw = frame.width * 0.5
         let hh = frame.height * 0.5
 
@@ -207,33 +208,37 @@ class World {
         for (let key in sprite_buffer)
             sprite_buffer[key].zero()
 
-        g.set_texture(this.gl, "map")
+        g.set_texture(gl, "map")
+
         for (let gy = r_min; gy <= r_lim; gy++) {
             for (let gx = c_min; gx <= c_lim; gx++) {
                 let block = this.blocks[gx + gy * this.width]
-                // let mesh = block.mesh
-                // if (mesh.vertex_pos > 0)
-                //     RenderSystem.BindAndDraw(this.gl, mesh)
 
-                let texture = block.texture
-                if (texture !== null) {
-                    g.set_texture_direct(this.gl, texture)
-                    generic.zero()
-                    Render.Image(generic, gx * GRID_SIZE, gy * GRID_SIZE, GRID_SIZE, GRID_SIZE, 0.0, 1.0, 1.0, 0.0)
-                    RenderSystem.UpdateAndDraw(this.gl, generic)
-                }
+                let mesh = block.mesh
+                if (mesh.vertex_pos > 0)
+                    RenderSystem.BindAndDraw(gl, mesh)
+
+                // let texture = block.texture
+                // if (texture !== null) {
+                //     g.set_texture_direct(this.gl, texture)
+                //     generic.zero()
+                //     Render.Image(generic, gx * GRID_SIZE, gy * GRID_SIZE, GRID_SIZE, GRID_SIZE, 0.0, 1.0, 1.0, 0.0)
+                //     RenderSystem.UpdateAndDraw(this.gl, generic)
+                // }
 
                 block.render_things(sprite_set, sprite_buffer)
             }
         }
 
+        gl.enable(gl.DEPTH_TEST)
         for (let key in sprite_buffer) {
             let buffer = sprite_buffer[key]
             if (buffer.vertex_pos > 0) {
-                g.set_texture(this.gl, key)
-                RenderSystem.UpdateAndDraw(this.gl, buffer)
+                g.set_texture(gl, key)
+                RenderSystem.UpdateAndDraw(gl, buffer)
             }
         }
+        gl.disable(gl.DEPTH_TEST)
     }
     update() {
         this.thread_id = this.threads[this.thread_index]

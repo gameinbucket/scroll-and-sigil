@@ -14,8 +14,8 @@ class Block {
         this.blue = 156
         this.music = "vampire"
         this.tiles = new Uint8Array(BLOCK_TOTAL)
-        // this.mesh = null
-        this.texture = null
+        this.mesh = null
+        // this.texture = null
         this.x = px
         this.y = py
         this.things = []
@@ -121,12 +121,7 @@ class Block {
             let thing = this.things[i]
             if (sprite_set.has(thing)) continue
             sprite_set.add(thing)
-            let sprite = thing.sprite[thing.frame]
-            let x = Math.floor(thing.x - sprite.width * 0.5)
-            let y = Math.floor(thing.y + sprite.oy)
-
-            if (thing.mirror) Render.MirrorSprite(sprite_buffer[thing.sprite_id], x - sprite.ox, y, sprite)
-            else Render.Sprite(sprite_buffer[thing.sprite_id], x + sprite.ox, y, sprite)
+            thing.render(sprite_buffer)
         }
     }
 }

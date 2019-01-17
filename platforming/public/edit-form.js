@@ -93,7 +93,7 @@ class EditMain extends EditForm {
         let x = this.x
         for (let key in icons) {
             let icon = icons[key]
-            let sprite = SPRITES["buttons"][icon][0]
+            let sprite = SPRITE_DATA["buttons"][icon][0]
             let w = BUTTON_SIZE
             let h = BUTTON_SIZE
             let y = this.y + this.height - h
@@ -197,18 +197,18 @@ class EditWorld extends EditForm {
         this.clear(gl)
         let x = this.x
         let y = this.y + this.height - BUTTON_SIZE
-        let sprite = SPRITES["buttons"]["eraser"][0]
+        let sprite = SPRITE_DATA["buttons"]["eraser"]
         Render.Image(sprite_buffer["buttons"], x, y, BUTTON_SIZE, BUTTON_SIZE, sprite.left, sprite.top, sprite.right, sprite.bottom)
         x += BUTTON_SIZE
         if (this.menu === "tiles") {
             for (let i in TILE_LIST) {
                 let tile = TILE_LIST[i]
-                sprite = SPRITES["map"][tile][0]
+                sprite = SPRITE_DATA["map"][tile]
                 Render.Image(sprite_buffer["map"], x, y, BUTTON_SIZE, BUTTON_SIZE, sprite.left, sprite.top, sprite.right, sprite.bottom)
                 x += BUTTON_SIZE
             }
         } else if (this.menu === "things") {
-            let sprite = SPRITES["buttons"]["camera"][0]
+            let sprite = SPRITE_DATA["buttons"]["camera"]
             Render.Image(sprite_buffer["buttons"], x, y, BUTTON_SIZE, BUTTON_SIZE, sprite.left, sprite.top, sprite.right, sprite.bottom)
             x += BUTTON_SIZE
 
@@ -216,7 +216,7 @@ class EditWorld extends EditForm {
                 let thing = THING_LIST[i]
                 let texture = thing["texture"]
                 let animation = thing["animation"]
-                let sprite = SPRITES[texture][animation][0]
+                let sprite = SPRITE_DATA[texture][animation]
                 let w = BUTTON_SIZE
                 let h = BUTTON_SIZE
                 let y = this.y + this.height - h

@@ -1,6 +1,6 @@
 {
-    "shaders": ["texture"],
-    "textures": ["map", "you", "skeleton", "doodad", "item", "interface", "font"],
+    "shaders": ["texture", "texture3", "color_texture"],
+    "textures": ["map", "you", "human", "skeleton", "doodad", "item", "interface", "font"],
     "music": [{
         "name": "melody",
         "path": "vampire-killer.ogg"
@@ -34,6 +34,35 @@
         "path": "destroy.wav"
     }],
     "sprites": [{
+        "name": "human",
+        "offsets": {
+            "leather.head.2": [8, 24],
+            "leather.head.3": [2, 24],
+            "leather.body.whip.attack.1": [0, 0],
+            "leather.body.whip.attack.2": [0, 0],
+            "whip.attack.1": [-8, -1],
+            "whip.attack.2": [-16, 7]
+        },
+        "animations": [{
+            "name": "leather.head.2",
+            "frames": ["leather.head.2"]
+        }, {
+            "name": "leather.head.3",
+            "frames": ["leather.head.3"]
+        }, {
+            "name": "leather.body.whip.attack.1",
+            "frames": ["leather.body.whip.attack.1"]
+        }, {
+            "name": "leather.body.whip.attack.2",
+            "frames": ["leather.body.whip.attack.2"]
+        }, {
+            "name": "whip.attack.1",
+            "frames": ["whip.attack.1"]
+        }, {
+            "name": "whip.attack.2",
+            "frames": ["whip.attack.2"]
+        }]
+    }, {
         "name": "you",
         "offsets": {
             "stair.up": [-2, 0],
@@ -43,7 +72,9 @@
             "attack.3": [14, 0],
             "crouch.attack.1": [-8, -8],
             "crouch.attack.2": [-8, 0],
-            "crouch.attack.3": [14, 0]
+            "crouch.attack.3": [14, 0],
+            "shield": [4, 0],
+            "crouch.shield": [4, 0]
         },
         "animations": [{
             "name": "idle",
@@ -75,6 +106,15 @@
         }, {
             "name": "crouch.attack",
             "frames": ["crouch.attack.1", "crouch.attack.2", "crouch.attack.3"]
+        }, {
+            "name": "shield",
+            "frames": ["shield"]
+        }, {
+            "name": "crouch.shield",
+            "frames": ["crouch.shield"]
+        }, {
+            "name": "breath",
+            "frames": ["walk.1", "walk.2", "walk.1"]
         }]
     }, {
         "name": "item",
@@ -120,6 +160,9 @@
         }, {
             "name": "splat",
             "frames": ["fire.1", "fire.2", "fire.3", "fire.4"]
+        }, {
+            "name": "elevator",
+            "frames": ["elevator"]
         }]
     }, {
         "name": "interface",
@@ -129,6 +172,9 @@
         }, {
             "name": "stamina",
             "frames": ["stamina"]
+        }, {
+            "name": "experience",
+            "frames": ["experience"]
         }, {
             "name": "reduce",
             "frames": ["reduce"]

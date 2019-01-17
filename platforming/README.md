@@ -17,6 +17,9 @@
 > stairs
 > elevators
 > customizable character appearance
+> attacking on stairs
+> weapon hitting terrain causes stumble animation
+> running out of stamina causes idle / breathing animation
 
 ## stats list
 
@@ -41,12 +44,9 @@
 
 > head
 > body
-> arms
-> legs
-
-> left hand item
-> right hand item
-> usable item
+> left hand
+> right hand
+> item
 > skill
 
 ## items

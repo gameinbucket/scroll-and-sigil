@@ -1,6 +1,7 @@
 class You extends Living {
     constructor(world, x, y) {
         super(world, "you", "you", x, y)
+        this.z = 0.7
         this.gx = Math.floor(this.x * INV_GRID_SIZE)
         this.substate = ""
         this.alliance = "good"
@@ -8,11 +9,11 @@ class You extends Living {
         this.inventory_size = 0
         this.inventory_lim = 10
         this.menu = null
-        this.health_reduce = 0
         this.stamina_reduce = 0
         this.sticky_jump = true
         this.sticky_dodge = true
         this.sticky_attack = true
+        this.sticky_shild = true
         this.sticky_menu = true
         this.sticky_search = true
         this.sticky_item = true
@@ -22,8 +23,6 @@ class You extends Living {
         this.offhand = null
         this.head = null
         this.body = null
-        this.arms = null
-        this.legs = null
         this.skill = null
         this.experience = 0
         this.experience_lim = 10
@@ -44,28 +43,35 @@ class You extends Living {
         this.poison_resist = 0 // todo
     }
     damage(world, thing, amount) {
-        if (this.health === 0 || this.ignore) return
-        this.health_reduce = this.health
-        this.health -= amount
-        if (this.health < 0) this.health = 0
-        SOUND["you.hurt"].play()
-        this.state = "damaged"
+        if (this.ignore || this.state === "death") return
+
+        if (this.state === "shield" || this.state === "crouch.shield") {
+            if ((this.mirror && this.x > thing.x) || (!this.mirror && this.x < thing.x)) {
+                this.stamina -= amount
+                if (this.stamina >= 0) return
+                amount = -this.stamina
+                this.stamina = 0
+            }
+        }
+
+        this.health += amount
+
+        if (this.health > 100) {
+            this.ignore = true
+            SOUND["destroy"].play()
+            this.state = "death"
+        } else {
+            SOUND["you.hurt"].play()
+            this.state = "damaged"
+        }
+
         this.sprite_state = "damaged"
         this.sprite = this.animations[this.sprite_state]
         this.frame = 0
         this.frame_modulo = 0
         this.dy = GRAVITY * 8
         this.ground = false
-        this.ignore = true
         this.mirror = thing.x < this.x
-    }
-    death() {
-        SOUND["destroy"].play()
-        this.state = "death"
-        this.sprite_state = "death"
-        this.sprite = this.animations[this.sprite_state]
-        this.frame = 0
-        this.frame_modulo = 0
     }
     afflict(affect) {
         this.afflictions.push(affect)
@@ -93,11 +99,11 @@ class You extends Living {
                 let block = world.get_block(gx, gy)
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
-                    if (thing === this || searched.has(thing)) continue
+                    if (thing === this || thing.ignore || searched.has(thing)) continue
                     if (this.overlap(thing) && Thing.OverlapBoxes(boxes, thing.boxes())) {
                         let damage = item.base_damage * this.charge_multiplier + item.strength_multiplier * this.strength + item.dexterity_multiplier * this.dexterity
                         thing.damage(world, this, damage)
-                        this.experience += damage
+                        this.experience += 1
                         if (this.experience > this.experience_lim) {
                             this.stat_points += 5
                             this.experience_lim = Math.floor(this.experience_lim * 1.5) + 5
@@ -152,6 +158,23 @@ class You extends Living {
         this.frame_modulo = 0
         this.sprite_state = "crouch"
         this.sprite = this.animations[this.sprite_state]
+    }
+    shield() {
+        const min_stamina = 4
+        if (this.stamina < min_stamina) return
+        if (this.state === "idle" || this.state === "walk") {
+            this.state = "shield"
+            this.sprite_state = "shield"
+        } else if (this.state === "crouch") {
+            this.state = "crouch.shield"
+            this.sprite_state = "crouch.shield"
+        } else
+            return
+        this.frame = 0
+        this.frame_modulo = 0
+        this.sprite = this.animations[this.sprite_state]
+        this.stamina_reduce = this.stamina
+        this.stamina -= min_stamina
     }
     dodge_left() {
         const min_stamina = 24
@@ -241,9 +264,6 @@ class You extends Living {
         }
     }
     update(world) {
-        if (this.health_reduce > this.health)
-            this.health_reduce--
-
         if (this.stamina_reduce > this.stamina)
             this.stamina_reduce--
 
@@ -258,14 +278,37 @@ class You extends Living {
         }
 
         if (this.state === "death") {
-            if (this.frame < this.sprite.length - 1) {
-                this.frame_modulo++
-                if (this.frame_modulo === ANIMATION_RATE) {
-                    this.frame_modulo = 0
-                    this.frame++
+            if (this.ground) {
+                if (this.sprite_state === "damaged") {
+                    this.sprite_state = "death"
+                    this.sprite = this.animations[this.sprite_state]
                 }
+                if (this.frame < this.sprite.length - 1) {
+                    this.frame_modulo++
+                    if (this.frame_modulo === ANIMATION_RATE) {
+                        this.frame_modulo = 0
+                        this.frame++
+                    }
+                }
+            } else {
+                if (this.mirror) this.dx = 2
+                else this.dx = -2
             }
             super.update(world)
+            return
+        }
+
+        if (this.state === "damaged") {
+            if (this.mirror) this.dx = 2
+            else this.dx = -2
+            super.update(world)
+            if (this.ground) {
+                this.state = "idle"
+                this.sprite_state = "idle"
+                this.sprite = this.animations[this.sprite_state]
+                this.frame = 0
+                this.frame_modulo = 0
+            }
             return
         }
 
@@ -285,6 +328,22 @@ class You extends Living {
                 } else if (this.substate === "right") {
                     this.dx = this.dodge_delta
                     this.dodge_delta *= 0.9
+                }
+            }
+            super.update(world)
+            return
+        }
+
+        if (this.state === "breath") {
+            this.frame_modulo++
+            if (this.frame_modulo == ANIMATION_RATE) {
+                this.frame_modulo = 0
+                this.frame++
+                if (this.frame === this.sprite.length) {
+                    this.state = "idle"
+                    this.sprite_state = "idle"
+                    this.sprite = this.animations[this.sprite_state]
+                    this.frame = 0
                 }
             }
             super.update(world)
@@ -540,24 +599,6 @@ class You extends Living {
             return
         }
 
-        if (this.state === "damaged") {
-            if (this.mirror) this.dx = 2
-            else this.dx = -2
-            super.update(world)
-            if (this.ground) {
-                if (this.health < 1) this.death()
-                else {
-                    this.state = "idle"
-                    this.sprite_state = "idle"
-                    this.sprite = this.animations[this.sprite_state]
-                    this.frame = 0
-                    this.frame_modulo = 0
-                    this.ignore = false
-                }
-            }
-            return
-        }
-
         if (!this.ground) {
             if (this.move_air) {
                 if (this.mirror) this.dx = -this.speed
@@ -572,7 +613,26 @@ class You extends Living {
             }
         }
 
-        if (this.state === "attack") {
+        if (this.state === "shield" || this.state === "crouch.shield") {
+            if (Input.Is("Control")) {
+                this.stamina_reduce = this.stamina
+                this.stamina -= 0.25
+                if (this.stamina <= 0) {
+                    this.stamina = 0
+                    this.state = "breath"
+                    this.sprite_state = "breath"
+                    this.sprite = this.animations[this.sprite_state]
+                    this.frame = 0
+                    this.frame_modulo = 0
+                }
+            } else {
+                this.state = "idle"
+                this.sprite_state = "idle"
+                this.sprite = this.animations[this.sprite_state]
+                this.frame = 0
+                this.frame_modulo = 0
+            }
+        } else if (this.state === "attack") {
             if (this.charge_attack) {
                 if (Input.Is("z")) {
                     this.charge_multiplier += 0.01
@@ -580,8 +640,8 @@ class You extends Living {
                     if (this.stamina <= 0) {
                         this.stamina = 0
                         this.charge_attack = false
-                        this.state = "idle"
-                        this.sprite_state = "idle"
+                        this.state = "breath"
+                        this.sprite_state = "breath"
                         this.sprite = this.animations[this.sprite_state]
                         this.frame = 0
                         this.frame_modulo = 0
@@ -703,8 +763,14 @@ class You extends Living {
         if (this.menu === null) {
             this.crouch(Input.Is("ArrowDown"))
             if (Input.Is("v")) this.parry()
-            if (Input.Is("Control")) this.block()
             if (Input.Is("x")) this.heavy_attack()
+
+            if (Input.Is("Control")) {
+                if (this.sticky_shield) {
+                    this.shield()
+                    this.sticky_shield = false
+                }
+            } else this.sticky_shield = true
 
             if (Input.Is("z")) {
                 if (this.sticky_attack) {
@@ -744,5 +810,112 @@ class You extends Living {
             world.theme(gx, this.bottom_gy)
             this.gx = gx
         }
+    }
+    build_texture(g, gl) {
+
+        let sprite_atlas = []
+        let sprite_boxes = []
+        let weapon_boxes = []
+        let shield_boxes = []
+
+        let weapon_type = "whip"
+        let shield_type = "tower"
+        let head_material = "leather"
+        let body_material = "leather"
+
+        let human_data = SPRITE_DATA["human"]
+        let animations = SPRITES["you"]
+
+        for (let frame_name in human_data) {
+
+        }
+
+        for (let animation_name in animations) {
+            let frames = SPRITE_ANIMATIONS["you"][animation_name]
+
+            for (let index = 0; index < frames.length; index++) {
+                let frame = frames[index]
+                let sprite_name = frame.sprite_name
+
+                if (name.contains("attack")) {
+                    if (index === 0) weapon_boxes[name] = []
+                    let weapon_key = weapon_type + "." + sprite_name
+                    weapon_boxes[name].push(human_data[weapon_key].boxes)
+
+                } else if (name.contains("shield")) {
+                    if (index === 0) shield_boxes[name] = []
+                    let shield_key = shield_type + "." + sprite_name
+                    shield_boxes[name].push(human_data[shield_key].boxes)
+                }
+
+                if (index === 0) sprite_boxes[name] = []
+                let head_key = head_material + ".head." + sprite_name
+                let body_key = body_material + ".body." + sprite_name
+                sprite_boxes[name].push.apply(human_data[head_key].boxes)
+                sprite_boxes[name].push.apply(human_data[body_key].boxes)
+            }
+        }
+
+        this.sprite_boxes = sprite_boxes
+        this.weapon_boxes = weapon_boxes
+        this.shield_boxes = shield_boxes
+
+        //
+
+        const mesh = new RenderBuffer(2, 0, 2, 4, 6)
+        const frame = new FrameBuffer()
+        const ortho = []
+
+        // for each possible sprite... 
+        {
+            let width = 0
+            let height = 0
+
+            Matrix.Orthographic(ortho, 0.0, width, 0.0, height, 0.0, 1.0)
+            frame.set(width, height, [gl.RGBA], [gl.RGBA], [gl.UNSIGNED_BYTE], "nearest", "no.depth")
+            RenderSystem.MakeFrameBuffer(gl, frame)
+
+            RenderSystem.SetView(gl, 0, 0, width, height)
+            gl.clearColor(0.0, 0.0, 0.0, 0.0)
+            gl.clear(gl.COLOR_BUFFER_BIT)
+            g.set_program(gl, "texture")
+            g.set_orthographic(ortho, 0, 0)
+            g.update_mvp(gl)
+
+            // for each equipment
+            {
+                mesh.zero()
+                Render.Image(mesh, 0.0, 0.0, width, height, 0.0, 0.0, 1.0, 1.0)
+                g.set_texture(gl, "map")
+                RenderSystem.BindAndDraw(gl, mesh)
+
+                g.set_texture(gl, "human")
+                generic.zero()
+                x = 100
+                y = 100
+                let sprite = SPRITES["human"]["leather.body.whip.attack.1"][0]
+                Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
+                sprite = SPRITES["human"]["leather.head.2"][0]
+                Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
+                sprite = SPRITES["human"]["whip.attack.1"][0]
+                Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
+
+                RenderSystem.UpdateAndDraw(gl, generic)
+            }
+
+            // gl.textures["you"] = frame.textures[0]
+        }
+    }
+    render(sprite_buffer) {
+        let sprite_frame = this.sprite[this.frame]
+        let sprite = this.sprite_data[sprite_frame]
+
+        let x = Math.floor(this.x - sprite.width * 0.5)
+        let y = Math.floor(this.y + sprite.oy)
+
+        if (this.mirror)
+            Render3.MirrorSprite(sprite_buffer[this.sprite_id], x - sprite.ox, y, this.z, sprite)
+        else
+            Render3.Sprite(sprite_buffer[this.sprite_id], x + sprite.ox, y, this.z, sprite)
     }
 }

@@ -1,4 +1,4 @@
-const FONT = "0123456789abcdefghijklmnopqrstuvwxyz"
+const FONT = "0123456789abcdefghijklmnopqrstuvwxyz%"
 const FONT_WIDTH = 9
 const FONT_HEIGHT = 9
 const FONT_GRID = Math.floor(64.0 / FONT_WIDTH)
@@ -80,6 +80,41 @@ class Render {
 
         buffer.vertices[buffer.vertex_pos++] = x
         buffer.vertices[buffer.vertex_pos++] = y + height
+        buffer.vertices[buffer.vertex_pos++] = left
+        buffer.vertices[buffer.vertex_pos++] = top
+
+        Render.Index4(buffer)
+    }
+    static ColorImage(buffer, x, y, width, height, left, top, right, bottom, red, green, blue) {
+        buffer.vertices[buffer.vertex_pos++] = x
+        buffer.vertices[buffer.vertex_pos++] = y
+        buffer.vertices[buffer.vertex_pos++] = red
+        buffer.vertices[buffer.vertex_pos++] = green
+        buffer.vertices[buffer.vertex_pos++] = blue
+        buffer.vertices[buffer.vertex_pos++] = left
+        buffer.vertices[buffer.vertex_pos++] = bottom
+
+        buffer.vertices[buffer.vertex_pos++] = x + width
+        buffer.vertices[buffer.vertex_pos++] = y
+        buffer.vertices[buffer.vertex_pos++] = red
+        buffer.vertices[buffer.vertex_pos++] = green
+        buffer.vertices[buffer.vertex_pos++] = blue
+        buffer.vertices[buffer.vertex_pos++] = right
+        buffer.vertices[buffer.vertex_pos++] = bottom
+
+        buffer.vertices[buffer.vertex_pos++] = x + width
+        buffer.vertices[buffer.vertex_pos++] = y + height
+        buffer.vertices[buffer.vertex_pos++] = red
+        buffer.vertices[buffer.vertex_pos++] = green
+        buffer.vertices[buffer.vertex_pos++] = blue
+        buffer.vertices[buffer.vertex_pos++] = right
+        buffer.vertices[buffer.vertex_pos++] = top
+
+        buffer.vertices[buffer.vertex_pos++] = x
+        buffer.vertices[buffer.vertex_pos++] = y + height
+        buffer.vertices[buffer.vertex_pos++] = red
+        buffer.vertices[buffer.vertex_pos++] = green
+        buffer.vertices[buffer.vertex_pos++] = blue
         buffer.vertices[buffer.vertex_pos++] = left
         buffer.vertices[buffer.vertex_pos++] = top
 
@@ -178,6 +213,34 @@ class Render {
             let ty2 = ty1 + FONT_ROW
 
             Render.Image(buffer, xx, yy, FONT_WIDTH * scale, FONT_HEIGHT * scale, tx1, ty1, tx2, ty2)
+
+            xx += FONT_WIDTH * scale
+        }
+    }
+    static ColorPrint(buffer, text, x, y, scale, red, green, blue) {
+        let xx = x
+        let yy = y
+        for (let i = 0; i < text.length; i++) {
+
+            let c = text.charAt(i)
+
+            if (c === " ") {
+                xx += FONT_WIDTH * scale
+                continue
+            } else if (c === "\n") {
+                xx = x
+                yy += FONT_HEIGHT * scale
+                continue
+            }
+
+            let loc = FONT.indexOf(c)
+
+            let tx1 = Math.floor(loc % FONT_GRID) * FONT_COLUMN
+            let ty1 = Math.floor(loc / FONT_GRID) * FONT_ROW
+            let tx2 = tx1 + FONT_COLUMN
+            let ty2 = ty1 + FONT_ROW
+
+            Render.ColorImage(buffer, xx, yy, FONT_WIDTH * scale, FONT_HEIGHT * scale, tx1, ty1, tx2, ty2, red, green, blue)
 
             xx += FONT_WIDTH * scale
         }

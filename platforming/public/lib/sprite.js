@@ -1,16 +1,19 @@
 class Sprite {
-    constructor(data, width, height) {
-        this.width = data[2]
-        this.height = data[3]
+    constructor(atlas, boxes, width, height) {
+        this.atlas = atlas
+        this.boxes = boxes
 
-        this.left = data[0] * width
-        this.top = data[1] * height
-        this.right = (data[0] + this.width) * width
-        this.bottom = (data[1] + this.height) * height
+        this.width = atlas[2]
+        this.height = atlas[3]
 
-        if (data.length > 4) {
-            this.ox = data[4]
-            this.oy = data[5]
+        this.left = atlas[0] * width
+        this.top = atlas[1] * height
+        this.right = (atlas[0] + this.width) * width
+        this.bottom = (atlas[1] + this.height) * height
+
+        if (atlas.length > 4) {
+            this.ox = atlas[4]
+            this.oy = atlas[5]
         } else {
             this.ox = 0
             this.oy = 0

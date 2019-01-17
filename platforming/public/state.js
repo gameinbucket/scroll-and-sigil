@@ -89,6 +89,7 @@ class WorldState {
         let player = this.app.player
         let generic = this.app.generic
         let generic2 = this.app.generic2
+        let colored = this.app.colored
         let canvas_ortho = this.app.canvas_ortho
         let draw_ortho = this.app.draw_ortho
         let screen = this.app.screen
@@ -102,43 +103,63 @@ class WorldState {
 
         gl.clearColor(world.red, world.green, world.blue, 1.0)
         gl.clear(gl.COLOR_BUFFER_BIT)
-        g.set_program(gl, "texture")
+        gl.clear(gl.DEPTH_BUFFER_BIT)
+        g.set_program(gl, "texture3")
         g.set_orthographic(draw_ortho, view_x, view_y)
         g.update_mvp(gl)
-        world.render(g, frame, player.x, player.y, generic)
 
+        const fps = false
+        if (fps) {
+            let before = performance.now()
+            world.render(g, frame, player.x, player.y, generic)
+            console.log(performance.now() - before)
+        } else
+            world.render(g, frame, player.x, player.y, generic)
+
+        g.set_program(gl, "texture")
         g.set_orthographic(draw_ortho, 0, 0)
         g.update_mvp(gl)
         g.set_texture(gl, "interface")
         generic.zero()
 
-        Render.Sprite(generic, 20, 32, SPRITES["interface"]["panel"][0])
-        Render.Sprite(generic, 62, 32, SPRITES["interface"]["panel"][0])
-        Render.Sprite(generic, 41, 49, SPRITES["interface"]["panel"][0])
-        Render.Sprite(generic, 41, 16, SPRITES["interface"]["panel"][0])
+        let x = frame.width - 2 - 21 * 4
+        let y = 2
 
-        let health_bar = player.health
-        let health_gone = (player.health_lim - player.health)
+        Render.Sprite(generic, x, y, SPRITE_DATA["interface"]["panel"])
+        Render.Sprite(generic, x + 21, y, SPRITE_DATA["interface"]["panel"])
+        Render.Sprite(generic, x + 21 * 2, y, SPRITE_DATA["interface"]["panel"])
+        Render.Sprite(generic, x + 21 * 3, y, SPRITE_DATA["interface"]["panel"])
+
+        // let health_bar = player.health
+        // let health_gone = (player.health_lim - player.health)
 
         let stamina_bar = player.stamina
         let stamina_gone = (player.stamina_lim - player.stamina)
 
-        let x = 20
-        let y = 26
-        Render.ImageSprite(generic, x + health_bar, frame.height - y, SPRITES["interface"]["gone"][0], health_gone, 6)
-        if (player.health_reduce > player.health) {
-            let health_reduce = player.health_reduce - health_bar
-            Render.ImageSprite(generic, x + health_bar, frame.height - y, SPRITES["interface"]["reduce"][0], health_reduce, 6)
-        }
-        Render.ImageSprite(generic, x, frame.height - y, SPRITES["interface"]["health"][0], health_bar, 6)
+        let experience_bar = player.experience / player.experience_lim * 50.0
+        let experience_remaining = (player.experience_lim - player.experience) / player.experience_lim * 50.0
 
-        y = 33
-        Render.ImageSprite(generic, x + stamina_bar, frame.height - y, SPRITES["interface"]["gone"][0], stamina_gone, 6)
+        x = Math.floor(frame.width * 0.5 - 50 * 0.5)
+        y = 2
+
+        Render.ImageSprite(generic, x + experience_bar, y, SPRITE_DATA["interface"]["gone"], experience_remaining, 6)
+        Render.ImageSprite(generic, x, y, SPRITE_DATA["interface"]["experience"], experience_bar, 6)
+
+        y += 7
+        Render.ImageSprite(generic, x + stamina_bar, y, SPRITE_DATA["interface"]["gone"], stamina_gone, 6)
         if (player.stamina_reduce > player.stamina) {
             let stamina_reduce = player.stamina_reduce - stamina_bar
-            Render.ImageSprite(generic, x + stamina_bar, frame.height - y, SPRITES["interface"]["reduce"][0], stamina_reduce, 6)
+            Render.ImageSprite(generic, x + stamina_bar, y, SPRITE_DATA["interface"]["reduce"], stamina_reduce, 6)
         }
-        Render.ImageSprite(generic, x, frame.height - y, SPRITES["interface"]["stamina"][0], stamina_bar, 6)
+        Render.ImageSprite(generic, x, y, SPRITE_DATA["interface"]["stamina"], stamina_bar, 6)
+
+        // y += 7
+        // Render.ImageSprite(generic, x + health_bar, y, SPRITE_DATA["interface"]["gone"][0], health_gone, 6)
+        // if (player.health_reduce > player.health) {
+        //     let health_reduce = player.health_reduce - health_bar
+        //     Render.ImageSprite(generic, x + health_bar, y, SPRITE_DATA["interface"]["reduce"][0], health_reduce, 6)
+        // }
+        // Render.ImageSprite(generic, x, y, SPRITE_DATA["interface"]["health"][0], health_bar, 6)
 
         RenderSystem.UpdateAndDraw(gl, generic)
 
@@ -146,32 +167,69 @@ class WorldState {
         generic.zero()
         if (player.hand !== null) {
             let sprite = player.hand.sprite[0]
-            let x = 20 + 10 - sprite.width * 0.5
-            let y = 32 + 16 - sprite.height * 0.5
-            Render.Sprite(generic, x, y, sprite)
+            Render.Sprite(generic, frame.width - 2 - 21 * 4 + 10 - sprite.width * 0.5, 2 + 10 - sprite.height * 0.5, sprite)
         }
         if (player.offhand !== null) {
             let sprite = player.offhand.sprite[0]
-            let x = 62 + 10 - sprite.width * 0.5
-            let y = 32 + 16 - sprite.height * 0.5
-            Render.Sprite(generic, x, y, sprite)
+            Render.Sprite(generic, 62 + 10 - sprite.width * 0.5, 32 + 16 - sprite.height * 0.5, sprite)
         }
         if (player.item !== null) {
             let sprite = player.item.sprite[0]
-            let x = 41 + 10 - sprite.width * 0.5
-            let y = 16 + 16 - sprite.height * 0.5
-            Render.Sprite(generic, x, y, sprite)
+            Render.Sprite(generic, 41 + 10 - sprite.width * 0.5, 16 + 16 - sprite.height * 0.5, sprite)
         }
         if (player.skill !== null) {
             let sprite = player.skill.sprite[0]
-            let x = 41 + 10 - sprite.width * 0.5
-            let y = 49 + 16 - sprite.height * 0.5
-            Render.Sprite(generic, x, y, sprite)
+            Render.Sprite(generic, 41 + 10 - sprite.width * 0.5, 49 + 16 - sprite.height * 0.5, sprite)
         }
         RenderSystem.UpdateAndDraw(gl, generic)
 
         if (player.menu !== null)
             player.menu.render(g, gl, frame, generic, generic2)
+
+        //
+        g.set_texture(gl, "human")
+        generic.zero()
+        x = 100
+        y = 100
+        let sprite = SPRITE_DATA["human"]["leather.body.whip.attack.1"]
+        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
+        sprite = SPRITE_DATA["human"]["leather.head.2"]
+        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
+        sprite = SPRITE_DATA["human"]["whip.attack.1"]
+        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
+
+        x = 200
+        y = 100
+        sprite = SPRITE_DATA["human"]["leather.body.whip.attack.2"]
+        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
+        sprite = SPRITE_DATA["human"]["leather.head.3"]
+        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
+        sprite = SPRITE_DATA["human"]["whip.attack.2"]
+        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
+
+        RenderSystem.UpdateAndDraw(gl, generic)
+        //
+
+        //
+        colored.zero()
+        let size = 1
+        let print
+        if (player.state === "death") print = "dead"
+        else print = player.health.toString() + "%"
+        x = Math.floor(frame.width * 0.5 - print.length * FONT_WIDTH * size * 0.5)
+        y = 2 + 7 + 7
+        Render.ColorPrint(colored, print, x, y, size, 0.0, 0.0, 0.0)
+        Render.ColorPrint(colored, print, x - 1, y + 1, size, 1.0, 0.0, 0.0)
+        // x += (print.length + 1) * FONT_WIDTH * size
+        // print = Math.ceil(player.stamina / player.stamina_lim * 100).toString() + "%"
+        // Render.ColorPrint(colored, print, x, y, size, 0.0, 0.0, 0.0)
+        // Render.ColorPrint(colored, print, x - 1, y + 1, size, 0.0, 1.0, 0.0)
+        g.set_program(gl, "color_texture")
+        g.set_orthographic(draw_ortho, 0, 0)
+        g.update_mvp(gl)
+        g.set_texture(gl, "font")
+        RenderSystem.UpdateAndDraw(gl, colored)
+        //
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)

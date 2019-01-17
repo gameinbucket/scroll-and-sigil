@@ -104,19 +104,3 @@ class MusketBall extends Item {
         this.size = 0
     }
 }
-
-class Gloves extends Item {
-    constructor(world, x, y) {
-        super(world, "gloves", x, y)
-        this.slot = "arms"
-        this.size = 1
-    }
-}
-
-class Boots extends Item {
-    constructor(world, x, y) {
-        super(world, "boots", x, y)
-        this.slot = "legs"
-        this.size = 1
-    }
-}

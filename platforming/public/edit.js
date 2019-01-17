@@ -1,5 +1,5 @@
-const SPRITES = {}
-const SPRITE_BOXES = {}
+const SPRITE_DATA = {}
+const SPRITE_ANIMATIONS = {}
 
 class Application {
     constructor() {
@@ -27,9 +27,6 @@ class Application {
 
         let sprite_buffer = {}
         sprite_buffer["buttons"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
-        sprite_buffer["you"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
-        sprite_buffer["skeleton"] = RenderBuffer.Init(gl, 2, 0, 2, 40, 60)
-        sprite_buffer["item"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
         sprite_buffer["map"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
         sprite_buffer["font"] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
 
@@ -73,6 +70,7 @@ class Application {
     async init() {
         let g = this.g
         let gl = this.gl
+        let sprite_buffer = this.sprite_buffer
         let requests = []
 
         requests.push(async function () {
@@ -105,30 +103,39 @@ class Application {
                 let height = 1.0 / texture.image.height
                 let animations = sprite["animations"]
 
-                SPRITES[name] = {}
-                SPRITE_BOXES[name] = {}
+                sprite_buffer[name] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
+
+                SPRITE_DATA[name] = {}
+                SPRITE_ANIMATIONS[name] = {}
 
                 for (let jindex = 0; jindex < animations.length; jindex++) {
                     let animation = animations[jindex]
                     let animation_name = animation["name"]
                     let frames = animation["frames"]
 
-                    SPRITES[name][animation_name] = []
-                    SPRITE_BOXES[name][animation_name] = []
+                    SPRITE_ANIMATIONS[name][animation_name] = frames
 
                     for (let kindex = 0; kindex < frames.length; kindex++) {
                         let sprite_frame_name = frames[kindex]
+
+                        if (sprite_frame_name in SPRITE_DATA) continue
+
                         let frame_data = sprite_data[sprite_frame_name]
                         let lookup = frame_data["atlas"]
                         let boxes = frame_data["boxes"]
 
-                        SPRITES[name][animation_name].push(new Sprite(lookup, width, height))
-                        SPRITE_BOXES[name][animation_name].push(boxes)
+                        if (offsets !== null && sprite_frame_name in offsets) {
+                            let offset = offsets[sprite_frame_name]
+                            lookup.push(offset[0])
+                            lookup.push(offset[1])
+                        }
+
+                        SPRITE_DATA[name][sprite_frame_name] = new Sprite(lookup, boxes, width, height)
                     }
                 }
             }
 
-            SPRITES["map"] = {}
+            SPRITE_DATA["map"] = {}
             for (let index = 0; index < tiles.length; index++) {
                 let tile = tiles[index]
                 let texture = tile["texture"]
@@ -136,7 +143,7 @@ class Application {
                 if (texture === null) TILE_TEXTURE.push(null)
                 else {
                     TILE_TEXTURE.push(Sprite.Build(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
-                    SPRITES["map"][tile["name"]] = [new Sprite([texture[0], texture[1], TILE_SIZE, TILE_SIZE], TILE_SPRITE_SIZE, TILE_SPRITE_SIZE)]
+                    SPRITE_DATA["map"][tile["name"]] = [new Sprite([texture[0], texture[1], TILE_SIZE, TILE_SIZE], null, TILE_SPRITE_SIZE, TILE_SPRITE_SIZE)]
                 }
                 TILE_EMPTY.push(empty)
             }
@@ -166,14 +173,14 @@ class Application {
                 let width = 1.0 / texture.image.width
                 let height = 1.0 / texture.image.height
                 let animations = sprite["animations"]
-                SPRITES[name] = {}
+
+                SPRITE_DATA[name] = {}
+
                 for (let jindex = 0; jindex < animations.length; jindex++) {
                     let animation = animations[jindex]
                     let animation_name = animation["name"]
                     let frames = animation["frames"]
-                    SPRITES[name][animation_name] = []
-                    for (let kindex = 0; kindex < frames.length; kindex++)
-                        SPRITES[name][animation_name].push(new Sprite(frames[kindex], width, height))
+                    SPRITE_DATA[name][animation_name] = new Sprite(frames[0], null, width, height)
                 }
             }
         }())

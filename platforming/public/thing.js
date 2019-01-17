@@ -92,6 +92,13 @@ const THING_LIST = [{
     get: (world, x, y) => {
         return new Food(world, x, y)
     }
+}, {
+    id: "elevator",
+    texture: "doodad",
+    animation: "elevator",
+    get: (world, x, y) => {
+        return new Elevator(world, x, y)
+    }
 }]
 
 const THING_MAP = {}
@@ -113,8 +120,8 @@ class Thing {
         this.half_width = 6
         this.height = 31
         this.uid = uid
-        this.animations = SPRITES[sprite_name]
-        this.sprite_boxes = SPRITE_BOXES[sprite_name]
+        this.animations = SPRITE_ANIMATIONS[sprite_name]
+        this.sprite_data = SPRITE_DATA[sprite_name]
         this.sprite_id = sprite_name
         this.sprite_state = "idle"
         this.sprite = this.animations[this.sprite_state]
@@ -123,10 +130,12 @@ class Thing {
         this.frame_modulo = 0
         this.x = x
         this.y = y
+        this.z = 0.2
         this.dx = 0
         this.dy = 0
         this.ground = false
         this.ignore = false
+        this.blocking = false
         world.add_thing(this)
         this.block_borders()
         this.add_to_blocks(world)
@@ -158,11 +167,11 @@ class Thing {
         this.y += this.dy
         this.remove_from_blocks(world)
         this.tile_collision(world)
+        this.simple_thing_collision(world)
         this.block_borders()
         this.add_to_blocks(world)
 
-        if (this.ground)
-            this.dx = 0
+        if (this.ground) this.dx = 0
     }
     tile_x_collision(world, res) {
         let bottom_gy = Math.floor(this.y * INV_TILE_SIZE)
@@ -202,7 +211,17 @@ class Thing {
         res.finite = true
         res.resolve = false
         if (this.dy > 0) {
-            res.resolve = false
+            let gy = Math.floor((this.y + this.height) * INV_TILE_SIZE)
+            for (let gx = left_gx; gx <= right_gx; gx++) {
+                if (TILE_EMPTY[world.get_tile(gx, gy)])
+                    continue
+                res.resolve = true
+                res.delta = gy * TILE_SIZE
+                if (!TILE_EMPTY[world.get_tile(gx, gy - 1)]) {
+                    res.finite = false
+                    return
+                }
+            }
         } else {
             let gy = Math.floor(this.y * INV_TILE_SIZE)
             for (let gx = left_gx; gx <= right_gx; gx++) {
@@ -306,28 +325,9 @@ class Thing {
         if (dyy.resolve) this.ground = ground
         else if (this.ground) this.ground = this.check_ground(world)
     }
-    resolve_collision_thing(thing) {
-        if (!this.overlap(thing)) return
-        if (!Thing.OverlapBoxes(this.boxes(), thing.boxes())) return
-
-        let old_x = this.x - this.dx
-        let old_y = this.y - this.dy
-
-        if (Math.abs(old_x - thing.x) > Math.abs(old_y - thing.y)) {
-            if (old_x - thing.x < 0) this.x = thing.x - this.half_width - thing.half_width
-            else this.x = thing.x + this.half_width + thing.half_width
-            this.dx = 0
-        } else {
-            if (old_y - thing.y < 0) this.y = thing.y - this.height
-            else {
-                this.y = thing.y + thing.height
-                this.ground = true
-            }
-            this.dy = 0
-        }
-    }
     boxes() {
-        let boxes = SPRITE_BOXES[this.sprite_id][this.sprite_state][this.frame].slice()
+        let sprite_frame = this.animations[this.sprite_state][this.frame]
+        let boxes = this.sprite_data[sprite_frame].boxes.slice()
 
         let sprite = this.sprite[this.frame]
         let x = this.x - sprite.width * 0.5
@@ -369,6 +369,10 @@ class Thing {
         return self_x + self_sprite.width > thing_x && self_x < thing_x + thing_sprite.width &&
             self_y + self_sprite.height > thing_y && self_y < thing.y + thing_sprite.height
     }
+    overlap_simple(thing) {
+        return this.x + this.half_width > thing.x - thing.half_width && this.x - this.half_width < thing.x + thing.half_width &&
+            this.y + this.height > thing.y && this.y - 1 < thing.y + thing.height
+    }
     static OverlapBoxes(a, b) {
         for (let i = 0; i < a.length; i++) {
             let box_a = a[i]
@@ -381,19 +385,17 @@ class Thing {
         }
         return false
     }
-    thing_collision(world) {
+    simple_thing_collision(world) {
         let collided = []
         let searched = new Set()
-        let boxes = this.boxes()
 
         for (let gx = this.left_gx; gx <= this.right_gx; gx++) {
             for (let gy = this.bottom_gy; gy <= this.top_gy; gy++) {
                 let block = world.get_block(gx, gy)
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
-                    if (searched.has(thing)) continue
-                    if (this.overlap(thing) && Thing.OverlapBoxes(boxes, thing.boxes()))
-                        collided.push(thing)
+                    if (this === thing || !thing.blocking || searched.has(thing)) continue
+                    if (this.overlap_simple(thing)) collided.push(thing)
                     searched.add(thing)
                 }
             }
@@ -412,9 +414,39 @@ class Thing {
                     closest = thing
                 }
             }
-            this.resolve_collision_thing(closest)
+            if (this.overlap_simple(closest))
+                this.resolve_simple_thing_collision(closest)
             collided.splice(closest)
         }
+    }
+    resolve_simple_thing_collision(thing) {
+        let old_x = this.x - this.dx
+        let old_y = this.y - this.dy
+
+        if (Math.abs(old_x - thing.x) > Math.abs(old_y - thing.y)) {
+            if (old_x - thing.x < 0) this.x = thing.x - this.half_width - thing.half_width
+            else this.x = thing.x + this.half_width + thing.half_width
+            this.dx = 0
+        } else {
+            if (old_y - thing.y < 0) this.y = thing.y - this.height
+            else {
+                this.y = thing.y + thing.height
+                this.ground = true
+            }
+            this.dy = 0
+        }
+    }
+    render(sprite_buffer) {
+        let sprite_frame = this.sprite[this.frame]
+        let sprite = this.sprite_data[sprite_frame]
+
+        let x = Math.floor(this.x - sprite.width * 0.5)
+        let y = Math.floor(this.y + sprite.oy)
+
+        if (this.mirror)
+            Render3.MirrorSprite(sprite_buffer[this.sprite_id], x - sprite.ox, y, this.z, sprite)
+        else
+            Render3.Sprite(sprite_buffer[this.sprite_id], x + sprite.ox, y, this.z, sprite)
     }
     save(x, y) {
         return `{"id":"${this.uid}","x":${Math.floor(this.x - x)},"y":${Math.floor(this.y - y)}}`

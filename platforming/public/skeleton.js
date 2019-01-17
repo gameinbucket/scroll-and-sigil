@@ -9,21 +9,19 @@ class Skeleton extends Living {
         this.wait = false
     }
     damage(world, thing, amount) {
-        if (this.health > 0) {
-            this.health -= amount
-            if (this.health < 1)
-                this.death()
-            else {
-                SOUND["you.hurt"].play()
-                new Splat(world, this.x, this.y + this.height * 0.5)
-            }
+        if (this.state === "death") return
+
+        this.health += amount
+        if (this.health > 100) {
+            this.ignore = true
+            SOUND["destroy"].play()
+            this.state = "death"
+            this.sprite_state = "death"
+            this.sprite = this.animations[this.sprite_state]
+        } else {
+            SOUND["you.hurt"].play()
+            new Splat(world, this.x, this.y + this.height * 0.5)
         }
-    }
-    death() {
-        SOUND["destroy"].play()
-        this.state = "death"
-        this.sprite_state = "death"
-        this.sprite = this.animations[this.sprite_state]
     }
     find_target(world) {
         let left_gx = Math.floor((this.x - 32) * INV_GRID_SIZE)
@@ -41,7 +39,7 @@ class Skeleton extends Living {
                 let block = world.get_block(gx, gy)
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
-                    if (thing.alliance === "good" && thing.health > 0) {
+                    if (thing.alliance === "good" && thing.state !== "death") {
                         this.target = thing
                         return
                     }
@@ -103,9 +101,9 @@ class Skeleton extends Living {
                 this.wander_timer--
         } else {
             if (world.thread_id === "ai") {
-                if (this.target.health < 1)
+                if (this.target.state === "death") {
                     this.target = null
-                else {
+                } else {
                     if (this.x + this.half_width < this.target.x - this.target.half_width) {
                         this.mirror = false
                         this.wait = false
