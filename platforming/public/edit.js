@@ -94,6 +94,7 @@ class Application {
             for (let index = 0; index < sprites.length; index++) {
                 let sprite = sprites[index]
                 let name = sprite["name"]
+                let offsets = ("offsets" in sprite) ? sprite["offsets"] : null
 
                 let sprite_json = await Network.Request("json/" + name + ".json")
                 let sprite_data = JSON.parse(sprite_json)["sprites"]
@@ -138,12 +139,13 @@ class Application {
             SPRITE_DATA["map"] = {}
             for (let index = 0; index < tiles.length; index++) {
                 let tile = tiles[index]
+                let name = tile["name"]
                 let texture = tile["texture"]
                 let empty = tile["empty"]
                 if (texture === null) TILE_TEXTURE.push(null)
                 else {
                     TILE_TEXTURE.push(Sprite.Build(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
-                    SPRITE_DATA["map"][tile["name"]] = [new Sprite([texture[0], texture[1], TILE_SIZE, TILE_SIZE], null, TILE_SPRITE_SIZE, TILE_SPRITE_SIZE)]
+                    SPRITE_DATA["map"][name] = new Sprite([texture[0], texture[1], TILE_SIZE, TILE_SIZE], null, TILE_SPRITE_SIZE, TILE_SPRITE_SIZE)
                 }
                 TILE_EMPTY.push(empty)
             }

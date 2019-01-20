@@ -93,7 +93,7 @@ class EditMain extends EditForm {
         let x = this.x
         for (let key in icons) {
             let icon = icons[key]
-            let sprite = SPRITE_DATA["buttons"][icon][0]
+            let sprite = SPRITE_DATA["buttons"][icon]
             let w = BUTTON_SIZE
             let h = BUTTON_SIZE
             let y = this.y + this.height - h

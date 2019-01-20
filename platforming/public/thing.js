@@ -116,13 +116,13 @@ class Resolution {
 }
 
 class Thing {
-    constructor(world, uid, sprite_name, x, y) {
+    constructor(world, uid, sprite_id, x, y) {
         this.half_width = 6
         this.height = 31
         this.uid = uid
-        this.animations = SPRITE_ANIMATIONS[sprite_name]
-        this.sprite_data = SPRITE_DATA[sprite_name]
-        this.sprite_id = sprite_name
+        this.animations = SPRITE_ANIMATIONS[sprite_id]
+        this.sprite_data = SPRITE_DATA[sprite_id]
+        this.sprite_id = sprite_id
         this.sprite_state = "idle"
         this.sprite = this.animations[this.sprite_state]
         this.mirror = false
@@ -136,6 +136,10 @@ class Thing {
         this.ground = false
         this.ignore = false
         this.blocking = false
+        // TODO TEMP
+        if (this.sprite_id === "you")
+            this.sprite_id = "human"
+        //
         world.add_thing(this)
         this.block_borders()
         this.add_to_blocks(world)
@@ -326,10 +330,10 @@ class Thing {
         else if (this.ground) this.ground = this.check_ground(world)
     }
     boxes() {
-        let sprite_frame = this.animations[this.sprite_state][this.frame]
-        let boxes = this.sprite_data[sprite_frame].boxes.slice()
+        let sprite_frame = this.sprite[this.frame]
+        let sprite = this.sprite_data[sprite_frame]
+        let boxes = sprite.boxes.slice()
 
-        let sprite = this.sprite[this.frame]
         let x = this.x - sprite.width * 0.5
         let y = this.y + sprite.oy
 
@@ -352,14 +356,16 @@ class Thing {
         return boxes
     }
     overlap(thing) {
-        let self_sprite = this.sprite[this.frame]
+        let self_sprite_frame = this.sprite[this.frame]
+        let self_sprite = this.sprite_data[self_sprite_frame]
         let self_x = this.x - self_sprite.width * 0.5
         let self_y = this.y + self_sprite.oy
 
         if (this.mirror) self_x -= self_sprite.ox
         else self_x += self_sprite.ox
 
-        let thing_sprite = thing.sprite[thing.frame]
+        let thing_sprite_frame = thing.sprite[thing.frame]
+        let thing_sprite = thing.sprite_data[thing_sprite_frame]
         let thing_x = thing.x - thing_sprite.width * 0.5
         let thing_y = thing.y + thing_sprite.oy
 

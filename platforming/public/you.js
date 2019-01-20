@@ -813,10 +813,10 @@ class You extends Living {
     }
     build_texture(g, gl) {
 
-        let sprite_atlas = []
-        let sprite_boxes = []
-        let weapon_boxes = []
-        let shield_boxes = []
+        let sprite_atlas = {}
+        let sprite_boxes = {}
+        let weapon_boxes = {}
+        let shield_boxes = {}
 
         let weapon_type = "whip"
         let shield_type = "tower"
@@ -826,9 +826,26 @@ class You extends Living {
         let human_data = SPRITE_DATA["human"]
         let animations = SPRITES["you"]
 
-        for (let frame_name in human_data) {
+        for (let frame in human_data) {
+            let animation = "idle"
 
+            if (frame.contains("attack")) {
+                let weapon_key = weapon_type + "." + animation
+                weapon_boxes[frame] = human_data[weapon_key].boxes
+
+            } else if (frame.contains("shield")) {
+                let shield_key = shield_type + "." + animation
+                shield_boxes[frame] = human_data[shield_key].boxes
+            }
+
+            let head_key = head_material + ".head." + animation
+            let body_key = body_material + ".body." + animation
+            sprite_boxes[frame] = []
+            sprite_boxes[frame].push.apply(human_data[head_key].boxes)
+            sprite_boxes[frame].push.apply(human_data[body_key].boxes)
         }
+
+        //
 
         for (let animation_name in animations) {
             let frames = SPRITE_ANIMATIONS["you"][animation_name]
@@ -859,52 +876,6 @@ class You extends Living {
         this.sprite_boxes = sprite_boxes
         this.weapon_boxes = weapon_boxes
         this.shield_boxes = shield_boxes
-
-        //
-
-        const mesh = new RenderBuffer(2, 0, 2, 4, 6)
-        const frame = new FrameBuffer()
-        const ortho = []
-
-        // for each possible sprite... 
-        {
-            let width = 0
-            let height = 0
-
-            Matrix.Orthographic(ortho, 0.0, width, 0.0, height, 0.0, 1.0)
-            frame.set(width, height, [gl.RGBA], [gl.RGBA], [gl.UNSIGNED_BYTE], "nearest", "no.depth")
-            RenderSystem.MakeFrameBuffer(gl, frame)
-
-            RenderSystem.SetView(gl, 0, 0, width, height)
-            gl.clearColor(0.0, 0.0, 0.0, 0.0)
-            gl.clear(gl.COLOR_BUFFER_BIT)
-            g.set_program(gl, "texture")
-            g.set_orthographic(ortho, 0, 0)
-            g.update_mvp(gl)
-
-            // for each equipment
-            {
-                mesh.zero()
-                Render.Image(mesh, 0.0, 0.0, width, height, 0.0, 0.0, 1.0, 1.0)
-                g.set_texture(gl, "map")
-                RenderSystem.BindAndDraw(gl, mesh)
-
-                g.set_texture(gl, "human")
-                generic.zero()
-                x = 100
-                y = 100
-                let sprite = SPRITES["human"]["leather.body.whip.attack.1"][0]
-                Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
-                sprite = SPRITES["human"]["leather.head.2"][0]
-                Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
-                sprite = SPRITES["human"]["whip.attack.1"][0]
-                Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
-
-                RenderSystem.UpdateAndDraw(gl, generic)
-            }
-
-            // gl.textures["you"] = frame.textures[0]
-        }
     }
     render(sprite_buffer) {
         let sprite_frame = this.sprite[this.frame]
@@ -913,9 +884,32 @@ class You extends Living {
         let x = Math.floor(this.x - sprite.width * 0.5)
         let y = Math.floor(this.y + sprite.oy)
 
-        if (this.mirror)
-            Render3.MirrorSprite(sprite_buffer[this.sprite_id], x - sprite.ox, y, this.z, sprite)
-        else
-            Render3.Sprite(sprite_buffer[this.sprite_id], x + sprite.ox, y, this.z, sprite)
+        let sprites = this.sprite_atlas[]
+
+        if (this.mirror) {
+            for (let index = 0; index < sprites.length; index++) {
+                let sprite = sprites[index]
+                Render3.MirrorSprite(sprite_buffer["human"], x - sprite.ox, y + sprite.oy, this.z, sprite)
+            }
+        } else {
+            for (let index = 0; index < sprites.length; index++) {
+                let sprite = sprites[index]
+                Render3.Sprite(sprite_buffer["human"], x + sprite.ox, y + sprite.oy, this.z, sprite)
+            }
+        }
+
+        // sprite = SPRITE_DATA["human"]["leather.body.whip.attack.1"]
+        // Render3.MirrorSprite(sprite_buffer["human"], x - sprite.ox, y + sprite.oy, this.z, sprite)
+
+        // sprite = SPRITE_DATA["human"]["leather.head.2"]
+        // Render3.MirrorSprite(sprite_buffer["human"], x - sprite.ox, y + sprite.oy, this.z, sprite)
+
+        // sprite = SPRITE_DATA["human"]["whip.attack.1"]
+        // Render3.MirrorSprite(sprite_buffer["human"], x - sprite.ox, y + sprite.oy, this.z, sprite)
+
+        // if (this.mirror)
+        //     Render3.MirrorSprite(sprite_buffer[this.sprite_id], x - sprite.ox, y, this.z, sprite)
+        // else
+        //     Render3.Sprite(sprite_buffer[this.sprite_id], x + sprite.ox, y, this.z, sprite)
     }
 }
