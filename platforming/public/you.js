@@ -1,6 +1,6 @@
 class You extends Living {
     constructor(world, x, y) {
-        super(world, "you", "you", x, y)
+        super(world, "you", "human", x, y)
         this.z = 0.7
         this.gx = Math.floor(this.x * INV_GRID_SIZE)
         this.substate = ""
@@ -41,6 +41,7 @@ class You extends Living {
         this.frost_resist = 0 // todo
         this.fire_resist = 0 // todo
         this.poison_resist = 0 // todo
+        this.build_texture()
     }
     damage(world, thing, amount) {
         if (this.ignore || this.state === "death") return
@@ -811,7 +812,7 @@ class You extends Living {
             this.gx = gx
         }
     }
-    build_texture(g, gl) {
+    build_texture() {
 
         let sprite_atlas = {}
         let sprite_boxes = {}
@@ -823,68 +824,74 @@ class You extends Living {
         let head_material = "leather"
         let body_material = "leather"
 
-        let human_data = SPRITE_DATA["human"]
-        let animations = SPRITES["you"]
+        let data = SPRITE_DATA["human"]
+        let alias = SPRITE_ALIAS["human"]
+        let animations = SPRITE_ANIMATIONS["human"]
 
-        for (let frame in human_data) {
-            let animation = "idle"
+        console.log("data", data)
+        console.log("alias", alias)
+        console.log("animation", animations)
 
-            if (frame.contains("attack")) {
-                let weapon_key = weapon_type + "." + animation
-                weapon_boxes[frame] = human_data[weapon_key].boxes
+        for (let key in animations) {
+            let animation = animations[key]
+            for (let index in animation) {
+                let frame = animation[index]
 
-            } else if (frame.contains("shield")) {
-                let shield_key = shield_type + "." + animation
-                shield_boxes[frame] = human_data[shield_key].boxes
-            }
-
-            let head_key = head_material + ".head." + animation
-            let body_key = body_material + ".body." + animation
-            sprite_boxes[frame] = []
-            sprite_boxes[frame].push.apply(human_data[head_key].boxes)
-            sprite_boxes[frame].push.apply(human_data[body_key].boxes)
-        }
-
-        //
-
-        for (let animation_name in animations) {
-            let frames = SPRITE_ANIMATIONS["you"][animation_name]
-
-            for (let index = 0; index < frames.length; index++) {
-                let frame = frames[index]
-                let sprite_name = frame.sprite_name
-
-                if (name.contains("attack")) {
-                    if (index === 0) weapon_boxes[name] = []
-                    let weapon_key = weapon_type + "." + sprite_name
-                    weapon_boxes[name].push(human_data[weapon_key].boxes)
-
-                } else if (name.contains("shield")) {
-                    if (index === 0) shield_boxes[name] = []
-                    let shield_key = shield_type + "." + sprite_name
-                    shield_boxes[name].push(human_data[shield_key].boxes)
+                if (frame.includes("attack")) {
+                    if (!frame.includes(weapon_type)) continue
+                } else if (frame.includes("shield")) {
+                    if (!frame.includes(shield_type)) continue
                 }
 
-                if (index === 0) sprite_boxes[name] = []
-                let head_key = head_material + ".head." + sprite_name
-                let body_key = body_material + ".body." + sprite_name
-                sprite_boxes[name].push.apply(human_data[head_key].boxes)
-                sprite_boxes[name].push.apply(human_data[body_key].boxes)
+                if (frame in sprite_atlas) continue
+
+                sprite_atlas[frame] = []
+
+                let list = ["head", "body"]
+                for (let i in list) {
+                    let item = list[i] + "." + frame
+
+                    if (item.includes("body")) item = body_material + "." + item
+                    else if (item.includes("head")) item = head_material + "." + item
+
+                    if (item in alias) {
+                        let aliasing = alias[item]
+                        let name_alias = item
+                        let ox = 0
+                        let oy = 0
+                        if (aliasing.length === 1)
+                            name_alias = aliasing[0]
+                        else if (aliasing.length === 2) {
+                            ox = aliasing[0]
+                            oy = aliasing[1]
+                        } else if (aliasing.length === 3) {
+                            name_alias = aliasing[0]
+                            ox = aliasing[1]
+                            oy = aliasing[2]
+                        }
+                        console.log(key, "=>", frame, "=>", name_alias)
+                        sprite_atlas[frame].push(Sprite.Copy(data[name_alias], ox, oy))
+                    } else {
+                        console.log(key, "=>", frame, "=>", item)
+                        sprite_atlas[frame].push(data[item])
+                    }
+                }
             }
         }
 
+        this.sprite_atlas = sprite_atlas
         this.sprite_boxes = sprite_boxes
         this.weapon_boxes = weapon_boxes
         this.shield_boxes = shield_boxes
+
+        this.sprite_data = sprite_atlas
     }
     render(sprite_buffer) {
-        let sprite_frame = this.sprite[this.frame]
-        let sprite = this.sprite_data[sprite_frame]
-
-        let x = Math.floor(this.x - sprite.width * 0.5)
-        let y = Math.floor(this.y + sprite.oy)
-
-        let sprites = this.sprite_atlas[]
+        let sprites = this.sprite_data[this.sprite[this.frame]]
+        // let x = Math.floor(this.x - sprites.width * 0.5)
+        // let y = Math.floor(this.y + sprites.oy)
+        let x = Math.floor(this.x)
+        let y = Math.floor(this.y)
 
         if (this.mirror) {
             for (let index = 0; index < sprites.length; index++) {
@@ -897,19 +904,5 @@ class You extends Living {
                 Render3.Sprite(sprite_buffer["human"], x + sprite.ox, y + sprite.oy, this.z, sprite)
             }
         }
-
-        // sprite = SPRITE_DATA["human"]["leather.body.whip.attack.1"]
-        // Render3.MirrorSprite(sprite_buffer["human"], x - sprite.ox, y + sprite.oy, this.z, sprite)
-
-        // sprite = SPRITE_DATA["human"]["leather.head.2"]
-        // Render3.MirrorSprite(sprite_buffer["human"], x - sprite.ox, y + sprite.oy, this.z, sprite)
-
-        // sprite = SPRITE_DATA["human"]["whip.attack.1"]
-        // Render3.MirrorSprite(sprite_buffer["human"], x - sprite.ox, y + sprite.oy, this.z, sprite)
-
-        // if (this.mirror)
-        //     Render3.MirrorSprite(sprite_buffer[this.sprite_id], x - sprite.ox, y, this.z, sprite)
-        // else
-        //     Render3.Sprite(sprite_buffer[this.sprite_id], x + sprite.ox, y, this.z, sprite)
     }
 }

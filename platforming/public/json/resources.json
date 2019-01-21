@@ -1,245 +1,171 @@
 {
     "shaders": ["texture", "texture3", "color_texture"],
     "textures": ["map", "you", "human", "skeleton", "doodad", "item", "interface", "font"],
-    "music": [{
-        "name": "melody",
-        "path": "vampire-killer.ogg"
-    }],
-    "sound": [{
-        "name": "pick.up",
-        "path": "pickup.wav"
-    }, {
-        "name": "destroy",
-        "path": "destroy.wav"
-    }, {
-        "name": "you.hurt",
-        "path": "you-hurt.wav"
-    }, {
-        "name": "you.whip",
-        "path": "you-whip.wav"
-    }, {
-        "name": "level.up",
-        "path": "levelup.wav"
-    }, {
-        "name": "roar",
-        "path": "destroy.wav"
-    }, {
-        "name": "open.inventory",
-        "path": "destroy.wav"
-    }, {
-        "name": "menu.select",
-        "path": "destroy.wav"
-    }, {
-        "name": "equip",
-        "path": "destroy.wav"
-    }],
-    "sprites": [{
-        "name": "human",
-        "offsets": {
-            "leather.head.2": [8, 24],
-            "leather.head.3": [2, 24],
-            "leather.body.whip.attack.1": [0, 0],
-            "leather.body.whip.attack.2": [0, 0],
-            "whip.attack.1": [-8, -1],
-            "whip.attack.2": [-16, 7]
+    "music": {
+        "melody": "vampire-killer.ogg"
+    },
+    "sound": {
+        "pick.up": "pickup.wav",
+        "destroy": "destroy.wav",
+        "you.hurt": "you-hurt.wav",
+        "you.whip": "you-whip.wav",
+        "level.up": "levelup.wav",
+        "roar": "destroy.wav",
+        "open.inventory": "destroy.wav",
+        "menu.select": "destroy.wav",
+        "equip": "destroy.wav"
+    },
+    "sprites": {
+        "human": {
+            "alias": {
+                "leather.head.idle": ["leather.head.1", 8, 24],
+                "leather.head.dodge": ["leather.head.2", 8, 24],
+                "leather.head.walk.1": ["leather.head.3", 2, 24],
+                "leather.head.walk.2": ["leather.head.1", 2, 24],
+                "leather.head.stair.up": ["leather.head.1", 2, 24],
+                "leather.head.stair.down": ["leather.head.1", 2, 24],
+                "leather.head.crouch": ["leather.head.1", 2, 24],
+                "leather.head.damage": ["leather.head.1", 2, 24],
+                "leather.head.death": ["leather.head.1"],
+                "leather.head.breath": ["leather.head.1"],
+                "leather.head.whip.attack.1": ["leather.head.2"],
+                "leather.head.whip.attack.2": ["leather.head.1"],
+                "leather.head.whip.attack.3": ["leather.head.3"],
+                "leather.head.whip.crouch.attack.1": ["leather.head.2"],
+                "leather.head.whip.crouch.attack.2": ["leather.head.1"],
+                "leather.head.whip.crouch.attack.3": ["leather.head.3"],
+                "leather.head.tower.shield": ["leather.head.3"],
+                "leather.head.tower.crouch.shield": ["leather.head.3"],
+
+                "leather.body.idle": [-1, 0],
+                "leather.body.dodge": [-1, 0],
+                "leather.body.walk.1": [-1, 0],
+                "leather.body.walk.2": [-1, 0],
+                "leather.body.stair.up": [-2, 0],
+                "leather.body.stair.down": [-2, 0],
+                "leather.body.crouch": [-1, 0],
+                "leather.body.damage": [-1, 0],
+                "leather.body.death": [-1, 0],
+                "leather.body.breath": [-1, 0],
+                "leather.body.whip.attack.1": [0, 0],
+                "leather.body.whip.attack.2": [0, 0],
+                "leather.body.whip.attack.3": [0, 0],
+                "leather.body.whip.crouch.attack.1": [0, 0],
+                "leather.body.whip.crouch.attack.2": [0, 0],
+                "leather.body.whip.crouch.attack.3": [0, 0],
+                "leather.body.tower.shield": ["leather.body.whip.attack.3", 0, 0],
+                "leather.body.tower.crouch.shield": ["leather.body.whip.crouch.attack.3", 0, 0],
+
+                "whip.attack.1": [-8, -1],
+                "whip.attack.2": [-16, 7],
+                "whip.attack.3": [14, 0],
+                "whip.crouch.attack.1": [-8, -8],
+                "whip.crouch.attack.2": [-8, 0],
+                "whip.crouch.attack.3": [14, 0],
+                "tower.shield": [4, 0],
+                "tower.crouch.shield": [4, 0]
+            },
+            "animations": {
+                "idle": ["idle"],
+                "dodge": ["dodge"],
+                "walk": ["walk.1", "walk.2", "walk.1", "idle"],
+                "stair.up": ["stair.up", "walk.1"],
+                "stair.down": ["stair.down", "walk.1"],
+                "crouch": ["crouch"],
+                "damaged": ["damage"],
+                "death": ["death"],
+                "breath": ["walk.1", "walk.2", "walk.1"],
+                "whip.attack": ["whip.attack.1", "whip.attack.2", "whip.attack.3"],
+                "whip.crouch.attack": ["whip.crouch.attack.1", "whip.crouch.attack.2", "whip.crouch.attack.3"],
+                "sword.attack": ["sword.attack.1", "sword.attack.2", "sword.attack.3"],
+                "sword.crouch.attack": ["sword.crouch.attack.1", "sword.crouch.attack.2", "sword.crouch.attack.3"],
+                "tower.shield": ["tower.shield"],
+                "tower.crouch.shield": ["tower.crouch.shield"],
+                "buckler.shield": ["buckler.shield"],
+                "buckler.crouch.shield": ["buckler.crouch.shield"]
+            }
         },
-        "animations": [{
-            "name": "leather.head.2",
-            "frames": ["leather.head.2"]
-        }, {
-            "name": "leather.head.3",
-            "frames": ["leather.head.3"]
-        }, {
-            "name": "leather.body.whip.attack.1",
-            "frames": ["leather.body.whip.attack.1"]
-        }, {
-            "name": "leather.body.whip.attack.2",
-            "frames": ["leather.body.whip.attack.2"]
-        }, {
-            "name": "whip.attack.1",
-            "frames": ["whip.attack.1"]
-        }, {
-            "name": "whip.attack.2",
-            "frames": ["whip.attack.2"]
-        }]
-    }, {
-        "name": "you",
-        "offsets": {
-            "stair.up": [-2, 0],
-            "stair.down": [-2, 0],
-            "attack.1": [-8, -1],
-            "attack.2": [-8, 0],
-            "attack.3": [14, 0],
-            "crouch.attack.1": [-8, -8],
-            "crouch.attack.2": [-8, 0],
-            "crouch.attack.3": [14, 0],
-            "shield": [4, 0],
-            "crouch.shield": [4, 0]
+        "item": {
+            "animations": {
+                "water": ["water"],
+                "whip": ["whip"],
+                "musket": ["musket"],
+                "helmet": ["helmet"],
+                "armor": ["armor"],
+                "boots": ["boots"],
+                "musket.ball": ["musket.ball"],
+                "gloves": ["gloves"],
+                "shield": ["shield"],
+                "food": ["food"],
+                "roar": ["roar"]
+            }
         },
-        "animations": [{
-            "name": "idle",
-            "frames": ["idle"]
-        }, {
-            "name": "dodge",
-            "frames": ["dodge"]
-        }, {
-            "name": "walk",
-            "frames": ["walk.1", "walk.2", "walk.1", "idle"]
-        }, {
-            "name": "stair.up",
-            "frames": ["stair.up", "walk.1"]
-        }, {
-            "name": "stair.down",
-            "frames": ["stair.down", "walk.1"]
-        }, {
-            "name": "crouch",
-            "frames": ["crouch"]
-        }, {
-            "name": "damaged",
-            "frames": ["damage"]
-        }, {
-            "name": "death",
-            "frames": ["death"]
-        }, {
-            "name": "attack",
-            "frames": ["attack.1", "attack.2", "attack.3"]
-        }, {
-            "name": "crouch.attack",
-            "frames": ["crouch.attack.1", "crouch.attack.2", "crouch.attack.3"]
-        }, {
-            "name": "shield",
-            "frames": ["shield"]
-        }, {
-            "name": "crouch.shield",
-            "frames": ["crouch.shield"]
-        }, {
-            "name": "breath",
-            "frames": ["walk.1", "walk.2", "walk.1"]
-        }]
-    }, {
-        "name": "item",
-        "animations": [{
-            "name": "water",
-            "frames": ["water"]
-        }, {
-            "name": "whip",
-            "frames": ["whip"]
-        }, {
-            "name": "musket",
-            "frames": ["musket"]
-        }, {
-            "name": "helmet",
-            "frames": ["helmet"]
-        }, {
-            "name": "armor",
-            "frames": ["armor"]
-        }, {
-            "name": "boots",
-            "frames": ["boots"]
-        }, {
-            "name": "musket.ball",
-            "frames": ["musket.ball"]
-        }, {
-            "name": "gloves",
-            "frames": ["gloves"]
-        }, {
-            "name": "shield",
-            "frames": ["shield"]
-        }, {
-            "name": "food",
-            "frames": ["food"]
-        }, {
-            "name": "roar",
-            "frames": ["roar"]
-        }]
-    }, {
-        "name": "doodad",
-        "animations": [{
-            "name": "bone",
-            "frames": ["bone.1", "bone.2"]
-        }, {
-            "name": "splat",
-            "frames": ["fire.1", "fire.2", "fire.3", "fire.4"]
-        }, {
-            "name": "elevator",
-            "frames": ["elevator"]
-        }]
-    }, {
-        "name": "interface",
-        "animations": [{
-            "name": "health",
-            "frames": ["health"]
-        }, {
-            "name": "stamina",
-            "frames": ["stamina"]
-        }, {
-            "name": "experience",
-            "frames": ["experience"]
-        }, {
-            "name": "reduce",
-            "frames": ["reduce"]
-        }, {
-            "name": "gone",
-            "frames": ["gone"]
-        }, {
-            "name": "panel",
-            "frames": ["panel"]
-        }, {
-            "name": "select.panel",
-            "frames": ["select.panel"]
-        }]
-    }, {
-        "name": "skeleton",
-        "animations": [{
-            "name": "idle",
-            "frames": ["idle"]
-        }, {
-            "name": "walk",
-            "frames": ["walk.1", "idle"]
-        }, {
-            "name": "death",
-            "frames": ["death.1", "death.2"]
-        }]
-    }],
-    "tiles": [{
-        "name": "none",
-        "texture": null,
-        "empty": true
-    }, {
-        "name": "ground",
-        "texture": [0, 0],
-        "empty": false
-    }, {
-        "name": "rails.right",
-        "texture": [17, 0],
-        "empty": true
-    }, {
-        "name": "stairs.right",
-        "texture": [17, 17],
-        "empty": true
-    }, {
-        "name": "rail",
-        "texture": [34, 0],
-        "empty": true
-    }, {
-        "name": "wall",
-        "texture": [51, 0],
-        "empty": true
-    }, {
-        "name": "water-top",
-        "texture": [68, 0],
-        "empty": true
-    }, {
-        "name": "water",
-        "texture": [68, 17],
-        "empty": true
-    }, {
-        "name": "rails-left",
-        "texture": [85, 0],
-        "empty": true
-    }, {
-        "name": "stairs-left",
-        "texture": [85, 17],
-        "empty": true
-    }]
+        "doodad": {
+            "animations": {
+                "bone": ["bone.1", "bone.2"],
+                "splat": ["fire.1", "fire.2", "fire.3", "fire.4"],
+                "elevator": ["elevator"]
+            }
+        },
+        "interface": {
+            "animations": {
+                "health": ["health"],
+                "stamina": ["stamina"],
+                "experience": ["experience"],
+                "reduce": ["reduce"],
+                "gone": ["gone"],
+                "panel": ["panel"],
+                "select.panel": ["select.panel"]
+            }
+        },
+        "skeleton": {
+            "animations": {
+                "idle": ["idle"],
+                "walk": ["walk.1", "idle"],
+                "death": ["death.1", "death.2"]
+            }
+        }
+    },
+    "tiles": {
+        "none": {
+            "texture": null,
+            "empty": true
+        },
+        "ground": {
+            "texture": [0, 0],
+            "empty": false
+        },
+        "rails.right": {
+            "texture": [17, 0],
+            "empty": true
+        },
+        "stairs.right": {
+            "texture": [17, 17],
+            "empty": true
+        },
+        "rail": {
+            "texture": [34, 0],
+            "empty": true
+        },
+        "wall": {
+            "texture": [51, 0],
+            "empty": true
+        },
+        "water-top": {
+            "texture": [68, 0],
+            "empty": true
+        },
+        "water": {
+            "texture": [68, 17],
+            "empty": true
+        },
+        "rails-left": {
+            "texture": [85, 0],
+            "empty": true
+        },
+        "stairs-left": {
+            "texture": [85, 17],
+            "empty": true
+        }
+    }
 }

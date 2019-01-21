@@ -136,10 +136,6 @@ class Thing {
         this.ground = false
         this.ignore = false
         this.blocking = false
-        // TODO TEMP
-        if (this.sprite_id === "you")
-            this.sprite_id = "human"
-        //
         world.add_thing(this)
         this.block_borders()
         this.add_to_blocks(world)

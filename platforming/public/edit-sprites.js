@@ -32,7 +32,7 @@ class Sprites {
                 y = atlas_height + 1
             }
 
-            sprites.push(new Sprite(x, y, texture, boxes))
+            sprites.push(Sprite.Build(x, y, texture, boxes))
 
             if (index > 0) json += ", "
             json += `"${name}":{"atlas":[${x}, ${y}, ${width}, ${height}], "boxes":[${Boxes.JSON(boxes)}]}`

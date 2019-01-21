@@ -30,13 +30,13 @@ const TILE_LIST = [
 ]
 
 const TILE_MAP = {
-    "ground": 1,
-    "rails.right": 2,
-    "stairs.right": 3,
-    "rail": 4,
-    "wall": 5,
-    "water-top": 6,
-    "water": 7,
-    "rails-left": 8,
-    "stairs-left": 9,
+    "ground": TILE_GROUND,
+    "rails.right": TILE_RAILS_RIGHT,
+    "stairs.right": TILE_STAIRS_RIGHT,
+    "rail": TILE_RAIL,
+    "wall": TILE_WALL,
+    "water-top": TILE_WATER_TOP,
+    "water": TILE_WATER,
+    "rails-left": TILE_RAILS_LEFT,
+    "stairs-left": TILE_STAIRS_LEFT,
 }

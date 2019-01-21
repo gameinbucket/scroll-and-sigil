@@ -1,6 +1,7 @@
 const MUSIC = {}
 const SOUND = {}
 const SPRITE_DATA = {}
+const SPRITE_ALIAS = {}
 const SPRITE_ANIMATIONS = {}
 
 class Application {
@@ -83,19 +84,21 @@ class Application {
 
         await Promise.all(promises)
 
-        for (let index = 0; index < music.length; index++) {
-            let iter = music[index]
-            MUSIC[iter["name"]] = new Audio("music/" + iter["path"])
-            MUSIC[iter["name"]].loop = true
+        for (let key in music) {
+            let path = music[key]
+            MUSIC[key] = new Audio("music/" + path)
+            MUSIC[key].loop = true
         }
 
-        for (let index = 0; index < sound.length; index++)
-            SOUND[sound[index]["name"]] = new Audio("sound/" + sound[index]["path"])
+        for (let key in sound) {
+            let path = sound[key]
+            SOUND[key] = new Audio("sound/" + path)
+        }
 
-        for (let index = 0; index < sprites.length; index++) {
-            let sprite = sprites[index]
-            let name = sprite["name"]
-            let offsets = ("offsets" in sprite) ? sprite["offsets"] : null
+        for (let name in sprites) {
+            let sprite = sprites[name]
+            let animations = sprite["animations"]
+            let alias = ("alias" in sprite) ? sprite["alias"] : null
 
             let sprite_json = await Network.Request("json/" + name + ".json")
             let sprite_data = JSON.parse(sprite_json)["sprites"]
@@ -103,44 +106,40 @@ class Application {
             let texture = g.textures[name]
             let width = 1.0 / texture.image.width
             let height = 1.0 / texture.image.height
-            let animations = sprite["animations"]
 
             SPRITE_DATA[name] = {}
+            SPRITE_ALIAS[name] = {}
             SPRITE_ANIMATIONS[name] = {}
 
-            for (let jindex = 0; jindex < animations.length; jindex++) {
-                let animation = animations[jindex]
-                let animation_name = animation["name"]
-                let frames = animation["frames"]
+            for (let key in animations)
+                SPRITE_ANIMATIONS[name][key] = animations[key]
 
-                SPRITE_ANIMATIONS[name][animation_name] = frames
+            if (alias != null)
+                for (let key in alias)
+                    SPRITE_ALIAS[name][key] = alias[key]
 
-                for (let kindex = 0; kindex < frames.length; kindex++) {
-                    let sprite_frame_name = frames[kindex]
+            for (let key in sprite_data) {
+                let sprite = sprite_data[key]
+                let atlas = sprite.atlas
+                let boxes = sprite.boxes
 
-                    if (sprite_frame_name in SPRITE_DATA) continue
+                // if (offsets !== null && key in offsets) {
+                //     let offset = offsets[key]
+                //     atlas.push(offset[0])
+                //     atlas.push(offset[1])
+                // }
 
-                    let frame_data = sprite_data[sprite_frame_name]
-                    let lookup = frame_data["atlas"]
-                    let boxes = frame_data["boxes"]
-
-                    if (offsets !== null && sprite_frame_name in offsets) {
-                        let offset = offsets[sprite_frame_name]
-                        lookup.push(offset[0])
-                        lookup.push(offset[1])
-                    }
-
-                    SPRITE_DATA[name][sprite_frame_name] = new Sprite(lookup, boxes, width, height)
-                }
+                SPRITE_DATA[name][key] = Sprite.Build(atlas, boxes, width, height)
             }
         }
 
-        for (let index = 0; index < tiles.length; index++) {
-            let tile = tiles[index]
+        for (let key in tiles) {
+            let tile = tiles[key]
             let texture = tile["texture"]
             let empty = tile["empty"]
             if (texture === null) TILE_TEXTURE.push(null)
-            else TILE_TEXTURE.push(Sprite.Build(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
+            else
+                TILE_TEXTURE.push(Sprite.Simple(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
             TILE_EMPTY.push(empty)
         }
 

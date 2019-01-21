@@ -187,30 +187,6 @@ class WorldState {
             player.menu.render(g, gl, frame, generic, generic2)
 
         //
-        g.set_texture(gl, "human")
-        generic.zero()
-        x = 100
-        y = 100
-        let sprite = SPRITE_DATA["human"]["leather.body.whip.attack.1"]
-        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
-        sprite = SPRITE_DATA["human"]["leather.head.2"]
-        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
-        sprite = SPRITE_DATA["human"]["whip.attack.1"]
-        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
-
-        x = 200
-        y = 100
-        sprite = SPRITE_DATA["human"]["leather.body.whip.attack.2"]
-        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
-        sprite = SPRITE_DATA["human"]["leather.head.3"]
-        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
-        sprite = SPRITE_DATA["human"]["whip.attack.2"]
-        Render.Sprite(generic, x + sprite.ox, y + sprite.oy, sprite)
-
-        RenderSystem.UpdateAndDraw(gl, generic)
-        //
-
-        //
         colored.zero()
         let size = 1
         let print

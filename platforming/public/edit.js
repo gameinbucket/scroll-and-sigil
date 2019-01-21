@@ -91,9 +91,9 @@ class Application {
 
             await Promise.all(promises)
 
-            for (let index = 0; index < sprites.length; index++) {
-                let sprite = sprites[index]
-                let name = sprite["name"]
+            for (let name in sprites) {
+                let sprite = sprites[name]
+                let animations = sprite["animations"]
                 let offsets = ("offsets" in sprite) ? sprite["offsets"] : null
 
                 let sprite_json = await Network.Request("json/" + name + ".json")
@@ -102,50 +102,39 @@ class Application {
                 let texture = g.textures[name]
                 let width = 1.0 / texture.image.width
                 let height = 1.0 / texture.image.height
-                let animations = sprite["animations"]
 
                 sprite_buffer[name] = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
 
                 SPRITE_DATA[name] = {}
                 SPRITE_ANIMATIONS[name] = {}
 
-                for (let jindex = 0; jindex < animations.length; jindex++) {
-                    let animation = animations[jindex]
-                    let animation_name = animation["name"]
-                    let frames = animation["frames"]
+                for (let key in animations)
+                    SPRITE_ANIMATIONS[name][key] = animations[key]
 
-                    SPRITE_ANIMATIONS[name][animation_name] = frames
+                for (let key in sprite_data) {
+                    let sprite = sprite_data[key]
+                    let atlas = sprite.atlas
+                    let boxes = sprite.boxes
 
-                    for (let kindex = 0; kindex < frames.length; kindex++) {
-                        let sprite_frame_name = frames[kindex]
-
-                        if (sprite_frame_name in SPRITE_DATA) continue
-
-                        let frame_data = sprite_data[sprite_frame_name]
-                        let lookup = frame_data["atlas"]
-                        let boxes = frame_data["boxes"]
-
-                        if (offsets !== null && sprite_frame_name in offsets) {
-                            let offset = offsets[sprite_frame_name]
-                            lookup.push(offset[0])
-                            lookup.push(offset[1])
-                        }
-
-                        SPRITE_DATA[name][sprite_frame_name] = new Sprite(lookup, boxes, width, height)
+                    if (offsets !== null && key in offsets) {
+                        let offset = offsets[key]
+                        atlas.push(offset[0])
+                        atlas.push(offset[1])
                     }
+
+                    SPRITE_DATA[name][key] = Sprite.Build(atlas, boxes, width, height)
                 }
             }
 
             SPRITE_DATA["map"] = {}
-            for (let index = 0; index < tiles.length; index++) {
-                let tile = tiles[index]
-                let name = tile["name"]
+            for (let key in tiles) {
+                let tile = tiles[key]
                 let texture = tile["texture"]
                 let empty = tile["empty"]
                 if (texture === null) TILE_TEXTURE.push(null)
                 else {
-                    TILE_TEXTURE.push(Sprite.Build(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
-                    SPRITE_DATA["map"][name] = new Sprite([texture[0], texture[1], TILE_SIZE, TILE_SIZE], null, TILE_SPRITE_SIZE, TILE_SPRITE_SIZE)
+                    TILE_TEXTURE.push(Sprite.Simple(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
+                    SPRITE_DATA["map"][key] = Sprite.Build([texture[0], texture[1], TILE_SIZE, TILE_SIZE], null, TILE_SPRITE_SIZE, TILE_SPRITE_SIZE)
                 }
                 TILE_EMPTY.push(empty)
             }
@@ -182,7 +171,7 @@ class Application {
                     let animation = animations[jindex]
                     let animation_name = animation["name"]
                     let frames = animation["frames"]
-                    SPRITE_DATA[name][animation_name] = new Sprite(frames[0], null, width, height)
+                    SPRITE_DATA[name][animation_name] = Sprite.Build(frames[0], null, width, height)
                 }
             }
         }())
