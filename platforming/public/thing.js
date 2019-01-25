@@ -351,25 +351,22 @@ class Thing {
 
         return boxes
     }
+    bounding_box() {
+        let sprite = this.sprite_data[this.sprite[this.frame]]
+        let left = this.x - sprite.width * 0.5
+        if (this.mirror) left -= sprite.ox
+        else left += sprite.ox
+        let bottom = this.y + sprite.oy
+        let right = left + sprite.width
+        let top = bottom + sprite.height
+        return [left, bottom, right, top]
+    }
     overlap(thing) {
-        let self_sprite_frame = this.sprite[this.frame]
-        let self_sprite = this.sprite_data[self_sprite_frame]
-        let self_x = this.x - self_sprite.width * 0.5
-        let self_y = this.y + self_sprite.oy
+        let this_box = this.bounding_box()
+        let thing_box = thing.bounding_box()
 
-        if (this.mirror) self_x -= self_sprite.ox
-        else self_x += self_sprite.ox
-
-        let thing_sprite_frame = thing.sprite[thing.frame]
-        let thing_sprite = thing.sprite_data[thing_sprite_frame]
-        let thing_x = thing.x - thing_sprite.width * 0.5
-        let thing_y = thing.y + thing_sprite.oy
-
-        if (thing.mirror) thing_x -= thing_sprite.ox
-        else thing_x += thing_sprite.ox
-
-        return self_x + self_sprite.width > thing_x && self_x < thing_x + thing_sprite.width &&
-            self_y + self_sprite.height > thing_y && self_y < thing.y + thing_sprite.height
+        return this_box[2] > thing_box[0] && this_box[0] < thing_box[2] &&
+            this_box[3] > thing_box[1] && this_box[1] < thing_box[3]
     }
     overlap_simple(thing) {
         return this.x + this.half_width > thing.x - thing.half_width && this.x - this.half_width < thing.x + thing.half_width &&

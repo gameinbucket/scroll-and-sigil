@@ -123,12 +123,6 @@ class Application {
                 let atlas = sprite.atlas
                 let boxes = sprite.boxes
 
-                // if (offsets !== null && key in offsets) {
-                //     let offset = offsets[key]
-                //     atlas.push(offset[0])
-                //     atlas.push(offset[1])
-                // }
-
                 SPRITE_DATA[name][key] = Sprite.Build(atlas, boxes, width, height)
             }
         }
@@ -160,6 +154,7 @@ class Application {
     }
     configure_opengl(gl) {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+        gl.depthFunc(gl.LEQUAL)
         gl.disable(gl.CULL_FACE)
         gl.disable(gl.BLEND)
         gl.disable(gl.DEPTH_TEST)

@@ -81,19 +81,12 @@ class You extends Living {
     damage_scan(world) {
         let item = this.hand
         let searched = new Set()
-        let boxes = this.boxes()
+        let bounds = this.bounding_box()
 
-        let sprite = this.sprite[this.frame]
-        let x = this.x - sprite.width * 0.5
-        let y = this.y + sprite.oy
-
-        if (this.mirror) x -= sprite.ox
-        else x += sprite.ox
-
-        let left_gx = Math.floor(x * INV_GRID_SIZE)
-        let right_gx = Math.floor((x + sprite.width) * INV_GRID_SIZE)
-        let bottom_gy = Math.floor(y * INV_GRID_SIZE)
-        let top_gy = Math.floor((y + sprite.height) * INV_GRID_SIZE)
+        let left_gx = Math.floor(bounds[0] * INV_GRID_SIZE)
+        let right_gx = Math.floor(bounds[2] * INV_GRID_SIZE)
+        let bottom_gy = Math.floor(bounds[1] * INV_GRID_SIZE)
+        let top_gy = Math.floor(bounds[3] * INV_GRID_SIZE)
 
         for (let gx = left_gx; gx <= right_gx; gx++) {
             for (let gy = bottom_gy; gy <= top_gy; gy++) {
@@ -101,7 +94,7 @@ class You extends Living {
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (thing === this || thing.ignore || searched.has(thing)) continue
-                    if (this.overlap(thing) && Thing.OverlapBoxes(boxes, thing.boxes())) {
+                    if (this.overlap(thing) && Thing.OverlapBoxes(this.weapon_boxes(), thing.boxes())) {
                         let damage = item.base_damage * this.charge_multiplier + item.strength_multiplier * this.strength + item.dexterity_multiplier * this.dexterity
                         thing.damage(world, this, damage)
                         this.experience += 1
@@ -125,12 +118,34 @@ class You extends Living {
                 for (let i = 0; i < block.thing_count; i++) {
                     let thing = block.things[i]
                     if (thing.sprite_id !== "item" || searched.has(thing)) continue
-                    if (this.overlap(thing) && this.inventory_size + thing.size <= this.inventory_lim) {
+                    if (this.inventory_size + thing.size <= this.inventory_lim && this.overlap(thing) && Thing.OverlapBoxes(this.boxes(), thing.boxes())) {
                         SOUND["pick.up"].currentTime = 0
                         SOUND["pick.up"].play()
                         this.inventory.push(thing)
                         this.inventory_size += thing.size
                         world.delete_thing(thing)
+                        switch (thing.slot) {
+                            case "hand":
+                                if (this.hand === null)
+                                    this.hand = thing
+                                break
+                            case "head":
+                                if (this.head === null)
+                                    this.head = thing
+                                break
+                            case "body":
+                                if (this.body === null)
+                                    this.body = thing
+                                break
+                            case "item":
+                                if (this.item === null)
+                                    this.item = thing
+                                break
+                            case "skill":
+                                if (this.skill === null)
+                                    this.skill = thing
+                                break
+                        }
                         return
                     }
                 }
@@ -161,14 +176,15 @@ class You extends Living {
         this.sprite = this.animations[this.sprite_state]
     }
     shield() {
+        let shield = "tower"
         const min_stamina = 4
         if (this.stamina < min_stamina) return
         if (this.state === "idle" || this.state === "walk") {
             this.state = "shield"
-            this.sprite_state = "shield"
+            this.sprite_state = shield + ".shield"
         } else if (this.state === "crouch") {
             this.state = "crouch.shield"
-            this.sprite_state = "crouch.shield"
+            this.sprite_state = shield + ".crouch.shield"
         } else
             return
         this.frame = 0
@@ -812,12 +828,65 @@ class You extends Living {
             this.gx = gx
         }
     }
-    build_texture() {
+    make_boxes(sprites) {
+        let list = []
+        for (let index = 0; index < sprites.length; index++) {
+            let sprite = sprites[index]
+            let boxes = sprite.boxes.slice()
+            let x = Math.floor(this.x - sprite.width * 0.5)
+            let y = Math.floor(this.y) + sprite.oy
+            if (this.mirror) {
+                x -= sprite.ox
+                for (let index = 0; index < boxes.length; index++) {
+                    let box = boxes[index]
+                    box[0] = -(box[0] + box[2])
+                }
+            } else
+                x += sprite.ox
 
-        let sprite_atlas = {}
-        let sprite_boxes = {}
-        let weapon_boxes = {}
-        let shield_boxes = {}
+            for (let index = 0; index < boxes.length; index++) {
+                let box = boxes[index].slice()
+                box[0] += x
+                box[1] += y
+                boxes[index] = box
+            }
+
+            Array.prototype.push.apply(list, boxes);
+        }
+        return list
+    }
+    boxes() {
+        let sprites = this.sprite_data[this.sprite[this.frame]]
+        return this.make_boxes(sprites)
+    }
+    weapon_boxes() {
+        let sprites = this.weapon_data[this.sprite[this.frame]]
+        return this.make_boxes(sprites)
+    }
+    bounding_box() {
+        let this_left = this.x
+        let this_bottom = this.y
+        let this_right = 1
+        let this_top = 1
+        let sprites = this.sprite_data[this.sprite[this.frame]]
+        for (let index = 0; index < sprites.length; index++) {
+            let sprite = sprites[index]
+            let left = Math.floor(this.x - sprite.width * 0.5)
+            if (this.mirror) left -= sprite.ox
+            else left += sprite.ox
+            let bottom = Math.floor(this.y) + sprite.oy
+            if (left < this_left) this_left = left
+            if (bottom < this_bottom) this_bottom = bottom
+            let right = left + sprite.width
+            let top = bottom + sprite.height
+            if (right > this_right) this_right = right
+            if (top > this_top) this_top = top
+        }
+        return [this_left, this_bottom, this_right, this_top]
+    }
+    build_texture() {
+        let sprite_data = {}
+        let weapon_data = {}
 
         let weapon_type = "whip"
         let shield_type = "tower"
@@ -843,16 +912,27 @@ class You extends Living {
                     if (!frame.includes(shield_type)) continue
                 }
 
-                if (frame in sprite_atlas) continue
+                if (frame in sprite_data) continue
 
-                sprite_atlas[frame] = []
-
+                sprite_data[frame] = []
                 let list = ["head", "body"]
-                for (let i in list) {
-                    let item = list[i] + "." + frame
 
-                    if (item.includes("body")) item = body_material + "." + item
-                    else if (item.includes("head")) item = head_material + "." + item
+                if (frame.includes("attack")) {
+                    weapon_data[frame] = []
+                    list.push("")
+                } else if (frame.includes("shield")) {
+                    list.push("")
+                }
+
+                for (let i in list) {
+                    let item
+                    let value = list[i]
+
+                    if (value !== "") item = value + "." + frame
+                    else item = frame
+
+                    if (item.includes("head")) item = head_material + "." + item
+                    else if (item.includes("body")) item = body_material + "." + item
 
                     if (item in alias) {
                         let aliasing = alias[item]
@@ -869,39 +949,34 @@ class You extends Living {
                             ox = aliasing[1]
                             oy = aliasing[2]
                         }
-                        console.log(key, "=>", frame, "=>", name_alias)
-                        sprite_atlas[frame].push(Sprite.Copy(data[name_alias], ox, oy))
+                        sprite_data[frame].push(Sprite.Copy(data[name_alias], ox, oy))
+                        if (frame.includes("attack")) weapon_data[frame].push(Sprite.Copy(data[name_alias], ox, oy))
                     } else {
-                        console.log(key, "=>", frame, "=>", item)
-                        sprite_atlas[frame].push(data[item])
+                        sprite_data[frame].push(data[item])
+                        if (frame.includes("attack")) weapon_data[frame].push(data[item])
                     }
                 }
             }
         }
 
-        this.sprite_atlas = sprite_atlas
-        this.sprite_boxes = sprite_boxes
-        this.weapon_boxes = weapon_boxes
-        this.shield_boxes = shield_boxes
-
-        this.sprite_data = sprite_atlas
+        this.sprite_data = sprite_data
+        this.weapon_data = weapon_data
     }
     render(sprite_buffer) {
         let sprites = this.sprite_data[this.sprite[this.frame]]
-        // let x = Math.floor(this.x - sprites.width * 0.5)
-        // let y = Math.floor(this.y + sprites.oy)
-        let x = Math.floor(this.x)
-        let y = Math.floor(this.y)
-
         if (this.mirror) {
             for (let index = 0; index < sprites.length; index++) {
                 let sprite = sprites[index]
-                Render3.MirrorSprite(sprite_buffer["human"], x - sprite.ox, y + sprite.oy, this.z, sprite)
+                let x = Math.floor(this.x) - sprite.width * 0.5 - sprite.ox
+                let y = Math.floor(this.y) + sprite.oy
+                Render3.MirrorSprite(sprite_buffer["human"], x, y, this.z, sprite)
             }
         } else {
             for (let index = 0; index < sprites.length; index++) {
                 let sprite = sprites[index]
-                Render3.Sprite(sprite_buffer["human"], x + sprite.ox, y + sprite.oy, this.z, sprite)
+                let x = Math.floor(this.x) - sprite.width * 0.5 + sprite.ox
+                let y = Math.floor(this.y) + sprite.oy
+                Render3.Sprite(sprite_buffer["human"], x, y, this.z, sprite)
             }
         }
     }

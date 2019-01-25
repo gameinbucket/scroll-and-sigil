@@ -69,7 +69,7 @@ class Living extends Thing {
             this.stamina_reduce = this.stamina
             this.stamina -= min_stamina
             this.state = "attack"
-            this.sprite_state = "attack"
+            this.sprite_state = "whip.attack"
             this.sprite = this.animations[this.sprite_state]
             this.frame = 0
             this.frame_modulo = 0
@@ -77,7 +77,7 @@ class Living extends Thing {
             this.stamina_reduce = this.stamina
             this.stamina -= min_stamina
             this.state = "crouch.attack"
-            this.sprite_state = "crouch.attack"
+            this.sprite_state = "whip.crouch.attack"
             this.sprite = this.animations[this.sprite_state]
             this.frame = 0
             this.frame_modulo = 0
