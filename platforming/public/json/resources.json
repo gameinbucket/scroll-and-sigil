@@ -26,7 +26,7 @@
                 "leather.head.stair.down": ["leather.head.1", 0, 24],
                 "leather.head.crouch": ["leather.head.1", 0, 16],
                 "leather.head.damage": ["leather.head.1", 2, 24],
-                "leather.head.death": ["leather.head.1", 2, 24],
+                "leather.head.death": ["leather.head.4", 20, 9],
                 "leather.head.breath": ["leather.head.1", 2, 24],
                 "leather.head.whip.attack.1": ["leather.head.2", -5, 24],
                 "leather.head.whip.attack.2": ["leather.head.1", -4, 24],

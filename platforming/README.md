@@ -10,7 +10,6 @@
 > sprite jittering
 > inventory screen
 > background textures
-> learning ai
 > infinite level moving
 > save game
 > death screen / reload

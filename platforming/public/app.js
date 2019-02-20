@@ -39,7 +39,7 @@ class Application {
         window.onfocus = function () {
             self.on = true
             if (self.music)
-                self.music.play().then(() => {}).catch((_) => {})
+                self.music.play().then(() => { }).catch((_) => { })
         }
 
         document.onkeyup = Input.KeyUp
@@ -199,7 +199,7 @@ class Application {
         this.resize()
         this.loop()
     }
-    switch (state) {
+    switch(state) {
         this.state = state
     }
     loop() {

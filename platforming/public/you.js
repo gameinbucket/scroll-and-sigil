@@ -41,7 +41,30 @@ class You extends Living {
         this.frost_resist = 0 // todo
         this.fire_resist = 0 // todo
         this.poison_resist = 0 // todo
+        this.body_data = null
+        this.weapon_data = null
+        this.shield_data = null
         this.build_texture()
+    }
+    set_state(state) {
+        this.state = state
+        this.sprite_state = state
+        this.sprite = this.animations[state]
+        this.frame = 0
+        this.frame_modulo = 0
+    }
+    set_state2(state, sprite) {
+        this.state = state
+        this.sprite_state = sprite
+        this.sprite = this.animations[sprite]
+        this.frame = 0
+        this.frame_modulo = 0
+    }
+    set_sprite(sprite) {
+        this.sprite_state = sprite
+        this.sprite = this.animations[sprite]
+        this.frame = 0
+        this.frame_modulo = 0
     }
     damage(world, thing, amount) {
         if (this.ignore || this.state === "death") return
@@ -60,16 +83,12 @@ class You extends Living {
         if (this.health > 100) {
             this.ignore = true
             SOUND["destroy"].play()
-            this.state = "death"
+            this.set_state2("death", "damaged")
         } else {
             SOUND["you.hurt"].play()
-            this.state = "damaged"
+            this.set_state("damaged")
         }
 
-        this.sprite_state = "damaged"
-        this.sprite = this.animations[this.sprite_state]
-        this.frame = 0
-        this.frame_modulo = 0
         this.dy = GRAVITY * 8
         this.ground = false
         this.mirror = thing.x < this.x
@@ -170,26 +189,18 @@ class You extends Living {
         this.ground = false
         this.dy = 7.5
         this.move_air = this.state === "walk"
-        this.frame = 0
-        this.frame_modulo = 0
-        this.sprite_state = "crouch"
-        this.sprite = this.animations[this.sprite_state]
+        this.set_sprite("crouch")
     }
     shield() {
         let shield = "tower"
         const min_stamina = 4
         if (this.stamina < min_stamina) return
         if (this.state === "idle" || this.state === "walk") {
-            this.state = "shield"
-            this.sprite_state = shield + ".shield"
+            this.set_state2("shield", shield + ".shield")
         } else if (this.state === "crouch") {
-            this.state = "crouch.shield"
-            this.sprite_state = shield + ".crouch.shield"
+            this.set_state2("crouch.shield", shield + ".crouch.shield")
         } else
             return
-        this.frame = 0
-        this.frame_modulo = 0
-        this.sprite = this.animations[this.sprite_state]
         this.stamina_reduce = this.stamina
         this.stamina -= min_stamina
     }
@@ -202,13 +213,9 @@ class You extends Living {
         this.stamina -= min_stamina
         this.mirror = true
         this.ignore = true
-        this.state = "dodge"
+        this.set_state("dodge")
         this.substate = "left"
         this.dodge_delta = 2
-        this.sprite_state = "dodge"
-        this.sprite = this.animations[this.sprite_state]
-        this.frame = 0
-        this.frame_modulo = 0
     }
     dodge_right() {
         const min_stamina = 24
@@ -219,13 +226,9 @@ class You extends Living {
         this.stamina -= min_stamina
         this.mirror = false
         this.ignore = true
-        this.state = "dodge"
+        this.set_state("dodge")
         this.substate = "right"
         this.dodge_delta = 2
-        this.sprite_state = "dodge"
-        this.sprite = this.animations[this.sprite_state]
-        this.frame = 0
-        this.frame_modulo = 0
     }
     dodge() {
         const min_stamina = 24
@@ -235,12 +238,8 @@ class You extends Living {
         this.stamina_reduce = this.stamina
         this.stamina -= min_stamina
         this.ignore = true
-        this.state = "dodge"
+        this.set_state("dodge")
         this.substate = ""
-        this.sprite_state = "dodge"
-        this.sprite = this.animations[this.sprite_state]
-        this.frame = 0
-        this.frame_modulo = 0
     }
     stair_up(world) {
         let left_gx = Math.floor((this.x - 20) * INV_TILE_SIZE)
@@ -306,6 +305,8 @@ class You extends Living {
                         this.frame_modulo = 0
                         this.frame++
                     }
+                } else {
+                    // death screen
                 }
             } else {
                 if (this.mirror) this.dx = 2
@@ -319,13 +320,8 @@ class You extends Living {
             if (this.mirror) this.dx = 2
             else this.dx = -2
             super.update(world)
-            if (this.ground) {
-                this.state = "idle"
-                this.sprite_state = "idle"
-                this.sprite = this.animations[this.sprite_state]
-                this.frame = 0
-                this.frame_modulo = 0
-            }
+            if (this.ground)
+                this.set_state("idle")
             return
         }
 
@@ -333,11 +329,7 @@ class You extends Living {
             this.frame_modulo++
             if (this.frame_modulo == 32) {
                 this.ignore = false
-                this.state = "idle"
-                this.sprite_state = "idle"
-                this.sprite = this.animations[this.sprite_state]
-                this.frame = 0
-                this.frame_modulo = 0
+                this.set_state("idle")
             } else {
                 if (this.substate === "left") {
                     this.dx = -this.dodge_delta
@@ -356,12 +348,8 @@ class You extends Living {
             if (this.frame_modulo == ANIMATION_RATE) {
                 this.frame_modulo = 0
                 this.frame++
-                if (this.frame === this.sprite.length) {
-                    this.state = "idle"
-                    this.sprite_state = "idle"
-                    this.sprite = this.animations[this.sprite_state]
-                    this.frame = 0
-                }
+                if (this.frame === this.sprite.length)
+                    this.set_state("idle")
             }
             super.update(world)
             return
@@ -373,11 +361,7 @@ class You extends Living {
                     let dist = Math.floor(this.target_x - this.x)
                     if (dist === 0) {
                         this.x = this.target_x
-                        this.state = "stairs"
-                        this.sprite_state = "stair.up"
-                        this.sprite = this.animations[this.sprite_state]
-                        this.frame = 0
-                        this.frame_modulo = 0
+                        this.set_state2("stairs", "stair.up")
                         if (this.substate === "upleft") {
                             this.mirror = true
                             this.target_x -= TILE_SIZE_HALF
@@ -412,23 +396,14 @@ class You extends Living {
                                 this.frame = 0
                         }
                     }
-                } else {
-                    this.state = "idle"
-                    this.sprite_state = "idle"
-                    this.sprite = this.animations[this.sprite_state]
-                    this.frame = 0
-                    this.frame_modulo = 0
-                }
+                } else
+                    this.set_state("idle")
             } else {
                 if (this.menu === null && Input.Is("ArrowDown")) {
                     let dist = Math.floor(this.target_x - this.x)
                     if (dist === 0) {
                         this.x = this.target_x
-                        this.state = "stairs"
-                        this.sprite_state = "stair.down"
-                        this.sprite = this.animations[this.sprite_state]
-                        this.frame = 0
-                        this.frame_modulo = 0
+                        this.set_state2("stairs", "stair.down")
                         if (this.substate === "downleft") {
                             this.mirror = true
                             this.target_x -= TILE_SIZE_HALF
@@ -463,13 +438,8 @@ class You extends Living {
                                 this.frame = 0
                         }
                     }
-                } else {
-                    this.state = "idle"
-                    this.sprite_state = "idle"
-                    this.sprite = this.animations[this.sprite_state]
-                    this.frame = 0
-                    this.frame_modulo = 0
-                }
+                } else
+                    this.set_state("idle")
             }
             super.update(world)
             return
@@ -483,11 +453,7 @@ class You extends Living {
             let dist = Math.floor(this.target_x - this.x)
             if (dist === 0) {
                 if (Math.floor(this.y) % TILE_SIZE == 0 && this.check_ground(world)) {
-                    this.state = "idle"
-                    this.sprite_state = "idle"
-                    this.sprite = this.animations[this.sprite_state]
-                    this.frame = 0
-                    this.frame_modulo = 0
+                    this.set_state("idle")
                     return
                 }
 
@@ -599,13 +565,8 @@ class You extends Living {
                     this.x -= pace
                     this.y -= pace
 
-                    if (Math.floor(this.y) % TILE_SIZE == 0 && this.check_ground(world)) {
-                        this.state = "idle"
-                        this.sprite_state = "idle"
-                        this.sprite = this.animations[this.sprite_state]
-                        this.frame = 0
-                        this.frame_modulo = 0
-                    }
+                    if (Math.floor(this.y) % TILE_SIZE == 0 && this.check_ground(world))
+                        this.set_state("idle")
                 }
 
                 this.remove_from_blocks(world)
@@ -621,13 +582,8 @@ class You extends Living {
                 if (this.mirror) this.dx = -this.speed
                 else this.dx = this.speed
             }
-            if (this.dy < 0 && (this.state === "idle" || this.state === "walk")) {
-                this.state = "idle"
-                this.sprite_state = "idle"
-                this.sprite = this.animations[this.sprite_state]
-                this.frame = 0
-                this.frame_modulo = 0
-            }
+            if (this.dy < 0 && (this.state === "idle" || this.state === "walk"))
+                this.set_state("idle")
         }
 
         if (this.state === "shield" || this.state === "crouch.shield") {
@@ -636,19 +592,10 @@ class You extends Living {
                 this.stamina -= 0.25
                 if (this.stamina <= 0) {
                     this.stamina = 0
-                    this.state = "breath"
-                    this.sprite_state = "breath"
-                    this.sprite = this.animations[this.sprite_state]
-                    this.frame = 0
-                    this.frame_modulo = 0
+                    this.set_state("breath")
                 }
-            } else {
-                this.state = "idle"
-                this.sprite_state = "idle"
-                this.sprite = this.animations[this.sprite_state]
-                this.frame = 0
-                this.frame_modulo = 0
-            }
+            } else
+                this.set_state("idle")
         } else if (this.state === "attack") {
             if (this.charge_attack) {
                 if (Input.Is("z")) {
@@ -657,11 +604,7 @@ class You extends Living {
                     if (this.stamina <= 0) {
                         this.stamina = 0
                         this.charge_attack = false
-                        this.state = "breath"
-                        this.sprite_state = "breath"
-                        this.sprite = this.animations[this.sprite_state]
-                        this.frame = 0
-                        this.frame_modulo = 0
+                        this.set_state("breath")
                     }
                 } else
                     this.charge_attack = false
@@ -672,11 +615,7 @@ class You extends Living {
                     this.frame_modulo = 0
                     this.frame++
                     if (this.frame === this.sprite.length) {
-                        this.state = "idle"
-                        this.sprite_state = "idle"
-                        this.sprite = this.animations[this.sprite_state]
-                        this.frame = 0
-                        this.frame_modulo = 0
+                        this.set_state("idle")
                     } else if (this.frame === 1) {
                         this.charge_multiplier = 1.0
                         if (Input.Is("z"))
@@ -695,11 +634,7 @@ class You extends Living {
                     if (this.stamina <= 0) {
                         this.stamina = 0
                         this.charge_attack = false
-                        this.state = "idle"
-                        this.sprite_state = "idle"
-                        this.sprite = this.animations[this.sprite_state]
-                        this.frame = 0
-                        this.frame_modulo = 0
+                        this.set_state("idle")
                     }
                 } else
                     this.charge_attack = false
@@ -710,11 +645,7 @@ class You extends Living {
                     this.frame_modulo = 0
                     this.frame++
                     if (this.frame === this.sprite.length) {
-                        this.state = "crouch"
-                        this.sprite_state = "crouch"
-                        this.sprite = this.animations[this.sprite_state]
-                        this.frame = 0
-                        this.frame_modulo = 0
+                        this.set_state("crouch")
                     } else if (this.frame === 1) {
                         this.charge_multiplier = 1.0
                         if (Input.Is("z"))
@@ -740,11 +671,7 @@ class You extends Living {
             } else if (right && !left) {
                 this.move_right()
             } else if (this.state === "walk") {
-                this.state = "idle"
-                this.sprite_state = "idle"
-                this.sprite = this.animations[this.sprite_state]
-                this.frame = 0
-                this.frame_modulo = 0
+                this.set_state("idle")
                 this.move_air = false
             }
 
@@ -856,12 +783,21 @@ class You extends Living {
         return list
     }
     boxes() {
-        let sprites = this.sprite_data[this.sprite[this.frame]]
+        let sprites = this.body_data[this.sprite[this.frame]]
         return this.make_boxes(sprites)
     }
     weapon_boxes() {
         let sprites = this.weapon_data[this.sprite[this.frame]]
         return this.make_boxes(sprites)
+    }
+    shield_boxes() {
+        let sprites = this.shield_data[this.sprite[this.frame]]
+        return this.make_boxes(sprites)
+    }
+    shielded(thing_boxes) {
+        if (this.state === "shield" || this.state === "crouch.shield")
+            return Thing.OverlapBoxes(this.shield_boxes(), thing_boxes)
+        else return false
     }
     bounding_box() {
         let this_left = this.x
@@ -886,7 +822,9 @@ class You extends Living {
     }
     build_texture() {
         let sprite_data = {}
+        let body_data = {}
         let weapon_data = {}
+        let shield_data = {}
 
         let weapon_type = "whip"
         let shield_type = "tower"
@@ -896,10 +834,6 @@ class You extends Living {
         let data = SPRITE_DATA["human"]
         let alias = SPRITE_ALIAS["human"]
         let animations = SPRITE_ANIMATIONS["human"]
-
-        console.log("data", data)
-        console.log("alias", alias)
-        console.log("animation", animations)
 
         for (let key in animations) {
             let animation = animations[key]
@@ -914,6 +848,7 @@ class You extends Living {
 
                 if (frame in sprite_data) continue
 
+                body_data[frame] = []
                 sprite_data[frame] = []
                 let list = ["head", "body"]
 
@@ -921,6 +856,7 @@ class You extends Living {
                     weapon_data[frame] = []
                     list.push("")
                 } else if (frame.includes("shield")) {
+                    shield_data[frame] = []
                     list.push("")
                 }
 
@@ -949,18 +885,35 @@ class You extends Living {
                             ox = aliasing[1]
                             oy = aliasing[2]
                         }
-                        sprite_data[frame].push(Sprite.Copy(data[name_alias], ox, oy))
-                        if (frame.includes("attack")) weapon_data[frame].push(Sprite.Copy(data[name_alias], ox, oy))
+
+                        let sprite = Sprite.Copy(data[name_alias], ox, oy)
+                        sprite_data[frame].push(sprite)
+
+                        if (item.includes("head") || item.includes("body")) {
+                            body_data[frame].push(sprite)
+                        } else {
+                            if (frame.includes("attack")) weapon_data[frame].push(sprite)
+                            else if (frame.includes("shield")) shield_data[frame].push(sprite)
+                        }
                     } else {
-                        sprite_data[frame].push(data[item])
-                        if (frame.includes("attack")) weapon_data[frame].push(data[item])
+                        let sprite = data[item]
+                        sprite_data[frame].push(sprite)
+
+                        if (item.includes("head") || item.includes("body")) {
+                            body_data[frame].push(sprite)
+                        } else {
+                            if (frame.includes("attack")) weapon_data[frame].push(sprite)
+                            else if (frame.includes("shield")) shield_data[frame].push(sprite)
+                        }
                     }
                 }
             }
         }
 
         this.sprite_data = sprite_data
+        this.body_data = body_data
         this.weapon_data = weapon_data
+        this.shield_data = shield_data
     }
     render(sprite_buffer) {
         let sprites = this.sprite_data[this.sprite[this.frame]]

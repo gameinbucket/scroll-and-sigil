@@ -372,6 +372,9 @@ class Thing {
         return this.x + this.half_width > thing.x - thing.half_width && this.x - this.half_width < thing.x + thing.half_width &&
             this.y + this.height > thing.y && this.y - 1 < thing.y + thing.height
     }
+    shielded(thing) {
+        return false
+    }
     static OverlapBoxes(a, b) {
         for (let i = 0; i < a.length; i++) {
             let box_a = a[i]
