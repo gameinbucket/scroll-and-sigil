@@ -50,7 +50,7 @@ class FileServer(http.server.BaseHTTPRequestHandler):
         except Exception as err:
             print(err)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     port = 3000
     with socketserver.TCPServer(("", port), FileServer) as server:
         print("listening on port", port)

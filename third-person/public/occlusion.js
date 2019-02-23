@@ -1,59 +1,59 @@
-const OCCLUSION_SLICE_A = new Int32Array(3);
-const OCCLUSION_SLICE_B = new Int32Array(3);
-const OCCLUSION_FULLY = 0;
-const OCCLUSION_PARTIALLY = 1;
-const OCCLUSION_NOTHING = 2;
-const OCCLUSION_QUEUE = [];
-const OCCLUSION_GOTO = [];
-const OCCLUSION_QUEUE_FROM = [];
-const FRUSTUM = new Array(6);
+const OCCLUSION_SLICE_A = new Int32Array(3)
+const OCCLUSION_SLICE_B = new Int32Array(3)
+const OCCLUSION_FULLY = 0
+const OCCLUSION_PARTIALLY = 1
+const OCCLUSION_NOTHING = 2
+const OCCLUSION_QUEUE = []
+const OCCLUSION_GOTO = []
+const OCCLUSION_QUEUE_FROM = []
+const FRUSTUM = new Array(6)
 for (let i = 0; i < FRUSTUM.length; i++) {
-    FRUSTUM[i] = new Float32Array(4);
+    FRUSTUM[i] = new Float32Array(4)
 }
-let OCCLUSION_VIEW_NUM = 0;
-let OCCLUSION_QUEUE_POS = 0;
-let OCCLUSION_QUEUE_NUM = 0;
+let OCCLUSION_VIEW_NUM = 0
+let OCCLUSION_QUEUE_POS = 0
+let OCCLUSION_QUEUE_NUM = 0
 class Occlusion {
-    static Calculate(chunk) {
+    static Calculate(block) {
         for (let side_a = 0; side_a < 6; side_a++) {
-            let ax = SLICE_X[side_a];
-            let ay = SLICE_Y[side_a];
-            let az = SLICE_Z[side_a];
+            let ax = SLICE_X[side_a]
+            let ay = SLICE_Y[side_a]
+            let az = SLICE_Z[side_a]
             for (let side_b = side_a + 1; side_b < 6; side_b++) {
-                let bx = SLICE_X[side_b];
-                let by = SLICE_Y[side_b];
-                let bz = SLICE_Z[side_b];
+                let bx = SLICE_X[side_b]
+                let by = SLICE_Y[side_b]
+                let bz = SLICE_Z[side_b]
 
                 if (SLICE_TOWARDS[side_a] > 0) {
-                    OCCLUSION_SLICE_A[2] = CHUNK_DIM - 1;
+                    OCCLUSION_SLICE_A[2] = CHUNK_DIM - 1
                 } else {
-                    OCCLUSION_SLICE_A[2] = 0;
+                    OCCLUSION_SLICE_A[2] = 0
                 }
 
                 if (SLICE_TOWARDS[side_b] > 0) {
-                    OCCLUSION_SLICE_B[2] = CHUNK_DIM - 1;
+                    OCCLUSION_SLICE_B[2] = CHUNK_DIM - 1
                 } else {
-                    OCCLUSION_SLICE_B[2] = 0;
+                    OCCLUSION_SLICE_B[2] = 0
                 }
                 loop:
-                    for (OCCLUSION_SLICE_A[1] = 0; OCCLUSION_SLICE_A[1] < CHUNK_DIM; OCCLUSION_SLICE_A[1]++) {
-                        for (OCCLUSION_SLICE_A[0] = 0; OCCLUSION_SLICE_A[0] < CHUNK_DIM; OCCLUSION_SLICE_A[0]++) {
-                            for (OCCLUSION_SLICE_B[1] = 0; OCCLUSION_SLICE_B[1] < CHUNK_DIM; OCCLUSION_SLICE_B[1]++) {
-                                for (OCCLUSION_SLICE_B[0] = 0; OCCLUSION_SLICE_B[0] < CHUNK_DIM; OCCLUSION_SLICE_B[0]++) {
-                                    let from_x = OCCLUSION_SLICE_A[ax] + 0.5;
-                                    let from_y = OCCLUSION_SLICE_A[ay] + 0.5;
-                                    let from_z = OCCLUSION_SLICE_A[az] + 0.5;
-                                    let to_x = OCCLUSION_SLICE_B[bx] + 0.5;
-                                    let to_y = OCCLUSION_SLICE_B[by] + 0.5;
-                                    let to_z = OCCLUSION_SLICE_B[bz] + 0.5;
-                                    if (Cast.Chunk(chunk, from_x, from_y, from_z, to_x, to_y, to_z)) {
-                                        chunk.visibility |= 1 << (side_a * 6 + side_b)
-                                        break loop;
-                                    }
+                for (OCCLUSION_SLICE_A[1] = 0; OCCLUSION_SLICE_A[1] < CHUNK_DIM; OCCLUSION_SLICE_A[1]++) {
+                    for (OCCLUSION_SLICE_A[0] = 0; OCCLUSION_SLICE_A[0] < CHUNK_DIM; OCCLUSION_SLICE_A[0]++) {
+                        for (OCCLUSION_SLICE_B[1] = 0; OCCLUSION_SLICE_B[1] < CHUNK_DIM; OCCLUSION_SLICE_B[1]++) {
+                            for (OCCLUSION_SLICE_B[0] = 0; OCCLUSION_SLICE_B[0] < CHUNK_DIM; OCCLUSION_SLICE_B[0]++) {
+                                let from_x = OCCLUSION_SLICE_A[ax] + 0.5
+                                let from_y = OCCLUSION_SLICE_A[ay] + 0.5
+                                let from_z = OCCLUSION_SLICE_A[az] + 0.5
+                                let to_x = OCCLUSION_SLICE_B[bx] + 0.5
+                                let to_y = OCCLUSION_SLICE_B[by] + 0.5
+                                let to_z = OCCLUSION_SLICE_B[bz] + 0.5
+                                if (Cast.Chunk(block, from_x, from_y, from_z, to_x, to_y, to_z)) {
+                                    block.visibility |= 1 << (side_a * 6 + side_b)
+                                    break loop
                                 }
                             }
                         }
                     }
+                }
             }
         }
     }
@@ -111,10 +111,10 @@ class Occlusion {
 
         OCCLUSION_VIEW_NUM = 0
 
-        let index = lx + ly * world.chunk_w + lz * world.chunk_slice
-        if (index < 0 || index >= world.chunk_all) {
-            while (OCCLUSION_VIEW_NUM < world.chunk_all) {
-                world.viewable[OCCLUSION_VIEW_NUM] = world.chunks[OCCLUSION_VIEW_NUM]
+        let index = lx + ly * world.block_w + lz * world.block_slice
+        if (index < 0 || index >= world.block_all) {
+            while (OCCLUSION_VIEW_NUM < world.block_all) {
+                world.viewable[OCCLUSION_VIEW_NUM] = world.blocks[OCCLUSION_VIEW_NUM]
                 OCCLUSION_VIEW_NUM++
             }
             return
@@ -122,10 +122,10 @@ class Occlusion {
 
         OCCLUSION_QUEUE_POS = 0
         OCCLUSION_QUEUE_NUM = 1
-        OCCLUSION_QUEUE[0] = world.chunks[index]
+        OCCLUSION_QUEUE[0] = world.blocks[index]
         OCCLUSION_QUEUE_FROM[0] = -1
 
-        for (let i = 0; i < world.chunk_all; i++) {
+        for (let i = 0; i < world.block_all; i++) {
             OCCLUSION_GOTO[i] = true
         }
         while (OCCLUSION_QUEUE_NUM > 0) {
@@ -136,7 +136,7 @@ class Occlusion {
             OCCLUSION_VIEW_NUM++
 
             OCCLUSION_QUEUE_POS++
-            if (OCCLUSION_QUEUE_POS === world.chunk_all) {
+            if (OCCLUSION_QUEUE_POS === world.block_all) {
                 OCCLUSION_QUEUE_POS = 0
             }
             OCCLUSION_QUEUE_NUM--
@@ -168,7 +168,7 @@ class Occlusion {
         switch (to) {
             case WORLD_POSITIVE_X:
                 x++
-                if (x === world.chunk_w) {
+                if (x === world.block_w) {
                     return
                 }
                 break
@@ -180,7 +180,7 @@ class Occlusion {
                 break
             case WORLD_POSITIVE_Y:
                 y++
-                if (y === world.chunk_h) {
+                if (y === world.block_h) {
                     return
                 }
                 break
@@ -192,7 +192,7 @@ class Occlusion {
                 break
             case WORLD_POSITIVE_Z:
                 z++
-                if (z === world.chunk_l) {
+                if (z === world.block_l) {
                     return
                 }
                 break
@@ -203,7 +203,7 @@ class Occlusion {
                 }
                 break
         }
-        let index = x + y * world.chunk_w + z * world.chunk_slice
+        let index = x + y * world.block_w + z * world.block_slice
         if (OCCLUSION_GOTO[index] === false) {
             return
         }
@@ -241,7 +241,7 @@ class Occlusion {
             }
         }
         OCCLUSION_GOTO[index] = false
-        let C = world.chunks[index]
+        let C = world.blocks[index]
         let pos_cx = C.x * CHUNK_DIM
         let pos_cy = C.y * CHUNK_DIM
         let pos_cz = C.z * CHUNK_DIM
@@ -252,8 +252,8 @@ class Occlusion {
             return
         }
         let queue = OCCLUSION_QUEUE_POS + OCCLUSION_QUEUE_NUM
-        if (queue >= world.chunk_all) {
-            queue -= world.chunk_all
+        if (queue >= world.block_all) {
+            queue -= world.block_all
         }
         OCCLUSION_QUEUE[queue] = C
         OCCLUSION_QUEUE_FROM[queue] = to

@@ -53,9 +53,9 @@ class World {
             let by = block["y"]
 
             if (left === null || bx < left) left = bx
-            if (right === null || by < bottom) bottom = by
-            if (top === null || bx > right) right = bx
-            if (bottom === null || by > top) top = by
+            if (right === null || bx > right) right = bx
+            if (top === null || by > top) top = by
+            if (bottom === null || by < bottom) bottom = by
         }
 
         this.width = right - left + 1
