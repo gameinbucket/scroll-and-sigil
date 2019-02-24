@@ -2,13 +2,13 @@ const LIGHT_QUEUE_LIMIT = 30 * 30 * 30
 const LIGHT_QUEUE = new Array(LIGHT_QUEUE_LIMIT)
 const LIGHT_QUEUE_POS = 0
 const LIGHT_QUEUE_NUM = 1
-const LIGHT_FADE = 0.95;
+const LIGHT_FADE = 0.95
 for (let i = 0; i < LIGHT_QUEUE.length; i++) {
     LIGHT_QUEUE[i] = new Int32Array(3)
 }
-let LIGHT_CHUNK_X = 0
-let LIGHT_CHUNK_Y = 0
-let LIGHT_CHUNK_Z = 0
+let LIGHT_BLOCK_X = 0
+let LIGHT_BLOCK_Y = 0
+let LIGHT_BLOCK_Z = 0
 let LIGHT_POS = 0
 let LIGHT_NUM = 0
 
@@ -27,7 +27,7 @@ class Light {
         ]
     }
     static Visit(world, bx, by, bz, red, green, blue) {
-        let tile = world.get_tile_pointer(LIGHT_CHUNK_X, LIGHT_CHUNK_Y, LIGHT_CHUNK_Z, bx, by, bz)
+        let tile = world.get_tile_pointer(LIGHT_BLOCK_X, LIGHT_BLOCK_Y, LIGHT_BLOCK_Z, bx, by, bz)
         if (tile === null || TILE_CLOSED[tile.type])
             return
         if (tile.red >= red || tile.green >= green || tile.blue >= blue)
@@ -37,18 +37,17 @@ class Light {
         tile.blue = blue
 
         let queue = LIGHT_POS + LIGHT_NUM
-        if (queue >= LIGHT_QUEUE_LIMIT) {
+        if (queue >= LIGHT_QUEUE_LIMIT)
             queue -= LIGHT_QUEUE_LIMIT
-        }
         LIGHT_QUEUE[queue][0] = bx
         LIGHT_QUEUE[queue][1] = by
         LIGHT_QUEUE[queue][2] = bz
         LIGHT_NUM++
     }
     static Add(world, block, light) {
-        LIGHT_CHUNK_X = block.x
-        LIGHT_CHUNK_Y = block.y
-        LIGHT_CHUNK_Z = block.z
+        LIGHT_BLOCK_X = block.x
+        LIGHT_BLOCK_Y = block.y
+        LIGHT_BLOCK_Z = block.z
 
         let color = Render.UnpackRgb(light.rgb)
 
@@ -68,12 +67,13 @@ class Light {
             let x = LIGHT_QUEUE[LIGHT_POS][0]
             let y = LIGHT_QUEUE[LIGHT_POS][1]
             let z = LIGHT_QUEUE[LIGHT_POS][2]
+
             LIGHT_POS++
-            if (LIGHT_POS == LIGHT_QUEUE_LIMIT)
+            if (LIGHT_POS === LIGHT_QUEUE_LIMIT)
                 LIGHT_POS = 0
             LIGHT_NUM--
 
-            let node = world.get_tile_pointer(LIGHT_CHUNK_X, LIGHT_CHUNK_Y, LIGHT_CHUNK_Z, x, y, z)
+            let node = world.get_tile_pointer(LIGHT_BLOCK_X, LIGHT_BLOCK_Y, LIGHT_BLOCK_Z, x, y, z)
             if (node === null)
                 continue
 

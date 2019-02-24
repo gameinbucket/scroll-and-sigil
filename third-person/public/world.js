@@ -261,10 +261,6 @@ class World {
             }
         }
     }
-    get_terrain_height(x, y, z) {
-        let gy = Math.floor(y)
-        return gy + 1
-    }
     unit_overlap(a, b) {
         let dxx = a.x - b.x
         let dzz = a.z - b.z

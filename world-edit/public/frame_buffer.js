@@ -1,9 +1,6 @@
-class FrameBuffer
-{
-    constructor(sys, gl, width, height, internalFormat, format, type, linear, depth)
-    {
-        if (format.length !== internalFormat.length || format.length !== type.length)
-        {
+class FrameBuffer {
+    constructor(sys, gl, width, height, internalFormat, format, type, linear, depth) {
+        if (format.length !== internalFormat.length || format.length !== type.length) {
             console.error('framebuffer invalid');
         }
         this.fbo;
@@ -19,8 +16,7 @@ class FrameBuffer
         this.drawBuffers = new Array(format.length);
         RenderSystem.MakeFrameBuffer(sys, gl, this);
     }
-    static Resize(sys, gl, buffer, widht, height)
-    {
+    static Resize(sys, gl, buffer, width, height) {
         buffer.width = width;
         buffer.height = height;
         RenderSystem.UpdateFrameBuffer(sys, gl, buffer);

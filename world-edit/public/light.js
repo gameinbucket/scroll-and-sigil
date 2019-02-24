@@ -2,7 +2,7 @@ const LIGHT_QUEUE_LIMIT = 30 * 30 * 30;
 const LIGHT_QUEUE = new Array(LIGHT_QUEUE_LIMIT);
 const LIGHT_QUEUE_POS = 0;
 const LIGHT_QUEUE_NUM = 1;
-const LIGHT_FADE = 0.95; // 0.8;
+const LIGHT_FADE = 0.95
 for (let i = 0; i < LIGHT_QUEUE.length; i++) {
     LIGHT_QUEUE[i] = new Int32Array(3);
 }

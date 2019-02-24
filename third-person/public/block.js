@@ -211,37 +211,37 @@ class Block {
                         this.determine_light(block_zmz, color)
                         this.determine_light(block_zzm, color)
                     }
-                    if (block_mzz === null || TILE_CLOSED[block_mzz]) {
+                    if (block_mzz === null || TILE_CLOSED[block_mzz.type]) {
                         this.determine_light(block_zzz, color)
                         this.determine_light(block_zmz, color)
                         this.determine_light(block_zzm, color)
                     }
-                    if (block_mzm === null || TILE_CLOSED[block_mzm]) {
+                    if (block_mzm === null || TILE_CLOSED[block_mzm.type]) {
                         this.determine_light(block_mzz, color)
                         this.determine_light(block_zzm, color)
                         this.determine_light(block_mmm, color)
                     }
-                    if (block_zzm === null || TILE_CLOSED[block_zzm]) {
+                    if (block_zzm === null || TILE_CLOSED[block_zzm.type]) {
                         this.determine_light(block_zzz, color)
                         this.determine_light(block_mzm, color)
                         this.determine_light(block_zmm, color)
                     }
-                    if (block_zmz === null || TILE_CLOSED[block_zmz]) {
+                    if (block_zmz === null || TILE_CLOSED[block_zmz.type]) {
                         this.determine_light(block_zzz, color)
                         this.determine_light(block_mmz, color)
                         this.determine_light(block_zmm, color)
                     }
-                    if (block_mmz === null || TILE_CLOSED[block_mmz]) {
+                    if (block_mmz === null || TILE_CLOSED[block_mmz.type]) {
                         this.determine_light(block_mzz, color)
                         this.determine_light(block_mmm, color)
                         this.determine_light(block_zmz, color)
                     }
-                    if (block_mmm === null || TILE_CLOSED[block_mmm]) {
+                    if (block_mmm === null || TILE_CLOSED[block_mmm.type]) {
                         this.determine_light(block_mzm, color)
                         this.determine_light(block_zmm, color)
                         this.determine_light(block_mmz, color)
                     }
-                    if (block_zmm === null || TILE_CLOSED[block_zmm]) {
+                    if (block_zmm === null || TILE_CLOSED[block_zmm.type]) {
                         this.determine_light(block_zzm, color)
                         this.determine_light(block_zmz, color)
                         this.determine_light(block_mmm, color)
@@ -350,8 +350,6 @@ class Block {
 
                         let light = this.light_of_side(xs, ys, zs, side)
                         let ambient = BLOCK_MESH_AMBIENT[index][side]
-
-                        console.log(light)
 
                         let rgb_a = Light.Colorize(light[0], ambient[0])
                         let rgb_b = Light.Colorize(light[1], ambient[1])

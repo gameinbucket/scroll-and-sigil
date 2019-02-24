@@ -152,7 +152,7 @@ class Thing {
     terrain_collision_y(world) {
         this.ground = false
         if (this.dy < 0) {
-            let height = world.get_terrain_height(this.x, this.y, this.z)
+            let height = Math.floor(this.y)
             if (this.y < height) {
                 this.y = height
                 this.ground = true

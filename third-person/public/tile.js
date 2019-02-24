@@ -9,6 +9,10 @@ const TILE_WATER = 7
 const TILE_RAILS_LEFT = 8
 const TILE_STAIRS_LEFT = 9
 
+const AMBIENT_LOW = 100
+const AMBIENT_HALF = 175
+const AMBIENT_FULL = 255
+
 const TILE_SIZE = 16
 const TILE_SPRITE_SIZE = 1.0 / 128.0
 const TILE_TEXTURE = []
@@ -47,9 +51,9 @@ class Tile {
     }
     static Ambient(side1, side2, corner) {
         if (side1 && side2)
-            return 175
+            return AMBIENT_LOW
         if (side1 || side2 || corner)
-            return 215
-        return 255
+            return AMBIENT_HALF
+        return AMBIENT_FULL
     }
 }

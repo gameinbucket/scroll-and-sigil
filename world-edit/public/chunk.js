@@ -424,8 +424,6 @@ class Chunk {
                         let raise = this.side_offset(world, xs, ys, zs, side);
                         let ambient = CHUNK_MESH_AMBIENT[index][side];
 
-                        console.log(light)
-
                         let rgb_a = Light.Colorize(light[0], ambient[0]);
                         let rgb_b = Light.Colorize(light[1], ambient[1]);
                         let rgb_c = Light.Colorize(light[2], ambient[2]);
