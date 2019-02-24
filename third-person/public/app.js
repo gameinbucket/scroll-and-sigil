@@ -27,40 +27,6 @@ class Application {
         let generics = RenderBuffer.Init(gl, 2, 3, 0, 1600, 2400)
         let generics2 = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
 
-        // remove >
-        let sprite_buffers = [
-            RenderBuffer.Init(gl, 3, 0, 2, 400, 600)
-        ];
-        this.sprite_buffers = sprite_buffers;
-        // < remove
-
-        // w = 1.0 / 1024.0
-        // h = 1.0 / 256.0
-        // let d = 48.0
-        // let z = 0.0
-        // let t = 24.0
-        // let footman_walk = []
-        // footman_walk[0] = new Array(8)
-        // footman_walk[1] = new Array(8)
-        // footman_walk[2] = new Array(8)
-        // footman_walk[3] = new Array(8)
-        // footman_walk[4] = new Array(8)
-        // for (let i = 0; i < 5; i++) {
-        //     footman_walk[i][0] = new Sprite(i * d, 0, d, d, w, h, z, t)
-        //     footman_walk[i][1] = new Sprite(i * d, 4.0 * d, d, d, w, h, z, t)
-        //     footman_walk[i][2] = new Sprite(i * d, 3.0 * d, d, d, w, h, z, t)
-        //     footman_walk[i][3] = footman_walk[i][1]
-        //     footman_walk[i][4] = footman_walk[i][0]
-        //     footman_walk[i][5] = new Sprite(i * d, 0.0 * d, d, d, w, h, z, t)
-        //     footman_walk[i][6] = new Sprite(i * d, 1.0 * d, d, d, w, h, z, t)
-        //     footman_walk[i][7] = footman_walk[i][5]
-        // }
-
-        // new Unit().init(world, UNIT_COLOR_RED, 0, footman_walk, 16, 9, 20)
-
-        // this.sprite_cavern = sprite_cavern
-        // this.footman_walk = footman_walk
-
         this.on = true
         this.canvas = canvas
         this.gl = gl
@@ -137,7 +103,7 @@ class Application {
         let config = JSON.parse(data)
         let shaders = config["shaders"]
         let textures = config["textures"]
-        let sound = config["sound"]
+        let sounds = config["sound"]
         let sprites = config["sprites"]
         let tiles = config["tiles"]
 
@@ -151,10 +117,8 @@ class Application {
 
         await Promise.all(promises)
 
-        for (let key in sound) {
-            let path = sound[key]
-            SOUND[key] = new Audio("sound/" + path)
-        }
+        for (let key in sounds)
+            SOUND[key] = new Audio("sound/" + sounds[key])
 
         for (let name in sprites) {
             let sprite = sprites[name]
@@ -183,7 +147,6 @@ class Application {
                 let sprite = sprite_data[key]
                 let atlas = sprite.atlas
                 let boxes = sprite.boxes
-
                 SPRITE_DATA[name][key] = Sprite.Build(atlas, boxes, width, height)
             }
         }
@@ -191,11 +154,9 @@ class Application {
         for (let key in tiles) {
             let tile = tiles[key]
             let texture = tile["texture"]
-            let empty = tile["empty"]
             if (texture === null) TILE_TEXTURE.push(null)
-            else
-                TILE_TEXTURE.push(Sprite.Simple(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
-            TILE_EMPTY.push(empty)
+            else TILE_TEXTURE.push(Sprite.Simple(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
+            TILE_CLOSED.push(tile["closed"])
         }
 
         data = await Network.Request("maps/map.json")

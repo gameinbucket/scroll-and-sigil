@@ -3,6 +3,7 @@ import json
 import socketserver
 import http.server
 import base64
+import sys
 
 mime = {
     ".f": "text/plain",
@@ -51,7 +52,10 @@ class FileServer(http.server.BaseHTTPRequestHandler):
             print(err)
 
 if __name__ == "__main__":
-    port = 3000
+    if len(sys.argv) > 1:
+        port = int(sys.argv[1])
+    else:
+        port = 3000
     with socketserver.TCPServer(("", port), FileServer) as server:
         print("listening on port", port)
         try:

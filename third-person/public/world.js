@@ -4,34 +4,32 @@ const WORLD_POSITIVE_Z = 2
 const WORLD_NEGATIVE_X = 3
 const WORLD_NEGATIVE_Y = 4
 const WORLD_NEGATIVE_Z = 5
-const WORLD_LIGHT_AMBIENT = 0.38
-const WORLD_LIGHT_INTESITY = 5.0
-const WORLD_LIGHT_DIR_X = 50.0
-const WORLD_LIGHT_DIR_Y = -10.0
-const WORLD_LIGHT_DIR_Z = 50.0
-const WORLD_LIGHT_LEN = Math.sqrt(
-    WORLD_LIGHT_DIR_X * WORLD_LIGHT_DIR_X +
-    WORLD_LIGHT_DIR_Y * WORLD_LIGHT_DIR_Y +
-    WORLD_LIGHT_DIR_Z * WORLD_LIGHT_DIR_Z)
-const WORLD_LIGHT_X = WORLD_LIGHT_DIR_X / WORLD_LIGHT_LEN
-const WORLD_LIGHT_Y = WORLD_LIGHT_DIR_Y / WORLD_LIGHT_LEN
-const WORLD_LIGHT_Z = WORLD_LIGHT_DIR_Z / WORLD_LIGHT_LEN
 
 class World {
     constructor(g, gl) {
         this.g = g
         this.gl = gl
-        this.block_w
-        this.block_h
-        this.block_l
-        this.block_slice
-        this.block_all
+        this.width
+        this.height
+        this.length
+        this.slice
+        this.all
         this.blocks
         this.colors
         this.viewable
         this.collisions
         this.block_cache
         this.block_cache_count
+        this.sprite_set
+        this.sprite_buffer
+        this.sprite_count
+        this.things
+        this.thing_count
+        this.delete_things
+        this.delete_thing_count
+        this.threads = ["ai", "pathing"]
+        this.thread_index = 0
+        this.thread_id = ""
     }
     load(data) {
         let content
@@ -50,6 +48,13 @@ class World {
         this.collisions = new Set()
         this.block_cache = []
         this.block_cache_count = 0
+        this.sprite_set = new Set()
+        this.sprite_buffer = {}
+        this.sprite_count = {}
+        this.things = []
+        this.thing_count = 0
+        this.delete_things = []
+        this.delete_thing_count = 0
 
         let blocks = content["blocks"]
 
@@ -79,12 +84,6 @@ class World {
         this.slice = this.width * this.height
         this.all = this.slice * this.length
 
-        this.block_w = this.width
-        this.block_h = this.height
-        this.block_l = this.length
-        this.block_slice = this.slice
-        this.block_all = this.all
-
         for (let b = 0; b < blocks.length; b++) {
             let data = blocks[b]
             let bx = data["x"] - left
@@ -94,8 +93,10 @@ class World {
 
             let block = new Block(bx, by, bz)
 
-            for (let t = 0; t < CHUNK_ALL; t++)
-                block.tiles[t].type = tiles[t]
+            if (tiles !== null) {
+                for (let t = 0; t < BLOCK_ALL; t++)
+                    block.tiles[t].type = tiles[t]
+            }
 
             this.blocks[bx + by * this.width + bz * this.slice] = block
         }
@@ -117,9 +118,9 @@ class World {
             let bz = data["z"] - bottom
             let things = data["things"]
 
-            let px = bx * GRID_SIZE
-            let py = by * GRID_SIZE
-            let pz = bz * GRID_SIZE
+            let px = bx * BLOCK_SIZE
+            let py = by * BLOCK_SIZE
+            let pz = bz * BLOCK_SIZE
 
             for (let t = 0; t < things.length; t++) {
                 let thing = things[t]
@@ -127,22 +128,16 @@ class World {
                 let x = thing["x"] + px
                 let y = thing["y"] + py
                 let z = thing["z"] + pz
-                let item = THING_MAP[id]
-                if (id === "you") {
-                    if (you === null)
-                        you = item.get(this, x, y)
-                } else
-                    item.get(this, x, y)
+                THING_MAP[id].make(this, x, y, z)
             }
         }
 
         this.build()
-        console.log(this.save("map"))
     }
     save(name) {
         let data = `{"name":"${name}","blocks":[`
         let block_data = []
-        for (let i = 0; i < this.block_all; i++) {
+        for (let i = 0; i < this.all; i++) {
             let block = this.blocks[i]
             if (block.empty()) continue
             block_data.push(block.save())
@@ -152,98 +147,97 @@ class World {
         return data
     }
     build() {
-        for (let i = 0; i < this.block_all; i++) {
+        for (let i = 0; i < this.all; i++) {
             let block = this.blocks[i]
             for (let j = 0; j < block.lights.length; j++)
                 Light.Add(this, block, block.lights[j])
             Occlusion.Calculate(block)
         }
-        for (let i = 0; i < this.block_all; i++)
-            this.blocks[i].build_mesh(this, this.g, this.gl)
+        for (let i = 0; i < this.all; i++)
+            this.blocks[i].build_mesh(this)
     }
     find_block(x, y, z) {
-        let cx = Math.floor(x / CHUNK_DIM)
-        let cy = Math.floor(y / CHUNK_DIM)
-        let cz = Math.floor(z / CHUNK_DIM)
-        let bx = x % CHUNK_DIM
-        let by = y % CHUNK_DIM
-        let bz = z % CHUNK_DIM
-        let block = this.blocks[cx + cy * this.block_w + cz * this.block_slice]
-        return block.tiles[bx + by * CHUNK_DIM + bz * CHUNK_SLICE].type
+        let cx = Math.floor(x * INV_BLOCK_SIZE)
+        let cy = Math.floor(y * INV_BLOCK_SIZE)
+        let cz = Math.floor(z * INV_BLOCK_SIZE)
+        let bx = x % BLOCK_SIZE
+        let by = y % BLOCK_SIZE
+        let bz = z % BLOCK_SIZE
+        let block = this.blocks[cx + cy * this.width + cz * this.slice]
+        return block.tiles[bx + by * BLOCK_SIZE + bz * BLOCK_SLICE].type
     }
     get_tile_pointer(cx, cy, cz, bx, by, bz) {
         while (bx < 0) {
-            bx += CHUNK_DIM
+            bx += BLOCK_SIZE
             cx--
         }
-        while (bx >= CHUNK_DIM) {
-            bx -= CHUNK_DIM
+        while (bx >= BLOCK_SIZE) {
+            bx -= BLOCK_SIZE
             cx++
         }
         while (by < 0) {
-            by += CHUNK_DIM
+            by += BLOCK_SIZE
             cy--
         }
-        while (by >= CHUNK_DIM) {
-            by -= CHUNK_DIM
+        while (by >= BLOCK_SIZE) {
+            by -= BLOCK_SIZE
             cy++
         }
         while (bz < 0) {
-            bz += CHUNK_DIM
+            bz += BLOCK_SIZE
             cz--
         }
-        while (bz >= CHUNK_DIM) {
-            bz -= CHUNK_DIM
+        while (bz >= BLOCK_SIZE) {
+            bz -= BLOCK_SIZE
             cz++
         }
         let block = this.get_block(cx, cy, cz)
-        if (block === null) {
+        if (block === null)
             return null
-        }
         return block.get_tile_pointer_unsafe(bx, by, bz)
     }
     get_tile_type(cx, cy, cz, bx, by, bz) {
         while (bx < 0) {
-            bx += CHUNK_DIM
+            bx += BLOCK_SIZE
             cx--
         }
-        while (bx >= CHUNK_DIM) {
-            bx -= CHUNK_DIM
+        while (bx >= BLOCK_SIZE) {
+            bx -= BLOCK_SIZE
             cx++
         }
         while (by < 0) {
-            by += CHUNK_DIM
+            by += BLOCK_SIZE
             cy--
         }
-        while (by >= CHUNK_DIM) {
-            by -= CHUNK_DIM
+        while (by >= BLOCK_SIZE) {
+            by -= BLOCK_SIZE
             cy++
         }
         while (bz < 0) {
-            bz += CHUNK_DIM
+            bz += BLOCK_SIZE
             cz--
         }
-        while (bz >= CHUNK_DIM) {
-            bz -= CHUNK_DIM
+        while (bz >= BLOCK_SIZE) {
+            bz -= BLOCK_SIZE
             cz++
         }
         let block = this.get_block(cx, cy, cz)
         if (block === null) {
-            return BLOCK_NONE
+            return TILE_NONE
         }
         return block.get_tile_type_unsafe(bx, by, bz)
     }
     get_block(x, y, z) {
-        if (x < 0 || x >= this.block_w) {
+        if (x < 0 || x >= this.width) {
             return null
         }
-        if (y < 0 || y >= this.block_h) {
+        if (y < 0 || y >= this.height) {
             return null
         }
-        if (z < 0 || z >= this.block_l) {
+        if (z < 0 || z >= this.length) {
             return null
         }
-        return this.blocks[x + y * this.block_w + z * this.block_slice]
+        return this.blocks[x + y * this.width + z * this.slice]
     }
     add_block_cache(c) {
         if (this.block_cache_count === this.block_cache.length) {
@@ -316,11 +310,23 @@ class World {
             }
         }
     }
-    render(gl, sprite_buffers, x, y, z, mv) {
+    render(g, x, y, z) {
+        let gl = this.gl
+        let sprite_set = this.sprite_set
+        let sprite_buffer = this.sprite_buffer
+
+        sprite_set.clear()
+        for (let key in sprite_buffer)
+            sprite_buffer[key].zero()
+
+        g.set_program(gl, "texcol3d")
+        g.update_mvp(gl)
+        g.set_texture(gl, "map")
+
         for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
             let block = this.viewable[i]
 
-            block.render_things(gl, sprite_buffers, mv)
+            block.render_things(sprite_set, sprite_buffer, g.mv)
 
             let mesh = block.mesh
             if (mesh.vertex_pos === 0)
@@ -331,28 +337,35 @@ class World {
             if (x == block.x) {
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_X], block.count_side[WORLD_POSITIVE_X])
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_X], block.count_side[WORLD_NEGATIVE_X])
-            } else if (x > block.x) {
+            } else if (x > block.x)
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_X], block.count_side[WORLD_POSITIVE_X])
-            } else {
+            else
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_X], block.count_side[WORLD_NEGATIVE_X])
-            }
 
             if (y == block.y) {
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_Y], block.count_side[WORLD_POSITIVE_Y])
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_Y], block.count_side[WORLD_NEGATIVE_Y])
-            } else if (y > block.y) {
+            } else if (y > block.y)
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_Y], block.count_side[WORLD_POSITIVE_Y])
-            } else {
+            else
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_Y], block.count_side[WORLD_NEGATIVE_Y])
-            }
 
             if (z == block.z) {
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_Z], block.count_side[WORLD_POSITIVE_Z])
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_Z], block.count_side[WORLD_NEGATIVE_Z])
-            } else if (z > block.z) {
+            } else if (z > block.z)
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_Z], block.count_side[WORLD_POSITIVE_Z])
-            } else {
+            else
                 RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_Z], block.count_side[WORLD_NEGATIVE_Z])
+        }
+
+        g.set_program(gl, "texture3d")
+        g.update_mvp(gl)
+        for (let key in sprite_buffer) {
+            let buffer = sprite_buffer[key]
+            if (buffer.vertex_pos > 0) {
+                g.set_texture(gl, key)
+                RenderSystem.UpdateAndDraw(gl, buffer)
             }
         }
     }

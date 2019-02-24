@@ -2,7 +2,7 @@ const LIGHT_QUEUE_LIMIT = 30 * 30 * 30
 const LIGHT_QUEUE = new Array(LIGHT_QUEUE_LIMIT)
 const LIGHT_QUEUE_POS = 0
 const LIGHT_QUEUE_NUM = 1
-const LIGHT_FADE = 0.95; // 0.8
+const LIGHT_FADE = 0.95;
 for (let i = 0; i < LIGHT_QUEUE.length; i++) {
     LIGHT_QUEUE[i] = new Int32Array(3)
 }
@@ -28,7 +28,7 @@ class Light {
     }
     static Visit(world, bx, by, bz, red, green, blue) {
         let tile = world.get_tile_pointer(LIGHT_CHUNK_X, LIGHT_CHUNK_Y, LIGHT_CHUNK_Z, bx, by, bz)
-        if (tile === null || Tile.Closed(tile.type))
+        if (tile === null || TILE_CLOSED[tile.type])
             return
         if (tile.red >= red || tile.green >= green || tile.blue >= blue)
             return
@@ -52,7 +52,7 @@ class Light {
 
         let color = Render.UnpackRgb(light.rgb)
 
-        let index = light.x + light.y * CHUNK_DIM + light.z * CHUNK_SLICE
+        let index = light.x + light.y * BLOCK_SIZE + light.z * BLOCK_SLICE
         let tile = block.tiles[index]
         tile.red = color[0]
         tile.green = color[1]
@@ -69,15 +69,13 @@ class Light {
             let y = LIGHT_QUEUE[LIGHT_POS][1]
             let z = LIGHT_QUEUE[LIGHT_POS][2]
             LIGHT_POS++
-            if (LIGHT_POS == LIGHT_QUEUE_LIMIT) {
+            if (LIGHT_POS == LIGHT_QUEUE_LIMIT)
                 LIGHT_POS = 0
-            }
             LIGHT_NUM--
 
             let node = world.get_tile_pointer(LIGHT_CHUNK_X, LIGHT_CHUNK_Y, LIGHT_CHUNK_Z, x, y, z)
-            if (node === null) {
+            if (node === null)
                 continue
-            }
 
             let r = Math.floor(node.red * LIGHT_FADE)
             let g = Math.floor(node.green * LIGHT_FADE)
@@ -92,13 +90,13 @@ class Light {
         }
     }
     static Remove(world, x, y, z) {
-        let cx = Math.floor(x / CHUNK_DIM)
-        let cy = Math.floor(y / CHUNK_DIM)
-        let cz = Math.floor(z / CHUNK_DIM)
-        let bx = x % CHUNK_DIM
-        let by = y % CHUNK_DIM
-        let bz = z % CHUNK_DIM
-        let block = world.blocks[cx + cy * world.block_w + cz * world.block_slice]
+        let cx = Math.floor(x * INV_BLOCK_SIZE)
+        let cy = Math.floor(y * INV_BLOCK_SIZE)
+        let cz = Math.floor(z * INV_BLOCK_SIZE)
+        let bx = x % BLOCK_SIZE
+        let by = y % BLOCK_SIZE
+        let bz = z % BLOCK_SIZE
+        let block = world.blocks[cx + cy * world.width + cz * world.slice]
         for (let i = 0; i < block.lights.length; i++) {
             let light = block.lights[i]
             if (light.x === bx && light.y === by && light.z === bz)

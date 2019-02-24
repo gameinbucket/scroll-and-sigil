@@ -225,10 +225,9 @@ class RenderTile {
 				break
 		}
 
-		if (Render.Lumin(rgb_a) + Render.Lumin(rgb_c) < Render.Lumin(rgb_b) + Render.Lumin(rgb_d)) {
+		if (Render.Lumin(rgb_a) + Render.Lumin(rgb_c) < Render.Lumin(rgb_b) + Render.Lumin(rgb_d))
 			Render.MirrorIndex4(buffer)
-		} else {
+		else
 			Render.Index4(buffer)
-		}
 	}
 }

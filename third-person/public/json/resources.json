@@ -400,70 +400,70 @@
     "tiles": {
         "none": {
             "texture": null,
-            "empty": true
+            "closed": false
         },
         "ground": {
             "texture": [
                 0,
                 0
             ],
-            "empty": false
+            "closed": true
         },
         "rails.right": {
             "texture": [
                 17,
                 0
             ],
-            "empty": true
+            "closed": true
         },
         "stairs.right": {
             "texture": [
                 17,
                 17
             ],
-            "empty": true
+            "closed": true
         },
         "rail": {
             "texture": [
                 34,
                 0
             ],
-            "empty": true
+            "closed": true
         },
         "wall": {
             "texture": [
                 51,
                 0
             ],
-            "empty": true
+            "closed": true
         },
         "water-top": {
             "texture": [
                 68,
                 0
             ],
-            "empty": true
+            "closed": true
         },
         "water": {
             "texture": [
                 68,
                 17
             ],
-            "empty": true
+            "closed": true
         },
         "rails-left": {
             "texture": [
                 85,
                 0
             ],
-            "empty": true
+            "closed": true
         },
         "stairs-left": {
             "texture": [
                 85,
                 17
             ],
-            "empty": true
+            "closed": true
         }
     }
 }

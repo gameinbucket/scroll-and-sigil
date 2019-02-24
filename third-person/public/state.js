@@ -63,7 +63,6 @@ class WorldState {
         let world = this.app.world
         let cam = this.app.camera
 
-
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
 
@@ -75,30 +74,15 @@ class WorldState {
         g.set_perspective(draw_perspective, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry)
         Matrix.Inverse(g.iv, g.v)
 
-        g.set_program(gl, "texcol3d")
-        g.update_mvp(gl)
-        g.set_texture(gl, "map")
-
-        let cam_block_x = Math.floor(cam.x / CHUNK_DIM)
-        let cam_block_y = Math.floor(cam.y / CHUNK_DIM)
-        let cam_block_z = Math.floor(cam.z / CHUNK_DIM)
-
-        let sprite_buffers = this.app.sprite_buffers
-
-        for (let i = 0; i < sprite_buffers.length; i++)
-            sprite_buffers[i].zero()
+        let cam_block_x = Math.floor(cam.x * INV_BLOCK_SIZE)
+        let cam_block_y = Math.floor(cam.y * INV_BLOCK_SIZE)
+        let cam_block_z = Math.floor(cam.z * INV_BLOCK_SIZE)
 
         // look_x, look_y, look_z -> g.mv[2], g.mv[6], g.mv[10]
 
         Occlusion.PrepareFrustum(g)
         Occlusion.Occlude(world, cam_block_x, cam_block_y, cam_block_z)
-        world.render(gl, sprite_buffers, cam_block_x, cam_block_y, cam_block_z, g.mv)
-
-        g.set_program(gl, "texture3d")
-        g.update_mvp(gl)
-        g.set_texture(gl, "skeleton")
-        for (let i = 0; i < sprite_buffers.length; i++)
-            RenderSystem.UpdateAndDraw(gl, sprite_buffers[i])
+        world.render(g, cam_block_x, cam_block_y, cam_block_z)
 
         gl.disable(gl.DEPTH_TEST)
         gl.disable(gl.CULL_FACE)

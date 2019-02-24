@@ -46,31 +46,31 @@ class Cast {
             next_z = (from_z - z) * dt_dz
         }
         while (true) {
-            if (Tile.Closed(block.get_tile_type_unsafe(x, y, z)))
+            if (TILE_CLOSED[block.get_tile_type_unsafe(x, y, z)])
                 return false
             else if (x === Math.floor(to_x) && y === Math.floor(to_y) && z === Math.floor(to_z))
                 return true
             if (next_x < next_y) {
                 if (next_x < next_z) {
                     x += inc_x
-                    if (x < 0 || x >= CHUNK_DIM)
+                    if (x < 0 || x >= BLOCK_SIZE)
                         return false
                     next_x += dt_dx
                 } else {
                     z += inc_z
-                    if (z < 0 || z >= CHUNK_DIM)
+                    if (z < 0 || z >= BLOCK_SIZE)
                         return false
                     next_z += dt_dz
                 }
             } else {
                 if (next_y < next_z) {
                     y += inc_y
-                    if (y < 0 || y >= CHUNK_DIM)
+                    if (y < 0 || y >= BLOCK_SIZE)
                         return false
                     next_y += dt_dy
                 } else {
                     z += inc_z
-                    if (z < 0 || z >= CHUNK_DIM)
+                    if (z < 0 || z >= BLOCK_SIZE)
                         return false
                     next_z += dt_dz
                 }
@@ -134,13 +134,13 @@ class Cast {
                     if (x < 0 || x >= world.blocks_w) {
                         return [x + 0.5, y + 0.5, z + 0.5, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
                     }
-                    let cx = Math.floor(x / CHUNK_DIM)
-                    let cy = Math.floor(y / CHUNK_DIM)
-                    let cz = Math.floor(z / CHUNK_DIM)
-                    let bx = x % CHUNK_DIM
-                    let by = y % CHUNK_DIM
-                    let bz = z % CHUNK_DIM
-                    if (Tile.Closed(world.get_tile_type(cx, cy, cz, bx, by, bz))) {
+                    let cx = Math.floor(x * INV_BLOCK_SIZE)
+                    let cy = Math.floor(y * INV_BLOCK_SIZE)
+                    let cz = Math.floor(z * INV_BLOCK_SIZE)
+                    let bx = x % BLOCK_SIZE
+                    let by = y % BLOCK_SIZE
+                    let bz = z % BLOCK_SIZE
+                    if (TILE_CLOSED[world.get_tile_type(cx, cy, cz, bx, by, bz)]) {
                         x -= inc_x
                         return [x, y, z, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
                     }
@@ -150,13 +150,13 @@ class Cast {
                     if (z < 0 || z >= world.blocks_l) {
                         return [x + 0.5, y + 0.5, z + 0.5]
                     }
-                    let cx = Math.floor(x / CHUNK_DIM)
-                    let cy = Math.floor(y / CHUNK_DIM)
-                    let cz = Math.floor(z / CHUNK_DIM)
-                    let bx = x % CHUNK_DIM
-                    let by = y % CHUNK_DIM
-                    let bz = z % CHUNK_DIM
-                    if (Tile.Closed(world.get_tile_type(cx, cy, cz, bx, by, bz))) {
+                    let cx = Math.floor(x * INV_BLOCK_SIZE)
+                    let cy = Math.floor(y * INV_BLOCK_SIZE)
+                    let cz = Math.floor(z * INV_BLOCK_SIZE)
+                    let bx = x % BLOCK_SIZE
+                    let by = y % BLOCK_SIZE
+                    let bz = z % BLOCK_SIZE
+                    if (TILE_CLOSED[world.get_tile_type(cx, cy, cz, bx, by, bz)]) {
                         z -= inc_z
                         return [x, y, z, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
                     }
@@ -168,13 +168,13 @@ class Cast {
                     if (y < 0 || y >= world.blocks_h) {
                         return [x + 0.5, y + 0.5, z + 0.5]
                     }
-                    let cx = Math.floor(x / CHUNK_DIM)
-                    let cy = Math.floor(y / CHUNK_DIM)
-                    let cz = Math.floor(z / CHUNK_DIM)
-                    let bx = x % CHUNK_DIM
-                    let by = y % CHUNK_DIM
-                    let bz = z % CHUNK_DIM
-                    if (Tile.Closed(world.get_tile_type(cx, cy, cz, bx, by, bz))) {
+                    let cx = Math.floor(x * INV_BLOCK_SIZE)
+                    let cy = Math.floor(y * INV_BLOCK_SIZE)
+                    let cz = Math.floor(z * INV_BLOCK_SIZE)
+                    let bx = x % BLOCK_SIZE
+                    let by = y % BLOCK_SIZE
+                    let bz = z % BLOCK_SIZE
+                    if (TILE_CLOSED[world.get_tile_type(cx, cy, cz, bx, by, bz)]) {
                         y -= inc_y
                         return [x + 0.5, y + 0.5, z + 0.5]
                     }
@@ -184,13 +184,13 @@ class Cast {
                     if (z < 0 || z >= world.blocks_l) {
                         return [x + 0.5, y + 0.5, z + 0.5]
                     }
-                    let cx = Math.floor(x / CHUNK_DIM)
-                    let cy = Math.floor(y / CHUNK_DIM)
-                    let cz = Math.floor(z / CHUNK_DIM)
-                    let bx = x % CHUNK_DIM
-                    let by = y % CHUNK_DIM
-                    let bz = z % CHUNK_DIM
-                    if (Tile.Closed(world.get_tile_type(cx, cy, cz, bx, by, bz))) {
+                    let cx = Math.floor(x * INV_BLOCK_SIZE)
+                    let cy = Math.floor(y * INV_BLOCK_SIZE)
+                    let cz = Math.floor(z * INV_BLOCK_SIZE)
+                    let bx = x % BLOCK_SIZE
+                    let by = y % BLOCK_SIZE
+                    let bz = z % BLOCK_SIZE
+                    if (TILE_CLOSED[world.get_tile_type(cx, cy, cz, bx, by, bz)]) {
                         z -= inc_z
                         return [x + 0.5, y + 0.5, z + 0.5]
                     }
