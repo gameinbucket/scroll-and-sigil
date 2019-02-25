@@ -1,65 +1,32 @@
+const ANIMATION_RATE = 8
+const GRAVITY = 0.01
+
 const THING_LIST = [{
-    id: "you",
-    texture: "you",
-    animation: "idle",
+    uid: "you",
     make: (world, x, y, z) => {
-        return new Thing(world, x, y, z)
+        return new You(world, x, y, z)
     }
 }]
 
 const THING_MAP = {}
 for (let i in THING_LIST) {
-    let item = THING_LIST[i]
-    THING_MAP[item.id] = item
+    let thing = THING_LIST[i]
+    THING_MAP[thing.uid] = thing
 }
 
-const UNIT_COLOR_RED = 0
-const UNIT_ANIMATION_RATE = 8
-const UNIT_ANIMATION_NOT_DONE = 0
-const UNIT_ANIMATION_DONE = 1
-const UNIT_ANIMATION_ALMOST_DONE = 2
-const UNIT_STATUS_IDLE = 0
-const UNIT_STATUS_CHASE = 1
-const UNIT_STATUS_MELEE = 2
-const UNIT_STATUS_MISSILE = 3
-const UNIT_STATUS_DEAD = 4
-const UNIT_STATUS_MOVE = 5
-const UNIT_STATUS_ATTACK_MOVE = 6
-const UNIT_STATUS_DOODAD = 7
-const UNIT_STATUS_STEP_ASIDE = 8
-const UNIT_GRAVITY = 0.01
-
 class Thing {
-    constructor() {
-        this.color
-        this.command
-        this.status
-        this.radius
-        this.speed
-        this.target
-        this.attack_time
-        this.attack_cooldown
-        this.range
-        this.sight
-        this.health
-        this.formation
-        this.position
-        this.holding
-        this.mirror = false
-        this.direction
-        this.sprite_id
-        this.animation_move
-        this.animation_attack
-        this.animation_death
-        this.animation
-        this.animation_mod = 16
-        this.animation_frame
-        this.x
-        this.y
-        this.z
-        this.gx
-        this.gy
-        this.gz
+    constructor(world, uid, sid, x, y, z) {
+        this.uid = uid
+        this.sid = sid
+        this.animations = SPRITE_ANIMATIONS[sid]
+        this.sprite_data = SPRITE_DATA[sid]
+        this.animation_frame = 0
+        this.animation_frame_modulo = 0
+        this.sprite_name = "idle"
+        this.sprite = this.animations[this.sprite_name]
+        this.x = x
+        this.y = y
+        this.z = z
         this.dx = 0
         this.dy = 0
         this.dz = 0
@@ -69,56 +36,35 @@ class Thing {
         this.high_gx
         this.high_gy
         this.high_gz
-        this.path_list
-        this.move_to_x
-        this.move_to_y
-        this.move_to_z
-        this.final_move_to_x
-        this.final_move_to_y
-        this.final_move_to_z
         this.ground = false
-    }
-    init(world, color, sprite_id, animation_move, x, y, z) {
-        this.color = color
-        world.colors[color].push(this)
-        this.status = UNIT_STATUS_IDLE
-        this.direction = 0
-        this.sprite_id = sprite_id
-        this.animation_move = animation_move
-        this.animation = this.animation_move
-        this.attack_time = 32
-        this.animation_frame = 0
-        this.x = x
-        this.y = y
-        this.z = z
-        this.move_to_x = x
-        this.move_to_y = y
-        this.move_to_z = z
-        this.gx = Math.floor(x * INV_BLOCK_SIZE)
-        this.gy = Math.floor(y * INV_BLOCK_SIZE)
-        this.gz = Math.floor(z * INV_BLOCK_SIZE)
-        world.get_block(this.gx, this.gy, this.gz).add_unit(this)
-        this.health = 2
         this.radius = 0.0001
-        this.speed = 1
-        this.range = 8
-        this.sight = 10
+        this.height = 1.0
+        world.add_thing(this)
+        this.block_borders()
+        this.add_to_blocks(world)
+    }
+    save(x, y, z) {
+        return `{"id":"${this.uid}","x":${this.x - x},"y":${this.y - y},"z":${this.z - z}}`
+    }
+    block_borders() {
         this.low_gx = Math.floor((this.x - this.radius) * INV_BLOCK_SIZE)
-        this.low_gy = Math.floor((this.y - this.radius) * INV_BLOCK_SIZE)
+        this.low_gy = Math.floor(this.y * INV_BLOCK_SIZE)
         this.low_gz = Math.floor((this.z - this.radius) * INV_BLOCK_SIZE)
         this.high_gx = Math.floor((this.x + this.radius) * INV_BLOCK_SIZE)
-        this.high_gy = Math.floor((this.y + this.radius) * INV_BLOCK_SIZE)
+        this.high_gy = Math.floor((this.y + this.height) * INV_BLOCK_SIZE)
         this.high_gz = Math.floor((this.z + this.radius) * INV_BLOCK_SIZE)
-        for (let gx = this.low_gx; gx <= this.high_gx; gx++) {
-            for (let gy = this.low_gy; gy <= this.high_gy; gy++) {
-                for (let gz = this.low_gz; gz <= this.high_gz; gz++) {
-                    let c = world.get_block(gx, gy, gz)
-                    if (c !== null) {
-                        c.add_physical(world, this)
-                    }
-                }
-            }
-        }
+    }
+    add_to_blocks(world) {
+        for (let gx = this.low_gx; gx <= this.high_gx; gx++)
+            for (let gy = this.low_gy; gy <= this.high_gy; gy++)
+                for (let gz = this.low_gz; gz <= this.high_gz; gz++)
+                    world.get_block(gx, gy, gz).add_thing(this)
+    }
+    remove_from_blocks(world) {
+        for (let gx = this.low_gx; gx <= this.high_gx; gx++)
+            for (let gy = this.low_gy; gy <= this.high_gy; gy++)
+                for (let gz = this.low_gz; gz <= this.high_gz; gz++)
+                    world.get_block(gx, gy, gz).remove_thing(this)
     }
     animate() {
         this.animation_mod++
@@ -128,26 +74,6 @@ class Thing {
             if (this.animation_frame === this.animation.length)
                 this.animation_frame = 0
         }
-    }
-    update(world) {
-        this.dy -= UNIT_GRAVITY
-
-        this.x += this.dx
-        this.y += this.dy
-        this.z += this.dz
-        this.dx = 0
-        this.dz = 0
-
-        this.terrain_collision_y(world)
-
-        this.animate()
-    }
-    render(sprite_buffer, model_view) {
-        let sprite = this.animation[this.animation_frame][this.direction]
-        if (this.mirror)
-            Render.MirrorSprite(sprite_buffer[this.sprite_id], this.x, this.y + sprite.height, this.z, model_view, sprite)
-        else
-            Render.Sprite(sprite_buffer[this.sprite_id], this.x, this.y + sprite.height, this.z, model_view, sprite)
     }
     terrain_collision_y(world) {
         this.ground = false
@@ -159,5 +85,24 @@ class Thing {
                 this.dy = 0
             }
         }
+    }
+    update(world) {
+        // this.dy -= GRAVITY
+        this.x += this.dx
+        this.y += this.dy
+        this.z += this.dz
+        this.dx = 0
+        this.dz = 0
+        // this.terrain_collision_y(world)
+        // this.animate()
+    }
+    render(sprite_buffer, model_view) {
+        // let sprite = this.animation[this.animation_frame]
+        let sprite_frame = this.sprite[this.animation_frame]
+        let sprite = this.sprite_data[sprite_frame]
+        if (this.mirror)
+            Render3.MirrorSprite(sprite_buffer[this.sid], this.x, this.y + sprite.height, this.z, model_view, sprite)
+        else
+            Render3.Sprite(sprite_buffer[this.sid], this.x, this.y + sprite.height, this.z, model_view, sprite)
     }
 }

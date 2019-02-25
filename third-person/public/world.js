@@ -15,9 +15,7 @@ class World {
         this.slice
         this.all
         this.blocks
-        this.colors
         this.viewable
-        this.collisions
         this.block_cache
         this.block_cache_count
         this.sprite_set
@@ -25,8 +23,6 @@ class World {
         this.sprite_count
         this.things
         this.thing_count
-        this.delete_things
-        this.delete_thing_count
         this.threads = ["ai", "pathing"]
         this.thread_index = 0
         this.thread_id = ""
@@ -41,11 +37,7 @@ class World {
         }
 
         this.blocks = []
-        this.colors = [
-            []
-        ]
         this.viewable = []
-        this.collisions = new Set()
         this.block_cache = []
         this.block_cache_count = 0
         this.sprite_set = new Set()
@@ -53,8 +45,6 @@ class World {
         this.sprite_count = {}
         this.things = []
         this.thing_count = 0
-        this.delete_things = []
-        this.delete_thing_count = 0
 
         let blocks = content["blocks"]
 
@@ -228,23 +218,43 @@ class World {
         return block.get_tile_type_unsafe(bx, by, bz)
     }
     get_block(x, y, z) {
-        if (x < 0 || x >= this.width) {
+        if (x < 0 || x >= this.width)
             return null
-        }
-        if (y < 0 || y >= this.height) {
+        if (y < 0 || y >= this.height)
             return null
-        }
-        if (z < 0 || z >= this.length) {
+        if (z < 0 || z >= this.length)
             return null
-        }
         return this.blocks[x + y * this.width + z * this.slice]
+    }
+    add_thing(thing) {
+        this.things[this.thing_count] = thing
+        this.thing_count++
+
+        let count = this.sprite_count[thing.sid]
+        if (count) {
+            this.sprite_count[thing.sid] = count + 1
+            if ((count + 2) * 16 > this.sprite_buffer[thing.sid].vertices.length)
+                this.sprite_buffer[thing.sid] = RenderBuffer.Expand(this.gl, this.sprite_buffer[thing.sid])
+        } else {
+            this.sprite_count[thing.sid] = 1
+            this.sprite_buffer[thing.sid] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
+        }
+    }
+    remove_thing(thing) {
+        for (let i = 0; i < this.thing_count; i++) {
+            if (this.things[i] === thing) {
+                for (let j = i; j < this.thing_count - 1; j++) this.things[j] = this.things[j + 1]
+                this.thing_count--
+                this.sprite_count[thing.sid]--
+                break
+            }
+        }
     }
     add_block_cache(c) {
         if (this.block_cache_count === this.block_cache.length) {
             let cp = new Array(this.block_cache_count + 10)
-            for (let i = 0; i < this.block_cache_count; i++) {
+            for (let i = 0; i < this.block_cache_count; i++)
                 cp[i] = this.block_cache[i]
-            }
             this.block_cache = cp
         }
         this.block_cache[this.block_cache_count] = c
@@ -253,58 +263,21 @@ class World {
     remove_block_cache(c) {
         for (let i = 0; i < this.block_cache_count; i++) {
             if (this.block_cache[i] === c) {
-                for (let j = i; j < this.block_cache_count - 1; j++) {
+                for (let j = i; j < this.block_cache_count - 1; j++)
                     this.block_cache[j] = this.block_cache[j + 1]
-                }
                 this.block_cache_count--
                 break
             }
         }
     }
-    unit_overlap(a, b) {
-        let dxx = a.x - b.x
-        let dzz = a.z - b.z
-        let repel = a.radius + b.radius
-        let distance = dxx * dxx + dzz * dzz
-        if (distance > repel * repel) {
-            return
-        }
-        distance = Math.sqrt(distance)
-        if (distance === 0) {
-            distance = 0.0001
-        }
-        repel /= distance
-        let fx = dxx * repel - dxx
-        let fz = dzz * repel - dzz
-        a.dx += fx
-        a.dz += fz
-        b.dx -= fx
-        b.dz -= fz
-    }
     update() {
-        this.collisions.clear()
+        this.thread_id = this.threads[this.thread_index]
+        this.thread_index++
+        if (this.thread_index === this.threads.length)
+            this.thread_index = 0
 
-        for (let i = 0; i < this.block_cache_count; i++) {
-            let c = this.block_cache[i]
-            for (let j = 0; j < c.physical_count; j++) {
-                let a = c.physical[j]
-                for (let k = j + 1; k < c.physical_count; k++) {
-                    let b = c.physical[k]
-                    let id = Math.floor(a.x) + " " + Math.floor(a.y) + " " + Math.floor(a.z) + " " + Math.floor(b.x) + " " + Math.floor(b.y) + " " + Math.floor(b.z)
-                    if (!this.collisions.has(id)) {
-                        this.collisions.add(id)
-                        this.unit_overlap(a, b)
-                    }
-                }
-            }
-        }
-
-        for (let i = 0; i < this.colors.length; i++) {
-            let c = this.colors[i]
-            for (let j = 0; j < c.length; j++) {
-                c[j].update(this)
-            }
-        }
+        for (let i = 0; i < this.thing_count; i++)
+            this.things[i].update(this)
     }
     render(g, x, y, z) {
         let gl = this.gl

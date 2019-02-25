@@ -25,27 +25,21 @@ const SLICE_TEMP = new Array(3)
 
 class Block {
     constructor(px, py, pz) {
-        this.tiles = []
-        this.visibility = new Uint8Array(36)
-        this.mesh
-        this.begin_side = new Array(6)
-        this.count_side = new Array(6)
-        this.x
-        this.y
-        this.z
-        this.units = []
-        this.unit_count = 0
-        this.physical = []
-        this.physical_count = 0
-        this.lights = []
-
         this.x = px
         this.y = py
         this.z = pz
+        this.mesh
+        this.visibility = new Uint8Array(36)
+        this.begin_side = new Array(6)
+        this.count_side = new Array(6)
+        this.things = []
+        this.thing_count = 0
 
+        this.tiles = []
         for (let t = 0; t < BLOCK_ALL; t++)
             this.tiles[t] = new Tile()
 
+        this.lights = []
         this.lights.push(new Light(BLOCK_SIZE - 1, BLOCK_SIZE - 1, BLOCK_SIZE - 1, Render.PackRgb(255, 230, 200)))
     }
     save() {
@@ -82,50 +76,21 @@ class Block {
     get_tile_type_unsafe(x, y, z) {
         return this.tiles[x + y * BLOCK_SIZE + z * BLOCK_SLICE].type
     }
-    add_unit(u) {
-        if (this.unit_count === this.units.length) {
-            let cp = new Array(this.unit_count + 5)
-            for (let i = 0; i < this.unit_count; i++) {
-                cp[i] = this.units[i]
-            }
-            this.units = cp
-        }
-        this.units[this.unit_count] = u
-        this.unit_count++
-    }
-    remove_unit(u) {
-        for (let i = 0; i < this.unit_count; i++) {
-            if (this.units[i] === u) {
-                for (let j = i; j < this.unit_count - 1; j++) {
-                    this.units[j] = this.units[j + 1]
-                }
-                this.unit_count--
-                break
-            }
-        }
-    }
-    add_physical(world, p) {
-        if (this.physical_count === this.physical.length) {
-            let cp = new Array(this.physical_count + 5)
-            for (let i = 0; i < this.physical_count; i++)
-                cp[i] = this.physical[i]
-            this.physical = cp
-        }
-        this.physical[this.physical_count] = p
-        this.physical_count++
-
-        if (this.physical_count === 2)
+    add_thing(thing) {
+        this.things[this.thing_count] = thing
+        this.thing_count++
+        if (this.thing_count === 2)
             world.add_block_cache(this)
     }
-    remove_physical(world, p) {
-        for (let i = 0; i < this.physical_count; i++) {
-            if (this.physical[i] === p) {
-                for (let j = i; j < this.physical_count - 1; j++)
-                    this.physical[j] = this.physical[j + 1]
-                this.physical_count--
-                if (this.physical_count === 1)
+    remove_thing(thing) {
+        for (let i = 0; i < this.thing_count; i++) {
+            if (this.things[i] === thing) {
+                for (let j = i; j < this.thing_count - 1; j++)
+                    this.things[j] = this.things[j + 1]
+                this.thing_count--
+                if (this.thing_count === 1)
                     world.remove_block_cache(this)
-                break
+                return
             }
         }
     }
