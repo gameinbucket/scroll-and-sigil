@@ -1,8 +1,11 @@
+const SCALE = 1.0 / 16.0
+
 class Sprite {
     constructor(atlas, boxes, width, height, left, top, right, bottom, ox, oy) {
         this.atlas = atlas
         this.boxes = boxes
         this.width = width
+        this.half_width = width * 0.5
         this.height = height
         this.left = left
         this.top = top
@@ -20,18 +23,37 @@ class Sprite {
         ]
     }
     static Build(atlas, boxes, atlas_width, atlas_height) {
-        let width = atlas[2]
-        let height = atlas[3]
         let left = atlas[0] * atlas_width
         let top = atlas[1] * atlas_height
-        let right = (atlas[0] + width) * atlas_width
-        let bottom = (atlas[1] + height) * atlas_height
+        let right = (atlas[0] + atlas[2]) * atlas_width
+        let bottom = (atlas[1] + atlas[3]) * atlas_height
+
+        let width = atlas[2]
+        let height = atlas[3]
+
         let ox = 0
         let oy = 0
-
         if (atlas.length > 4) {
             ox = atlas[4]
             oy = atlas[5]
+        }
+
+        return new Sprite(atlas, boxes, width, height, left, top, right, bottom, ox, oy)
+    }
+    static Build3(atlas, boxes, atlas_width, atlas_height) {
+        let left = atlas[0] * atlas_width
+        let top = atlas[1] * atlas_height
+        let right = (atlas[0] + atlas[2]) * atlas_width
+        let bottom = (atlas[1] + atlas[3]) * atlas_height
+
+        let width = atlas[2] * SCALE
+        let height = atlas[3] * SCALE
+
+        let ox = 0
+        let oy = 0
+        if (atlas.length > 4) {
+            ox = atlas[4] * SCALE
+            oy = atlas[5] * SCALE
         }
 
         return new Sprite(atlas, boxes, width, height, left, top, right, bottom, ox, oy)

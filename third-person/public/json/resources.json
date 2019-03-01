@@ -31,6 +31,7 @@
     },
     "sprites": {
         "human": {
+            "world": true,
             "alias": {
                 "leather.head.idle": [
                     "leather.head.1",
@@ -382,6 +383,7 @@
             }
         },
         "skeleton": {
+            "world": true,
             "animations": {
                 "idle": [
                     "idle"

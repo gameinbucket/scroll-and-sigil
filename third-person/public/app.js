@@ -1,11 +1,34 @@
 const SOUND = {}
 const SPRITE_DATA = {}
+const SPRITE_DATA_3D = {}
 const SPRITE_ALIAS = {}
 const SPRITE_ANIMATIONS = {}
+
+let SOCKET = null
 
 class Application {
     constructor() {
         let self = this
+
+        let socket = new WebSocket("ws://localhost:3000/websocket")
+
+        socket.onopen = function () {
+            console.log("listening to websocket")
+            socket.send(`{"uid":"open"}`)
+        }
+        socket.onmessage = function (event) {
+            if (event.data === null)
+                return
+            console.log(event.data)
+        }
+        socket.onerror = function (event) {
+            console.log(event.data)
+        }
+        socket.onclose = function () {
+            socket = null;
+        }
+        this.socket = socket
+        SOCKET = socket
 
         let canvas = document.createElement("canvas")
         canvas.style.display = "block"
@@ -36,7 +59,7 @@ class Application {
         this.frame = null
         this.generics = generics
         this.generics2 = generics2
-        this.camera = new Camera(16.0, 16.0, 48.0, 0.0, 0.0)
+        this.camera = null
         this.state = new WorldState(this)
 
         document.onkeyup = Input.KeyUp
@@ -124,6 +147,7 @@ class Application {
             let sprite = sprites[name]
             let animations = sprite["animations"]
             let alias = ("alias" in sprite) ? sprite["alias"] : null
+            let in_world = ("world" in sprite) ? sprite["world"] : false
 
             let sprite_json = await Network.Request("json/" + name + ".json")
             let sprite_data = JSON.parse(sprite_json)["sprites"]
@@ -139,6 +163,9 @@ class Application {
             for (let key in animations)
                 SPRITE_ANIMATIONS[name][key] = animations[key]
 
+            if (in_world)
+                SPRITE_DATA_3D[name] = {}
+
             if (alias != null)
                 for (let key in alias)
                     SPRITE_ALIAS[name][key] = alias[key]
@@ -148,6 +175,8 @@ class Application {
                 let atlas = sprite.atlas
                 let boxes = sprite.boxes
                 SPRITE_DATA[name][key] = Sprite.Build(atlas, boxes, width, height)
+                if (in_world)
+                    SPRITE_DATA_3D[name][key] = Sprite.Build3(atlas, boxes, width, height)
             }
         }
 
@@ -164,6 +193,8 @@ class Application {
         for (let index = 0; index < this.world.thing_count; index++) {
             if (this.world.things[index].uid === "you") {
                 this.player = this.world.things[index]
+                this.camera = new Camera(this.player, 10.0, 0.0, 0.0)
+                this.player.camera = this.camera
                 break
             }
         }

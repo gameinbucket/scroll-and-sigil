@@ -16,8 +16,6 @@ class World {
         this.all
         this.blocks
         this.viewable
-        this.block_cache
-        this.block_cache_count
         this.sprite_set
         this.sprite_buffer
         this.sprite_count
@@ -26,6 +24,7 @@ class World {
         this.threads = ["ai", "pathing"]
         this.thread_index = 0
         this.thread_id = ""
+        this.occluder = new Occluder()
     }
     load(data) {
         let content
@@ -38,8 +37,6 @@ class World {
 
         this.blocks = []
         this.viewable = []
-        this.block_cache = []
-        this.block_cache_count = 0
         this.sprite_set = new Set()
         this.sprite_buffer = {}
         this.sprite_count = {}
@@ -114,11 +111,11 @@ class World {
 
             for (let t = 0; t < things.length; t++) {
                 let thing = things[t]
-                let id = thing["id"]
+                let uid = thing["uid"]
                 let x = thing["x"] + px
                 let y = thing["y"] + py
                 let z = thing["z"] + pz
-                THING_MAP[id].make(this, x, y, z)
+                THING_MAP[uid].make(this, x, y, z)
             }
         }
 
@@ -141,20 +138,23 @@ class World {
             let block = this.blocks[i]
             for (let j = 0; j < block.lights.length; j++)
                 Light.Add(this, block, block.lights[j])
-            Occlusion.Calculate(block)
+            Occluder.SetBlockVisible(block)
         }
         for (let i = 0; i < this.all; i++)
             this.blocks[i].build_mesh(this)
     }
     find_block(x, y, z) {
-        let cx = Math.floor(x * INV_BLOCK_SIZE)
-        let cy = Math.floor(y * INV_BLOCK_SIZE)
-        let cz = Math.floor(z * INV_BLOCK_SIZE)
-        let bx = x % BLOCK_SIZE
-        let by = y % BLOCK_SIZE
-        let bz = z % BLOCK_SIZE
-        let block = this.blocks[cx + cy * this.width + cz * this.slice]
-        return block.tiles[bx + by * BLOCK_SIZE + bz * BLOCK_SLICE].type
+        let gx = Math.floor(x)
+        let gy = Math.floor(y)
+        let gz = Math.floor(z)
+        let bx = Math.floor(gx * INV_BLOCK_SIZE)
+        let by = Math.floor(gy * INV_BLOCK_SIZE)
+        let bz = Math.floor(gz * INV_BLOCK_SIZE)
+        let tx = gx - bx * BLOCK_SIZE
+        let ty = gy - by * BLOCK_SIZE
+        let tz = gz - bz * BLOCK_SIZE
+        let block = this.blocks[bx + by * this.width + bz * this.slice]
+        return block.tiles[tx + ty * BLOCK_SIZE + tz * BLOCK_SLICE].type
     }
     get_tile_pointer(cx, cy, cz, bx, by, bz) {
         while (bx < 0) {
@@ -250,26 +250,6 @@ class World {
             }
         }
     }
-    add_block_cache(c) {
-        if (this.block_cache_count === this.block_cache.length) {
-            let cp = new Array(this.block_cache_count + 10)
-            for (let i = 0; i < this.block_cache_count; i++)
-                cp[i] = this.block_cache[i]
-            this.block_cache = cp
-        }
-        this.block_cache[this.block_cache_count] = c
-        this.block_cache_count++
-    }
-    remove_block_cache(c) {
-        for (let i = 0; i < this.block_cache_count; i++) {
-            if (this.block_cache[i] === c) {
-                for (let j = i; j < this.block_cache_count - 1; j++)
-                    this.block_cache[j] = this.block_cache[j + 1]
-                this.block_cache_count--
-                break
-            }
-        }
-    }
     update() {
         this.thread_id = this.threads[this.thread_index]
         this.thread_index++
@@ -279,10 +259,13 @@ class World {
         for (let i = 0; i < this.thing_count; i++)
             this.things[i].update(this)
     }
-    render(g, x, y, z) {
+    render(g, x, y, z, cam_x, cam_z) {
         let gl = this.gl
         let sprite_set = this.sprite_set
         let sprite_buffer = this.sprite_buffer
+
+        this.occluder.prepare_frustum(g)
+        this.occluder.occlude(this, x, y, z)
 
         sprite_set.clear()
         for (let key in sprite_buffer)
@@ -295,7 +278,7 @@ class World {
         for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
             let block = this.viewable[i]
 
-            block.render_things(sprite_set, sprite_buffer, g.mv)
+            block.render_things(sprite_set, sprite_buffer, cam_x, cam_z)
 
             let mesh = block.mesh
             if (mesh.vertex_pos === 0)

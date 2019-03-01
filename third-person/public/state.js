@@ -4,48 +4,38 @@ class WorldState {
     }
     update() {
         let cam = this.app.camera
-
-        let pace = 0.1
-
-        if (Input.Is("w")) {
-            cam.x += Math.sin(cam.ry) * pace
-            cam.z -= Math.cos(cam.ry) * pace
-        }
-
-        if (Input.Is("s")) {
-            cam.x -= Math.sin(cam.ry) * pace
-            cam.z += Math.cos(cam.ry) * pace
-        }
-
-        if (Input.Is("a")) {
-            cam.x -= Math.cos(cam.ry) * pace
-            cam.z -= Math.sin(cam.ry) * pace
-        }
-
-        if (Input.Is("d")) {
-            cam.x += Math.cos(cam.ry) * pace
-            cam.z += Math.sin(cam.ry) * pace
-        }
-
-        if (Input.Is("q"))
-            cam.y += 0.1
-
-        if (Input.Is("e"))
-            cam.y -= 0.1
-
+        // let pace = 0.1
+        // if (Input.Is("w")) {
+        //     cam.x += Math.sin(cam.ry) * pace
+        //     cam.z -= Math.cos(cam.ry) * pace
+        // }
+        // if (Input.Is("s")) {
+        //     cam.x -= Math.sin(cam.ry) * pace
+        //     cam.z += Math.cos(cam.ry) * pace
+        // }
+        // if (Input.Is("a")) {
+        //     cam.x -= Math.cos(cam.ry) * pace
+        //     cam.z -= Math.sin(cam.ry) * pace
+        // }
+        // if (Input.Is("d")) {
+        //     cam.x += Math.cos(cam.ry) * pace
+        //     cam.z += Math.sin(cam.ry) * pace
+        // }
+        // if (Input.Is("q"))
+        //     cam.y += 0.1
+        // if (Input.Is("e"))
+        //     cam.y -= 0.1
         if (Input.Is("ArrowLeft"))
             cam.ry -= 0.05
-
+        if (Input.Is("ArrowRight"))
+            cam.ry += 0.05
         if (Input.Is("ArrowUp"))
             cam.rx -= 0.05
-
         if (Input.Is("ArrowDown"))
             cam.rx += 0.05
 
-        if (Input.Is("ArrowRight"))
-            cam.ry += 0.05
-
         this.app.world.update()
+        cam.update();
     }
     render() {
         let g = this.app.g
@@ -78,11 +68,7 @@ class WorldState {
         let cam_block_y = Math.floor(cam.y * INV_BLOCK_SIZE)
         let cam_block_z = Math.floor(cam.z * INV_BLOCK_SIZE)
 
-        // look_x, look_y, look_z -> g.mv[2], g.mv[6], g.mv[10]
-
-        Occlusion.PrepareFrustum(g)
-        Occlusion.Occlude(world, cam_block_x, cam_block_y, cam_block_z)
-        world.render(g, cam_block_x, cam_block_y, cam_block_z)
+        world.render(g, cam_block_x, cam_block_y, cam_block_z, cam.x, cam.z)
 
         gl.disable(gl.DEPTH_TEST)
         gl.disable(gl.CULL_FACE)

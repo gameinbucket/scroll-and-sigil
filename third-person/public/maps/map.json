@@ -228,7 +228,12 @@
         "z": 2,
         "tiles": null,
         "things": [{
-            "id": "you",
+            "uid": "you",
+            "x": 3,
+            "y": 3,
+            "z": 3
+        }, {
+            "uid": "skeleton",
             "x": 1,
             "y": 1,
             "z": 1

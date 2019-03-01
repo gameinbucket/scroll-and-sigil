@@ -79,8 +79,6 @@ class Block {
     add_thing(thing) {
         this.things[this.thing_count] = thing
         this.thing_count++
-        if (this.thing_count === 2)
-            world.add_block_cache(this)
     }
     remove_thing(thing) {
         for (let i = 0; i < this.thing_count; i++) {
@@ -88,8 +86,6 @@ class Block {
                 for (let j = i; j < this.thing_count - 1; j++)
                     this.things[j] = this.things[j + 1]
                 this.thing_count--
-                if (this.thing_count === 1)
-                    world.remove_block_cache(this)
                 return
             }
         }
@@ -330,12 +326,12 @@ class Block {
         }
         this.mesh = RenderBuffer.InitCopy(world.gl, BLOCK_MESH)
     }
-    render_things(sprite_set, sprite_buffer, model_view) {
+    render_things(sprite_set, sprite_buffer, x, y) {
         for (let i = 0; i < this.thing_count; i++) {
             let thing = this.things[i]
             if (sprite_set.has(thing)) continue
             sprite_set.add(thing)
-            thing.render(sprite_buffer, model_view)
+            thing.render(sprite_buffer, x, y)
         }
     }
 }
