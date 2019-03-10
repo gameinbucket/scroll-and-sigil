@@ -1,23 +1,10 @@
 const ANIMATION_RATE = 8
 const GRAVITY = 0.01
 
-const THING_LIST = [{
-    uid: "you",
-    make: (world, x, y, z) => {
-        return new You(world, x, y, z)
-    }
-}, {
-    uid: "skeleton",
-    make: (world, x, y, z) => {
-        return new Skeleton(world, x, y, z)
-    }
-}]
-
-const THING_MAP = {}
-for (let i in THING_LIST) {
-    let thing = THING_LIST[i]
-    THING_MAP[thing.uid] = thing
-}
+const THING_LIST = [
+    "you",
+    "skeleton"
+]
 
 class Thing {
     constructor(world, uid, sid, x, y, z, radius, height) {
@@ -32,6 +19,7 @@ class Thing {
         this.x = x
         this.y = y
         this.z = z
+        this.r = 0
         this.dx = 0
         this.dy = 0
         this.dz = 0
@@ -50,8 +38,16 @@ class Thing {
         this.block_borders()
         this.add_to_blocks(world)
     }
+    static LoadNewThing(world, uid, x, y, z) {
+        switch (uid) {
+            case "you":
+                return new You(world, x, y, z)
+            case "skeleton":
+                return new Skeleton(world, x, y, z)
+        }
+    }
     save(x, y, z) {
-        return `{"id":"${this.uid}","x":${this.x - x},"y":${this.y - y},"z":${this.z - z}}`
+        return "{u:" + this.uid + ",x:" + (this.x - x) + ",y:" + (this.y - y) + ",z:" + (this.z - z) + "}"
     }
     block_borders() {
         this.low_gx = Math.floor((this.x - this.radius) * INV_BLOCK_SIZE)
@@ -152,7 +148,7 @@ class Thing {
                 let manhattan = Number.MAX_VALUE
                 for (let i = 0; i < collided.length; i++) {
                     let thing = collided[i]
-                    let dist = Math.abs(this.ox - thing.x) + Math.abs(this.oz - thing.y)
+                    let dist = Math.abs(this.ox - thing.x) + Math.abs(this.oz - thing.z)
                     if (dist < manhattan) {
                         manhattan = dist
                         closest = thing

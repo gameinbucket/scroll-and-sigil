@@ -43,12 +43,13 @@ class Block {
         this.lights.push(new Light(BLOCK_SIZE - 1, BLOCK_SIZE - 1, BLOCK_SIZE - 1, Render.PackRgb(255, 230, 200)))
     }
     save() {
-        let data = `{"x":${this.x},"y":${this.y},"z":${this.z},"tiles":[` + this.tiles[0].type
+        let data = "{x:" + this.x + ",y:" + this.y + ",z:" + this.z + ",t["
+        data += this.tiles[0].type
         for (let i = 1; i < BLOCK_ALL; i++) {
             data += ","
             data += this.tiles[i].type
         }
-        data += `],"things":[`
+        data += "],e["
         if (this.thing_count > 0) {
             let x = this.x * BLOCK_SIZE
             let y = this.y * BLOCK_SIZE
@@ -64,7 +65,7 @@ class Block {
     }
     empty() {
         if (this.thing_count > 0)
-            return true
+            return false
         for (let i = 0; i < BLOCK_ALL; i++)
             if (this.tiles[i].type !== TILE_NONE)
                 return false

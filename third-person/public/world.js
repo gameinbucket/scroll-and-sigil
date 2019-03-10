@@ -27,14 +27,6 @@ class World {
         this.occluder = new Occluder()
     }
     load(data) {
-        let content
-        try {
-            content = JSON.parse(data)
-        } catch (err) {
-            console.log("Failed to parse world", data)
-            return
-        }
-
         this.blocks = []
         this.viewable = []
         this.sprite_set = new Set()
@@ -43,7 +35,8 @@ class World {
         this.things = []
         this.thing_count = 0
 
-        let blocks = content["blocks"]
+        let content = Parser.read(data)
+        let blocks = content["b"]
 
         let left = null
         let right = null
@@ -52,10 +45,10 @@ class World {
         let front = null
         let back = null
         for (let b = 0; b < blocks.length; b++) {
-            let block = blocks[b]
-            let bx = block["x"]
-            let by = block["y"]
-            let bz = block["z"]
+            let data = blocks[b]
+            let bx = parseInt(data["x"])
+            let by = parseInt(data["y"])
+            let bz = parseInt(data["z"])
 
             if (left === null || bx < left) left = bx
             if (right === null || bx > right) right = bx
@@ -73,16 +66,16 @@ class World {
 
         for (let b = 0; b < blocks.length; b++) {
             let data = blocks[b]
-            let bx = data["x"] - left
-            let by = data["y"] - bottom
-            let bz = data["z"] - back
-            let tiles = data["tiles"]
+            let bx = parseInt(data["x"]) - left
+            let by = parseInt(data["y"]) - bottom
+            let bz = parseInt(data["z"]) - back
+            let tiles = data["t"]
 
             let block = new Block(bx, by, bz)
 
-            if (tiles !== null) {
+            if (tiles.length > 0) {
                 for (let t = 0; t < BLOCK_ALL; t++)
-                    block.tiles[t].type = tiles[t]
+                    block.tiles[t].type = parseInt(tiles[t])
             }
 
             this.blocks[bx + by * this.width + bz * this.slice] = block
@@ -100,10 +93,10 @@ class World {
 
         for (let b = 0; b < blocks.length; b++) {
             let data = blocks[b]
-            let bx = data["x"] - left
-            let by = data["y"] - bottom
-            let bz = data["z"] - bottom
-            let things = data["things"]
+            let bx = parseInt(data["x"]) - left
+            let by = parseInt(data["y"]) - bottom
+            let bz = parseInt(data["z"]) - back
+            let things = data["e"]
 
             let px = bx * BLOCK_SIZE
             let py = by * BLOCK_SIZE
@@ -111,26 +104,28 @@ class World {
 
             for (let t = 0; t < things.length; t++) {
                 let thing = things[t]
-                let uid = thing["uid"]
-                let x = thing["x"] + px
-                let y = thing["y"] + py
-                let z = thing["z"] + pz
-                THING_MAP[uid].make(this, x, y, z)
+                let uid = thing["u"]
+                let x = parseFloat(thing["x"]) + px
+                let y = parseFloat(thing["y"]) + py
+                let z = parseFloat(thing["z"]) + pz
+                Thing.LoadNewThing(this, uid, x, y, z)
             }
         }
 
         this.build()
     }
     save(name) {
-        let data = `{"name":"${name}","blocks":[`
-        let block_data = []
+        let data = "n:" + name + ",b["
+        let comma = false
         for (let i = 0; i < this.all; i++) {
             let block = this.blocks[i]
-            if (block.empty()) continue
-            block_data.push(block.save())
+            if (!block.empty()) {
+                if (comma) data += ","
+                comma = true
+                block_data.push(block.save())
+            }
         }
-        data += block_data.join(",")
-        data += "]}"
+        data += "]"
         return data
     }
     build() {

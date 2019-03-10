@@ -23,4 +23,15 @@ class Network {
             request.send(data)
         })
     }
+    static Socket(url) {
+        return new Promise(function (resolve, reject) {
+            let socket = new WebSocket(url)
+            socket.onopen = function () {
+                resolve(socket)
+            }
+            socket.onerror = function (err) {
+                reject(err)
+            }
+        })
+    }
 }

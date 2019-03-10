@@ -10,26 +10,6 @@ class Application {
     constructor() {
         let self = this
 
-        let socket = new WebSocket("ws://localhost:3000/websocket")
-
-        socket.onopen = function () {
-            console.log("listening to websocket")
-            socket.send(`{"uid":"open"}`)
-        }
-        socket.onmessage = function (event) {
-            if (event.data === null)
-                return
-            console.log(event.data)
-        }
-        socket.onerror = function (event) {
-            console.log(event.data)
-        }
-        socket.onclose = function () {
-            socket = null;
-        }
-        this.socket = socket
-        SOCKET = socket
-
         let canvas = document.createElement("canvas")
         canvas.style.display = "block"
         canvas.style.position = "absolute"
@@ -119,6 +99,7 @@ class Application {
         this.draw_perspective = draw_perspective
     }
     async init() {
+        let self = this
         let g = this.g
         let gl = this.gl
 
@@ -188,7 +169,31 @@ class Application {
             TILE_CLOSED.push(tile["closed"])
         }
 
-        data = await Network.Request("maps/map.json")
+        let socket = await Network.Socket("ws://localhost:3000/websocket")
+        socket.onclose = function () {
+            socket = null
+        }
+        this.socket = socket
+        SOCKET = socket
+
+        data = await new Promise(function (resolve) {
+            socket.onmessage = function (event) {
+                resolve(event.data)
+            }
+        })
+
+        socket.onmessage = function (event) {
+            let data = event.data
+            console.log(data)
+            let map = Parser.read(data)
+            console.log(map)
+            if (map["c"] === "p") {
+                self.player.x = parseFloat(map["x"])
+                self.player.y = parseFloat(map["y"])
+                self.player.z = parseFloat(map["z"])
+            }
+        }
+
         this.world.load(data)
         for (let index = 0; index < this.world.thing_count; index++) {
             if (this.world.things[index].uid === "you") {
