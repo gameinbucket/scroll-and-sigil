@@ -39,20 +39,18 @@ func (me *Block) Save(data *strings.Builder) {
 	data.WriteString(",z:")
 	data.WriteString(strconv.Itoa(me.Z))
 	data.WriteString(",t[")
-	data.WriteString(strconv.FormatInt(int64(me.Tiles[0]), 10))
-	for i := 1; i < BlockAll; i++ {
-		data.WriteString(",")
+	for i := 0; i < BlockAll; i++ {
 		data.WriteString(strconv.FormatInt(int64(me.Tiles[i]), 10))
+		data.WriteString(",")
 	}
 	data.WriteString("],e[")
 	if me.ThingCount > 0 {
 		x := float32(me.X * BlockSize)
 		y := float32(me.Y * BlockSize)
 		z := float32(me.Z * BlockSize)
-		me.Things[0].Save(data, x, y, z)
-		for i := 1; i < me.ThingCount; i++ {
-			data.WriteString(",")
+		for i := 0; i < me.ThingCount; i++ {
 			me.Things[i].Save(data, x, y, z)
+			data.WriteString(",")
 		}
 	}
 	data.WriteString("]}")

@@ -1,17 +1,17 @@
 class You extends Living {
-    constructor(world, x, y, z) {
-        super(world, "you", "skeleton", x, y, z, 0.4, 1.0)
+    constructor(world, nid, x, y, z) {
+        super(world, "you", "skeleton", nid, x, y, z, 0.4, 1.0)
         this.camera = null
     }
     update(world) {
         let pace = 0.1
         let input = []
         if (Input.Is("ArrowLeft")) {
-            this.r -= 0.05
+            this.r += 0.05
             input.push("tl")
         }
         if (Input.Is("ArrowRight")) {
-            this.r += 0.05
+            this.r -= 0.05
             input.push("tr")
         }
         if (Input.Is("w")) {

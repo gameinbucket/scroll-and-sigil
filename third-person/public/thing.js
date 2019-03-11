@@ -7,9 +7,12 @@ const THING_LIST = [
 ]
 
 class Thing {
-    constructor(world, uid, sid, x, y, z, radius, height) {
+    constructor(world, uid, sid, nid, x, y, z, radius, height) {
+        height = 1.0 // why is this not working
+        console.log("thing>", uid, sid, nid, x, y, z, radius, height)
         this.uid = uid
         this.sid = sid
+        this.nid = nid
         this.animations = SPRITE_ANIMATIONS[sid]
         this.sprite_data = SPRITE_DATA_3D[sid]
         this.animation_frame = 0
@@ -24,6 +27,7 @@ class Thing {
         this.dy = 0
         this.dz = 0
         this.ox = x
+        this.oy = y
         this.oz = z
         this.low_gx
         this.low_gy
@@ -38,12 +42,12 @@ class Thing {
         this.block_borders()
         this.add_to_blocks(world)
     }
-    static LoadNewThing(world, uid, x, y, z) {
+    static LoadNewThing(world, uid, nid, x, y, z) {
         switch (uid) {
             case "you":
-                return new You(world, x, y, z)
+                return new You(world, nid, x, y, z)
             case "skeleton":
-                return new Skeleton(world, x, y, z)
+                return new Skeleton(world, nid, x, y, z)
         }
     }
     save(x, y, z) {
@@ -58,16 +62,22 @@ class Thing {
         this.high_gz = Math.floor((this.z + this.radius) * INV_BLOCK_SIZE)
     }
     add_to_blocks(world) {
-        for (let gx = this.low_gx; gx <= this.high_gx; gx++)
-            for (let gy = this.low_gy; gy <= this.high_gy; gy++)
-                for (let gz = this.low_gz; gz <= this.high_gz; gz++)
+        for (let gx = this.low_gx; gx <= this.high_gx; gx++) {
+            for (let gy = this.low_gy; gy <= this.high_gy; gy++) {
+                for (let gz = this.low_gz; gz <= this.high_gz; gz++) {
                     world.get_block(gx, gy, gz).add_thing(this)
+                }
+            }
+        }
     }
     remove_from_blocks(world) {
-        for (let gx = this.low_gx; gx <= this.high_gx; gx++)
-            for (let gy = this.low_gy; gy <= this.high_gy; gy++)
-                for (let gz = this.low_gz; gz <= this.high_gz; gz++)
+        for (let gx = this.low_gx; gx <= this.high_gx; gx++) {
+            for (let gy = this.low_gy; gy <= this.high_gy; gy++) {
+                for (let gz = this.low_gz; gz <= this.high_gz; gz++) {
                     world.get_block(gx, gy, gz).remove_thing(this)
+                }
+            }
+        }
     }
     animate() {
         this.animation_mod++
@@ -117,10 +127,11 @@ class Thing {
         return Math.abs(this.x - b.x) <= square && Math.abs(this.z - b.z) <= square
     }
     update(world) {
-        if (this.dx != 0.0 || this.dz != 0.0) {
-            this.ox = this.x
-            this.oz = this.z
+        this.ox = this.x // TODO maybe have this.final_delta_x = this.x - this.ox at end of changes
+        this.oy = this.y
+        this.oz = this.z
 
+        if (this.dx != 0.0 || this.dz != 0.0) {
             this.x += this.dx
             this.z += this.dz
 
@@ -166,7 +177,6 @@ class Thing {
         }
 
         if (!this.ground || this.dy != 0.0) {
-
             this.dy -= GRAVITY
             this.y += this.dy
             this.terrain_collision_y(world)
@@ -178,16 +188,20 @@ class Thing {
 
         this.animate()
     }
-    render(sprite_buffer, x, z) {
-        let sin = x - this.x
-        let cos = z - this.z
+    render(interpolation, sprite_buffer, camx, camz) {
+        let vx = this.ox + interpolation * (this.x - this.ox)
+        let vy = this.oy + interpolation * (this.y - this.oy)
+        let vz = this.oz + interpolation * (this.z - this.oz)
+
+        let sin = camx - vx
+        let cos = camz - vz
         let length = Math.sqrt(sin * sin + cos * cos)
         sin /= length
         cos /= length
 
         let sprite_frame = this.sprite[this.animation_frame]
         let sprite = this.sprite_data[sprite_frame]
-        Render3.Sprite(sprite_buffer[this.sid], this.x, this.y, this.z, sin, cos, sprite)
+        Render3.Sprite(sprite_buffer[this.sid], vx, vy, vz, sin, cos, sprite)
     }
     render3(sprite_buffer, model_view) {
         let sprite_frame = this.sprite[this.animation_frame]

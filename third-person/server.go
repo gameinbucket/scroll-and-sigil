@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -72,25 +71,16 @@ func main() {
 
 	server.people = make([]*Person, 0)
 	server.mux = &sync.Mutex{}
-	ticker := time.NewTicker(1000 * time.Millisecond)
+	ticker := time.NewTicker(1000 * time.Millisecond) // 50
 	go func() {
 		for range ticker.C {
 			server.mux.Lock()
 			if len(server.people) > 0 {
 				server.world.Update()
-
+				broadcast := server.world.Snapshot.String()
 				for i := 0; i < len(server.people); i++ {
 					person := server.people[i]
-					var message strings.Builder
-					message.WriteString("c:p,x:")
-					message.WriteString(strconv.FormatFloat(float64(person.Character.X), 'f', -1, 32))
-					message.WriteString(",y:")
-					message.WriteString(strconv.FormatFloat(float64(person.Character.Y), 'f', -1, 32))
-					message.WriteString(",z:")
-					message.WriteString(strconv.FormatFloat(float64(person.Character.Z), 'f', -1, 32))
-					go person.WriteToClient(message.String())
-
-					person.InputCount = 0
+					go person.WriteToClient(broadcast)
 				}
 			}
 			server.mux.Unlock()

@@ -1,57 +1,59 @@
 class WorldState {
     constructor(app) {
         this.app = app
+        this.previous_update = new Date().getTime()
     }
     update() {
         let cam = this.app.camera
-        // let pace = 0.1
-        // if (Input.Is("w")) {
-        //     cam.x += Math.sin(cam.ry) * pace
-        //     cam.z -= Math.cos(cam.ry) * pace
-        // }
-        // if (Input.Is("s")) {
-        //     cam.x -= Math.sin(cam.ry) * pace
-        //     cam.z += Math.cos(cam.ry) * pace
-        // }
-        // if (Input.Is("a")) {
-        //     cam.x -= Math.cos(cam.ry) * pace
-        //     cam.z -= Math.sin(cam.ry) * pace
-        // }
-        // if (Input.Is("d")) {
-        //     cam.x += Math.cos(cam.ry) * pace
-        //     cam.z += Math.sin(cam.ry) * pace
-        // }
-        // if (Input.Is("q"))
-        //     cam.y += 0.1
-        // if (Input.Is("e"))
-        //     cam.y -= 0.1
-        if (Input.Is("ArrowLeft"))
-            cam.ry -= 0.05
-        if (Input.Is("ArrowRight"))
-            cam.ry += 0.05
-        if (Input.Is("ArrowUp"))
-            cam.rx -= 0.05
-        if (Input.Is("ArrowDown"))
-            cam.rx += 0.05
+        let world = this.app.world
 
-        this.app.world.update()
-        cam.update();
+        if (Input.Is("ArrowLeft"))
+            cam.ry += 0.05
+        if (Input.Is("ArrowRight"))
+            cam.ry -= 0.05
+        if (Input.Is("ArrowUp"))
+            cam.rx += 0.05
+        if (Input.Is("ArrowDown"))
+            cam.rx -= 0.05
+
+        if (SOCKET_QUEUE.length > 0) {
+            let data = SOCKET_QUEUE[SOCKET_QUEUE.length - 1]
+            SOCKET_QUEUE = []
+            let map = Parser.read(data)
+            console.log(data, map)
+            let things = map["t"]
+            for (let i = 0; i < things.length; i++) {
+                let snap = things[i]
+                let nid = snap["n"]
+                let thing = world.things_net[nid]
+                thing.x = parseFloat(snap["x"])
+                thing.y = parseFloat(snap["y"])
+                thing.z = parseFloat(snap["z"])
+                thing.remove_from_blocks(world)
+                thing.block_borders()
+                thing.add_to_blocks(world)
+            }
+            this.previous_update = new Date().getTime()
+        }
+
+        world.update()
+        cam.update()
     }
     render() {
         let g = this.app.g
         let gl = this.app.gl
         let frame = this.app.frame
         let canvas = this.app.canvas
-        let player = this.app.player
-        let generic = this.app.generic
-        let generic2 = this.app.generic2
-        let colored = this.app.colored
         let canvas_ortho = this.app.canvas_ortho
-        let draw_ortho = this.app.draw_ortho
         let draw_perspective = this.app.draw_perspective
         let screen = this.app.screen
         let world = this.app.world
         let cam = this.app.camera
+
+        let time = new Date().getTime()
+        let interpolation = (time - this.previous_update) / NETWORK_UPDATE_RATE
+        if (interpolation > 1.0) interpolation = 1.0
+        // console.log(time, this.previous_update, NETWORK_UPDATE_RATE, interpolation)
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
@@ -68,7 +70,7 @@ class WorldState {
         let cam_block_y = Math.floor(cam.y * INV_BLOCK_SIZE)
         let cam_block_z = Math.floor(cam.z * INV_BLOCK_SIZE)
 
-        world.render(g, cam_block_x, cam_block_y, cam_block_z, cam.x, cam.z)
+        world.render(g, interpolation, cam_block_x, cam_block_y, cam_block_z, cam.x, cam.z)
 
         gl.disable(gl.DEPTH_TEST)
         gl.disable(gl.CULL_FACE)

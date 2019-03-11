@@ -5,6 +5,7 @@ const SPRITE_ALIAS = {}
 const SPRITE_ANIMATIONS = {}
 
 let SOCKET = null
+let SOCKET_QUEUE = []
 
 class Application {
     constructor() {
@@ -99,7 +100,6 @@ class Application {
         this.draw_perspective = draw_perspective
     }
     async init() {
-        let self = this
         let g = this.g
         let gl = this.gl
 
@@ -183,15 +183,7 @@ class Application {
         })
 
         socket.onmessage = function (event) {
-            let data = event.data
-            console.log(data)
-            let map = Parser.read(data)
-            console.log(map)
-            if (map["c"] === "p") {
-                self.player.x = parseFloat(map["x"])
-                self.player.y = parseFloat(map["y"])
-                self.player.z = parseFloat(map["z"])
-            }
+            SOCKET_QUEUE.push(event.data)
         }
 
         this.world.load(data)
@@ -219,7 +211,7 @@ class Application {
     }
     loop() {
         if (this.on) {
-            this.state.update()
+            this.state.update() // TODO remove
             this.state.render()
         }
         requestAnimationFrame(loop)

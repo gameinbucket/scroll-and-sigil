@@ -1,3 +1,5 @@
+const NETWORK_UPDATE_RATE = 1000
+
 const WORLD_POSITIVE_X = 0
 const WORLD_POSITIVE_Y = 1
 const WORLD_POSITIVE_Z = 2
@@ -21,6 +23,7 @@ class World {
         this.sprite_count
         this.things
         this.thing_count
+        this.things_net
         this.threads = ["ai", "pathing"]
         this.thread_index = 0
         this.thread_id = ""
@@ -34,6 +37,9 @@ class World {
         this.sprite_count = {}
         this.things = []
         this.thing_count = 0
+        this.things_net = {}
+
+        // console.log(data)
 
         let content = Parser.read(data)
         let blocks = content["b"]
@@ -105,10 +111,11 @@ class World {
             for (let t = 0; t < things.length; t++) {
                 let thing = things[t]
                 let uid = thing["u"]
+                let nid = thing["n"]
                 let x = parseFloat(thing["x"]) + px
                 let y = parseFloat(thing["y"]) + py
                 let z = parseFloat(thing["z"]) + pz
-                Thing.LoadNewThing(this, uid, x, y, z)
+                Thing.LoadNewThing(this, uid, nid, x, y, z)
             }
         }
 
@@ -224,6 +231,7 @@ class World {
     add_thing(thing) {
         this.things[this.thing_count] = thing
         this.thing_count++
+        this.things_net[thing.nid] = thing
 
         let count = this.sprite_count[thing.sid]
         if (count) {
@@ -241,6 +249,7 @@ class World {
                 for (let j = i; j < this.thing_count - 1; j++) this.things[j] = this.things[j + 1]
                 this.thing_count--
                 this.sprite_count[thing.sid]--
+                delete this.things_net[thing.nid]
                 break
             }
         }
@@ -254,7 +263,7 @@ class World {
         for (let i = 0; i < this.thing_count; i++)
             this.things[i].update(this)
     }
-    render(g, x, y, z, cam_x, cam_z) {
+    render(g, interpolation, x, y, z, cam_x, cam_z) {
         let gl = this.gl
         let sprite_set = this.sprite_set
         let sprite_buffer = this.sprite_buffer
@@ -273,7 +282,7 @@ class World {
         for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
             let block = this.viewable[i]
 
-            block.render_things(sprite_set, sprite_buffer, cam_x, cam_z)
+            block.render_things(interpolation, sprite_set, sprite_buffer, cam_x, cam_z)
 
             let mesh = block.mesh
             if (mesh.vertex_pos === 0)

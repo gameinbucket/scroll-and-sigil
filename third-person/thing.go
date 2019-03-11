@@ -12,10 +12,16 @@ const (
 	Gravity       = 0.01
 )
 
+// Thing variables
+var (
+	ThingNetworkNum = 0
+)
+
 // Thing struct
 type Thing struct {
 	UID                    string
 	SID                    string
+	NID                    string
 	Animations             map[string]string
 	SpriteData             map[string]string
 	AnimationFrame         int
@@ -35,7 +41,9 @@ type Thing struct {
 
 // NewThing func
 func NewThing(world *World, uid, sid string, x, y, z, radius, height float32) *Thing {
-	t := &Thing{UID: uid, SID: sid, X: x, Y: y, Z: z, Radius: radius, Height: height}
+	nid := "nid" + strconv.Itoa(ThingNetworkNum)
+	ThingNetworkNum++
+	t := &Thing{UID: uid, SID: sid, NID: nid, X: x, Y: y, Z: z, Radius: radius, Height: height}
 	t.SpriteName = "idle"
 	world.AddThing(t)
 	t.BlockBorders()
@@ -63,6 +71,8 @@ func LoadNewThing(world *World, uid string, x, y, z float32) *Thing {
 func (me *Thing) Save(data *strings.Builder, x, y, z float32) {
 	data.WriteString("{u:")
 	data.WriteString(me.UID)
+	data.WriteString(",n:")
+	data.WriteString(me.NID)
 	data.WriteString(",x:")
 	data.WriteString(strconv.FormatFloat(float64(me.X-x), 'f', -1, 32))
 	data.WriteString(",y:")
@@ -265,4 +275,14 @@ func (me *Thing) Update(world *World) {
 	}
 
 	me.Animate()
+
+	world.Snapshot.WriteString("{n:")
+	world.Snapshot.WriteString(me.NID)
+	world.Snapshot.WriteString(",x:")
+	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+	world.Snapshot.WriteString(",y:")
+	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	world.Snapshot.WriteString(",z:")
+	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	world.Snapshot.WriteString("},")
 }

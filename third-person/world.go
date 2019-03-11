@@ -37,6 +37,7 @@ type World struct {
 	ThinkCount  int
 	ThreadIndex int
 	ThreadID    string
+	Snapshot    strings.Builder
 }
 
 // NewWorld func
@@ -156,15 +157,11 @@ func (me *World) Save(name string) string {
 	data.WriteString("n:")
 	data.WriteString(name)
 	data.WriteString(",b[")
-	comma := false
 	for i := 0; i < me.All; i++ {
 		block := me.Blocks[i]
 		if !block.IsEmpty() {
-			if comma {
-				data.WriteString(",")
-			}
-			comma = true
 			block.Save(&data)
+			data.WriteString(",")
 		}
 	}
 	data.WriteString("]")
@@ -287,6 +284,8 @@ func (me *World) RemoveThinker(t *Think) {
 
 // Update func
 func (me *World) Update() {
+	me.Snapshot.Reset()
+	me.Snapshot.WriteString("t[")
 	me.ThreadID = WorldThreads[me.ThreadIndex]
 	me.ThreadIndex++
 	if me.ThreadIndex == len(WorldThreads) {
@@ -295,6 +294,7 @@ func (me *World) Update() {
 	for i := 0; i < len(me.People); i++ {
 		person := me.People[i]
 		person.Think(person, me)
+		person.InputCount = 0
 	}
 	for i := 0; i < me.ThinkCount; i++ {
 		think := me.Thinkers[i]
@@ -303,4 +303,5 @@ func (me *World) Update() {
 	for i := 0; i < me.ThingCount; i++ {
 		me.Things[i].Update(me)
 	}
+	me.Snapshot.WriteString("]")
 }

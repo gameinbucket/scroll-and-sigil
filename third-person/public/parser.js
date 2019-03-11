@@ -52,7 +52,7 @@ class Parser {
                 else state = "key"
             } else if (c === ']') {
                 let pc = str[i - 1]
-                if (pc !== '[' && pc !== ']' && pc !== '}') {
+                if (pc !== ',' && pc !== '[' && pc !== ']' && pc !== '}') {
                     stack[0].push(value)
                     value = ""
                 }
