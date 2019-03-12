@@ -39,8 +39,6 @@ class World {
         this.thing_count = 0
         this.things_net = {}
 
-        // console.log(data)
-
         let content = Parser.read(data)
         let blocks = content["b"]
 

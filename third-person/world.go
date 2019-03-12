@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"math"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // World constants
@@ -285,7 +287,9 @@ func (me *World) RemoveThinker(t *Think) {
 // Update func
 func (me *World) Update() {
 	me.Snapshot.Reset()
-	me.Snapshot.WriteString("t[")
+	me.Snapshot.WriteString("s:")
+	me.Snapshot.WriteString(strconv.FormatInt(time.Now().UnixNano()/1000000-1552330000000, 10))
+	me.Snapshot.WriteString(",t[")
 	me.ThreadID = WorldThreads[me.ThreadIndex]
 	me.ThreadIndex++
 	if me.ThreadIndex == len(WorldThreads) {

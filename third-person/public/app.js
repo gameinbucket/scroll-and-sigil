@@ -6,6 +6,7 @@ const SPRITE_ANIMATIONS = {}
 
 let SOCKET = null
 let SOCKET_QUEUE = []
+let SOCKET_SEND = []
 
 class Application {
     constructor() {

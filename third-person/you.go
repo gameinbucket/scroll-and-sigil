@@ -13,6 +13,12 @@ func ThinkYou(me *Person, world *World) {
 	thing := me.Character
 	input := me.InputQueue[0]
 
+	// fmt.Print("in> ")
+	// for i := 0; i < me.InputCount; i++ {
+	// 	fmt.Print(me.InputQueue[i], " ")
+	// }
+	// fmt.Println()
+
 	if input == "tl" {
 		thing.Angle -= 0.05
 	}

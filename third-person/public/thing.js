@@ -8,8 +8,6 @@ const THING_LIST = [
 
 class Thing {
     constructor(world, uid, sid, nid, x, y, z, radius, height) {
-        height = 1.0 // why is this not working
-        console.log("thing>", uid, sid, nid, x, y, z, radius, height)
         this.uid = uid
         this.sid = sid
         this.nid = nid
@@ -127,7 +125,7 @@ class Thing {
         return Math.abs(this.x - b.x) <= square && Math.abs(this.z - b.z) <= square
     }
     update(world) {
-        this.ox = this.x // TODO maybe have this.final_delta_x = this.x - this.ox at end of changes
+        this.ox = this.x
         this.oy = this.y
         this.oz = this.z
 
@@ -192,6 +190,8 @@ class Thing {
         let vx = this.ox + interpolation * (this.x - this.ox)
         let vy = this.oy + interpolation * (this.y - this.oy)
         let vz = this.oz + interpolation * (this.z - this.oz)
+
+        console.log(this.oy, this.y, interpolation, vy)
 
         let sin = camx - vx
         let cos = camz - vz

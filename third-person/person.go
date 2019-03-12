@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -49,8 +50,11 @@ func (me *Person) ConnectionLoop(server *Server) {
 		if in == "exit" {
 			break
 		}
+		words := strings.Fields(in)
 		server.mux.Lock()
-		me.Input(in)
+		for _, w := range words {
+			me.Input(w)
+		}
 		server.mux.Unlock()
 	}
 	server.RemovePerson(me)

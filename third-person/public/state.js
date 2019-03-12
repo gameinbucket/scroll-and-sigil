@@ -1,27 +1,18 @@
 class WorldState {
     constructor(app) {
         this.app = app
+        this.snapshot_time = new Date().getTime()
         this.previous_update = new Date().getTime()
     }
     update() {
-        let cam = this.app.camera
         let world = this.app.world
 
-        if (Input.Is("ArrowLeft"))
-            cam.ry += 0.05
-        if (Input.Is("ArrowRight"))
-            cam.ry -= 0.05
-        if (Input.Is("ArrowUp"))
-            cam.rx += 0.05
-        if (Input.Is("ArrowDown"))
-            cam.rx -= 0.05
-
         if (SOCKET_QUEUE.length > 0) {
-            let data = SOCKET_QUEUE[SOCKET_QUEUE.length - 1]
+            let raw = SOCKET_QUEUE[SOCKET_QUEUE.length - 1]
             SOCKET_QUEUE = []
-            let map = Parser.read(data)
-            console.log(data, map)
-            let things = map["t"]
+            let data = Parser.read(raw)
+            console.log(raw, data)
+            let things = data["t"]
             for (let i = 0; i < things.length; i++) {
                 let snap = things[i]
                 let nid = snap["n"]
@@ -29,15 +20,21 @@ class WorldState {
                 thing.x = parseFloat(snap["x"])
                 thing.y = parseFloat(snap["y"])
                 thing.z = parseFloat(snap["z"])
+                thing.r = parseFloat(snap["a"])
                 thing.remove_from_blocks(world)
                 thing.block_borders()
                 thing.add_to_blocks(world)
             }
+            this.snapshot_time = parseInt(data["s"]) + 1552330000000
             this.previous_update = new Date().getTime()
         }
 
         world.update()
-        cam.update()
+
+        if (SOCKET_SEND.length > 0) {
+            SOCKET.send(SOCKET_SEND)
+            SOCKET_SEND = ""
+        }
     }
     render() {
         let g = this.app.g
@@ -53,7 +50,17 @@ class WorldState {
         let time = new Date().getTime()
         let interpolation = (time - this.previous_update) / NETWORK_UPDATE_RATE
         if (interpolation > 1.0) interpolation = 1.0
-        // console.log(time, this.previous_update, NETWORK_UPDATE_RATE, interpolation)
+        console.log(time, this.previous_update, interpolation)
+
+        if (Input.Is("ArrowLeft"))
+            cam.ry += 0.05
+        if (Input.Is("ArrowRight"))
+            cam.ry -= 0.05
+        if (Input.Is("ArrowUp"))
+            cam.rx += 0.05
+        if (Input.Is("ArrowDown"))
+            cam.rx -= 0.05
+        cam.update(interpolation)
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)

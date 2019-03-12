@@ -5,38 +5,36 @@ class You extends Living {
     }
     update(world) {
         let pace = 0.1
-        let input = []
+
         if (Input.Is("ArrowLeft")) {
-            this.r += 0.05
-            input.push("tl")
+            // this.r += 0.05
+            SOCKET_SEND += "tl "
         }
         if (Input.Is("ArrowRight")) {
-            this.r -= 0.05
-            input.push("tr")
+            // this.r -= 0.05
+            SOCKET_SEND += "tr "
         }
         if (Input.Is("w")) {
-            this.dx += Math.sin(this.r) * pace
-            this.dz -= Math.cos(this.r) * pace
-            input.push("mf")
+            // this.dx += Math.sin(this.r) * pace
+            // this.dz -= Math.cos(this.r) * pace
+            SOCKET_SEND += "mf "
         }
         if (Input.Is("s")) {
-            this.dx -= Math.sin(this.r) * pace
-            this.dz += Math.cos(this.r) * pace
-            input.push("mb")
+            // this.dx -= Math.sin(this.r) * pace
+            // this.dz += Math.cos(this.r) * pace
+            SOCKET_SEND += "mb "
         }
         if (Input.Is("a")) {
-            this.dx -= Math.cos(this.r) * pace
-            this.dz -= Math.sin(this.r) * pace
-            input.push("sl")
+            // this.dx -= Math.cos(this.r) * pace
+            // this.dz -= Math.sin(this.r) * pace
+            SOCKET_SEND += "sl "
         }
         if (Input.Is("d")) {
-            this.dx += Math.cos(this.r) * pace
-            this.dz += Math.sin(this.r) * pace
-            input.push("sr")
+            // this.dx += Math.cos(this.r) * pace
+            // this.dz += Math.sin(this.r) * pace
+            SOCKET_SEND += "sr "
         }
-        if (input.length > 0) {
-            SOCKET.send(input[0])
-        }
-        super.update(world)
+
+        // super.update(world)
     }
 }

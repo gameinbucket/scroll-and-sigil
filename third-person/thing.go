@@ -49,7 +49,7 @@ func NewThing(world *World, uid, sid string, x, y, z, radius, height float32) *T
 	t.BlockBorders()
 	t.AddToBlocks(world)
 	if uid == "you" {
-	} else if uid == "wander" {
+	} else if uid == "skeleton" {
 		thinker := &Think{Thing: t, Think: ThinkWander}
 		world.AddThinker(thinker)
 	}
@@ -284,5 +284,7 @@ func (me *Thing) Update(world *World) {
 	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
 	world.Snapshot.WriteString(",z:")
 	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	world.Snapshot.WriteString(",a:")
+	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
 	world.Snapshot.WriteString("},")
 }
