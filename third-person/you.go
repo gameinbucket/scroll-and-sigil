@@ -2,6 +2,8 @@ package main
 
 import (
 	"math"
+	"strconv"
+	"strings"
 )
 
 // ThinkYou func
@@ -11,7 +13,6 @@ func ThinkYou(me *Person, world *World) {
 	}
 
 	thing := me.Character
-	input := me.InputQueue[0]
 
 	// fmt.Print("in> ")
 	// for i := 0; i < me.InputCount; i++ {
@@ -19,33 +20,44 @@ func ThinkYou(me *Person, world *World) {
 	// }
 	// fmt.Println()
 
-	if input == "tl" {
-		thing.Angle -= 0.05
-	}
+	mf := false
+	mb := false
+	sl := false
+	sr := false
 
-	if input == "tr" {
-		thing.Angle += 0.05
-	}
+	for i := 0; i < me.InputCount; i++ {
+		input := me.InputQueue[i]
 
-	pace := float32(0.1)
+		if strings.HasPrefix(input, "a:") {
+			angle := strings.Split(input, "a:")[1]
+			value, _ := strconv.ParseFloat(angle, 32)
+			thing.Angle = float32(value)
+		}
 
-	if input == "mf" {
-		thing.DX += float32(math.Sin(float64(thing.Angle))) * pace
-		thing.DZ -= float32(math.Cos(float64(thing.Angle))) * pace
-	}
+		pace := float32(0.1)
 
-	if input == "mb" {
-		thing.DX -= float32(math.Sin(float64(thing.Angle))) * pace
-		thing.DZ += float32(math.Cos(float64(thing.Angle))) * pace
-	}
+		if !mf && input == "mf" {
+			thing.DX += float32(math.Sin(float64(thing.Angle))) * pace
+			thing.DZ -= float32(math.Cos(float64(thing.Angle))) * pace
+			mf = true
+		}
 
-	if input == "sr" {
-		thing.DX -= float32(math.Cos(float64(thing.Angle))) * pace
-		thing.DZ -= float32(math.Sin(float64(thing.Angle))) * pace
-	}
+		if !mb && input == "mb" {
+			thing.DX -= float32(math.Sin(float64(thing.Angle))) * pace
+			thing.DZ += float32(math.Cos(float64(thing.Angle))) * pace
+			mb = true
+		}
 
-	if input == "sl" {
-		thing.DX += float32(math.Cos(float64(thing.Angle))) * pace
-		thing.DZ += float32(math.Sin(float64(thing.Angle))) * pace
+		if !sl && input == "sl" {
+			thing.DX -= float32(math.Cos(float64(thing.Angle))) * pace
+			thing.DZ -= float32(math.Sin(float64(thing.Angle))) * pace
+			sl = true
+		}
+
+		if !sr && input == "sr" {
+			thing.DX += float32(math.Cos(float64(thing.Angle))) * pace
+			thing.DZ += float32(math.Sin(float64(thing.Angle))) * pace
+			sr = true
+		}
 	}
 }

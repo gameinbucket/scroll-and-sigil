@@ -125,73 +125,72 @@ class Thing {
         return Math.abs(this.x - b.x) <= square && Math.abs(this.z - b.z) <= square
     }
     update(world) {
-        this.ox = this.x
-        this.oy = this.y
-        this.oz = this.z
+        // ox and snapshot need to be different things
+        // this.ox = this.x
+        // this.oy = this.y
+        // this.oz = this.z
 
-        if (this.dx != 0.0 || this.dz != 0.0) {
-            this.x += this.dx
-            this.z += this.dz
+        // if (this.dx != 0.0 || this.dz != 0.0) {
+        //     this.x += this.dx
+        //     this.z += this.dz
 
-            let collided = []
-            let searched = new Set()
+        //     let collided = []
+        //     let searched = new Set()
 
-            this.remove_from_blocks(world)
+        //     this.remove_from_blocks(world)
 
-            for (let gx = this.low_gx; gx <= this.high_gx; gx++) {
-                for (let gy = this.low_gy; gy <= this.high_gy; gy++) {
-                    for (let gz = this.low_gz; gz <= this.high_gz; gz++) {
-                        let block = world.get_block(gx, gy, gz)
-                        for (let t = 0; t < block.thing_count; t++) {
-                            let thing = block.things[t]
-                            if (searched.has(thing)) continue
-                            searched.add(thing)
-                            if (this.overlap(thing)) collided.push(thing)
-                        }
-                    }
-                }
-            }
+        //     for (let gx = this.low_gx; gx <= this.high_gx; gx++) {
+        //         for (let gy = this.low_gy; gy <= this.high_gy; gy++) {
+        //             for (let gz = this.low_gz; gz <= this.high_gz; gz++) {
+        //                 let block = world.get_block(gx, gy, gz)
+        //                 for (let t = 0; t < block.thing_count; t++) {
+        //                     let thing = block.things[t]
+        //                     if (searched.has(thing)) continue
+        //                     searched.add(thing)
+        //                     if (this.overlap(thing)) collided.push(thing)
+        //                 }
+        //             }
+        //         }
+        //     }
 
-            while (collided.length > 0) {
-                let closest = null
-                let manhattan = Number.MAX_VALUE
-                for (let i = 0; i < collided.length; i++) {
-                    let thing = collided[i]
-                    let dist = Math.abs(this.ox - thing.x) + Math.abs(this.oz - thing.z)
-                    if (dist < manhattan) {
-                        manhattan = dist
-                        closest = thing
-                    }
-                }
-                this.resolve(closest)
-                collided.splice(closest)
-            }
+        //     while (collided.length > 0) {
+        //         let closest = null
+        //         let manhattan = Number.MAX_VALUE
+        //         for (let i = 0; i < collided.length; i++) {
+        //             let thing = collided[i]
+        //             let dist = Math.abs(this.ox - thing.x) + Math.abs(this.oz - thing.z)
+        //             if (dist < manhattan) {
+        //                 manhattan = dist
+        //                 closest = thing
+        //             }
+        //         }
+        //         this.resolve(closest)
+        //         collided.splice(closest)
+        //     }
 
-            this.block_borders()
-            this.add_to_blocks(world)
+        //     this.block_borders()
+        //     this.add_to_blocks(world)
 
-            this.dx = 0.0
-            this.dz = 0.0
-        }
+        //     this.dx = 0.0
+        //     this.dz = 0.0
+        // }
 
-        if (!this.ground || this.dy != 0.0) {
-            this.dy -= GRAVITY
-            this.y += this.dy
-            this.terrain_collision_y(world)
+        // if (!this.ground || this.dy != 0.0) {
+        //     this.dy -= GRAVITY
+        //     this.y += this.dy
+        //     this.terrain_collision_y(world)
 
-            this.remove_from_blocks(world)
-            this.block_borders()
-            this.add_to_blocks(world)
-        }
+        //     this.remove_from_blocks(world)
+        //     this.block_borders()
+        //     this.add_to_blocks(world)
+        // }
 
-        this.animate()
+        // this.animate()
     }
     render(interpolation, sprite_buffer, camx, camz) {
         let vx = this.ox + interpolation * (this.x - this.ox)
         let vy = this.oy + interpolation * (this.y - this.oy)
         let vz = this.oz + interpolation * (this.z - this.oz)
-
-        console.log(this.oy, this.y, interpolation, vy)
 
         let sin = camx - vx
         let cos = camz - vz

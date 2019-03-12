@@ -19,24 +19,24 @@ var (
 
 // Thing struct
 type Thing struct {
-	UID                    string
-	SID                    string
-	NID                    string
-	Animations             map[string]string
-	SpriteData             map[string]string
-	AnimationFrame         int
-	AnimationMod           int
-	SpriteName             string
-	Sprite                 map[string]string
-	Angle                  float32
-	X, Y, Z                float32
-	DX, DY, DZ             float32
-	OldX, OldZ             float32
-	LowGX, LowGY, LowGZ    int
-	HighGX, HighGY, HighGZ int
-	Ground                 bool
-	Radius                 float32
-	Height                 float32
+	UID                 string
+	SID                 string
+	NID                 string
+	Animations          map[string]string
+	SpriteData          map[string]string
+	AnimationFrame      int
+	AnimationMod        int
+	SpriteName          string
+	Sprite              map[string]string
+	Angle               float32
+	X, Y, Z             float32
+	DX, DY, DZ          float32
+	OldX, OldZ          float32
+	MinBX, MinBY, MinBZ int
+	MaxBX, MaxBY, MaxBZ int
+	Ground              bool
+	Radius              float32
+	Height              float32
 }
 
 // NewThing func
@@ -60,9 +60,9 @@ func NewThing(world *World, uid, sid string, x, y, z, radius, height float32) *T
 func LoadNewThing(world *World, uid string, x, y, z float32) *Thing {
 	switch uid {
 	case "you":
-		return NewThing(world, uid, "you", x, y, z, 0.01, 1.0)
+		return NewThing(world, uid, "you", x, y, z, 0.4, 1.0)
 	case "skeleton":
-		return NewThing(world, uid, "skeleton", x, y, z, 0.01, 1.0)
+		return NewThing(world, uid, "skeleton", x, y, z, 0.4, 1.0)
 	}
 	return nil
 }
@@ -84,19 +84,19 @@ func (me *Thing) Save(data *strings.Builder, x, y, z float32) {
 
 // BlockBorders func
 func (me *Thing) BlockBorders() {
-	me.LowGX = int((me.X - me.Radius) * InverseBlockSize)
-	me.LowGY = int(me.Y * InverseBlockSize)
-	me.LowGZ = int((me.Z - me.Radius) * InverseBlockSize)
-	me.HighGX = int((me.X + me.Radius) * InverseBlockSize)
-	me.HighGY = int((me.Y + me.Height) * InverseBlockSize)
-	me.HighGZ = int((me.Z + me.Radius) * InverseBlockSize)
+	me.MinBX = int((me.X - me.Radius) * InverseBlockSize)
+	me.MinBY = int(me.Y * InverseBlockSize)
+	me.MinBZ = int((me.Z - me.Radius) * InverseBlockSize)
+	me.MaxBX = int((me.X + me.Radius) * InverseBlockSize)
+	me.MaxBY = int((me.Y + me.Height) * InverseBlockSize)
+	me.MaxBZ = int((me.Z + me.Radius) * InverseBlockSize)
 }
 
 // AddToBlocks func
 func (me *Thing) AddToBlocks(world *World) {
-	for gx := me.LowGX; gx <= me.HighGX; gx++ {
-		for gy := me.LowGY; gy <= me.HighGY; gy++ {
-			for gz := me.LowGZ; gz <= me.HighGZ; gz++ {
+	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
+		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
+			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
 				world.GetBlock(gx, gy, gz).AddThing(me)
 			}
 		}
@@ -105,9 +105,9 @@ func (me *Thing) AddToBlocks(world *World) {
 
 // RemoveFromBlocks func
 func (me *Thing) RemoveFromBlocks(world *World) {
-	for gx := me.LowGX; gx <= me.HighGX; gx++ {
-		for gy := me.LowGY; gy <= me.HighGY; gy++ {
-			for gz := me.LowGZ; gz <= me.HighGZ; gz++ {
+	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
+		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
+			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
 				world.GetBlock(gx, gy, gz).RemoveThing(me)
 			}
 		}
@@ -122,6 +122,62 @@ func (me *Thing) Animate() {
 		me.AnimationFrame++
 		if me.AnimationFrame == len(me.Animations) {
 			me.AnimationFrame = 0
+		}
+	}
+}
+
+// TerrainCollisionXZ func
+func (me *Thing) TerrainCollisionXZ(world *World) {
+	minGX := int((me.X - me.Radius))
+	minGY := int(me.Y)
+	minGZ := int((me.Z - me.Radius))
+	maxGX := int((me.X + me.Radius))
+	maxGY := int((me.Y + me.Height))
+	maxGZ := int((me.Z + me.Radius))
+	for gx := minGX; gx <= maxGX; gx++ {
+		for gy := minGY; gy <= maxGY; gy++ {
+			for gz := minGZ; gz <= maxGZ; gz++ {
+				bx := int(float32(gx) * InverseBlockSize)
+				by := int(float32(gy) * InverseBlockSize)
+				bz := int(float32(gz) * InverseBlockSize)
+				tx := gx - bx*BlockSize
+				ty := gy - by*BlockSize
+				tz := gz - bz*BlockSize
+				tile := world.GetTileType(bx, by, bz, tx, ty, tz)
+				if TileClosed[tile] {
+					xx := float32(gx)
+					closeX := me.X
+					if closeX < xx {
+						closeX = xx
+					} else if closeX > xx+1 {
+						closeX = xx + 1
+					}
+
+					zz := float32(gz)
+					closeZ := me.Z
+					if closeZ < zz {
+						closeZ = zz
+					} else if closeZ > zz+1 {
+						closeZ = zz + 1
+					}
+
+					// TODO line intersection collision for non bounding box walls
+					dxx := me.X - closeX
+					dzz := me.Z - closeZ
+					dist := dxx*dxx + dzz*dzz
+
+					if dist > me.Radius*me.Radius {
+						continue
+					}
+					dist = float32(math.Sqrt(float64(dist)))
+					if dist == 0 {
+						dist = 1
+					}
+					mult := me.Radius / dist
+					me.X += dxx*mult - dxx
+					me.Z += dzz*mult - dzz
+				}
+			}
 		}
 	}
 }
@@ -214,10 +270,11 @@ func (me *Thing) Update(world *World) {
 		searched := make(map[*Thing]bool)
 
 		me.RemoveFromBlocks(world)
+		me.BlockBorders()
 
-		for gx := me.LowGX; gx <= me.HighGX; gx++ {
-			for gy := me.LowGY; gy <= me.HighGY; gy++ {
-				for gz := me.LowGZ; gz <= me.HighGZ; gz++ {
+		for gx := me.MinBX; gx <= me.MaxBX; gx++ {
+			for gy := me.MinBY; gy <= me.MaxBY; gy++ {
+				for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
 					block := world.GetBlock(gx, gy, gz)
 					for t := 0; t < block.ThingCount; t++ {
 						thing := block.Things[t]
@@ -256,6 +313,8 @@ func (me *Thing) Update(world *World) {
 			collided[len(collided)-1] = nil
 			collided = collided[:len(collided)-1]
 		}
+
+		me.TerrainCollisionXZ(world)
 
 		me.BlockBorders()
 		me.AddToBlocks(world)

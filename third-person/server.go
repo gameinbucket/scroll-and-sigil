@@ -71,7 +71,7 @@ func main() {
 
 	server.people = make([]*Person, 0)
 	server.mux = &sync.Mutex{}
-	ticker := time.NewTicker(1000 * time.Millisecond) // 50
+	ticker := time.NewTicker(50 * time.Millisecond) // 50
 	go func() {
 		for range ticker.C {
 			server.mux.Lock()

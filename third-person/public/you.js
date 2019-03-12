@@ -8,11 +8,11 @@ class You extends Living {
 
         if (Input.Is("ArrowLeft")) {
             // this.r += 0.05
-            SOCKET_SEND += "tl "
+            // SOCKET_SEND += "tl "
         }
         if (Input.Is("ArrowRight")) {
             // this.r -= 0.05
-            SOCKET_SEND += "tr "
+            // SOCKET_SEND += "tr "
         }
         if (Input.Is("w")) {
             // this.dx += Math.sin(this.r) * pace
