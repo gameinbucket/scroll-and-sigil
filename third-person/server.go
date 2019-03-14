@@ -59,7 +59,7 @@ func main() {
 	server = &Server{}
 
 	server.world = NewWorld()
-	file, err := os.Open("maps/map.json")
+	file, err := os.Open("maps/test.map")
 	if err != nil {
 		panic(err)
 	}
@@ -71,7 +71,7 @@ func main() {
 
 	server.people = make([]*Person, 0)
 	server.mux = &sync.Mutex{}
-	ticker := time.NewTicker(50 * time.Millisecond) // 50
+	ticker := time.NewTicker(50 * time.Millisecond)
 	go func() {
 		for range ticker.C {
 			server.mux.Lock()

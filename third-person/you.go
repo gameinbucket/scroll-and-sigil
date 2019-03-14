@@ -6,6 +6,38 @@ import (
 	"strings"
 )
 
+// You struct
+type You struct {
+	*Thing
+	person    *Person
+	something int
+}
+
+// NewYou func
+func NewYou(world *World, x, y, z float32) *You {
+	nid := NextNID()
+	t := &You{}
+	t.Thing = &Thing{}
+	t.UID = "you"
+	t.SID = "you"
+	t.NID = nid
+	t.X = x
+	t.Y = y
+	t.Z = z
+	t.Radius = 0.4
+	t.Height = 1.0
+	t.SpriteName = "idle"
+	world.AddThing(t)
+	t.BlockBorders()
+	t.AddToBlocks(world)
+	return t
+}
+
+// Update func
+func (me *You) Update(world *World) {
+	me.Integrate(world)
+}
+
 // ThinkYou func
 func ThinkYou(me *Person, world *World) {
 	if me.InputCount == 0 {
@@ -13,12 +45,6 @@ func ThinkYou(me *Person, world *World) {
 	}
 
 	thing := me.Character
-
-	// fmt.Print("in> ")
-	// for i := 0; i < me.InputCount; i++ {
-	// 	fmt.Print(me.InputQueue[i], " ")
-	// }
-	// fmt.Println()
 
 	mf := false
 	mb := false

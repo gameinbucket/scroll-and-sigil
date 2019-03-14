@@ -22,5 +22,7 @@ class Camera {
         this.x = vx - this.radius * cos_x * sin_y
         this.y = vy + this.radius * sin_x
         this.z = vz + this.radius * cos_x * cos_y
+
+        this.y += this.thing.height
     }
 }

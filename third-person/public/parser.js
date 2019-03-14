@@ -7,10 +7,11 @@ class Parser {
         let state = "key"
         for (let i = 0; i < str.length; i++) {
             let c = str[i]
-            if (c === ':') {
+            if (c === ":") {
                 state = "value"
-            } else if (c === ',') {
-                if (str[i - 1] !== '}' && str[i - 1] !== ']') {
+            } else if (c === ",") {
+                let pc = str[i - 1]
+                if (pc !== "}" && pc !== "]") {
                     if (stack[0].constructor === Array) {
                         stack[0].push(value)
                     } else {
@@ -20,7 +21,7 @@ class Parser {
                     }
                     value = ""
                 }
-            } else if (c === '{') {
+            } else if (c === "{") {
                 let map = {}
                 if (stack[0].constructor === Array) {
                     stack[0].push(map)
@@ -30,7 +31,7 @@ class Parser {
                 }
                 stack.unshift(map)
                 state = "key"
-            } else if (c === '[') {
+            } else if (c === "[") {
                 let array = []
                 if (stack[0].constructor === Array) {
                     stack[0].push(array)
@@ -40,9 +41,9 @@ class Parser {
                 }
                 stack.unshift(array)
                 state = "value"
-            } else if (c === '}') {
+            } else if (c === "}") {
                 let pc = str[i - 1]
-                if (pc !== '{' && pc !== ']' && pc !== '}') {
+                if (pc !== "{" && pc !== "]" && pc !== "}") {
                     stack[0][key] = value
                     key = ""
                     value = ""
@@ -50,9 +51,9 @@ class Parser {
                 stack.shift()
                 if (stack[0].constructor === Array) state = "value"
                 else state = "key"
-            } else if (c === ']') {
+            } else if (c === "]") {
                 let pc = str[i - 1]
-                if (pc !== ',' && pc !== '[' && pc !== ']' && pc !== '}') {
+                if (pc !== "," && pc !== "[" && pc !== "]" && pc !== "}") {
                     stack[0].push(value)
                     value = ""
                 }
@@ -65,7 +66,7 @@ class Parser {
                 value += c
         }
         let pc = str[str.length - 1]
-        if (pc !== ']' && pc !== '}')
+        if (pc !== "]" && pc !== "}")
             stack[0][key] = value
         return data
     }

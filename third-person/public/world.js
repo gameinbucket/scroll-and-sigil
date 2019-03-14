@@ -72,12 +72,22 @@ class World {
             let by = parseInt(data["y"]) - bottom
             let bz = parseInt(data["z"]) - back
             let tiles = data["t"]
+            let lights = data["c"]
 
             let block = new Block(bx, by, bz)
 
             if (tiles.length > 0) {
                 for (let t = 0; t < BLOCK_ALL; t++)
                     block.tiles[t].type = parseInt(tiles[t])
+            }
+
+            for (let t = 0; t < lights.length; t++) {
+                let light = lights[t]
+                let x = parseInt(light["x"])
+                let y = parseInt(light["y"])
+                let z = parseInt(light["z"])
+                let rgb = parseInt(light["v"])
+                block.add_light(new Light(x, y, z, rgb))
             }
 
             this.blocks[bx + by * this.width + bz * this.slice] = block
@@ -119,13 +129,11 @@ class World {
     }
     save(name) {
         let data = "n:" + name + ",b["
-        let comma = false
         for (let i = 0; i < this.all; i++) {
             let block = this.blocks[i]
             if (!block.empty()) {
-                if (comma) data += ","
-                comma = true
-                block_data.push(block.save())
+                data += block.save()
+                data += ","
             }
         }
         data += "]"

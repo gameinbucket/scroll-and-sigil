@@ -20,7 +20,8 @@ type Block struct {
 	Tiles      [BlockAll]int
 	Things     []*Thing
 	ThingCount int
-	Lights     []int
+	Lights     []*Light
+	LightCount int
 }
 
 // NewBlock func
@@ -52,6 +53,11 @@ func (me *Block) Save(data *strings.Builder) {
 			me.Things[i].Save(data, x, y, z)
 			data.WriteString(",")
 		}
+	}
+	data.WriteString("],c[")
+	for i := 0; i < me.LightCount; i++ {
+		me.Lights[i].Save(data)
+		data.WriteString(",")
 	}
 	data.WriteString("]}")
 }
@@ -93,6 +99,30 @@ func (me *Block) RemoveThing(t *Thing) {
 				me.Things[j] = me.Things[j+1]
 			}
 			me.ThingCount--
+			return
+		}
+	}
+}
+
+// AddLight func
+func (me *Block) AddLight(t *Light) {
+	if me.LightCount == len(me.Lights) {
+		array := make([]*Light, me.LightCount+5)
+		copy(array, me.Lights)
+		me.Lights = array
+	}
+	me.Lights[me.LightCount] = t
+	me.LightCount++
+}
+
+// RemoveLight func
+func (me *Block) RemoveLight(t *Light) {
+	for i := 0; i < me.LightCount; i++ {
+		if me.Lights[i] == t {
+			for j := i; j < me.LightCount-1; j++ {
+				me.Lights[j] = me.Lights[j+1]
+			}
+			me.LightCount--
 			return
 		}
 	}

@@ -1,7 +1,106 @@
 package main
 
-// Read func
-func Read(str []rune) map[string]string {
-	data := make(map[string]string)
+import (
+	"container/list"
+	"strings"
+)
+
+// ParserRead func
+func ParserRead(str []byte) map[string]interface{} {
+	data := make(map[string]interface{})
+	stack := list.New()
+	stack.PushFront(data)
+	var key strings.Builder
+	var value strings.Builder
+	state := "key"
+	len := len(str)
+	for i := 0; i < len; i++ {
+		c := str[i]
+		if c == ':' {
+			state = "value"
+		} else if c == ',' {
+			pc := str[i-1]
+			if pc != '}' && pc != ']' {
+				front := stack.Front().Value
+				switch front.(type) {
+				case *Array:
+					array := front.(*Array)
+					array.data = append(array.data, value.String())
+				default:
+					front.(map[string]interface{})[key.String()] = value.String()
+					key.Reset()
+					state = "key"
+				}
+				value.Reset()
+			}
+		} else if c == '{' {
+			dict := make(map[string]interface{})
+			front := stack.Front().Value
+			switch front.(type) {
+			case *Array:
+				array := front.(*Array)
+				array.data = append(array.data, dict)
+			default:
+				front.(map[string]interface{})[key.String()] = dict
+				key.Reset()
+			}
+			stack.PushFront(dict)
+			state = "key"
+		} else if c == '[' {
+			list := NewArray()
+			front := stack.Front().Value
+			switch front.(type) {
+			case *Array:
+				array := front.(*Array)
+				array.data = append(array.data, list)
+			default:
+				front.(map[string]interface{})[key.String()] = list
+				key.Reset()
+			}
+			stack.PushFront(list)
+			state = "value"
+		} else if c == '}' {
+			pc := str[i-1]
+			if pc != '{' && pc != ']' && pc != '}' {
+				front := stack.Front().Value
+				front.(map[string]interface{})[key.String()] = value.String()
+				key.Reset()
+				value.Reset()
+			}
+			stack.Remove(stack.Front())
+			front := stack.Front().Value
+			switch front.(type) {
+			case *Array:
+				state = "value"
+			default:
+				state = "key"
+			}
+		} else if c == ']' {
+			pc := str[i-1]
+			if pc != ',' && pc != '[' && pc != ']' && pc != '}' {
+				front := stack.Front().Value
+				array := front.(*Array)
+				array.data = append(array.data, value.String())
+				value.Reset()
+			}
+			stack.Remove(stack.Front())
+			front := stack.Front().Value
+			switch front.(type) {
+			case *Array:
+				state = "value"
+			default:
+				state = "key"
+			}
+		} else if state == "key" {
+			key.WriteByte(c)
+		} else {
+			value.WriteByte(c)
+		}
+	}
+	pc := str[len-1]
+	if pc != ']' && pc != '}' {
+		front := stack.Front().Value
+		front.(map[string]interface{})[key.String()] = value.String()
+	}
 	return data
 }

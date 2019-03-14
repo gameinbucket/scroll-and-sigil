@@ -3,7 +3,7 @@ const GRAVITY = 0.01
 
 const THING_LIST = [
     "you",
-    "skeleton"
+    "baron"
 ]
 
 class Thing {
@@ -44,7 +44,7 @@ class Thing {
         switch (uid) {
             case "you":
                 return new You(world, nid, x, y, z)
-            case "skeleton":
+            case "baron":
                 return new Skeleton(world, nid, x, y, z)
         }
     }

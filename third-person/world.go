@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"math"
 	"strconv"
 	"strings"
@@ -33,10 +32,8 @@ type World struct {
 	Blocks      []*Block
 	You         *Thing
 	People      []*Person
-	Things      []*Thing
+	Things      []ThingInterface
 	ThingCount  int
-	Thinkers    []*Think
-	ThinkCount  int
 	ThreadIndex int
 	ThreadID    string
 	Snapshot    strings.Builder
@@ -50,11 +47,9 @@ func NewWorld() *World {
 
 // Load func
 func (me *World) Load(data []byte) {
-	var content map[string]interface{}
-	json.Unmarshal(data, &content)
+	content := ParserRead(data)
 
-	blocks := content["blocks"].([]interface{})
-
+	blocks := content["b"].(*Array).data
 	left := math.MaxInt32
 	right := math.MinInt32
 	top := math.MinInt32
@@ -64,9 +59,9 @@ func (me *World) Load(data []byte) {
 
 	for b := 0; b < len(blocks); b++ {
 		block := blocks[b].(map[string]interface{})
-		bx := int(block["x"].(float64))
-		by := int(block["y"].(float64))
-		bz := int(block["z"].(float64))
+		bx := ParseInt(block["x"].(string))
+		by := ParseInt(block["y"].(string))
+		bz := ParseInt(block["z"].(string))
 
 		if bx < left {
 			left = bx
@@ -93,21 +88,32 @@ func (me *World) Load(data []byte) {
 	me.Length = front - back + 1
 	me.Slice = me.Width * me.Height
 	me.All = me.Slice * me.Length
-	me.Blocks = make([]*Block, me.All, me.All)
+	me.Blocks = make([]*Block, me.All)
 
 	for b := 0; b < len(blocks); b++ {
 		bdata := blocks[b].(map[string]interface{})
-		bx := int(bdata["x"].(float64)) - left
-		by := int(bdata["y"].(float64)) - bottom
-		bz := int(bdata["z"].(float64)) - back
-		tiles := bdata["tiles"].([]interface{})
+		bx := ParseInt(bdata["x"].(string)) - left
+		by := ParseInt(bdata["y"].(string)) - bottom
+		bz := ParseInt(bdata["z"].(string)) - back
+		tiles := bdata["t"].(*Array).data
+		lights := bdata["c"].(*Array).data
 
 		block := NewBlock(bx, by, bz)
 		if len(tiles) > 0 {
 			for t := 0; t < BlockAll; t++ {
-				block.Tiles[t] = int(tiles[t].(float64))
+				block.Tiles[t] = ParseInt(tiles[t].(string))
 			}
 		}
+
+		for t := 0; t < len(lights); t++ {
+			light := lights[t].(map[string]interface{})
+			x := ParseInt(light["x"].(string))
+			y := ParseInt(light["y"].(string))
+			z := ParseInt(light["z"].(string))
+			rgb := ParseInt(light["v"].(string))
+			block.AddLight(NewLight(x, y, z, rgb))
+		}
+
 		me.Blocks[bx+by*me.Width+bz*me.Slice] = block
 	}
 
@@ -123,17 +129,15 @@ func (me *World) Load(data []byte) {
 	}
 
 	me.People = make([]*Person, 0)
-	me.Things = make([]*Thing, 5)
+	me.Things = make([]ThingInterface, 5)
 	me.ThingCount = 0
-	me.Thinkers = make([]*Think, 5)
-	me.ThinkCount = 0
 
 	for b := 0; b < len(blocks); b++ {
 		bdata := blocks[b].(map[string]interface{})
-		bx := int(bdata["x"].(float64)) - left
-		by := int(bdata["y"].(float64)) - bottom
-		bz := int(bdata["z"].(float64)) - back
-		things := bdata["things"].([]interface{})
+		bx := ParseInt(bdata["x"].(string)) - left
+		by := ParseInt(bdata["y"].(string)) - bottom
+		bz := ParseInt(bdata["z"].(string)) - back
+		things := bdata["e"].(*Array).data
 
 		px := float32(bx * BlockSize)
 		py := float32(by * BlockSize)
@@ -141,10 +145,10 @@ func (me *World) Load(data []byte) {
 
 		for t := 0; t < len(things); t++ {
 			thing := things[t].(map[string]interface{})
-			uid := thing["uid"].(string)
-			x := thing["x"].(float64)
-			y := thing["y"].(float64)
-			z := thing["z"].(float64)
+			uid := thing["u"].(string)
+			x := ParseFloat(thing["x"].(string))
+			y := ParseFloat(thing["y"].(string))
+			z := ParseFloat(thing["z"].(string))
 			t := LoadNewThing(me, uid, float32(x)+px, float32(y)+py, float32(z)+pz)
 			if uid == "you" {
 				me.You = t
@@ -237,9 +241,9 @@ func (me *World) GetBlock(x, y, z int) *Block {
 }
 
 // AddThing func
-func (me *World) AddThing(t *Thing) {
+func (me *World) AddThing(t ThingInterface) {
 	if me.ThingCount == len(me.Things) {
-		array := make([]*Thing, me.ThingCount+5)
+		array := make([]ThingInterface, me.ThingCount+5)
 		copy(array, me.Things)
 		me.Things = array
 	}
@@ -248,37 +252,13 @@ func (me *World) AddThing(t *Thing) {
 }
 
 // RemoveThing func
-func (me *World) RemoveThing(t *Thing) {
+func (me *World) RemoveThing(t ThingInterface) {
 	for i := 0; i < me.ThingCount; i++ {
 		if me.Things[i] == t {
 			for j := i; j < me.ThingCount-1; j++ {
 				me.Things[j] = me.Things[j+1]
 			}
 			me.ThingCount--
-			return
-		}
-	}
-}
-
-// AddThinker func
-func (me *World) AddThinker(t *Think) {
-	if me.ThinkCount == len(me.Thinkers) {
-		array := make([]*Think, me.ThinkCount+5)
-		copy(array, me.Thinkers)
-		me.Thinkers = array
-	}
-	me.Thinkers[me.ThinkCount] = t
-	me.ThinkCount++
-}
-
-// RemoveThinker func
-func (me *World) RemoveThinker(t *Think) {
-	for i := 0; i < me.ThinkCount; i++ {
-		if me.Thinkers[i] == t {
-			for j := i; j < me.ThinkCount-1; j++ {
-				me.Thinkers[j] = me.Thinkers[j+1]
-			}
-			me.ThinkCount--
 			return
 		}
 	}
@@ -299,10 +279,6 @@ func (me *World) Update() {
 		person := me.People[i]
 		person.Think(person, me)
 		person.InputCount = 0
-	}
-	for i := 0; i < me.ThinkCount; i++ {
-		think := me.Thinkers[i]
-		think.Think(think.Thing, me)
 	}
 	for i := 0; i < me.ThingCount; i++ {
 		me.Things[i].Update(me)

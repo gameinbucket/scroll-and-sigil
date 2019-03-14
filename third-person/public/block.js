@@ -34,31 +34,32 @@ class Block {
         this.count_side = new Array(6)
         this.things = []
         this.thing_count = 0
-
+        this.lights = []
+        this.light_count = 0
         this.tiles = []
         for (let t = 0; t < BLOCK_ALL; t++)
             this.tiles[t] = new Tile()
-
-        this.lights = []
-        this.lights.push(new Light(BLOCK_SIZE - 1, BLOCK_SIZE - 1, BLOCK_SIZE - 1, Render.PackRgb(255, 230, 200)))
     }
     save() {
         let data = "{x:" + this.x + ",y:" + this.y + ",z:" + this.z + ",t["
-        data += this.tiles[0].type
-        for (let i = 1; i < BLOCK_ALL; i++) {
-            data += ","
+        for (let i = 0; i < BLOCK_ALL; i++) {
             data += this.tiles[i].type
+            data += ","
         }
         data += "],e["
         if (this.thing_count > 0) {
             let x = this.x * BLOCK_SIZE
             let y = this.y * BLOCK_SIZE
             let z = this.z * BLOCK_SIZE
-            data += this.things[0].save(x, y, z)
-            for (let i = 1; i < this.thing_count; i++) {
-                data += ","
+            for (let i = 0; i < this.thing_count; i++) {
                 data += this.things[i].save(x, y, z)
+                data += ","
             }
+        }
+        data += "],c["
+        for (let i = 0; i < this.lights.length; i++) {
+            data += this.lights[i].save()
+            data += ","
         }
         data += "]}"
         return data
@@ -87,6 +88,20 @@ class Block {
                 for (let j = i; j < this.thing_count - 1; j++)
                     this.things[j] = this.things[j + 1]
                 this.thing_count--
+                return
+            }
+        }
+    }
+    add_light(light) {
+        this.lights[this.light_count] = light
+        this.light_count++
+    }
+    remove_light(light) {
+        for (let i = 0; i < this.light_count; i++) {
+            if (this.lights[i] === light) {
+                for (let j = i; j < this.light_count - 1; j++)
+                    this.lights[j] = this.lights[j + 1]
+                this.light_count--
                 return
             }
         }

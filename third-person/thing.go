@@ -17,6 +17,11 @@ var (
 	ThingNetworkNum = 0
 )
 
+// ThingInterface interface
+type ThingInterface interface {
+	Update(world *World)
+}
+
 // Thing struct
 type Thing struct {
 	UID                 string
@@ -39,30 +44,19 @@ type Thing struct {
 	Height              float32
 }
 
-// NewThing func
-func NewThing(world *World, uid, sid string, x, y, z, radius, height float32) *Thing {
-	nid := "nid" + strconv.Itoa(ThingNetworkNum)
+// NextNID func
+func NextNID() string {
 	ThingNetworkNum++
-	t := &Thing{UID: uid, SID: sid, NID: nid, X: x, Y: y, Z: z, Radius: radius, Height: height}
-	t.SpriteName = "idle"
-	world.AddThing(t)
-	t.BlockBorders()
-	t.AddToBlocks(world)
-	if uid == "you" {
-	} else if uid == "skeleton" {
-		thinker := &Think{Thing: t, Think: ThinkWander}
-		world.AddThinker(thinker)
-	}
-	return t
+	return "nid" + strconv.Itoa(ThingNetworkNum)
 }
 
 // LoadNewThing func
 func LoadNewThing(world *World, uid string, x, y, z float32) *Thing {
 	switch uid {
 	case "you":
-		return NewThing(world, uid, "you", x, y, z, 0.4, 1.0)
-	case "skeleton":
-		return NewThing(world, uid, "skeleton", x, y, z, 0.4, 1.0)
+		return NewYou(world, x, y, z).Thing
+	case "baron":
+		return NewBaron(world, x, y, z).Thing
 	}
 	return nil
 }
@@ -257,8 +251,8 @@ func (me *Thing) Overlap(b *Thing) bool {
 	return absx <= square && absz <= square
 }
 
-// Update func
-func (me *Thing) Update(world *World) {
+// Integrate func
+func (me *Thing) Integrate(world *World) {
 	if me.DX != 0.0 || me.DZ != 0.0 {
 		me.OldX = me.X
 		me.OldZ = me.Z

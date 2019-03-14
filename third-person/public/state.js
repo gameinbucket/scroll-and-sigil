@@ -1,5 +1,3 @@
-const NETWORK_UPDATE_RATE = 1000
-
 class WorldState {
     constructor(app) {
         this.app = app
@@ -38,13 +36,13 @@ class WorldState {
 
         let cam = this.app.camera
         if (Input.Is("ArrowLeft"))
-            cam.ry += 0.05
-        if (Input.Is("ArrowRight"))
             cam.ry -= 0.05
-        if (Input.Is("ArrowUp"))
-            cam.rx += 0.05
-        if (Input.Is("ArrowDown"))
+        if (Input.Is("ArrowRight"))
+            cam.ry += 0.05
+        if (cam.rx > -0.25 && Input.Is("ArrowUp"))
             cam.rx -= 0.05
+        if (cam.rx < 0.25 && Input.Is("ArrowDown"))
+            cam.rx += 0.05
 
         SOCKET_SEND += "a:" + cam.ry + " "
 
@@ -64,10 +62,12 @@ class WorldState {
         let world = this.app.world
         let cam = this.app.camera
 
+        const NETWORK_UPDATE_RATE = 50
+
         let time = new Date().getTime()
         let interpolation = (time - this.previous_update) / NETWORK_UPDATE_RATE
         if (interpolation > 1.0) interpolation = 1.0
-        // console.log(time, this.previous_update, interpolation)
+        // console.log(time, this.previous_update, this.snapshot_time, interpolation)
 
         cam.update(interpolation)
 
