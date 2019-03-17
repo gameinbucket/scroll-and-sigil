@@ -1,0 +1,5 @@
+animations{
+    idle[walk-0]
+    walk[walk-0, walk-1]
+    death[death-0, death-1]
+}

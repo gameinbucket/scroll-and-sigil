@@ -10,8 +10,7 @@ import (
 // Person struct
 type Person struct {
 	Connection *websocket.Conn
-	Character  *Thing
-	Think      func(me *Person, world *World)
+	Character  *You
 	InputQueue []string
 	InputCount int
 }
@@ -21,8 +20,7 @@ func NewPerson(connection *websocket.Conn, world *World) *Person {
 	p := &Person{Connection: connection}
 	p.InputQueue = make([]string, 3)
 	p.Character = world.You
-	p.Think = ThinkYou
-	world.People = append(world.People, p)
+	world.You.Person = p
 	return p
 }
 

@@ -40,12 +40,12 @@ func ParserRead(str []byte) map[string]interface{} {
 			case *Array:
 				array := front.(*Array)
 				array.data = append(array.data, dict)
+				state = "key"
 			default:
 				front.(map[string]interface{})[key.String()] = dict
 				key.Reset()
 			}
 			stack.PushFront(dict)
-			state = "key"
 		} else if c == '[' {
 			list := NewArray()
 			front := stack.Front().Value
@@ -61,7 +61,7 @@ func ParserRead(str []byte) map[string]interface{} {
 			state = "value"
 		} else if c == '}' {
 			pc := str[i-1]
-			if pc != '{' && pc != ']' && pc != '}' {
+			if pc != ',' && pc != '{' && pc != ']' && pc != '}' {
 				front := stack.Front().Value
 				front.(map[string]interface{})[key.String()] = value.String()
 				key.Reset()
@@ -98,7 +98,7 @@ func ParserRead(str []byte) map[string]interface{} {
 		}
 	}
 	pc := str[len-1]
-	if pc != ']' && pc != '}' {
+	if pc != ',' && pc != ']' && pc != '}' {
 		front := stack.Front().Value
 		front.(map[string]interface{})[key.String()] = value.String()
 	}

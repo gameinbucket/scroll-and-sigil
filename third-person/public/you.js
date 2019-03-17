@@ -1,6 +1,6 @@
 class You extends Living {
     constructor(world, nid, x, y, z) {
-        super(world, "you", "skeleton", nid, x, y, z, 0.4, 1.0)
+        super(world, "you", "baron", nid, x, y, z, 0.4, 1.0)
         this.camera = null
     }
     update(world) {
@@ -35,6 +35,6 @@ class You extends Living {
             SOCKET_SEND += "sr "
         }
 
-        // super.update(world)
+        super.update(world)
     }
 }

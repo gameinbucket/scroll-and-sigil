@@ -281,7 +281,7 @@ class World {
 
         g.set_program(gl, "texcol3d")
         g.update_mvp(gl)
-        g.set_texture(gl, "map")
+        g.set_texture(gl, "tiles")
 
         for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
             let block = this.viewable[i]

@@ -1,9 +1,3 @@
-const SOUND = {}
-const SPRITE_DATA = {}
-const SPRITE_DATA_3D = {}
-const SPRITE_ALIAS = {}
-const SPRITE_ANIMATIONS = {}
-
 let SOCKET = null
 let SOCKET_QUEUE = []
 let SOCKET_SEND = []
@@ -82,10 +76,12 @@ class Application {
         let scale = 1.0
         let draw_width = canvas.width * scale
         let draw_height = canvas.height * scale
+        let ratio = draw_width / draw_height
+        let fov = 2 * Math.atan(Math.tan(60 * (Math.PI / 180) / 2) / ratio) * (180 / Math.PI)
 
         Matrix.Orthographic(canvas_ortho, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
         Matrix.Orthographic(draw_ortho, 0.0, draw_width, 0.0, draw_height, 0.0, 1.0)
-        Matrix.Perspective(draw_perspective, 60.0, 0.01, 100.0, draw_width / draw_height)
+        Matrix.Perspective(draw_perspective, fov, 0.01, 100.0, ratio)
 
         if (this.frame === null)
             this.frame = FrameBuffer.Make(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "depth")
@@ -104,71 +100,8 @@ class Application {
         let g = this.g
         let gl = this.gl
 
-        let data = await Network.Request("json/resources.json")
-        let config = JSON.parse(data)
-        let shaders = config["shaders"]
-        let textures = config["textures"]
-        let sounds = config["sound"]
-        let sprites = config["sprites"]
-        let tiles = config["tiles"]
-
-        let promises = []
-
-        for (let index = 0; index < shaders.length; index++)
-            promises.push(g.make_program(gl, shaders[index]))
-
-        for (let index = 0; index < textures.length; index++)
-            promises.push(g.make_image(gl, textures[index], gl.CLAMP_TO_EDGE))
-
-        await Promise.all(promises)
-
-        for (let key in sounds)
-            SOUND[key] = new Audio("sound/" + sounds[key])
-
-        for (let name in sprites) {
-            let sprite = sprites[name]
-            let animations = sprite["animations"]
-            let alias = ("alias" in sprite) ? sprite["alias"] : null
-            let in_world = ("world" in sprite) ? sprite["world"] : false
-
-            let sprite_json = await Network.Request("json/" + name + ".json")
-            let sprite_data = JSON.parse(sprite_json)["sprites"]
-
-            let texture = g.textures[name]
-            let width = 1.0 / texture.image.width
-            let height = 1.0 / texture.image.height
-
-            SPRITE_DATA[name] = {}
-            SPRITE_ALIAS[name] = {}
-            SPRITE_ANIMATIONS[name] = {}
-
-            for (let key in animations)
-                SPRITE_ANIMATIONS[name][key] = animations[key]
-
-            if (in_world)
-                SPRITE_DATA_3D[name] = {}
-
-            if (alias != null)
-                for (let key in alias)
-                    SPRITE_ALIAS[name][key] = alias[key]
-
-            for (let key in sprite_data) {
-                let sprite = sprite_data[key]
-                let atlas = sprite.atlas
-                let boxes = sprite.boxes
-                SPRITE_DATA[name][key] = Sprite.Build(atlas, boxes, width, height)
-                if (in_world)
-                    SPRITE_DATA_3D[name][key] = Sprite.Build3(atlas, boxes, width, height)
-            }
-        }
-
-        for (let key in tiles) {
-            let tile = tiles[key]
-            let texture = tile["texture"]
-            if (texture === null) TILE_TEXTURE.push(null)
-            else TILE_TEXTURE.push(Sprite.Simple(texture[0], texture[1], TILE_SIZE, TILE_SIZE, TILE_SPRITE_SIZE))
-            TILE_CLOSED.push(tile["closed"])
-        }
+        let data = await Network.Request("wad")
+        await Wad.Load(g, gl, data)
 
         let socket = await Network.Socket("ws://localhost:3000/websocket")
         socket.onclose = function () {

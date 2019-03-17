@@ -1,4 +1,4 @@
-const ANIMATION_RATE = 8
+const ANIMATION_RATE = 16
 const GRAVITY = 0.01
 
 const THING_LIST = [
@@ -13,9 +13,9 @@ class Thing {
         this.nid = nid
         this.animations = SPRITE_ANIMATIONS[sid]
         this.sprite_data = SPRITE_DATA_3D[sid]
+        this.animation_mod = 0
         this.animation_frame = 0
-        this.animation_frame_modulo = 0
-        this.sprite_name = "idle"
+        this.sprite_name = "walk"
         this.sprite = this.animations[this.sprite_name]
         this.x = x
         this.y = y
@@ -45,7 +45,7 @@ class Thing {
             case "you":
                 return new You(world, nid, x, y, z)
             case "baron":
-                return new Skeleton(world, nid, x, y, z)
+                return new Baron(world, nid, x, y, z)
         }
     }
     save(x, y, z) {
@@ -77,12 +77,12 @@ class Thing {
             }
         }
     }
-    animate() {
+    UpdateAnimation() {
         this.animation_mod++
         if (this.animation_mod === ANIMATION_RATE) {
             this.animation_mod = 0
             this.animation_frame++
-            if (this.animation_frame === this.animation.length)
+            if (this.animation_frame === this.sprite.length)
                 this.animation_frame = 0
         }
     }
@@ -185,7 +185,7 @@ class Thing {
         //     this.add_to_blocks(world)
         // }
 
-        // this.animate()
+        this.UpdateAnimation()
     }
     render(interpolation, sprite_buffer, camx, camz) {
         let vx = this.ox + interpolation * (this.x - this.ox)
@@ -198,13 +198,9 @@ class Thing {
         sin /= length
         cos /= length
 
-        let sprite_frame = this.sprite[this.animation_frame]
+        let sprite_frame = "front-" + this.sprite[this.animation_frame]
         let sprite = this.sprite_data[sprite_frame]
+
         Render3.Sprite(sprite_buffer[this.sid], vx, vy, vz, sin, cos, sprite)
-    }
-    render3(sprite_buffer, model_view) {
-        let sprite_frame = this.sprite[this.animation_frame]
-        let sprite = this.sprite_data[sprite_frame]
-        Render3.Sprite3(sprite_buffer[this.sid], this.x, this.y + sprite.height, this.z, model_view, sprite)
     }
 }

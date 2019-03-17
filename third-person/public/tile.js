@@ -13,34 +13,8 @@ const AMBIENT_LOW = 100
 const AMBIENT_HALF = 175
 const AMBIENT_FULL = 255
 
-const TILE_SIZE = 16
-const TILE_SPRITE_SIZE = 1.0 / 128.0
 const TILE_TEXTURE = []
 const TILE_CLOSED = []
-
-const TILE_LIST = [
-    "ground",
-    "rails.right",
-    "stairs.right",
-    "rail",
-    "wall",
-    "water-top",
-    "water",
-    "rails-left",
-    "stairs-left",
-]
-
-const TILE_MAP = {
-    "ground": TILE_GROUND,
-    "rails.right": TILE_RAILS_RIGHT,
-    "stairs.right": TILE_STAIRS_RIGHT,
-    "rail": TILE_RAIL,
-    "wall": TILE_WALL,
-    "water-top": TILE_WATER_TOP,
-    "water": TILE_WATER,
-    "rails-left": TILE_RAILS_LEFT,
-    "stairs-left": TILE_STAIRS_LEFT,
-}
 
 class Tile {
     constructor() {

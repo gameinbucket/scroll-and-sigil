@@ -30,8 +30,7 @@ type World struct {
 	Slice       int
 	All         int
 	Blocks      []*Block
-	You         *Thing
-	People      []*Person
+	You         *You
 	Things      []ThingInterface
 	ThingCount  int
 	ThreadIndex int
@@ -128,7 +127,6 @@ func (me *World) Load(data []byte) {
 		}
 	}
 
-	me.People = make([]*Person, 0)
 	me.Things = make([]ThingInterface, 5)
 	me.ThingCount = 0
 
@@ -151,7 +149,7 @@ func (me *World) Load(data []byte) {
 			z := ParseFloat(thing["z"].(string))
 			t := LoadNewThing(me, uid, float32(x)+px, float32(y)+py, float32(z)+pz)
 			if uid == "you" {
-				me.You = t
+				me.You = t.Me.(*Living).Me.(*You)
 			}
 		}
 	}
@@ -274,11 +272,6 @@ func (me *World) Update() {
 	me.ThreadIndex++
 	if me.ThreadIndex == len(WorldThreads) {
 		me.ThreadIndex = 0
-	}
-	for i := 0; i < len(me.People); i++ {
-		person := me.People[i]
-		person.Think(person, me)
-		person.InputCount = 0
 	}
 	for i := 0; i < me.ThingCount; i++ {
 		me.Things[i].Update(me)

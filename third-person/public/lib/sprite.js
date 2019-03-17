@@ -1,9 +1,8 @@
-const SCALE = 1.0 / 16.0
+const SCALE = 1.0 / 32.0
 
 class Sprite {
-    constructor(atlas, boxes, width, height, left, top, right, bottom, ox, oy) {
+    constructor(atlas, width, height, left, top, right, bottom, ox, oy) {
         this.atlas = atlas
-        this.boxes = boxes
         this.width = width
         this.half_width = width * 0.5
         this.height = height
@@ -14,15 +13,15 @@ class Sprite {
         this.ox = ox
         this.oy = oy
     }
-    static Simple(left, top, width, height, sheet_size) {
+    static Simple(left, top, width, height, atlas_width, atlas_height) {
         return [
-            left * sheet_size,
-            top * sheet_size,
-            (left + width) * sheet_size,
-            (top + height) * sheet_size
+            left * atlas_width,
+            top * atlas_height,
+            (left + width) * atlas_width,
+            (top + height) * atlas_height
         ]
     }
-    static Build(atlas, boxes, atlas_width, atlas_height) {
+    static Build(atlas, atlas_width, atlas_height) {
         let left = atlas[0] * atlas_width
         let top = atlas[1] * atlas_height
         let right = (atlas[0] + atlas[2]) * atlas_width
@@ -38,9 +37,9 @@ class Sprite {
             oy = atlas[5]
         }
 
-        return new Sprite(atlas, boxes, width, height, left, top, right, bottom, ox, oy)
+        return new Sprite(atlas, width, height, left, top, right, bottom, ox, oy)
     }
-    static Build3(atlas, boxes, atlas_width, atlas_height) {
+    static Build3(atlas, atlas_width, atlas_height) {
         let left = atlas[0] * atlas_width
         let top = atlas[1] * atlas_height
         let right = (atlas[0] + atlas[2]) * atlas_width
@@ -56,9 +55,9 @@ class Sprite {
             oy = atlas[5] * SCALE
         }
 
-        return new Sprite(atlas, boxes, width, height, left, top, right, bottom, ox, oy)
+        return new Sprite(atlas, width, height, left, top, right, bottom, ox, oy)
     }
     static Copy(sprite, ox, oy) {
-        return new Sprite(sprite.atlas, sprite.boxes, sprite.width, sprite.height, sprite.left, sprite.top, sprite.right, sprite.bottom, ox, oy)
+        return new Sprite(sprite.atlas, sprite.width, sprite.height, sprite.left, sprite.top, sprite.right, sprite.bottom, ox, oy)
     }
 }

@@ -25,12 +25,12 @@ class Parser {
                 let map = {}
                 if (stack[0].constructor === Array) {
                     stack[0].push(map)
+                    state = "key"
                 } else {
                     stack[0][key] = map
                     key = ""
                 }
                 stack.unshift(map)
-                state = "key"
             } else if (c === "[") {
                 let array = []
                 if (stack[0].constructor === Array) {
@@ -43,7 +43,7 @@ class Parser {
                 state = "value"
             } else if (c === "}") {
                 let pc = str[i - 1]
-                if (pc !== "{" && pc !== "]" && pc !== "}") {
+                if (pc !== "," && pc !== "{" && pc !== "]" && pc !== "}") {
                     stack[0][key] = value
                     key = ""
                     value = ""
@@ -66,7 +66,7 @@ class Parser {
                 value += c
         }
         let pc = str[str.length - 1]
-        if (pc !== "]" && pc !== "}")
+        if (pc !== "," && pc !== "]" && pc !== "}")
             stack[0][key] = value
         return data
     }

@@ -20,17 +20,19 @@ var (
 // ThingInterface interface
 type ThingInterface interface {
 	Update(world *World)
+	Cast() *Thing
 }
 
 // Thing struct
 type Thing struct {
+	Me                  interface{}
 	UID                 string
-	SID                 string
 	NID                 string
-	Animations          map[string]string
+	Animations          map[string][]int
 	SpriteData          map[string]string
 	AnimationFrame      int
 	AnimationMod        int
+	Animation           []int
 	SpriteName          string
 	Sprite              map[string]string
 	Angle               float32
@@ -74,6 +76,11 @@ func (me *Thing) Save(data *strings.Builder, x, y, z float32) {
 	data.WriteString(",z:")
 	data.WriteString(strconv.FormatFloat(float64(me.Z-z), 'f', -1, 32))
 	data.WriteString("}")
+}
+
+// Cast func
+func (me *Thing) Cast() *Thing {
+	return me
 }
 
 // BlockBorders func
@@ -201,34 +208,22 @@ func (me *Thing) TerrainCollisionY(world *World) {
 // Resolve func
 func (me *Thing) Resolve(b *Thing) {
 	square := me.Radius + b.Radius
-	absx := me.X - b.X
-	if absx < 0 {
-		absx = -absx
-	}
-	absz := me.Z - b.Z
-	if absz < 0 {
-		absz = -absz
-	}
+	absx := Abs(me.X - b.X)
+	absz := Abs(me.Z - b.Z)
 	if absx > square || absz > square {
 		return
 	}
-	absx = me.OldX - b.X
-	if absx < 0 {
-		absx = -absx
-	}
-	absz = me.OldZ - b.Z
-	if absz < 0 {
-		absz = -absz
-	}
-	if absx > absz {
-		if me.OldX-b.X < 0 {
+	x := me.OldX - b.X
+	z := me.OldZ - b.Z
+	if Abs(x) > Abs(z) {
+		if x < 0 {
 			me.X = b.X - square
 		} else {
 			me.X = b.X + square
 		}
 		me.DX = 0.0
 	} else {
-		if me.OldZ-b.Z < 0 {
+		if z < 0 {
 			me.Z = b.Z - square
 		} else {
 			me.Z = b.Z + square
@@ -240,15 +235,17 @@ func (me *Thing) Resolve(b *Thing) {
 // Overlap func
 func (me *Thing) Overlap(b *Thing) bool {
 	square := me.Radius + b.Radius
-	absx := me.X - b.X
-	if absx < 0 {
-		absx = -absx
+	return Abs(me.X-b.X) <= square && Abs(me.Z-b.Z) <= square
+}
+
+// ApproximateDistance func
+func (me *Thing) ApproximateDistance(other *Thing) float32 {
+	dx := Abs(me.X - other.X)
+	dy := Abs(me.Z - other.Z)
+	if dx > dy {
+		return dx + dy - dy*0.5
 	}
-	absz := me.Z - b.Z
-	if absz < 0 {
-		absz = -absz
-	}
-	return absx <= square && absz <= square
+	return dx + dy - dx*0.5
 }
 
 // Integrate func
@@ -288,15 +285,7 @@ func (me *Thing) Integrate(world *World) {
 			manhattan := float32(math.MaxFloat32)
 			for i := 0; i < len(collided); i++ {
 				thing := collided[i]
-				absx := me.OldX - thing.X
-				if absx < 0 {
-					absx = -absx
-				}
-				absz := me.OldZ - thing.Z
-				if absz < 0 {
-					absz = -absz
-				}
-				dist := absx + absz
+				dist := Abs(me.OldX-thing.X) + Abs(me.OldZ-thing.Z)
 				if dist < manhattan {
 					manhattan = dist
 					closest = i
