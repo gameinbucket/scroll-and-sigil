@@ -29,6 +29,36 @@ class Render3 {
 
         Render.Index4(buffer)
     }
+    static MirrorSprite(buffer, x, y, z, sin, cos, sprite) {
+        let sine = sprite.half_width * sin;
+        let cosine = sprite.half_width * cos;
+
+        buffer.vertices[buffer.vertex_pos++] = x - cosine
+        buffer.vertices[buffer.vertex_pos++] = y
+        buffer.vertices[buffer.vertex_pos++] = z + sine
+        buffer.vertices[buffer.vertex_pos++] = sprite.right
+        buffer.vertices[buffer.vertex_pos++] = sprite.bottom
+
+        buffer.vertices[buffer.vertex_pos++] = x + cosine
+        buffer.vertices[buffer.vertex_pos++] = y
+        buffer.vertices[buffer.vertex_pos++] = z - sine
+        buffer.vertices[buffer.vertex_pos++] = sprite.left
+        buffer.vertices[buffer.vertex_pos++] = sprite.bottom
+
+        buffer.vertices[buffer.vertex_pos++] = x + cosine
+        buffer.vertices[buffer.vertex_pos++] = y + sprite.height
+        buffer.vertices[buffer.vertex_pos++] = z - sine
+        buffer.vertices[buffer.vertex_pos++] = sprite.left
+        buffer.vertices[buffer.vertex_pos++] = sprite.top
+
+        buffer.vertices[buffer.vertex_pos++] = x - cosine
+        buffer.vertices[buffer.vertex_pos++] = y + sprite.height
+        buffer.vertices[buffer.vertex_pos++] = z + sine
+        buffer.vertices[buffer.vertex_pos++] = sprite.right
+        buffer.vertices[buffer.vertex_pos++] = sprite.top
+
+        Render.Index4(buffer)
+    }
     static Sprite3(buffer, x, y, z, mv, sprite) {
         let right0 = mv[0]
         let right1 = mv[4]

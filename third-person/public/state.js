@@ -23,7 +23,22 @@ class WorldState {
                 thing.x = parseFloat(snap["x"])
                 thing.y = parseFloat(snap["y"])
                 thing.z = parseFloat(snap["z"])
-                thing.r = parseFloat(snap["a"])
+                if ("a" in snap) {
+                    thing.Angle = parseFloat(snap["a"])
+                } else {
+                    let direction = parseInt(snap["d"])
+                    const angles = [
+                        22.5 * DegToRad,
+                        67.5 * DegToRad,
+                        112.5 * DegToRad,
+                        157.5 * DegToRad,
+                        202.5 * DegToRad,
+                        247.5 * DegToRad,
+                        292.5 * DegToRad,
+                        337.5 * DegToRad
+                    ]
+                    thing.Angle = angles[direction]
+                }
                 thing.remove_from_blocks(world)
                 thing.block_borders()
                 thing.add_to_blocks(world)
@@ -35,10 +50,16 @@ class WorldState {
         world.update()
 
         let cam = this.app.camera
-        if (Input.Is("ArrowLeft"))
+        if (Input.Is("ArrowLeft")) {
             cam.ry -= 0.05
-        if (Input.Is("ArrowRight"))
+            if (cam.ry < 0)
+                cam.ry += Tau
+        }
+        if (Input.Is("ArrowRight")) {
             cam.ry += 0.05
+            if (cam.ry >= Tau)
+                cam.ry -= Tau
+        }
         if (cam.rx > -0.25 && Input.Is("ArrowUp"))
             cam.rx -= 0.05
         if (cam.rx < 0.25 && Input.Is("ArrowDown"))
@@ -86,7 +107,7 @@ class WorldState {
         let cam_block_y = Math.floor(cam.y * INV_BLOCK_SIZE)
         let cam_block_z = Math.floor(cam.z * INV_BLOCK_SIZE)
 
-        world.render(g, interpolation, cam_block_x, cam_block_y, cam_block_z, cam.x, cam.z)
+        world.render(g, interpolation, cam_block_x, cam_block_y, cam_block_z, cam.x, cam.z, cam.ry)
 
         gl.disable(gl.DEPTH_TEST)
         gl.disable(gl.CULL_FACE)

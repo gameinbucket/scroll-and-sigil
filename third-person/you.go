@@ -19,24 +19,24 @@ func NewYou(world *World, x, y, z float32) *You {
 	t.Thing = &Thing{}
 	t.UID = "you"
 	t.NID = NextNID()
+	t.World = world
 	t.X = x
 	t.Y = y
 	t.Z = z
 	t.Radius = 0.4
 	t.Height = 1.0
-	t.SpriteName = "idle"
 	t.Health = 1
 	t.Speed = 0.1
 	t.Living.Me = t
 	t.Thing.Me = t.Living
 	world.AddThing(t)
 	t.BlockBorders()
-	t.AddToBlocks(world)
+	t.AddToBlocks()
 	return t
 }
 
 // Update func
-func (me *You) Update(world *World) {
+func (me *You) Update() {
 	person := me.Person
 	if person == nil {
 		return
@@ -86,5 +86,17 @@ func (me *You) Update(world *World) {
 	}
 	person.InputCount = 0
 
-	me.Integrate(world)
+	me.Integrate()
+
+	me.World.Snapshot.WriteString("{n:")
+	me.World.Snapshot.WriteString(me.NID)
+	me.World.Snapshot.WriteString(",x:")
+	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+	me.World.Snapshot.WriteString(",y:")
+	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	me.World.Snapshot.WriteString(",z:")
+	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	me.World.Snapshot.WriteString(",a:")
+	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
+	me.World.Snapshot.WriteString("},")
 }

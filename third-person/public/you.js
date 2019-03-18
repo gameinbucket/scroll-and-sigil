@@ -7,31 +7,31 @@ class You extends Living {
         let pace = 0.1
 
         if (Input.Is("ArrowLeft")) {
-            // this.r += 0.05
+            // this.Angle += 0.05
             // SOCKET_SEND += "tl "
         }
         if (Input.Is("ArrowRight")) {
-            // this.r -= 0.05
+            // this.Angle -= 0.05
             // SOCKET_SEND += "tr "
         }
         if (Input.Is("w")) {
-            // this.dx += Math.sin(this.r) * pace
-            // this.dz -= Math.cos(this.r) * pace
+            // this.dx += Math.sin(this.Angle) * pace
+            // this.dz -= Math.cos(this.Angle) * pace
             SOCKET_SEND += "mf "
         }
         if (Input.Is("s")) {
-            // this.dx -= Math.sin(this.r) * pace
-            // this.dz += Math.cos(this.r) * pace
+            // this.dx -= Math.sin(this.Angle) * pace
+            // this.dz += Math.cos(this.Angle) * pace
             SOCKET_SEND += "mb "
         }
         if (Input.Is("a")) {
-            // this.dx -= Math.cos(this.r) * pace
-            // this.dz -= Math.sin(this.r) * pace
+            // this.dx -= Math.cos(this.Angle) * pace
+            // this.dz -= Math.sin(this.Angle) * pace
             SOCKET_SEND += "sl "
         }
         if (Input.Is("d")) {
-            // this.dx += Math.cos(this.r) * pace
-            // this.dz += Math.sin(this.r) * pace
+            // this.dx += Math.cos(this.Angle) * pace
+            // this.dz += Math.sin(this.Angle) * pace
             SOCKET_SEND += "sr "
         }
 

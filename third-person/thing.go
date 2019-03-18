@@ -6,10 +6,16 @@ import (
 	"strings"
 )
 
+// AnimationStatus enum
+type AnimationStatus int
+
 // Thing constants
 const (
-	AnimationRate = 8
-	Gravity       = 0.01
+	AnimationRate                       = 32
+	Gravity                             = 0.01
+	AnimationNotDone    AnimationStatus = 0
+	AnimationAlmostDone AnimationStatus = 1
+	AnimationDone       AnimationStatus = 2
 )
 
 // Thing variables
@@ -19,24 +25,22 @@ var (
 
 // ThingInterface interface
 type ThingInterface interface {
-	Update(world *World)
+	Update()
+	Damage(int)
 	Cast() *Thing
 }
 
 // Thing struct
 type Thing struct {
 	Me                  interface{}
+	World               *World
 	UID                 string
 	NID                 string
-	Animations          map[string][]int
-	SpriteData          map[string]string
-	AnimationFrame      int
+	Animation           int
 	AnimationMod        int
-	Animation           []int
-	SpriteName          string
-	Sprite              map[string]string
-	Angle               float32
+	AnimationFrame      int
 	X, Y, Z             float32
+	Angle               float32
 	DX, DY, DZ          float32
 	OldX, OldZ          float32
 	MinBX, MinBY, MinBZ int
@@ -59,6 +63,8 @@ func LoadNewThing(world *World, uid string, x, y, z float32) *Thing {
 		return NewYou(world, x, y, z).Thing
 	case "baron":
 		return NewBaron(world, x, y, z).Thing
+	case "tree":
+		return NewTree(world, x, y, z).Thing
 	}
 	return nil
 }
@@ -94,41 +100,44 @@ func (me *Thing) BlockBorders() {
 }
 
 // AddToBlocks func
-func (me *Thing) AddToBlocks(world *World) {
+func (me *Thing) AddToBlocks() {
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				world.GetBlock(gx, gy, gz).AddThing(me)
+				me.World.GetBlock(gx, gy, gz).AddThing(me)
 			}
 		}
 	}
 }
 
 // RemoveFromBlocks func
-func (me *Thing) RemoveFromBlocks(world *World) {
+func (me *Thing) RemoveFromBlocks() {
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				world.GetBlock(gx, gy, gz).RemoveThing(me)
+				me.World.GetBlock(gx, gy, gz).RemoveThing(me)
 			}
 		}
 	}
 }
 
-// Animate func
-func (me *Thing) Animate() {
+// UpdateAnimation func
+func (me *Thing) UpdateAnimation() AnimationStatus {
 	me.AnimationMod++
 	if me.AnimationMod == AnimationRate {
 		me.AnimationMod = 0
 		me.AnimationFrame++
-		if me.AnimationFrame == len(me.Animations) {
-			me.AnimationFrame = 0
+		if me.AnimationFrame == me.Animation-1 {
+			return AnimationAlmostDone
+		} else if me.AnimationFrame == me.Animation {
+			return AnimationDone
 		}
 	}
+	return AnimationNotDone
 }
 
 // TerrainCollisionXZ func
-func (me *Thing) TerrainCollisionXZ(world *World) {
+func (me *Thing) TerrainCollisionXZ() {
 	minGX := int((me.X - me.Radius))
 	minGY := int(me.Y)
 	minGZ := int((me.Z - me.Radius))
@@ -144,7 +153,7 @@ func (me *Thing) TerrainCollisionXZ(world *World) {
 				tx := gx - bx*BlockSize
 				ty := gy - by*BlockSize
 				tz := gz - bz*BlockSize
-				tile := world.GetTileType(bx, by, bz, tx, ty, tz)
+				tile := me.World.GetTileType(bx, by, bz, tx, ty, tz)
 				if TileClosed[tile] {
 					xx := float32(gx)
 					closeX := me.X
@@ -184,7 +193,7 @@ func (me *Thing) TerrainCollisionXZ(world *World) {
 }
 
 // TerrainCollisionY func
-func (me *Thing) TerrainCollisionY(world *World) {
+func (me *Thing) TerrainCollisionY() {
 	if me.DY < 0 {
 		gx := int(me.X)
 		gy := int(me.Y)
@@ -196,7 +205,7 @@ func (me *Thing) TerrainCollisionY(world *World) {
 		ty := gy - by*BlockSize
 		tz := gz - bz*BlockSize
 
-		tile := world.GetTileType(bx, by, bz, tx, ty, tz)
+		tile := me.World.GetTileType(bx, by, bz, tx, ty, tz)
 		if TileClosed[tile] {
 			me.Y = float32(gy + 1)
 			me.Ground = true
@@ -249,7 +258,7 @@ func (me *Thing) ApproximateDistance(other *Thing) float32 {
 }
 
 // Integrate func
-func (me *Thing) Integrate(world *World) {
+func (me *Thing) Integrate() {
 	if me.DX != 0.0 || me.DZ != 0.0 {
 		me.OldX = me.X
 		me.OldZ = me.Z
@@ -260,13 +269,13 @@ func (me *Thing) Integrate(world *World) {
 		collided := make([]*Thing, 0)
 		searched := make(map[*Thing]bool)
 
-		me.RemoveFromBlocks(world)
+		me.RemoveFromBlocks()
 		me.BlockBorders()
 
 		for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 			for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 				for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-					block := world.GetBlock(gx, gy, gz)
+					block := me.World.GetBlock(gx, gy, gz)
 					for t := 0; t < block.ThingCount; t++ {
 						thing := block.Things[t]
 						if _, ok := searched[thing]; !ok {
@@ -297,10 +306,10 @@ func (me *Thing) Integrate(world *World) {
 			collided = collided[:len(collided)-1]
 		}
 
-		me.TerrainCollisionXZ(world)
+		me.TerrainCollisionXZ()
 
 		me.BlockBorders()
-		me.AddToBlocks(world)
+		me.AddToBlocks()
 
 		me.DX = 0.0
 		me.DZ = 0.0
@@ -309,24 +318,10 @@ func (me *Thing) Integrate(world *World) {
 	if !me.Ground || me.DY != 0.0 {
 		me.DY -= Gravity
 		me.Y += me.DY
-		me.TerrainCollisionY(world)
+		me.TerrainCollisionY()
 
-		me.RemoveFromBlocks(world)
+		me.RemoveFromBlocks()
 		me.BlockBorders()
-		me.AddToBlocks(world)
+		me.AddToBlocks()
 	}
-
-	me.Animate()
-
-	world.Snapshot.WriteString("{n:")
-	world.Snapshot.WriteString(me.NID)
-	world.Snapshot.WriteString(",x:")
-	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-	world.Snapshot.WriteString(",y:")
-	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	world.Snapshot.WriteString(",z:")
-	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
-	world.Snapshot.WriteString(",a:")
-	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
-	world.Snapshot.WriteString("},")
 }

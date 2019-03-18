@@ -5,6 +5,10 @@ const WORLD_NEGATIVE_X = 3
 const WORLD_NEGATIVE_Y = 4
 const WORLD_NEGATIVE_Z = 5
 
+const Tau = Math.PI * 2.0
+const RadToDeg = 180.0 / Math.PI
+const DegToRad = Math.PI / 180.0
+
 class World {
     constructor(g, gl) {
         this.g = g
@@ -267,7 +271,7 @@ class World {
         for (let i = 0; i < this.thing_count; i++)
             this.things[i].update(this)
     }
-    render(g, interpolation, x, y, z, cam_x, cam_z) {
+    render(g, interpolation, x, y, z, camX, camZ, camAngle) {
         let gl = this.gl
         let sprite_set = this.sprite_set
         let sprite_buffer = this.sprite_buffer
@@ -286,7 +290,7 @@ class World {
         for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
             let block = this.viewable[i]
 
-            block.render_things(interpolation, sprite_set, sprite_buffer, cam_x, cam_z)
+            block.render_things(interpolation, sprite_set, sprite_buffer, camX, camZ, camAngle)
 
             let mesh = block.mesh
             if (mesh.vertex_pos === 0)

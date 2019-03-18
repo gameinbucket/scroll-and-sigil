@@ -20,7 +20,7 @@ class Thing {
         this.x = x
         this.y = y
         this.z = z
-        this.r = 0
+        this.Angle = 0
         this.dx = 0
         this.dy = 0
         this.dz = 0
@@ -46,6 +46,8 @@ class Thing {
                 return new You(world, nid, x, y, z)
             case "baron":
                 return new Baron(world, nid, x, y, z)
+            case "tree":
+                return new Tree(world, nid, x, y, z)
         }
     }
     save(x, y, z) {
@@ -187,20 +189,67 @@ class Thing {
 
         this.UpdateAnimation()
     }
-    render(interpolation, sprite_buffer, camx, camz) {
+    render(interpolation, sprite_buffer, camX, camZ, camAngle) {
         let vx = this.ox + interpolation * (this.x - this.ox)
         let vy = this.oy + interpolation * (this.y - this.oy)
         let vz = this.oz + interpolation * (this.z - this.oz)
 
-        let sin = camx - vx
-        let cos = camz - vz
+        let sin = camX - vx
+        let cos = camZ - vz
         let length = Math.sqrt(sin * sin + cos * cos)
         sin /= length
         cos /= length
 
-        let sprite_frame = "front-" + this.sprite[this.animation_frame]
+        let angle = camAngle - this.Angle
+        if (angle < 0) angle += Tau
+
+        let direction
+        let mirror
+
+        const AngleA = 337.5 * DegToRad
+        const AngleB = 292.5 * DegToRad
+        const AngleC = 247.5 * DegToRad
+        const AngleD = 202.5 * DegToRad
+        const AngleE = 157.5 * DegToRad
+        const AngleF = 112.5 * DegToRad
+        const AngleG = 67.5 * DegToRad
+        const AngleH = 22.5 * DegToRad
+
+        if (angle > AngleA) {
+            direction = "front-"
+            mirror = false
+        } else if (angle > AngleB) {
+            direction = "front-side-"
+            mirror = false
+        } else if (angle > AngleC) {
+            direction = "side-"
+            mirror = false
+        } else if (angle > AngleD) {
+            direction = "back-side-"
+            mirror = false
+        } else if (angle > AngleE) {
+            direction = "back-"
+            mirror = false
+        } else if (angle > AngleF) {
+            direction = "back-side-"
+            mirror = true
+        } else if (angle > AngleG) {
+            direction = "side-"
+            mirror = true
+        } else if (angle > AngleH) {
+            direction = "front-side-"
+            mirror = true
+        } else {
+            direction = "front-"
+            mirror = false
+        }
+
+        let sprite_frame = direction + this.sprite[this.animation_frame]
         let sprite = this.sprite_data[sprite_frame]
 
-        Render3.Sprite(sprite_buffer[this.sid], vx, vy, vz, sin, cos, sprite)
+        if (mirror)
+            Render3.MirrorSprite(sprite_buffer[this.sid], vx, vy, vz, sin, cos, sprite)
+        else
+            Render3.Sprite(sprite_buffer[this.sid], vx, vy, vz, sin, cos, sprite)
     }
 }

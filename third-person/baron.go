@@ -1,37 +1,32 @@
 package main
 
 import (
-	"fmt"
 	"math"
+	"strconv"
 )
 
-// AnimationStatus enum
-type AnimationStatus int
-
-// AnimationStatus constants
+// Animation constants
 const (
-	AnimationNotDone    AnimationStatus = 0
-	AnimationAlmostDone AnimationStatus = 1
-	AnimationDone       AnimationStatus = 2
+	BaronWalkAnimation    int = 2
+	BaronMeleeAnimation   int = 2
+	BaronMissileAnimation int = 3
+	BaronDeathAnimation   int = 2
 )
-
-// BaronStatus enum
-type BaronStatus int
 
 // Baron constants
 const (
-	BaronSleep   BaronStatus = 0
-	BaronDead    BaronStatus = 1
-	BaronLook    BaronStatus = 2
-	BaronChase   BaronStatus = 3
-	BaronMelee   BaronStatus = 4
-	BaronMissile BaronStatus = 5
+	BaronSleep   = 0
+	BaronDead    = 1
+	BaronLook    = 2
+	BaronChase   = 3
+	BaronMelee   = 4
+	BaronMissile = 5
 )
 
 // Baron struct
 type Baron struct {
 	*Npc
-	Status       BaronStatus
+	Status       int
 	Reaction     int
 	MeleeRange   float32
 	MissileRange float32
@@ -45,12 +40,13 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	t.Thing = &Thing{}
 	t.UID = "baron"
 	t.NID = NextNID()
+	t.World = world
 	t.X = x
 	t.Y = y
 	t.Z = z
 	t.Radius = 0.4
 	t.Height = 1.0
-	t.SpriteName = "idle"
+	t.Animation = BaronWalkAnimation
 	t.Health = 1
 	t.Speed = 0.1
 	t.MoveDirection = DirectionNone
@@ -58,11 +54,11 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	t.Npc.Me = t
 	t.Living.Me = t.Npc
 	t.Thing.Me = t.Living
-	t.MeleeRange = 0.9
+	t.MeleeRange = 2.9
 	t.MissileRange = 10.1
 	world.AddThing(t)
 	t.BlockBorders()
-	t.AddToBlocks(world)
+	t.AddToBlocks()
 	return t
 }
 
@@ -77,24 +73,46 @@ func (me *Baron) MeleeAttack() {
 func (me *Baron) ThrowMissile() {
 	const speed = 0.3
 	angle := math.Atan2(float64(me.Target.Z-me.Z), float64(me.Target.X-me.X))
-	dx := math.Cos(angle)
-	dz := math.Sin(angle)
+	dx := float32(math.Cos(angle))
+	dz := float32(math.Sin(angle))
 	dist := me.ApproximateDistance(me.Target.Thing)
 	dy := (me.Target.Y + me.Target.Height*0.5 - me.Y - me.Height*0.5) / (dist / speed)
-	fmt.Println(dx, dy, dz)
+	x := me.X + dx*me.Radius*2.0
+	y := me.Y + me.Height*0.5
+	z := me.Z + dz*me.Radius*2.0
+	NewPlasma(me.World, 1+NextRandP()%3, x, y, z, dx*speed, dy, dz*speed)
+}
+
+// Damage func
+func (me *Baron) Damage(amount int) {
+	if me.Status != BaronDead {
+		me.Health -= amount
+		if me.Health < 1 {
+			me.Status = BaronDead
+			me.AnimationMod = 0
+			me.AnimationFrame = 0
+			me.Animation = BaronDeathAnimation
+			// client death sound
+			me.RemoveFromBlocks()
+		} else {
+			// client pain sound
+		}
+
+		// client blood particles
+	}
 }
 
 // Dead func
 func (me *Baron) Dead() {
-	if me.AnimationFrame < len(me.Animation)-1 {
+	if me.AnimationFrame < me.Animation-1 {
 		me.UpdateAnimation()
 	}
 }
 
 // Look func
-func (me *Baron) Look(world *World) {
-	for i := 0; i < world.ThingCount; i++ {
-		t := world.Things[i]
+func (me *Baron) Look() {
+	for i := 0; i < me.World.ThingCount; i++ {
+		t := me.World.Things[i]
 		if me == t {
 			continue
 		}
@@ -124,7 +142,7 @@ func (me *Baron) Melee() {
 	} else if anim == AnimationDone {
 		me.AnimationFrame = 0
 		me.Status = BaronChase
-		me.Animation = me.Animations["walk"]
+		me.Animation = BaronWalkAnimation
 	}
 }
 
@@ -137,12 +155,12 @@ func (me *Baron) Missile() {
 	} else if anim == AnimationDone {
 		me.AnimationFrame = 0
 		me.Status = BaronChase
-		me.Animation = me.Animations["walk"]
+		me.Animation = BaronWalkAnimation
 	}
 }
 
 // Chase func
-func (me *Baron) Chase(world *World) {
+func (me *Baron) Chase() {
 	if me.Reaction > 0 {
 		me.Reaction--
 	}
@@ -155,16 +173,18 @@ func (me *Baron) Chase(world *World) {
 			me.Status = BaronMelee
 			me.AnimationMod = 0
 			me.AnimationFrame = 0
-			me.Animation = me.Animations["melee"]
+			me.Animation = BaronMeleeAnimation
+			// client melee sound
 		} else if me.Reaction == 0 && dist <= me.MissileRange {
 			me.Status = BaronMissile
 			me.AnimationMod = 0
 			me.AnimationFrame = 0
-			me.Animation = me.Animations["missile"]
+			me.Animation = BaronMissileAnimation
+			// client missile sound
 		} else {
 			me.MoveCount--
-			if me.MoveCount < 0 || !me.Move(world) {
-				me.NewDirection(world)
+			if me.MoveCount < 0 || !me.Move() {
+				me.NewDirection()
 			}
 			if me.UpdateAnimation() == AnimationDone {
 				me.AnimationFrame = 0
@@ -174,33 +194,30 @@ func (me *Baron) Chase(world *World) {
 }
 
 // Update func
-func (me *Baron) Update(world *World) {
+func (me *Baron) Update() {
 	switch me.Status {
 	case BaronDead:
 		me.Dead()
 	case BaronLook:
-		me.Look(world)
+		me.Look()
 	case BaronMelee:
 		me.Melee()
 	case BaronMissile:
 		me.Missile()
 	case BaronChase:
-		me.Chase(world)
+		me.Chase()
 	}
-	me.Integrate(world)
-}
+	me.Integrate()
 
-// UpdateAnimation func
-func (me *Baron) UpdateAnimation() AnimationStatus {
-	me.AnimationMod++
-	if me.AnimationMod == AnimationRate {
-		me.AnimationMod = 0
-		me.AnimationFrame++
-		if me.AnimationFrame == len(me.Animation)-1 {
-			return AnimationAlmostDone
-		} else if me.AnimationFrame == len(me.Animation) {
-			return AnimationDone
-		}
-	}
-	return AnimationNotDone
+	me.World.Snapshot.WriteString("{n:")
+	me.World.Snapshot.WriteString(me.NID)
+	me.World.Snapshot.WriteString(",x:")
+	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+	me.World.Snapshot.WriteString(",y:")
+	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	me.World.Snapshot.WriteString(",z:")
+	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	me.World.Snapshot.WriteString(",d:")
+	me.World.Snapshot.WriteString(strconv.Itoa(me.MoveDirection))
+	me.World.Snapshot.WriteString("},")
 }

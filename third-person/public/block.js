@@ -342,12 +342,12 @@ class Block {
         }
         this.mesh = RenderBuffer.InitCopy(world.gl, BLOCK_MESH)
     }
-    render_things(interpolation, sprite_set, sprite_buffer, x, y) {
+    render_things(interpolation, sprite_set, sprite_buffer, camX, camZ, camAngle) {
         for (let i = 0; i < this.thing_count; i++) {
             let thing = this.things[i]
             if (sprite_set.has(thing)) continue
             sprite_set.add(thing)
-            thing.render(interpolation, sprite_buffer, x, y)
+            thing.render(interpolation, sprite_buffer, camX, camZ, camAngle)
         }
     }
 }

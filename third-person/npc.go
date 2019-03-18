@@ -1,35 +1,22 @@
 package main
 
-// Direction enum
-type Direction int
-
 // Npc constants
 const (
-	DirectionNorth     Direction = 0
-	DirectionNorthEast Direction = 1
-	DirectionEast      Direction = 2
-	DirectionSouthEast Direction = 3
-	DirectionSouth     Direction = 4
-	DirectionSouthWest Direction = 5
-	DirectionWest      Direction = 6
-	DirectionNorthWest Direction = 7
-	DirectionCount               = 8
-	DirectionNone      Direction = 8
+	DirectionNorth     = 0
+	DirectionNorthEast = 1
+	DirectionEast      = 2
+	DirectionSouthEast = 3
+	DirectionSouth     = 4
+	DirectionSouthWest = 5
+	DirectionWest      = 6
+	DirectionNorthWest = 7
+	DirectionCount     = 8
+	DirectionNone      = 8
 )
 
 // Npc variables
 var (
-	Directions = []Direction{
-		DirectionNorth,
-		DirectionNorthEast,
-		DirectionEast,
-		DirectionSouthEast,
-		DirectionSouth,
-		DirectionSouthWest,
-		DirectionWest,
-		DirectionNorthWest,
-	}
-	OppositeDirection = []Direction{
+	OppositeDirection = []int{
 		DirectionSouth,
 		DirectionSouthWest,
 		DirectionWest,
@@ -40,7 +27,7 @@ var (
 		DirectionSouthEast,
 		DirectionNone,
 	}
-	DiagonalDirection = []Direction{
+	DiagonalDirection = []int{
 		DirectionSouthEast,
 		DirectionSouthWest,
 		DirectionNorthEast,
@@ -60,18 +47,18 @@ type Npc struct {
 	Me            interface{}
 	Target        *Living
 	MoveCount     int
-	MoveDirection Direction
+	MoveDirection int
 }
 
 // NewDirection func
-func (me *Npc) NewDirection(world *World) {
+func (me *Npc) NewDirection() {
 	const epsilon = 0.32
 	dx := me.Target.X - me.X
 	dz := me.Target.X - me.Z
 	old := me.MoveDirection
 	opposite := OppositeDirection[old]
 
-	var directionX Direction
+	var directionX int
 	if dx > epsilon {
 		directionX = DirectionWest
 	} else if dx < -epsilon {
@@ -80,7 +67,7 @@ func (me *Npc) NewDirection(world *World) {
 		directionX = DirectionNone
 	}
 
-	var directionZ Direction
+	var directionZ int
 	if dz > epsilon {
 		directionZ = DirectionNorth
 	} else if dz < -epsilon {
@@ -98,7 +85,7 @@ func (me *Npc) NewDirection(world *World) {
 			d++
 		}
 		me.MoveDirection = DiagonalDirection[d]
-		if me.MoveDirection != opposite && me.TestMove(world) {
+		if me.MoveDirection != opposite && me.TestMove() {
 			return
 		}
 	}
@@ -111,7 +98,7 @@ func (me *Npc) NewDirection(world *World) {
 
 	if directionX != opposite {
 		me.MoveDirection = directionX
-		if me.TestMove(world) {
+		if me.TestMove() {
 			return
 		}
 	} else {
@@ -120,7 +107,7 @@ func (me *Npc) NewDirection(world *World) {
 
 	if directionZ != opposite {
 		me.MoveDirection = directionZ
-		if me.TestMove(world) {
+		if me.TestMove() {
 			return
 		}
 	} else {
@@ -129,30 +116,28 @@ func (me *Npc) NewDirection(world *World) {
 
 	if old != DirectionNone {
 		me.MoveDirection = old
-		if me.TestMove(world) {
+		if me.TestMove() {
 			return
 		}
 	}
 
 	if NextRandP()&1 > 0 {
-		for i := 0; i < DirectionCount; i++ {
-			d := Directions[i]
+		for d := 0; d < DirectionCount; d++ {
 			if d == opposite {
 				continue
 			}
 			me.MoveDirection = d
-			if me.TestMove(world) {
+			if me.TestMove() {
 				return
 			}
 		}
 	} else {
-		for i := DirectionCount - 1; i >= 0; i-- {
-			d := Directions[i]
+		for d := DirectionCount - 1; d >= 0; d-- {
 			if d == opposite {
 				continue
 			}
 			me.MoveDirection = d
-			if me.TestMove(world) {
+			if me.TestMove() {
 				return
 			}
 		}
@@ -160,7 +145,7 @@ func (me *Npc) NewDirection(world *World) {
 
 	if opposite != DirectionNone {
 		me.MoveDirection = opposite
-		if me.TestMove(world) {
+		if me.TestMove() {
 			return
 		}
 	}
@@ -169,8 +154,8 @@ func (me *Npc) NewDirection(world *World) {
 }
 
 // TestMove func
-func (me *Npc) TestMove(world *World) bool {
-	if !me.Move(world) {
+func (me *Npc) TestMove() bool {
+	if !me.Move() {
 		return false
 	}
 	me.MoveCount = 16 + NextRandP()&32
@@ -178,7 +163,7 @@ func (me *Npc) TestMove(world *World) bool {
 }
 
 // TryMove func
-func (me *Npc) TryMove(world *World, x, z float32) bool {
+func (me *Npc) TryMove(x, z float32) bool {
 	minGX := int((me.X - me.Radius))
 	minGY := int(me.Y)
 	minGZ := int((me.Z - me.Radius))
@@ -194,7 +179,7 @@ func (me *Npc) TryMove(world *World, x, z float32) bool {
 				tx := gx - bx*BlockSize
 				ty := gy - by*BlockSize
 				tz := gz - bz*BlockSize
-				tile := world.GetTileType(bx, by, bz, tx, ty, tz)
+				tile := me.World.GetTileType(bx, by, bz, tx, ty, tz)
 				if TileClosed[tile] {
 					return false
 				}
@@ -205,7 +190,7 @@ func (me *Npc) TryMove(world *World, x, z float32) bool {
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				block := world.GetBlock(gx, gy, gz)
+				block := me.World.GetBlock(gx, gy, gz)
 				for t := 0; t < block.ThingCount; t++ {
 					thing := block.Things[t]
 					if me.Thing == thing {
@@ -225,18 +210,18 @@ func (me *Npc) TryMove(world *World, x, z float32) bool {
 }
 
 // Move func
-func (me *Npc) Move(world *World) bool {
+func (me *Npc) Move() bool {
 	if me.MoveDirection == DirectionNone {
 		return true
 	}
 	tryX := me.X + NpcMoveX[me.MoveDirection]*me.Speed
 	tryZ := me.Z + NpcMoveZ[me.MoveDirection]*me.Speed
-	if me.TryMove(world, tryX, tryZ) {
-		me.RemoveFromBlocks(world)
+	if me.TryMove(tryX, tryZ) {
+		me.RemoveFromBlocks()
 		me.X = tryX
 		me.Z = tryZ
 		me.BlockBorders()
-		me.AddToBlocks(world)
+		me.AddToBlocks()
 		return true
 	}
 	return false

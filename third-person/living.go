@@ -11,5 +11,4 @@ type Living struct {
 
 // Damage func
 func (me *Living) Damage(amount int) {
-	me.Health -= amount
 }
