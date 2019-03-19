@@ -43,9 +43,8 @@ var (
 
 // Npc struct
 type Npc struct {
-	*Living
-	Me            interface{}
-	Target        *Living
+	*Thing
+	Target        *Thing
 	MoveCount     int
 	MoveDirection int
 }

@@ -1,40 +1,48 @@
-class You extends Living {
+const YouAnimationIdle = []
+const YouAnimationWalk = []
+
+class You extends Thing {
     constructor(world, nid, x, y, z) {
-        super(world, "you", "baron", nid, x, y, z, 0.4, 1.0)
+        super()
+        this.World = world
+        this.UID = "you"
+        this.SID = "baron"
+        this.NID = nid
+        this.Animation = BaronAnimationWalk
+        this.X = x
+        this.Y = y
+        this.Z = z
+        this.OX = x
+        this.OY = y
+        this.OZ = z
+        this.Radius = 0.4
+        this.Height = 1.0
+        this.Speed = 0.1
+        this.Health = 1
+        world.AddThing(this)
+        this.BlockBorders()
+        this.AddToBlocks()
         this.camera = null
     }
-    update(world) {
-        let pace = 0.1
-
-        if (Input.Is("ArrowLeft")) {
-            // this.Angle += 0.05
-            // SOCKET_SEND += "tl "
-        }
-        if (Input.Is("ArrowRight")) {
-            // this.Angle -= 0.05
-            // SOCKET_SEND += "tr "
-        }
+    Update() {
         if (Input.Is("w")) {
-            // this.dx += Math.sin(this.Angle) * pace
-            // this.dz -= Math.cos(this.Angle) * pace
             SOCKET_SEND += "mf "
         }
+
         if (Input.Is("s")) {
-            // this.dx -= Math.sin(this.Angle) * pace
-            // this.dz += Math.cos(this.Angle) * pace
             SOCKET_SEND += "mb "
         }
+
         if (Input.Is("a")) {
-            // this.dx -= Math.cos(this.Angle) * pace
-            // this.dz -= Math.sin(this.Angle) * pace
             SOCKET_SEND += "sl "
         }
+
         if (Input.Is("d")) {
-            // this.dx += Math.cos(this.Angle) * pace
-            // this.dz += Math.sin(this.Angle) * pace
             SOCKET_SEND += "sr "
         }
 
-        super.update(world)
+        if (this.UpdateAnimation() === AnimationDone) {
+            this.AnimationFrame = 0
+        }
     }
 }

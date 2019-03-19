@@ -34,37 +34,35 @@ type Baron struct {
 
 // NewBaron func
 func NewBaron(world *World, x, y, z float32) *Baron {
-	t := &Baron{}
-	t.Npc = &Npc{}
-	t.Living = &Living{}
-	t.Thing = &Thing{}
-	t.UID = "baron"
-	t.NID = NextNID()
-	t.World = world
-	t.X = x
-	t.Y = y
-	t.Z = z
-	t.Radius = 0.4
-	t.Height = 1.0
-	t.Animation = BaronWalkAnimation
-	t.Health = 1
-	t.Speed = 0.1
-	t.MoveDirection = DirectionNone
-	t.Status = BaronLook
-	t.Npc.Me = t
-	t.Living.Me = t.Npc
-	t.Thing.Me = t.Living
-	t.MeleeRange = 2.9
-	t.MissileRange = 10.1
-	world.AddThing(t)
-	t.BlockBorders()
-	t.AddToBlocks()
-	return t
+	baron := &Baron{}
+	baron.Npc = &Npc{}
+	baron.Thing = &Thing{}
+	baron.UID = "baron"
+	baron.NID = NextNID()
+	baron.World = world
+	baron.Thing.Update = baron.Update
+	baron.Thing.Damage = baron.Damage
+	baron.X = x
+	baron.Y = y
+	baron.Z = z
+	baron.Radius = 0.4
+	baron.Height = 1.0
+	baron.Animation = BaronWalkAnimation
+	baron.Health = 1
+	baron.Speed = 0.1
+	baron.MoveDirection = DirectionNone
+	baron.Status = BaronLook
+	baron.MeleeRange = 2.9
+	baron.MissileRange = 10.1
+	world.AddThing(baron.Thing)
+	baron.BlockBorders()
+	baron.AddToBlocks()
+	return baron
 }
 
 // MeleeAttack func
 func (me *Baron) MeleeAttack() {
-	if me.ApproximateDistance(me.Target.Thing) <= me.MeleeRange {
+	if me.ApproximateDistance(me.Target) <= me.MeleeRange {
 		me.Target.Damage(1 + NextRandP()%3)
 	}
 }
@@ -75,7 +73,7 @@ func (me *Baron) ThrowMissile() {
 	angle := math.Atan2(float64(me.Target.Z-me.Z), float64(me.Target.X-me.X))
 	dx := float32(math.Cos(angle))
 	dz := float32(math.Sin(angle))
-	dist := me.ApproximateDistance(me.Target.Thing)
+	dist := me.ApproximateDistance(me.Target)
 	dy := (me.Target.Y + me.Target.Height*0.5 - me.Y - me.Height*0.5) / (dist / speed)
 	x := me.X + dx*me.Radius*2.0
 	y := me.Y + me.Height*0.5
@@ -112,20 +110,14 @@ func (me *Baron) Dead() {
 // Look func
 func (me *Baron) Look() {
 	for i := 0; i < me.World.ThingCount; i++ {
-		t := me.World.Things[i]
-		if me == t {
+		thing := me.World.Things[i]
+		if me.Thing == thing {
 			continue
 		}
-		thing := t.Cast()
-		if thing.Me != nil {
-			living := thing.Me.(*Living)
-			if living != nil {
-				if living.Health > 0 {
-					me.Target = living
-					me.Status = BaronChase
-					return
-				}
-			}
+		if thing.Health > 0 {
+			me.Target = thing
+			me.Status = BaronChase
+			return
 		}
 	}
 	if me.UpdateAnimation() == AnimationDone {
@@ -168,7 +160,7 @@ func (me *Baron) Chase() {
 		me.Target = nil
 		me.Status = BaronLook
 	} else {
-		dist := me.ApproximateDistance(me.Target.Thing)
+		dist := me.ApproximateDistance(me.Target)
 		if me.Reaction == 0 && dist < me.MeleeRange {
 			me.Status = BaronMelee
 			me.AnimationMod = 0

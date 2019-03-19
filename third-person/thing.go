@@ -6,16 +6,13 @@ import (
 	"strings"
 )
 
-// AnimationStatus enum
-type AnimationStatus int
-
 // Thing constants
 const (
-	AnimationRate                       = 32
-	Gravity                             = 0.01
-	AnimationNotDone    AnimationStatus = 0
-	AnimationAlmostDone AnimationStatus = 1
-	AnimationDone       AnimationStatus = 2
+	AnimationRate       = 32
+	Gravity             = 0.01
+	AnimationNotDone    = 0
+	AnimationAlmostDone = 1
+	AnimationDone       = 2
 )
 
 // Thing variables
@@ -23,16 +20,8 @@ var (
 	ThingNetworkNum = 0
 )
 
-// ThingInterface interface
-type ThingInterface interface {
-	Update()
-	Damage(int)
-	Cast() *Thing
-}
-
 // Thing struct
 type Thing struct {
-	Me                  interface{}
 	World               *World
 	UID                 string
 	NID                 string
@@ -48,6 +37,10 @@ type Thing struct {
 	Ground              bool
 	Radius              float32
 	Height              float32
+	Speed               float32
+	Health              int
+	Update              func()
+	Damage              func(int)
 }
 
 // NextNID func
@@ -60,11 +53,13 @@ func NextNID() string {
 func LoadNewThing(world *World, uid string, x, y, z float32) *Thing {
 	switch uid {
 	case "you":
-		return NewYou(world, x, y, z).Thing
+		y := NewYou(world, x, y, z)
+		world.You = y
+		return y.Thing
 	case "baron":
 		return NewBaron(world, x, y, z).Thing
 	case "tree":
-		return NewTree(world, x, y, z).Thing
+		return NewTree(world, x, y, z)
 	}
 	return nil
 }
@@ -82,11 +77,6 @@ func (me *Thing) Save(data *strings.Builder, x, y, z float32) {
 	data.WriteString(",z:")
 	data.WriteString(strconv.FormatFloat(float64(me.Z-z), 'f', -1, 32))
 	data.WriteString("}")
-}
-
-// Cast func
-func (me *Thing) Cast() *Thing {
-	return me
 }
 
 // BlockBorders func
@@ -122,7 +112,7 @@ func (me *Thing) RemoveFromBlocks() {
 }
 
 // UpdateAnimation func
-func (me *Thing) UpdateAnimation() AnimationStatus {
+func (me *Thing) UpdateAnimation() int {
 	me.AnimationMod++
 	if me.AnimationMod == AnimationRate {
 		me.AnimationMod = 0

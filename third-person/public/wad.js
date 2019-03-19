@@ -1,8 +1,9 @@
-const SOUND = {}
-const SPRITE_DATA = {}
-const SPRITE_DATA_3D = {}
-const SPRITE_ALIAS = {}
-const SPRITE_ANIMATIONS = {}
+const Sounds = {}
+const ImageData = {}
+const SpriteData = {}
+const SpriteAlias = {}
+const SpriteAnimations = {}
+const DirectionPrefix = ["front-", "front-side-", "side-", "back-side-", "back-"]
 
 class Wad {
     static async Load(g, gl, string) {
@@ -28,9 +29,11 @@ class Wad {
 
         await Promise.all(promises)
 
-        for (let key in sounds)
-            SOUND[key] = new Audio("sounds/" + sounds[key])
-
+        for (let s in sounds) {
+            let name = sounds[s]
+            let key = name.substring(0, name.lastIndexOf("."))
+            Sounds[key] = new Audio("sounds/" + name)
+        }
         for (let name in sprites) {
             let sprite = sprites[name]
 
@@ -38,16 +41,16 @@ class Wad {
             let width = 1.0 / texture.image.width
             let height = 1.0 / texture.image.height
 
-            SPRITE_DATA[name] = {}
-            SPRITE_DATA_3D[name] = {}
+            ImageData[name] = {}
+            SpriteData[name] = {}
 
             for (let frame in sprite) {
                 let data = sprite[frame]
                 let atlas = []
                 for (let i in data)
                     atlas.push(parseInt(data[i]))
-                SPRITE_DATA[name][frame] = Sprite.Build(atlas, width, height)
-                SPRITE_DATA_3D[name][frame] = Sprite.Build3(atlas, width, height)
+                ImageData[name][frame] = Sprite.Build(atlas, width, height)
+                SpriteData[name][frame] = Sprite.Build3(atlas, width, height)
             }
         }
 
@@ -56,15 +59,15 @@ class Wad {
             let animation_list = animation["animations"]
             let alias = ("alias" in animation) ? animation["alias"] : null
 
-            SPRITE_ALIAS[name] = {}
-            SPRITE_ANIMATIONS[name] = {}
+            SpriteAlias[name] = {}
+            SpriteAnimations[name] = {}
 
             for (let key in animation_list)
-                SPRITE_ANIMATIONS[name][key] = animation_list[key]
+                SpriteAnimations[name][key] = animation_list[key]
 
             if (alias != null) {
                 for (let key in alias)
-                    SPRITE_ALIAS[name][key] = alias[key]
+                    SpriteAlias[name][key] = alias[key]
             }
         }
 

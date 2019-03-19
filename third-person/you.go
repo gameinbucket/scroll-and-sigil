@@ -8,31 +8,35 @@ import (
 
 // You struct
 type You struct {
-	*Living
+	*Thing
 	Person *Person
 }
 
 // NewYou func
 func NewYou(world *World, x, y, z float32) *You {
-	t := &You{}
-	t.Living = &Living{}
-	t.Thing = &Thing{}
-	t.UID = "you"
-	t.NID = NextNID()
-	t.World = world
-	t.X = x
-	t.Y = y
-	t.Z = z
-	t.Radius = 0.4
-	t.Height = 1.0
-	t.Health = 1
-	t.Speed = 0.1
-	t.Living.Me = t
-	t.Thing.Me = t.Living
-	world.AddThing(t)
-	t.BlockBorders()
-	t.AddToBlocks()
-	return t
+	you := &You{}
+	you.Thing = &Thing{}
+	you.UID = "you"
+	you.NID = NextNID()
+	you.World = world
+	you.Thing.Update = you.Update
+	you.Thing.Damage = you.Damage
+	you.X = x
+	you.Y = y
+	you.Z = z
+	you.Radius = 0.4
+	you.Height = 1.0
+	you.Speed = 0.1
+	you.Health = 1
+	world.AddThing(you.Thing)
+	you.BlockBorders()
+	you.AddToBlocks()
+	return you
+}
+
+// Damage func
+func (me *You) Damage(amount int) {
+	me.Health -= amount
 }
 
 // Update func

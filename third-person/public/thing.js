@@ -1,44 +1,47 @@
-const ANIMATION_RATE = 16
-const GRAVITY = 0.01
+const Gravity = 0.01
 
-const THING_LIST = [
-    "you",
-    "baron"
-]
+const AnimationRate = 32
+
+const AnimationNotDone = 0
+const AnimationAlmostDone = 1
+const AnimationDone = 2
+
+const AnimationFront = 0
+const AnimationFrontSide = 1
+const AnimationSide = 2
+const AnimationBackSide = 3
+const AnimationBack = 4
 
 class Thing {
-    constructor(world, uid, sid, nid, x, y, z, radius, height) {
-        this.uid = uid
-        this.sid = sid
-        this.nid = nid
-        this.animations = SPRITE_ANIMATIONS[sid]
-        this.sprite_data = SPRITE_DATA_3D[sid]
-        this.animation_mod = 0
-        this.animation_frame = 0
-        this.sprite_name = "walk"
-        this.sprite = this.animations[this.sprite_name]
-        this.x = x
-        this.y = y
-        this.z = z
+    constructor() {
+        this.World = null
+        this.UID = ""
+        this.SID = ""
+        this.NID = ""
+        this.Animation = null
+        this.AnimationMod = 0
+        this.AnimationFrame = 0
+        this.X = 0
+        this.Y = 0
+        this.Z = 0
         this.Angle = 0
-        this.dx = 0
-        this.dy = 0
-        this.dz = 0
-        this.ox = x
-        this.oy = y
-        this.oz = z
-        this.low_gx
-        this.low_gy
-        this.low_gz
-        this.high_gx
-        this.high_gy
-        this.high_gz
-        this.ground = false
-        this.radius = radius
-        this.height = height
-        world.add_thing(this)
-        this.block_borders()
-        this.add_to_blocks(world)
+        this.DX = 0
+        this.DY = 0
+        this.DZ = 0
+        this.OX = 0
+        this.OY = 0
+        this.OZ = 0
+        this.MinBX = 0
+        this.MinBY = 0
+        this.MinBZ = 0
+        this.MaxBX = 0
+        this.MaxBY = 0
+        this.MaxBZ = 0
+        this.Ground = false
+        this.Radius = 0
+        this.Height = 0
+        this.Speed = 0
+        this.Health = 0
     }
     static LoadNewThing(world, uid, nid, x, y, z) {
         switch (uid) {
@@ -50,49 +53,53 @@ class Thing {
                 return new Tree(world, nid, x, y, z)
         }
     }
-    save(x, y, z) {
-        return "{u:" + this.uid + ",x:" + (this.x - x) + ",y:" + (this.y - y) + ",z:" + (this.z - z) + "}"
+    Save(x, y, z) {
+        return "{u:" + this.UID + ",x:" + (this.X - x) + ",y:" + (this.Y - y) + ",z:" + (this.Z - z) + "}"
     }
-    block_borders() {
-        this.low_gx = Math.floor((this.x - this.radius) * INV_BLOCK_SIZE)
-        this.low_gy = Math.floor(this.y * INV_BLOCK_SIZE)
-        this.low_gz = Math.floor((this.z - this.radius) * INV_BLOCK_SIZE)
-        this.high_gx = Math.floor((this.x + this.radius) * INV_BLOCK_SIZE)
-        this.high_gy = Math.floor((this.y + this.height) * INV_BLOCK_SIZE)
-        this.high_gz = Math.floor((this.z + this.radius) * INV_BLOCK_SIZE)
+    BlockBorders() {
+        this.MinBX = Math.floor((this.X - this.Radius) * INV_BLOCK_SIZE)
+        this.MinBY = Math.floor(this.Y * INV_BLOCK_SIZE)
+        this.MinBZ = Math.floor((this.Z - this.Radius) * INV_BLOCK_SIZE)
+        this.MaxBX = Math.floor((this.X + this.Radius) * INV_BLOCK_SIZE)
+        this.MaxBY = Math.floor((this.Y + this.Height) * INV_BLOCK_SIZE)
+        this.MaxBZ = Math.floor((this.Z + this.Radius) * INV_BLOCK_SIZE)
     }
-    add_to_blocks(world) {
-        for (let gx = this.low_gx; gx <= this.high_gx; gx++) {
-            for (let gy = this.low_gy; gy <= this.high_gy; gy++) {
-                for (let gz = this.low_gz; gz <= this.high_gz; gz++) {
-                    world.get_block(gx, gy, gz).add_thing(this)
+    AddToBlocks() {
+        for (let gx = this.MinBX; gx <= this.MaxBX; gx++) {
+            for (let gy = this.MinBY; gy <= this.MaxBY; gy++) {
+                for (let gz = this.MinBZ; gz <= this.MaxBZ; gz++) {
+                    this.World.get_block(gx, gy, gz).add_thing(this)
                 }
             }
         }
     }
-    remove_from_blocks(world) {
-        for (let gx = this.low_gx; gx <= this.high_gx; gx++) {
-            for (let gy = this.low_gy; gy <= this.high_gy; gy++) {
-                for (let gz = this.low_gz; gz <= this.high_gz; gz++) {
-                    world.get_block(gx, gy, gz).remove_thing(this)
+    RemoveFromBlocks() {
+        for (let gx = this.MinBX; gx <= this.MaxBX; gx++) {
+            for (let gy = this.MinBY; gy <= this.MaxBY; gy++) {
+                for (let gz = this.MinBZ; gz <= this.MaxBZ; gz++) {
+                    this.World.get_block(gx, gy, gz).remove_thing(this)
                 }
             }
         }
     }
     UpdateAnimation() {
-        this.animation_mod++
-        if (this.animation_mod === ANIMATION_RATE) {
-            this.animation_mod = 0
-            this.animation_frame++
-            if (this.animation_frame === this.sprite.length)
-                this.animation_frame = 0
+        this.AnimationMod++
+        if (this.AnimationMod === AnimationRate) {
+            this.AnimationMod = 0
+            this.AnimationFrame++
+            let len = this.Animation.length
+            if (this.AnimationFrame === len - 1)
+                return AnimationAlmostDone
+            else if (this.AnimationFrame === len)
+                return AnimationDone
         }
+        return AnimationNotDone
     }
-    terrain_collision_y(world) {
-        if (this.dy < 0) {
-            let gx = Math.floor(this.x)
-            let gy = Math.floor(this.y)
-            let gz = Math.floor(this.z)
+    TerrainCollisionY(world) {
+        if (this.DY < 0) {
+            let gx = Math.floor(this.X)
+            let gy = Math.floor(this.Y)
+            let gz = Math.floor(this.Z)
             let bx = Math.floor(gx * INV_BLOCK_SIZE)
             let by = Math.floor(gy * INV_BLOCK_SIZE)
             let bz = Math.floor(gz * INV_BLOCK_SIZE)
@@ -102,54 +109,54 @@ class Thing {
 
             let tile = world.get_tile_type(bx, by, bz, tx, ty, tz)
             if (TILE_CLOSED[tile]) {
-                this.y = gy + 1
-                this.ground = true
-                this.dy = 0
+                this.Y = gy + 1
+                this.Ground = true
+                this.DY = 0
             }
         }
     }
-    resolve(b) {
-        let square = this.radius + b.radius
-        if (Math.abs(this.x - b.x) > square || Math.abs(this.z - b.z) > square)
+    Resolve(b) {
+        let square = this.Radius + b.Radius
+        if (Math.abs(this.X - b.X) > square || Math.abs(this.Z - b.Z) > square)
             return
-        if (Math.abs(this.ox - b.x) > Math.abs(this.oz - b.z)) {
-            if (this.ox - b.x < 0) this.x = b.x - square
-            else this.x = b.x + square
-            this.dx = 0.0
+        if (Math.abs(this.OX - b.X) > Math.abs(this.OZ - b.Z)) {
+            if (this.OX - b.X < 0) this.X = b.X - square
+            else this.X = b.X + square
+            this.DX = 0.0
         } else {
-            if (this.oz - b.z < 0) this.z = b.z - square
-            else this.z = b.z + square
-            this.dz = 0.0
+            if (this.OZ - b.Z < 0) this.Z = b.Z - square
+            else this.Z = b.Z + square
+            this.DZ = 0.0
         }
     }
-    overlap(b) {
-        let square = this.radius + b.radius
-        return Math.abs(this.x - b.x) <= square && Math.abs(this.z - b.z) <= square
+    Overlap(b) {
+        let square = this.Radius + b.Radius
+        return Math.abs(this.X - b.X) <= square && Math.abs(this.Z - b.Z) <= square
     }
-    update(world) {
-        // ox and snapshot need to be different things
-        // this.ox = this.x
-        // this.oy = this.y
-        // this.oz = this.z
+    Integrate() {
+        // OX and snapshot need to be different things
+        // this.OX = this.X
+        // this.OY = this.Y
+        // this.OZ = this.Z
 
-        // if (this.dx != 0.0 || this.dz != 0.0) {
-        //     this.x += this.dx
-        //     this.z += this.dz
+        // if (this.DX != 0.0 || this.DZ != 0.0) {
+        //     this.X += this.DX
+        //     this.Z += this.DZ
 
         //     let collided = []
         //     let searched = new Set()
 
-        //     this.remove_from_blocks(world)
+        //     this.RemoveFromBlocks(world)
 
-        //     for (let gx = this.low_gx; gx <= this.high_gx; gx++) {
-        //         for (let gy = this.low_gy; gy <= this.high_gy; gy++) {
-        //             for (let gz = this.low_gz; gz <= this.high_gz; gz++) {
+        //     for (let gx = this.MinBX; gx <= this.MaxBX; gx++) {
+        //         for (let gy = this.MinBY; gy <= this.MaxBY; gy++) {
+        //             for (let gz = this.MinBZ; gz <= this.MaxBZ; gz++) {
         //                 let block = world.get_block(gx, gy, gz)
-        //                 for (let t = 0; t < block.thing_count; t++) {
+        //                 for (let t = 0; t < block.thingCount; t++) {
         //                     let thing = block.things[t]
         //                     if (searched.has(thing)) continue
         //                     searched.add(thing)
-        //                     if (this.overlap(thing)) collided.push(thing)
+        //                     if (this.Overlap(thing)) collided.push(thing)
         //                 }
         //             }
         //         }
@@ -160,39 +167,37 @@ class Thing {
         //         let manhattan = Number.MAX_VALUE
         //         for (let i = 0; i < collided.length; i++) {
         //             let thing = collided[i]
-        //             let dist = Math.abs(this.ox - thing.x) + Math.abs(this.oz - thing.z)
+        //             let dist = Math.abs(this.OX - thing.X) + Math.abs(this.OZ - thing.Z)
         //             if (dist < manhattan) {
         //                 manhattan = dist
         //                 closest = thing
         //             }
         //         }
-        //         this.resolve(closest)
+        //         this.Resolve(closest)
         //         collided.splice(closest)
         //     }
 
-        //     this.block_borders()
-        //     this.add_to_blocks(world)
+        //     this.BlockBorders()
+        //     this.AddToBlocks(world)
 
-        //     this.dx = 0.0
-        //     this.dz = 0.0
+        //     this.DX = 0.0
+        //     this.DZ = 0.0
         // }
 
-        // if (!this.ground || this.dy != 0.0) {
-        //     this.dy -= GRAVITY
-        //     this.y += this.dy
-        //     this.terrain_collision_y(world)
+        // if (!this.Ground || this.DY != 0.0) {
+        //     this.DY -= GRAVITY
+        //     this.Y += this.DY
+        //     this.TerrainCollisionY(world)
 
-        //     this.remove_from_blocks(world)
-        //     this.block_borders()
-        //     this.add_to_blocks(world)
+        //     this.RemoveFromBlocks(world)
+        //     this.BlockBorders()
+        //     this.AddToBlocks(world)
         // }
-
-        this.UpdateAnimation()
     }
-    render(interpolation, sprite_buffer, camX, camZ, camAngle) {
-        let vx = this.ox + interpolation * (this.x - this.ox)
-        let vy = this.oy + interpolation * (this.y - this.oy)
-        let vz = this.oz + interpolation * (this.z - this.oz)
+    Render(interpolation, spriteBuffer, camX, camZ, camAngle) {
+        let vx = this.OX + interpolation * (this.X - this.OX)
+        let vy = this.OY + interpolation * (this.Y - this.OY)
+        let vz = this.OZ + interpolation * (this.Z - this.OZ)
 
         let sin = camX - vx
         let cos = camZ - vz
@@ -216,40 +221,39 @@ class Thing {
         const AngleH = 22.5 * DegToRad
 
         if (angle > AngleA) {
-            direction = "front-"
+            direction = AnimationFront
             mirror = false
         } else if (angle > AngleB) {
-            direction = "front-side-"
+            direction = AnimationFrontSide
             mirror = false
         } else if (angle > AngleC) {
-            direction = "side-"
+            direction = AnimationSide
             mirror = false
         } else if (angle > AngleD) {
-            direction = "back-side-"
+            direction = AnimationBackSide
             mirror = false
         } else if (angle > AngleE) {
-            direction = "back-"
+            direction = AnimationBack
             mirror = false
         } else if (angle > AngleF) {
-            direction = "back-side-"
+            direction = AnimationBackSide
             mirror = true
         } else if (angle > AngleG) {
-            direction = "side-"
+            direction = AnimationSide
             mirror = true
         } else if (angle > AngleH) {
-            direction = "front-side-"
+            direction = AnimationFrontSide
             mirror = true
         } else {
-            direction = "front-"
+            direction = AnimationFront
             mirror = false
         }
 
-        let sprite_frame = direction + this.sprite[this.animation_frame]
-        let sprite = this.sprite_data[sprite_frame]
+        let sprite = this.Animation[this.AnimationFrame][direction]
 
         if (mirror)
-            Render3.MirrorSprite(sprite_buffer[this.sid], vx, vy, vz, sin, cos, sprite)
+            Render3.MirrorSprite(spriteBuffer[this.SID], vx, vy, vz, sin, cos, sprite)
         else
-            Render3.Sprite(sprite_buffer[this.sid], vx, vy, vz, sin, cos, sprite)
+            Render3.Sprite(spriteBuffer[this.SID], vx, vy, vz, sin, cos, sprite)
     }
 }

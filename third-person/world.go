@@ -34,7 +34,7 @@ type World struct {
 	ThingCount   int
 	ItemCount    int
 	MissileCount int
-	Things       []ThingInterface
+	Things       []*Thing
 	Items        []*Item
 	Missiles     []*Missile
 	ThreadIndex  int
@@ -131,7 +131,7 @@ func (me *World) Load(data []byte) {
 		}
 	}
 
-	me.Things = make([]ThingInterface, 5)
+	me.Things = make([]*Thing, 5)
 	me.ThingCount = 0
 
 	me.Items = make([]*Item, 1)
@@ -157,10 +157,7 @@ func (me *World) Load(data []byte) {
 			x := ParseFloat(thing["x"].(string))
 			y := ParseFloat(thing["y"].(string))
 			z := ParseFloat(thing["z"].(string))
-			t := LoadNewThing(me, uid, float32(x)+px, float32(y)+py, float32(z)+pz)
-			if uid == "you" {
-				me.You = t.Me.(*Living).Me.(*You)
-			}
+			LoadNewThing(me, uid, float32(x)+px, float32(y)+py, float32(z)+pz)
 		}
 	}
 }
@@ -249,9 +246,9 @@ func (me *World) GetBlock(x, y, z int) *Block {
 }
 
 // AddThing func
-func (me *World) AddThing(t ThingInterface) {
+func (me *World) AddThing(t *Thing) {
 	if me.ThingCount == len(me.Things) {
-		array := make([]ThingInterface, me.ThingCount+5)
+		array := make([]*Thing, me.ThingCount+5)
 		copy(array, me.Things)
 		me.Things = array
 	}
@@ -260,7 +257,7 @@ func (me *World) AddThing(t ThingInterface) {
 }
 
 // RemoveThing func
-func (me *World) RemoveThing(t ThingInterface) {
+func (me *World) RemoveThing(t *Thing) {
 	for i := 0; i < me.ThingCount; i++ {
 		if me.Things[i] == t {
 			for j := i; j < me.ThingCount-1; j++ {
@@ -333,7 +330,8 @@ func (me *World) Update() {
 	}
 	len := me.ThingCount
 	for i := 0; i < len; i++ {
-		me.Things[i].Update()
+		thing := me.Things[i]
+		thing.Update()
 	}
 	len = me.MissileCount
 	for i := 0; i < len; i++ {

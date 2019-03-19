@@ -121,8 +121,8 @@ class Application {
         }
 
         this.world.load(data)
-        for (let index = 0; index < this.world.thing_count; index++) {
-            if (this.world.things[index].uid === "you") {
+        for (let index = 0; index < this.world.thingCount; index++) {
+            if (this.world.things[index].UID === "you") {
                 this.player = this.world.things[index]
                 this.camera = new Camera(this.player, 10.0, 0.0, 0.0)
                 this.player.camera = this.camera
@@ -145,7 +145,7 @@ class Application {
     }
     loop() {
         if (this.on) {
-            this.state.update() // TODO remove
+            this.state.update()
             this.state.render()
         }
         requestAnimationFrame(loop)

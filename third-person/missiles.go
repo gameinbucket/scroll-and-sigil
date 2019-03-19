@@ -13,7 +13,7 @@ type Missile struct {
 	Height              float32
 	GC                  bool
 	Damage              int
-	HitFunc             func(me *Missile, thing ThingInterface)
+	Hit                 func(thing *Thing)
 }
 
 // BlockBorders func
@@ -66,7 +66,7 @@ func (me *Missile) Collision() bool {
 					if _, ok := searched[thing]; !ok {
 						searched[thing] = true
 						if me.Overlap(thing) {
-							me.HitFunc(me, thing)
+							me.Hit(thing)
 							return true
 						}
 					}
@@ -91,7 +91,7 @@ func (me *Missile) Collision() bool {
 				tz := gz - bz*BlockSize
 				tile := me.World.GetTileType(bx, by, bz, tx, ty, tz)
 				if TileClosed[tile] {
-					me.HitFunc(me, nil)
+					me.Hit(nil)
 					return true
 				}
 			}
@@ -126,7 +126,7 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) *Missile {
 	me.Radius = 0.4
 	me.Height = 1.0
 	me.Damage = damage
-	me.HitFunc = PlasmaHit
+	me.Hit = me.PlasmaHit
 	world.AddMissile(me)
 	me.BlockBorders()
 	me.AddToBlocks()
@@ -134,7 +134,7 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) *Missile {
 }
 
 // PlasmaHit func
-func PlasmaHit(me *Missile, thing ThingInterface) {
+func (me *Missile) PlasmaHit(thing *Thing) {
 	me.X -= me.DX
 	me.Y -= me.DY
 	me.Z -= me.DZ

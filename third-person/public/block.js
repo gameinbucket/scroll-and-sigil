@@ -33,7 +33,7 @@ class Block {
         this.begin_side = new Array(6)
         this.count_side = new Array(6)
         this.things = []
-        this.thing_count = 0
+        this.thingCount = 0
         this.lights = []
         this.light_count = 0
         this.tiles = []
@@ -47,11 +47,11 @@ class Block {
             data += ","
         }
         data += "],e["
-        if (this.thing_count > 0) {
+        if (this.thingCount > 0) {
             let x = this.x * BLOCK_SIZE
             let y = this.y * BLOCK_SIZE
             let z = this.z * BLOCK_SIZE
-            for (let i = 0; i < this.thing_count; i++) {
+            for (let i = 0; i < this.thingCount; i++) {
                 data += this.things[i].save(x, y, z)
                 data += ","
             }
@@ -65,7 +65,7 @@ class Block {
         return data
     }
     empty() {
-        if (this.thing_count > 0)
+        if (this.thingCount > 0)
             return false
         for (let i = 0; i < BLOCK_ALL; i++)
             if (this.tiles[i].type !== TILE_NONE)
@@ -79,15 +79,15 @@ class Block {
         return this.tiles[x + y * BLOCK_SIZE + z * BLOCK_SLICE].type
     }
     add_thing(thing) {
-        this.things[this.thing_count] = thing
-        this.thing_count++
+        this.things[this.thingCount] = thing
+        this.thingCount++
     }
     remove_thing(thing) {
-        for (let i = 0; i < this.thing_count; i++) {
+        for (let i = 0; i < this.thingCount; i++) {
             if (this.things[i] === thing) {
-                for (let j = i; j < this.thing_count - 1; j++)
+                for (let j = i; j < this.thingCount - 1; j++)
                     this.things[j] = this.things[j + 1]
-                this.thing_count--
+                this.thingCount--
                 return
             }
         }
@@ -342,12 +342,12 @@ class Block {
         }
         this.mesh = RenderBuffer.InitCopy(world.gl, BLOCK_MESH)
     }
-    render_things(interpolation, sprite_set, sprite_buffer, camX, camZ, camAngle) {
-        for (let i = 0; i < this.thing_count; i++) {
+    render_things(interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle) {
+        for (let i = 0; i < this.thingCount; i++) {
             let thing = this.things[i]
-            if (sprite_set.has(thing)) continue
-            sprite_set.add(thing)
-            thing.render(interpolation, sprite_buffer, camX, camZ, camAngle)
+            if (spriteSet.has(thing)) continue
+            spriteSet.add(thing)
+            thing.Render(interpolation, spriteBuffer, camX, camZ, camAngle)
         }
     }
 }

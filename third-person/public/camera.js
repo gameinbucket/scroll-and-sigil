@@ -15,14 +15,14 @@ class Camera {
         let sin_y = Math.sin(this.ry)
         let cos_y = Math.cos(this.ry)
 
-        let vx = this.thing.ox + interpolation * (this.thing.x - this.thing.ox)
-        let vy = this.thing.oy + interpolation * (this.thing.y - this.thing.oy)
-        let vz = this.thing.oz + interpolation * (this.thing.z - this.thing.oz)
+        let vx = this.thing.OX + interpolation * (this.thing.X - this.thing.OX)
+        let vy = this.thing.OY + interpolation * (this.thing.Y - this.thing.OY)
+        let vz = this.thing.OZ + interpolation * (this.thing.Z - this.thing.OZ)
 
         this.x = vx - this.radius * cos_x * sin_y
         this.y = vy + this.radius * sin_x
         this.z = vz + this.radius * cos_x * cos_y
 
-        this.y += this.thing.height
+        this.y += this.thing.Height
     }
 }

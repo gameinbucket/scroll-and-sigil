@@ -20,25 +20,22 @@ class World {
         this.all
         this.blocks
         this.viewable
-        this.sprite_set
-        this.sprite_buffer
-        this.sprite_count
+        this.spriteSet
+        this.spriteBuffer
+        this.spriteCount
         this.things
-        this.thing_count
+        this.thingCount
         this.things_net
-        this.threads = ["ai", "pathing"]
-        this.thread_index = 0
-        this.thread_id = ""
         this.occluder = new Occluder()
     }
     load(data) {
         this.blocks = []
         this.viewable = []
-        this.sprite_set = new Set()
-        this.sprite_buffer = {}
-        this.sprite_count = {}
+        this.spriteSet = new Set()
+        this.spriteBuffer = {}
+        this.spriteCount = {}
         this.things = []
-        this.thing_count = 0
+        this.thingCount = 0
         this.things_net = {}
 
         let content = Parser.read(data)
@@ -236,52 +233,47 @@ class World {
             return null
         return this.blocks[x + y * this.width + z * this.slice]
     }
-    add_thing(thing) {
-        this.things[this.thing_count] = thing
-        this.thing_count++
-        this.things_net[thing.nid] = thing
+    AddThing(thing) {
+        this.things[this.thingCount] = thing
+        this.thingCount++
+        this.things_net[thing.NID] = thing
 
-        let count = this.sprite_count[thing.sid]
+        let count = this.spriteCount[thing.SID]
         if (count) {
-            this.sprite_count[thing.sid] = count + 1
-            if ((count + 2) * 16 > this.sprite_buffer[thing.sid].vertices.length)
-                this.sprite_buffer[thing.sid] = RenderBuffer.Expand(this.gl, this.sprite_buffer[thing.sid])
+            this.spriteCount[thing.SID] = count + 1
+            if ((count + 2) * 16 > this.spriteBuffer[thing.SID].vertices.length)
+                this.spriteBuffer[thing.SID] = RenderBuffer.Expand(this.gl, this.spriteBuffer[thing.SID])
         } else {
-            this.sprite_count[thing.sid] = 1
-            this.sprite_buffer[thing.sid] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
+            this.spriteCount[thing.SID] = 1
+            this.spriteBuffer[thing.SID] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
         }
     }
-    remove_thing(thing) {
-        for (let i = 0; i < this.thing_count; i++) {
+    RemoveThing(thing) {
+        for (let i = 0; i < this.thingCount; i++) {
             if (this.things[i] === thing) {
-                for (let j = i; j < this.thing_count - 1; j++) this.things[j] = this.things[j + 1]
-                this.thing_count--
-                this.sprite_count[thing.sid]--
-                delete this.things_net[thing.nid]
+                for (let j = i; j < this.thingCount - 1; j++) this.things[j] = this.things[j + 1]
+                this.thingCount--
+                this.spriteCount[thing.SID]--
+                delete this.things_net[thing.NID]
                 break
             }
         }
     }
     update() {
-        this.thread_id = this.threads[this.thread_index]
-        this.thread_index++
-        if (this.thread_index === this.threads.length)
-            this.thread_index = 0
-
-        for (let i = 0; i < this.thing_count; i++)
-            this.things[i].update(this)
+        for (let i = 0; i < this.thingCount; i++)
+            this.things[i].Update()
     }
     render(g, interpolation, x, y, z, camX, camZ, camAngle) {
         let gl = this.gl
-        let sprite_set = this.sprite_set
-        let sprite_buffer = this.sprite_buffer
+        let spriteSet = this.spriteSet
+        let spriteBuffer = this.spriteBuffer
 
         this.occluder.prepare_frustum(g)
         this.occluder.occlude(this, x, y, z)
 
-        sprite_set.clear()
-        for (let key in sprite_buffer)
-            sprite_buffer[key].zero()
+        spriteSet.clear()
+        for (let key in spriteBuffer)
+            spriteBuffer[key].zero()
 
         g.set_program(gl, "texcol3d")
         g.update_mvp(gl)
@@ -290,7 +282,7 @@ class World {
         for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
             let block = this.viewable[i]
 
-            block.render_things(interpolation, sprite_set, sprite_buffer, camX, camZ, camAngle)
+            block.render_things(interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle)
 
             let mesh = block.mesh
             if (mesh.vertex_pos === 0)
@@ -325,8 +317,8 @@ class World {
 
         g.set_program(gl, "texture3d")
         g.update_mvp(gl)
-        for (let key in sprite_buffer) {
-            let buffer = sprite_buffer[key]
+        for (let key in spriteBuffer) {
+            let buffer = spriteBuffer[key]
             if (buffer.vertex_pos > 0) {
                 g.set_texture(gl, key)
                 RenderSystem.UpdateAndDraw(gl, buffer)

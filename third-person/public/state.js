@@ -17,12 +17,12 @@ class WorldState {
                 let snap = things[i]
                 let nid = snap["n"]
                 let thing = world.things_net[nid]
-                thing.ox = thing.x
-                thing.oy = thing.y
-                thing.oz = thing.z
-                thing.x = parseFloat(snap["x"])
-                thing.y = parseFloat(snap["y"])
-                thing.z = parseFloat(snap["z"])
+                thing.OX = thing.X
+                thing.OY = thing.Y
+                thing.OZ = thing.Z
+                thing.X = parseFloat(snap["x"])
+                thing.Y = parseFloat(snap["y"])
+                thing.Z = parseFloat(snap["z"])
                 if ("a" in snap) {
                     thing.Angle = parseFloat(snap["a"])
                 } else {
@@ -35,13 +35,14 @@ class WorldState {
                         202.5 * DegToRad,
                         247.5 * DegToRad,
                         292.5 * DegToRad,
-                        337.5 * DegToRad
+                        337.5 * DegToRad,
+                        22.5 * DegToRad, // MoveDirection = None
                     ]
                     thing.Angle = angles[direction]
                 }
-                thing.remove_from_blocks(world)
-                thing.block_borders()
-                thing.add_to_blocks(world)
+                thing.RemoveFromBlocks(world)
+                thing.BlockBorders()
+                thing.AddToBlocks(world)
             }
             this.snapshot_time = parseInt(data["s"]) + 1552330000000
             this.previous_update = new Date().getTime()
