@@ -13,8 +13,8 @@ const AMBIENT_LOW = 100
 const AMBIENT_HALF = 175
 const AMBIENT_FULL = 255
 
-const TILE_TEXTURE = []
-const TILE_CLOSED = []
+const TileTexture = []
+const TileClosed = []
 
 class Tile {
     constructor() {

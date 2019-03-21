@@ -26,17 +26,17 @@ class Occluder {
                 let by = SLICE_Y[side_b]
                 let bz = SLICE_Z[side_b]
 
-                if (SLICE_TOWARDS[side_a] > 0) OCCLUSION_SLICE_A[2] = BLOCK_SIZE - 1
+                if (SLICE_TOWARDS[side_a] > 0) OCCLUSION_SLICE_A[2] = BlockSize - 1
                 else OCCLUSION_SLICE_A[2] = 0
 
-                if (SLICE_TOWARDS[side_b] > 0) OCCLUSION_SLICE_B[2] = BLOCK_SIZE - 1
+                if (SLICE_TOWARDS[side_b] > 0) OCCLUSION_SLICE_B[2] = BlockSize - 1
                 else OCCLUSION_SLICE_B[2] = 0
 
                 loop:
-                    for (OCCLUSION_SLICE_A[1] = 0; OCCLUSION_SLICE_A[1] < BLOCK_SIZE; OCCLUSION_SLICE_A[1]++) {
-                        for (OCCLUSION_SLICE_A[0] = 0; OCCLUSION_SLICE_A[0] < BLOCK_SIZE; OCCLUSION_SLICE_A[0]++) {
-                            for (OCCLUSION_SLICE_B[1] = 0; OCCLUSION_SLICE_B[1] < BLOCK_SIZE; OCCLUSION_SLICE_B[1]++) {
-                                for (OCCLUSION_SLICE_B[0] = 0; OCCLUSION_SLICE_B[0] < BLOCK_SIZE; OCCLUSION_SLICE_B[0]++) {
+                    for (OCCLUSION_SLICE_A[1] = 0; OCCLUSION_SLICE_A[1] < BlockSize; OCCLUSION_SLICE_A[1]++) {
+                        for (OCCLUSION_SLICE_A[0] = 0; OCCLUSION_SLICE_A[0] < BlockSize; OCCLUSION_SLICE_A[0]++) {
+                            for (OCCLUSION_SLICE_B[1] = 0; OCCLUSION_SLICE_B[1] < BlockSize; OCCLUSION_SLICE_B[1]++) {
+                                for (OCCLUSION_SLICE_B[0] = 0; OCCLUSION_SLICE_B[0] < BlockSize; OCCLUSION_SLICE_B[0]++) {
                                     let from_x = OCCLUSION_SLICE_A[ax] + 0.5
                                     let from_y = OCCLUSION_SLICE_A[ay] + 0.5
                                     let from_z = OCCLUSION_SLICE_A[az] + 0.5
@@ -121,11 +121,11 @@ class Occluder {
         }
         OCCLUSION_GOTO[index] = false
         let C = world.blocks[index]
-        let pos_cx = C.x * BLOCK_SIZE
-        let pos_cy = C.y * BLOCK_SIZE
-        let pos_cz = C.z * BLOCK_SIZE
+        let pos_cx = C.x * BlockSize
+        let pos_cy = C.y * BlockSize
+        let pos_cz = C.z * BlockSize
         let box = this.in_box(
-            pos_cx + BLOCK_SIZE, pos_cy + BLOCK_SIZE, pos_cz + BLOCK_SIZE,
+            pos_cx + BlockSize, pos_cy + BlockSize, pos_cz + BlockSize,
             pos_cx, pos_cy, pos_cz)
         if (box === OCCLUSION_NOTHING)
             return

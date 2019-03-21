@@ -11,38 +11,55 @@ class WorldState {
             let raw = SOCKET_QUEUE[SOCKET_QUEUE.length - 1]
             SOCKET_QUEUE = []
             let data = Parser.read(raw)
-            // console.log(raw, data)
             let things = data["t"]
             for (let i = 0; i < things.length; i++) {
                 let snap = things[i]
                 let nid = snap["n"]
-                let thing = world.things_net[nid]
-                thing.OX = thing.X
-                thing.OY = thing.Y
-                thing.OZ = thing.Z
-                thing.X = parseFloat(snap["x"])
-                thing.Y = parseFloat(snap["y"])
-                thing.Z = parseFloat(snap["z"])
-                if ("a" in snap) {
-                    thing.Angle = parseFloat(snap["a"])
+                if (nid in world.thingLookup) {
+                    let thing = world.thingLookup[nid]
+                    thing.OX = thing.X
+                    thing.OY = thing.Y
+                    thing.OZ = thing.Z
+                    thing.X = parseFloat(snap["x"])
+                    thing.Y = parseFloat(snap["y"])
+                    thing.Z = parseFloat(snap["z"])
+                    if ("a" in snap) {
+                        thing.Angle = parseFloat(snap["a"])
+                    } else {
+                        let direction = parseInt(snap["d"])
+                        const angles = [
+                            22.5 * DegToRad,
+                            67.5 * DegToRad,
+                            112.5 * DegToRad,
+                            157.5 * DegToRad,
+                            202.5 * DegToRad,
+                            247.5 * DegToRad,
+                            292.5 * DegToRad,
+                            337.5 * DegToRad,
+                            22.5 * DegToRad, // MoveDirection = None
+                        ]
+                        thing.Angle = angles[direction]
+                    }
+                    if ("s" in snap) {
+                        console.log("new state received", snap["s"])
+                        thing.NetUpdateState(parseInt(snap["s"]))
+                    }
+                    thing.RemoveFromBlocks()
+                    thing.BlockBorders()
+                    thing.AddToBlocks()
                 } else {
-                    let direction = parseInt(snap["d"])
-                    const angles = [
-                        22.5 * DegToRad,
-                        67.5 * DegToRad,
-                        112.5 * DegToRad,
-                        157.5 * DegToRad,
-                        202.5 * DegToRad,
-                        247.5 * DegToRad,
-                        292.5 * DegToRad,
-                        337.5 * DegToRad,
-                        22.5 * DegToRad, // MoveDirection = None
-                    ]
-                    thing.Angle = angles[direction]
+                    let uid = snap["u"]
+                    if (uid === "plasma") {
+                        console.log("plasma!")
+                        let x = parseFloat(snap["x"])
+                        let y = parseFloat(snap["y"])
+                        let z = parseFloat(snap["z"])
+                        let dx = parseFloat(snap["dx"])
+                        let dy = parseFloat(snap["dy"])
+                        let dz = parseFloat(snap["dz"])
+                        new Plasma(world, nid, 2, x, y, z, dx, dy, dz)
+                    }
                 }
-                thing.RemoveFromBlocks(world)
-                thing.BlockBorders()
-                thing.AddToBlocks(world)
             }
             this.snapshot_time = parseInt(data["s"]) + 1552330000000
             this.previous_update = new Date().getTime()
@@ -104,9 +121,9 @@ class WorldState {
         g.set_perspective(draw_perspective, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry)
         Matrix.Inverse(g.iv, g.v)
 
-        let cam_block_x = Math.floor(cam.x * INV_BLOCK_SIZE)
-        let cam_block_y = Math.floor(cam.y * INV_BLOCK_SIZE)
-        let cam_block_z = Math.floor(cam.z * INV_BLOCK_SIZE)
+        let cam_block_x = Math.floor(cam.x * InverseBlockSize)
+        let cam_block_y = Math.floor(cam.y * InverseBlockSize)
+        let cam_block_z = Math.floor(cam.z * InverseBlockSize)
 
         world.render(g, interpolation, cam_block_x, cam_block_y, cam_block_z, cam.x, cam.z, cam.ry)
 

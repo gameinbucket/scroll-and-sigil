@@ -25,24 +25,38 @@ class You extends Thing {
         this.camera = null
     }
     Update() {
+        let moving = false
+
         if (Input.Is("w")) {
             SOCKET_SEND += "mf "
+            moving = true
         }
 
         if (Input.Is("s")) {
             SOCKET_SEND += "mb "
+            moving = true
         }
 
         if (Input.Is("a")) {
             SOCKET_SEND += "sl "
+            moving = true
         }
 
         if (Input.Is("d")) {
             SOCKET_SEND += "sr "
+            moving = true
         }
 
-        if (this.UpdateAnimation() === AnimationDone) {
+        if (moving) {
+            if (this.Animation === BaronAnimationIdle)
+                this.Animation = BaronAnimationWalk
+            if (this.UpdateAnimation() === AnimationDone) {
+                this.AnimationFrame = 0
+            }
+        } else {
+            this.AnimationMod = 0
             this.AnimationFrame = 0
+            this.Animation = BaronAnimationIdle
         }
     }
 }

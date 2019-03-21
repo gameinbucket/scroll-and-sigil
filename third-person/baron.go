@@ -30,6 +30,7 @@ type Baron struct {
 	Reaction     int
 	MeleeRange   float32
 	MissileRange float32
+	DeltaStatus  bool
 }
 
 // NewBaron func
@@ -52,7 +53,7 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	baron.Speed = 0.1
 	baron.MoveDirection = DirectionNone
 	baron.Status = BaronLook
-	baron.MeleeRange = 2.9
+	baron.MeleeRange = 1.9
 	baron.MissileRange = 10.1
 	world.AddThing(baron.Thing)
 	baron.BlockBorders()
@@ -60,32 +61,12 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	return baron
 }
 
-// MeleeAttack func
-func (me *Baron) MeleeAttack() {
-	if me.ApproximateDistance(me.Target) <= me.MeleeRange {
-		me.Target.Damage(1 + NextRandP()%3)
-	}
-}
-
-// ThrowMissile func
-func (me *Baron) ThrowMissile() {
-	const speed = 0.3
-	angle := math.Atan2(float64(me.Target.Z-me.Z), float64(me.Target.X-me.X))
-	dx := float32(math.Cos(angle))
-	dz := float32(math.Sin(angle))
-	dist := me.ApproximateDistance(me.Target)
-	dy := (me.Target.Y + me.Target.Height*0.5 - me.Y - me.Height*0.5) / (dist / speed)
-	x := me.X + dx*me.Radius*2.0
-	y := me.Y + me.Height*0.5
-	z := me.Z + dz*me.Radius*2.0
-	NewPlasma(me.World, 1+NextRandP()%3, x, y, z, dx*speed, dy, dz*speed)
-}
-
 // Damage func
 func (me *Baron) Damage(amount int) {
 	if me.Status != BaronDead {
 		me.Health -= amount
 		if me.Health < 1 {
+			me.DeltaStatus = true
 			me.Status = BaronDead
 			me.AnimationMod = 0
 			me.AnimationFrame = 0
@@ -102,7 +83,9 @@ func (me *Baron) Damage(amount int) {
 
 // Dead func
 func (me *Baron) Dead() {
-	if me.AnimationFrame < me.Animation-1 {
+	if me.AnimationFrame == me.Animation-1 {
+		me.Thing.Update = me.EmptyUpdate
+	} else {
 		me.UpdateAnimation()
 	}
 }
@@ -116,6 +99,7 @@ func (me *Baron) Look() {
 		}
 		if thing.Health > 0 {
 			me.Target = thing
+			me.DeltaStatus = true
 			me.Status = BaronChase
 			return
 		}
@@ -130,10 +114,13 @@ func (me *Baron) Melee() {
 	anim := me.UpdateAnimation()
 	if anim == AnimationAlmostDone {
 		me.Reaction = 40 + NextRandP()%220
-		me.MeleeAttack()
+		if me.ApproximateDistance(me.Target) <= me.MeleeRange {
+			me.Target.Damage(1 + NextRandP()%3)
+		}
 	} else if anim == AnimationDone {
-		me.AnimationFrame = 0
+		me.DeltaStatus = true
 		me.Status = BaronChase
+		me.AnimationFrame = 0
 		me.Animation = BaronWalkAnimation
 	}
 }
@@ -143,10 +130,20 @@ func (me *Baron) Missile() {
 	anim := me.UpdateAnimation()
 	if anim == AnimationAlmostDone {
 		me.Reaction = 40 + NextRandP()%220
-		me.ThrowMissile()
+		const speed = 0.3
+		angle := math.Atan2(float64(me.Target.Z-me.Z), float64(me.Target.X-me.X))
+		dx := float32(math.Cos(angle))
+		dz := float32(math.Sin(angle))
+		dist := me.ApproximateDistance(me.Target)
+		dy := (me.Target.Y + me.Target.Height*0.5 - me.Y - me.Height*0.5) / (dist / speed)
+		x := me.X + dx*me.Radius*2.0
+		y := me.Y + me.Height*0.5
+		z := me.Z + dz*me.Radius*2.0
+		NewPlasma(me.World, 1+NextRandP()%3, x, y, z, dx*speed, dy, dz*speed)
 	} else if anim == AnimationDone {
-		me.AnimationFrame = 0
+		me.DeltaStatus = true
 		me.Status = BaronChase
+		me.AnimationFrame = 0
 		me.Animation = BaronWalkAnimation
 	}
 }
@@ -158,21 +155,22 @@ func (me *Baron) Chase() {
 	}
 	if me.Target == nil || me.Target.Health <= 0 {
 		me.Target = nil
+		me.DeltaStatus = true
 		me.Status = BaronLook
 	} else {
 		dist := me.ApproximateDistance(me.Target)
 		if me.Reaction == 0 && dist < me.MeleeRange {
+			me.DeltaStatus = true
 			me.Status = BaronMelee
 			me.AnimationMod = 0
 			me.AnimationFrame = 0
 			me.Animation = BaronMeleeAnimation
-			// client melee sound
 		} else if me.Reaction == 0 && dist <= me.MissileRange {
+			me.DeltaStatus = true
 			me.Status = BaronMissile
 			me.AnimationMod = 0
 			me.AnimationFrame = 0
 			me.Animation = BaronMissileAnimation
-			// client missile sound
 		} else {
 			me.MoveCount--
 			if me.MoveCount < 0 || !me.Move() {
@@ -209,7 +207,19 @@ func (me *Baron) Update() {
 	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
 	me.World.Snapshot.WriteString(",z:")
 	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
-	me.World.Snapshot.WriteString(",d:")
-	me.World.Snapshot.WriteString(strconv.Itoa(me.MoveDirection))
+	if me.DeltaMoveDirection {
+		me.DeltaMoveDirection = false
+		me.World.Snapshot.WriteString(",d:")
+		me.World.Snapshot.WriteString(strconv.Itoa(me.MoveDirection))
+	}
+	if me.DeltaStatus {
+		me.World.Snapshot.WriteString(",s:")
+		me.World.Snapshot.WriteString(strconv.Itoa(me.Status))
+		me.DeltaStatus = false
+	}
 	me.World.Snapshot.WriteString("},")
+}
+
+// EmptyUpdate func
+func (me *Baron) EmptyUpdate() {
 }

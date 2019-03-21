@@ -44,13 +44,15 @@ var (
 // Npc struct
 type Npc struct {
 	*Thing
-	Target        *Thing
-	MoveCount     int
-	MoveDirection int
+	Target             *Thing
+	MoveCount          int
+	MoveDirection      int
+	DeltaMoveDirection bool
 }
 
 // NewDirection func
 func (me *Npc) NewDirection() {
+	me.DeltaMoveDirection = true
 	const epsilon = 0.32
 	dx := me.Target.X - me.X
 	dz := me.Target.X - me.Z

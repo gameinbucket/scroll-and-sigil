@@ -48,7 +48,7 @@ class MenuState {
         generic.zero()
 
         let size = 3
-        let print = "sword and sigil"
+        let print = "scroll and sigil"
         let x = Math.floor((frame.width - print.length * FONT_WIDTH * size) * 0.5)
         let y = Math.floor(frame.height * 0.8 - FONT_HEIGHT)
         Render.Print(generic, print, x, y, size)

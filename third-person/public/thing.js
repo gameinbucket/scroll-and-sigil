@@ -57,18 +57,18 @@ class Thing {
         return "{u:" + this.UID + ",x:" + (this.X - x) + ",y:" + (this.Y - y) + ",z:" + (this.Z - z) + "}"
     }
     BlockBorders() {
-        this.MinBX = Math.floor((this.X - this.Radius) * INV_BLOCK_SIZE)
-        this.MinBY = Math.floor(this.Y * INV_BLOCK_SIZE)
-        this.MinBZ = Math.floor((this.Z - this.Radius) * INV_BLOCK_SIZE)
-        this.MaxBX = Math.floor((this.X + this.Radius) * INV_BLOCK_SIZE)
-        this.MaxBY = Math.floor((this.Y + this.Height) * INV_BLOCK_SIZE)
-        this.MaxBZ = Math.floor((this.Z + this.Radius) * INV_BLOCK_SIZE)
+        this.MinBX = Math.floor((this.X - this.Radius) * InverseBlockSize)
+        this.MinBY = Math.floor(this.Y * InverseBlockSize)
+        this.MinBZ = Math.floor((this.Z - this.Radius) * InverseBlockSize)
+        this.MaxBX = Math.floor((this.X + this.Radius) * InverseBlockSize)
+        this.MaxBY = Math.floor((this.Y + this.Height) * InverseBlockSize)
+        this.MaxBZ = Math.floor((this.Z + this.Radius) * InverseBlockSize)
     }
     AddToBlocks() {
         for (let gx = this.MinBX; gx <= this.MaxBX; gx++) {
             for (let gy = this.MinBY; gy <= this.MaxBY; gy++) {
                 for (let gz = this.MinBZ; gz <= this.MaxBZ; gz++) {
-                    this.World.get_block(gx, gy, gz).add_thing(this)
+                    this.World.GetBlock(gx, gy, gz).AddThing(this)
                 }
             }
         }
@@ -77,7 +77,7 @@ class Thing {
         for (let gx = this.MinBX; gx <= this.MaxBX; gx++) {
             for (let gy = this.MinBY; gy <= this.MaxBY; gy++) {
                 for (let gz = this.MinBZ; gz <= this.MaxBZ; gz++) {
-                    this.World.get_block(gx, gy, gz).remove_thing(this)
+                    this.World.GetBlock(gx, gy, gz).RemoveThing(this)
                 }
             }
         }
@@ -95,20 +95,21 @@ class Thing {
         }
         return AnimationNotDone
     }
+    NetUpdateState(_) {}
     TerrainCollisionY(world) {
         if (this.DY < 0) {
             let gx = Math.floor(this.X)
             let gy = Math.floor(this.Y)
             let gz = Math.floor(this.Z)
-            let bx = Math.floor(gx * INV_BLOCK_SIZE)
-            let by = Math.floor(gy * INV_BLOCK_SIZE)
-            let bz = Math.floor(gz * INV_BLOCK_SIZE)
-            let tx = gx - bx * BLOCK_SIZE
-            let ty = gy - by * BLOCK_SIZE
-            let tz = gz - bz * BLOCK_SIZE
+            let bx = Math.floor(gx * InverseBlockSize)
+            let by = Math.floor(gy * InverseBlockSize)
+            let bz = Math.floor(gz * InverseBlockSize)
+            let tx = gx - bx * BlockSize
+            let ty = gy - by * BlockSize
+            let tz = gz - bz * BlockSize
 
-            let tile = world.get_tile_type(bx, by, bz, tx, ty, tz)
-            if (TILE_CLOSED[tile]) {
+            let tile = world.GetTileType(bx, by, bz, tx, ty, tz)
+            if (TileClosed[tile]) {
                 this.Y = gy + 1
                 this.Ground = true
                 this.DY = 0
@@ -133,6 +134,7 @@ class Thing {
         let square = this.Radius + b.Radius
         return Math.abs(this.X - b.X) <= square && Math.abs(this.Z - b.Z) <= square
     }
+    Damage(_) {}
     Integrate() {
         // OX and snapshot need to be different things
         // this.OX = this.X
@@ -151,7 +153,7 @@ class Thing {
         //     for (let gx = this.MinBX; gx <= this.MaxBX; gx++) {
         //         for (let gy = this.MinBY; gy <= this.MaxBY; gy++) {
         //             for (let gz = this.MinBZ; gz <= this.MaxBZ; gz++) {
-        //                 let block = world.get_block(gx, gy, gz)
+        //                 let block = world.GetBlock(gx, gy, gz)
         //                 for (let t = 0; t < block.thingCount; t++) {
         //                     let thing = block.things[t]
         //                     if (searched.has(thing)) continue

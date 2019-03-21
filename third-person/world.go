@@ -131,14 +131,13 @@ func (me *World) Load(data []byte) {
 		}
 	}
 
-	me.Things = make([]*Thing, 5)
 	me.ThingCount = 0
-
-	me.Items = make([]*Item, 1)
 	me.ItemCount = 0
-
-	me.Missiles = make([]*Missile, 1)
 	me.MissileCount = 0
+
+	me.Things = make([]*Thing, 5)
+	me.Items = make([]*Item, 1)
+	me.Missiles = make([]*Missile, 1)
 
 	for b := 0; b < len(blocks); b++ {
 		bdata := blocks[b].(map[string]interface{})
@@ -260,9 +259,7 @@ func (me *World) AddThing(t *Thing) {
 func (me *World) RemoveThing(t *Thing) {
 	for i := 0; i < me.ThingCount; i++ {
 		if me.Things[i] == t {
-			for j := i; j < me.ThingCount-1; j++ {
-				me.Things[j] = me.Things[j+1]
-			}
+			me.Things[i] = me.Things[me.ThingCount-1]
 			me.ThingCount--
 			return
 		}
@@ -284,9 +281,7 @@ func (me *World) AddItem(t *Item) {
 func (me *World) RemoveItem(t *Item) {
 	for i := 0; i < me.ItemCount; i++ {
 		if me.Items[i] == t {
-			for j := i; j < me.ItemCount-1; j++ {
-				me.Items[j] = me.Items[j+1]
-			}
+			me.Items[i] = me.Items[me.ItemCount-1]
 			me.ItemCount--
 			return
 		}
@@ -302,19 +297,6 @@ func (me *World) AddMissile(t *Missile) {
 	}
 	me.Missiles[me.MissileCount] = t
 	me.MissileCount++
-}
-
-// RemoveMissile func
-func (me *World) RemoveMissile(t *Missile) {
-	for i := 0; i < me.MissileCount; i++ {
-		if me.Missiles[i] == t {
-			for j := i; j < me.MissileCount-1; j++ {
-				me.Missiles[j] = me.Missiles[j+1]
-			}
-			me.MissileCount--
-			return
-		}
-	}
 }
 
 // Update func
@@ -336,7 +318,13 @@ func (me *World) Update() {
 	len = me.MissileCount
 	for i := 0; i < len; i++ {
 		missile := me.Missiles[i]
-		missile.Update()
+		if missile.Update() {
+			me.Missiles[i] = me.Missiles[len-1]
+			me.Missiles[len-1] = nil
+			me.MissileCount--
+			len--
+			i--
+		}
 	}
 	me.Snapshot.WriteString("]")
 }

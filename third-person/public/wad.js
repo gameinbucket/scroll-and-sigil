@@ -71,8 +71,8 @@ class Wad {
             }
         }
 
-        TILE_TEXTURE.push(null)
-        TILE_CLOSED.push(false)
+        TileTexture.push(null)
+        TileClosed.push(false)
         let tile_sprites = sprites["tiles"]
         let texture = g.textures["tiles"]
         let width = 1.0 / texture.image.width
@@ -83,8 +83,8 @@ class Wad {
             let y = parseInt(data[1])
             let w = parseInt(data[2])
             let h = parseInt(data[3])
-            TILE_TEXTURE.push(Sprite.Simple(x, y, w, h, width, height))
-            TILE_CLOSED.push(tiles[name]["closed"] === "true")
+            TileTexture.push(Sprite.Simple(x, y, w, h, width, height))
+            TileClosed.push(tiles[name]["closed"] === "true")
         }
     }
 }

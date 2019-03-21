@@ -1,7 +1,8 @@
-const BLOCK_SIZE = 8
-const INV_BLOCK_SIZE = 1.0 / BLOCK_SIZE
-const BLOCK_SLICE = BLOCK_SIZE * BLOCK_SIZE
-const BLOCK_ALL = BLOCK_SLICE * BLOCK_SIZE
+const BlockSize = 8
+const InverseBlockSize = 1.0 / BlockSize
+
+const BLOCK_SLICE = BlockSize * BlockSize
+const BLOCK_ALL = BLOCK_SLICE * BlockSize
 const BLOCK_MESH = new RenderCopy(3, 3, 2, BLOCK_ALL * 6 * 4, BLOCK_ALL * 6 * 6)
 const BLOCK_MESH_AMBIENT = new Array(BLOCK_ALL)
 for (let i = 0; i < BLOCK_ALL; i++) {
@@ -10,7 +11,7 @@ for (let i = 0; i < BLOCK_ALL; i++) {
         BLOCK_MESH_AMBIENT[i][j] = new Uint8Array(4)
     }
 }
-const BLOCK_COLOR_DIM = BLOCK_SIZE + 1
+const BLOCK_COLOR_DIM = BlockSize + 1
 const BLOCK_COLOR_SLICE = BLOCK_COLOR_DIM * BLOCK_COLOR_DIM
 const BLOCK_MESH_COLOR = new Array(BLOCK_COLOR_DIM * BLOCK_COLOR_SLICE)
 for (let i = 0; i < BLOCK_MESH_COLOR.length; i++) {
@@ -32,8 +33,14 @@ class Block {
         this.visibility = new Uint8Array(36)
         this.begin_side = new Array(6)
         this.count_side = new Array(6)
-        this.things = []
         this.thingCount = 0
+        this.itemCount = 0
+        this.missileCount = 0
+        this.particleCount = 0
+        this.things = []
+        this.items = []
+        this.missiles = []
+        this.particles = []
         this.lights = []
         this.light_count = 0
         this.tiles = []
@@ -48,9 +55,9 @@ class Block {
         }
         data += "],e["
         if (this.thingCount > 0) {
-            let x = this.x * BLOCK_SIZE
-            let y = this.y * BLOCK_SIZE
-            let z = this.z * BLOCK_SIZE
+            let x = this.x * BlockSize
+            let y = this.y * BlockSize
+            let z = this.z * BlockSize
             for (let i = 0; i < this.thingCount; i++) {
                 data += this.things[i].save(x, y, z)
                 data += ","
@@ -72,17 +79,17 @@ class Block {
                 return false
         return true
     }
-    get_tile_pointer_unsafe(x, y, z) {
-        return this.tiles[x + y * BLOCK_SIZE + z * BLOCK_SLICE]
+    GetTilePointerUnsafe(x, y, z) {
+        return this.tiles[x + y * BlockSize + z * BLOCK_SLICE]
     }
-    get_tile_type_unsafe(x, y, z) {
-        return this.tiles[x + y * BLOCK_SIZE + z * BLOCK_SLICE].type
+    GetTileTypeUnsafe(x, y, z) {
+        return this.tiles[x + y * BlockSize + z * BLOCK_SLICE].type
     }
-    add_thing(thing) {
+    AddThing(thing) {
         this.things[this.thingCount] = thing
         this.thingCount++
     }
-    remove_thing(thing) {
+    RemoveThing(thing) {
         for (let i = 0; i < this.thingCount; i++) {
             if (this.things[i] === thing) {
                 for (let j = i; j < this.thingCount - 1; j++)
@@ -92,11 +99,56 @@ class Block {
             }
         }
     }
-    add_light(light) {
+    AddItem(item) {
+        this.items[this.itemCount] = item
+        this.itemCount++
+    }
+    RemoveItem(item) {
+        for (let i = 0; i < this.itemCount; i++) {
+            if (this.items[i] === item) {
+                for (let j = i; j < this.itemCount - 1; j++) this.items[j] = this.items[j + 1]
+                this.itemCount--
+                this.spriteCount[item.SID]--
+                delete this.itemLookup[item.NID]
+                break
+            }
+        }
+    }
+    AddMissile(missile) {
+        this.missiles[this.missileCount] = missile
+        this.missileCount++
+    }
+    RemoveMissile(missile) {
+        for (let i = 0; i < this.missileCount; i++) {
+            if (this.missiles[i] === missile) {
+                for (let j = i; j < this.missileCount - 1; j++) this.missiles[j] = this.missiles[j + 1]
+                this.missileCount--
+                this.spriteCount[missile.SID]--
+                delete this.missileLookup[missile.NID]
+                break
+            }
+        }
+    }
+    AddParticle(particle) {
+        this.particles[this.particleCount] = particle
+        this.particleCount++
+    }
+    RemoveParticle(particle) {
+        for (let i = 0; i < this.particleCount; i++) {
+            if (this.particles[i] === particle) {
+                for (let j = i; j < this.particleCount - 1; j++) this.particles[j] = this.particles[j + 1]
+                this.particleCount--
+                this.spriteCount[particle.SID]--
+                delete this.particleLookup[particle.NID]
+                break
+            }
+        }
+    }
+    AddLight(light) {
         this.lights[this.light_count] = light
         this.light_count++
     }
-    remove_light(light) {
+    RemoveLight(light) {
         for (let i = 0; i < this.light_count; i++) {
             if (this.lights[i] === light) {
                 for (let j = i; j < this.light_count - 1; j++)
@@ -106,34 +158,34 @@ class Block {
             }
         }
     }
-    ambient_mesh(world) {
-        for (let bz = 0; bz < BLOCK_SIZE; bz++) {
-            for (let by = 0; by < BLOCK_SIZE; by++) {
-                for (let bx = 0; bx < BLOCK_SIZE; bx++) {
-                    let index = bx + by * BLOCK_SIZE + bz * BLOCK_SLICE
+    AmbientMesh(world) {
+        for (let bz = 0; bz < BlockSize; bz++) {
+            for (let by = 0; by < BlockSize; by++) {
+                for (let bx = 0; bx < BlockSize; bx++) {
+                    let index = bx + by * BlockSize + bz * BLOCK_SLICE
                     if (this.tiles[index].type === TILE_NONE)
                         continue
 
-                    let ao_mmz = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx - 1, by - 1, bz)]
-                    let ao_mmm = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx - 1, by - 1, bz - 1)]
-                    let ao_mmp = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx - 1, by - 1, bz + 1)]
-                    let ao_mzp = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx - 1, by, bz + 1)]
-                    let ao_mzm = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx - 1, by, bz - 1)]
-                    let ao_mpz = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx - 1, by + 1, bz)]
-                    let ao_mpp = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx - 1, by + 1, bz + 1)]
-                    let ao_mpm = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx - 1, by + 1, bz - 1)]
-                    let ao_zpp = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx, by + 1, bz + 1)]
-                    let ao_zmp = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx, by - 1, bz + 1)]
-                    let ao_zpm = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx, by + 1, bz - 1)]
-                    let ao_zmm = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx, by - 1, bz - 1)]
-                    let ao_ppz = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx + 1, by + 1, bz)]
-                    let ao_pmz = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx + 1, by - 1, bz)]
-                    let ao_pzp = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx + 1, by, bz + 1)]
-                    let ao_pzm = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx + 1, by, bz - 1)]
-                    let ao_pmm = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx + 1, by - 1, bz - 1)]
-                    let ao_ppm = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx + 1, by + 1, bz - 1)]
-                    let ao_ppp = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx + 1, by + 1, bz + 1)]
-                    let ao_pmp = TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, bx + 1, by - 1, bz + 1)]
+                    let ao_mmz = TileClosed[world.GetTileType(this.x, this.y, this.z, bx - 1, by - 1, bz)]
+                    let ao_mmm = TileClosed[world.GetTileType(this.x, this.y, this.z, bx - 1, by - 1, bz - 1)]
+                    let ao_mmp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx - 1, by - 1, bz + 1)]
+                    let ao_mzp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx - 1, by, bz + 1)]
+                    let ao_mzm = TileClosed[world.GetTileType(this.x, this.y, this.z, bx - 1, by, bz - 1)]
+                    let ao_mpz = TileClosed[world.GetTileType(this.x, this.y, this.z, bx - 1, by + 1, bz)]
+                    let ao_mpp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx - 1, by + 1, bz + 1)]
+                    let ao_mpm = TileClosed[world.GetTileType(this.x, this.y, this.z, bx - 1, by + 1, bz - 1)]
+                    let ao_zpp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx, by + 1, bz + 1)]
+                    let ao_zmp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx, by - 1, bz + 1)]
+                    let ao_zpm = TileClosed[world.GetTileType(this.x, this.y, this.z, bx, by + 1, bz - 1)]
+                    let ao_zmm = TileClosed[world.GetTileType(this.x, this.y, this.z, bx, by - 1, bz - 1)]
+                    let ao_ppz = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by + 1, bz)]
+                    let ao_pmz = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by - 1, bz)]
+                    let ao_pzp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by, bz + 1)]
+                    let ao_pzm = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by, bz - 1)]
+                    let ao_pmm = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by - 1, bz - 1)]
+                    let ao_ppm = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by + 1, bz - 1)]
+                    let ao_ppp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by + 1, bz + 1)]
+                    let ao_pmp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by - 1, bz + 1)]
 
                     BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_X][0] = Tile.Ambient(ao_pmz, ao_pzm, ao_pmm)
                     BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_X][1] = Tile.Ambient(ao_ppz, ao_pzm, ao_ppm)
@@ -168,60 +220,60 @@ class Block {
             }
         }
     }
-    color_mesh(world) {
+    ColorMesh(world) {
         for (let bz = 0; bz < BLOCK_COLOR_DIM; bz++) {
             for (let by = 0; by < BLOCK_COLOR_DIM; by++) {
                 for (let bx = 0; bx < BLOCK_COLOR_DIM; bx++) {
                     let color = [0, 0, 0, 0]
 
-                    let block_zzz = world.get_tile_pointer(this.x, this.y, this.z, bx, by, bz)
-                    let block_mzz = world.get_tile_pointer(this.x, this.y, this.z, bx - 1, by, bz)
-                    let block_mzm = world.get_tile_pointer(this.x, this.y, this.z, bx - 1, by, bz - 1)
-                    let block_zzm = world.get_tile_pointer(this.x, this.y, this.z, bx, by, bz - 1)
-                    let block_zmz = world.get_tile_pointer(this.x, this.y, this.z, bx, by - 1, bz)
-                    let block_mmz = world.get_tile_pointer(this.x, this.y, this.z, bx - 1, by - 1, bz)
-                    let block_mmm = world.get_tile_pointer(this.x, this.y, this.z, bx - 1, by - 1, bz - 1)
-                    let block_zmm = world.get_tile_pointer(this.x, this.y, this.z, bx, by - 1, bz - 1)
+                    let block_zzz = world.GetTilePointer(this.x, this.y, this.z, bx, by, bz)
+                    let block_mzz = world.GetTilePointer(this.x, this.y, this.z, bx - 1, by, bz)
+                    let block_mzm = world.GetTilePointer(this.x, this.y, this.z, bx - 1, by, bz - 1)
+                    let block_zzm = world.GetTilePointer(this.x, this.y, this.z, bx, by, bz - 1)
+                    let block_zmz = world.GetTilePointer(this.x, this.y, this.z, bx, by - 1, bz)
+                    let block_mmz = world.GetTilePointer(this.x, this.y, this.z, bx - 1, by - 1, bz)
+                    let block_mmm = world.GetTilePointer(this.x, this.y, this.z, bx - 1, by - 1, bz - 1)
+                    let block_zmm = world.GetTilePointer(this.x, this.y, this.z, bx, by - 1, bz - 1)
 
-                    if (block_zzz === null || TILE_CLOSED[block_zzz.type]) {
-                        this.determine_light(block_mzz, color)
-                        this.determine_light(block_zmz, color)
-                        this.determine_light(block_zzm, color)
+                    if (block_zzz === null || TileClosed[block_zzz.type]) {
+                        this.DetermineLight(block_mzz, color)
+                        this.DetermineLight(block_zmz, color)
+                        this.DetermineLight(block_zzm, color)
                     }
-                    if (block_mzz === null || TILE_CLOSED[block_mzz.type]) {
-                        this.determine_light(block_zzz, color)
-                        this.determine_light(block_zmz, color)
-                        this.determine_light(block_zzm, color)
+                    if (block_mzz === null || TileClosed[block_mzz.type]) {
+                        this.DetermineLight(block_zzz, color)
+                        this.DetermineLight(block_zmz, color)
+                        this.DetermineLight(block_zzm, color)
                     }
-                    if (block_mzm === null || TILE_CLOSED[block_mzm.type]) {
-                        this.determine_light(block_mzz, color)
-                        this.determine_light(block_zzm, color)
-                        this.determine_light(block_mmm, color)
+                    if (block_mzm === null || TileClosed[block_mzm.type]) {
+                        this.DetermineLight(block_mzz, color)
+                        this.DetermineLight(block_zzm, color)
+                        this.DetermineLight(block_mmm, color)
                     }
-                    if (block_zzm === null || TILE_CLOSED[block_zzm.type]) {
-                        this.determine_light(block_zzz, color)
-                        this.determine_light(block_mzm, color)
-                        this.determine_light(block_zmm, color)
+                    if (block_zzm === null || TileClosed[block_zzm.type]) {
+                        this.DetermineLight(block_zzz, color)
+                        this.DetermineLight(block_mzm, color)
+                        this.DetermineLight(block_zmm, color)
                     }
-                    if (block_zmz === null || TILE_CLOSED[block_zmz.type]) {
-                        this.determine_light(block_zzz, color)
-                        this.determine_light(block_mmz, color)
-                        this.determine_light(block_zmm, color)
+                    if (block_zmz === null || TileClosed[block_zmz.type]) {
+                        this.DetermineLight(block_zzz, color)
+                        this.DetermineLight(block_mmz, color)
+                        this.DetermineLight(block_zmm, color)
                     }
-                    if (block_mmz === null || TILE_CLOSED[block_mmz.type]) {
-                        this.determine_light(block_mzz, color)
-                        this.determine_light(block_mmm, color)
-                        this.determine_light(block_zmz, color)
+                    if (block_mmz === null || TileClosed[block_mmz.type]) {
+                        this.DetermineLight(block_mzz, color)
+                        this.DetermineLight(block_mmm, color)
+                        this.DetermineLight(block_zmz, color)
                     }
-                    if (block_mmm === null || TILE_CLOSED[block_mmm.type]) {
-                        this.determine_light(block_mzm, color)
-                        this.determine_light(block_zmm, color)
-                        this.determine_light(block_mmz, color)
+                    if (block_mmm === null || TileClosed[block_mmm.type]) {
+                        this.DetermineLight(block_mzm, color)
+                        this.DetermineLight(block_zmm, color)
+                        this.DetermineLight(block_mmz, color)
                     }
-                    if (block_zmm === null || TILE_CLOSED[block_zmm.type]) {
-                        this.determine_light(block_zzm, color)
-                        this.determine_light(block_zmz, color)
-                        this.determine_light(block_mmm, color)
+                    if (block_zmm === null || TileClosed[block_zmm.type]) {
+                        this.DetermineLight(block_zzm, color)
+                        this.DetermineLight(block_zmz, color)
+                        this.DetermineLight(block_mmm, color)
                     }
 
                     let index = bx + by * BLOCK_COLOR_DIM + bz * BLOCK_COLOR_SLICE
@@ -238,17 +290,17 @@ class Block {
             }
         }
     }
-    determine_light(tile, color) {
+    DetermineLight(tile, color) {
         if (tile === null)
             return
-        if (!TILE_CLOSED[tile.type]) {
+        if (!TileClosed[tile.type]) {
             color[0] += tile.red
             color[1] += tile.green
             color[2] += tile.blue
             color[3]++
         }
     }
-    light_of_side(xs, ys, zs, side) {
+    LightOfSide(xs, ys, zs, side) {
         switch (side) {
             case WORLD_POSITIVE_X:
                 return [
@@ -294,9 +346,9 @@ class Block {
                 ]
         }
     }
-    build_mesh(world) {
-        this.ambient_mesh(world)
-        this.color_mesh(world)
+    BuildMesh(world) {
+        this.AmbientMesh(world)
+        this.ColorMesh(world)
         BLOCK_MESH.zero()
         for (let side = 0; side < 6; side++) {
             let mesh_begin_index = BLOCK_MESH.index_pos
@@ -304,28 +356,28 @@ class Block {
             let ptr_y = SLICE_Y[side]
             let ptr_z = SLICE_Z[side]
             let toward = SLICE_TOWARDS[side]
-            for (SLICE[2] = 0; SLICE[2] < BLOCK_SIZE; SLICE[2]++) {
-                for (SLICE[1] = 0; SLICE[1] < BLOCK_SIZE; SLICE[1]++) {
-                    for (SLICE[0] = 0; SLICE[0] < BLOCK_SIZE; SLICE[0]++) {
-                        let type = this.get_tile_type_unsafe(SLICE[ptr_x], SLICE[ptr_y], SLICE[ptr_z])
+            for (SLICE[2] = 0; SLICE[2] < BlockSize; SLICE[2]++) {
+                for (SLICE[1] = 0; SLICE[1] < BlockSize; SLICE[1]++) {
+                    for (SLICE[0] = 0; SLICE[0] < BlockSize; SLICE[0]++) {
+                        let type = this.GetTileTypeUnsafe(SLICE[ptr_x], SLICE[ptr_y], SLICE[ptr_z])
                         if (type === TILE_NONE)
                             continue
                         SLICE_TEMP[0] = SLICE[0]
                         SLICE_TEMP[1] = SLICE[1]
                         SLICE_TEMP[2] = SLICE[2] + toward
-                        if (TILE_CLOSED[world.get_tile_type(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z])])
+                        if (TileClosed[world.GetTileType(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z])])
                             continue
                         let xs = SLICE[ptr_x]
                         let ys = SLICE[ptr_y]
                         let zs = SLICE[ptr_z]
-                        let index = xs + ys * BLOCK_SIZE + zs * BLOCK_SLICE
+                        let index = xs + ys * BlockSize + zs * BLOCK_SLICE
 
-                        let texture = TILE_TEXTURE[type]
-                        let bx = xs + BLOCK_SIZE * this.x
-                        let by = ys + BLOCK_SIZE * this.y
-                        let bz = zs + BLOCK_SIZE * this.z
+                        let texture = TileTexture[type]
+                        let bx = xs + BlockSize * this.x
+                        let by = ys + BlockSize * this.y
+                        let bz = zs + BlockSize * this.z
 
-                        let light = this.light_of_side(xs, ys, zs, side)
+                        let light = this.LightOfSide(xs, ys, zs, side)
                         let ambient = BLOCK_MESH_AMBIENT[index][side]
 
                         let rgb_a = Light.Colorize(light[0], ambient[0])
@@ -342,12 +394,30 @@ class Block {
         }
         this.mesh = RenderBuffer.InitCopy(world.gl, BLOCK_MESH)
     }
-    render_things(interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle) {
+    RenderThings(interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle) {
         for (let i = 0; i < this.thingCount; i++) {
             let thing = this.things[i]
             if (spriteSet.has(thing)) continue
             spriteSet.add(thing)
             thing.Render(interpolation, spriteBuffer, camX, camZ, camAngle)
+        }
+        for (let i = 0; i < this.itemCount; i++) {
+            let item = this.items[i]
+            if (spriteSet.has(item)) continue
+            spriteSet.add(item)
+            item.Render(interpolation, spriteBuffer, camX, camZ, camAngle)
+        }
+        for (let i = 0; i < this.missileCount; i++) {
+            let missile = this.missiles[i]
+            if (spriteSet.has(missile)) continue
+            spriteSet.add(missile)
+            missile.Render(interpolation, spriteBuffer, camX, camZ, camAngle)
+        }
+        for (let i = 0; i < this.particleCount; i++) {
+            let particle = this.particles[i]
+            if (spriteSet.has(particle)) continue
+            spriteSet.add(particle)
+            particle.Render(interpolation, spriteBuffer, camX, camZ, camAngle)
         }
     }
 }

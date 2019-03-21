@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -36,7 +37,7 @@ func NewYou(world *World, x, y, z float32) *You {
 
 // Damage func
 func (me *You) Damage(amount int) {
-	me.Health -= amount
+	fmt.Println("ouch!", amount)
 }
 
 // Update func

@@ -23,9 +23,18 @@ class World {
         this.spriteSet
         this.spriteBuffer
         this.spriteCount
-        this.things
         this.thingCount
-        this.things_net
+        this.itemCount
+        this.missileCount
+        this.particleCount
+        this.things
+        this.items
+        this.missiles
+        this.particles
+        this.thingLookup
+        this.itemLookup
+        this.missileLookup
+        this.particleLookup
         this.occluder = new Occluder()
     }
     load(data) {
@@ -34,9 +43,18 @@ class World {
         this.spriteSet = new Set()
         this.spriteBuffer = {}
         this.spriteCount = {}
-        this.things = []
         this.thingCount = 0
-        this.things_net = {}
+        this.itemCount = 0
+        this.missileCount = 0
+        this.particleCount = 0
+        this.things = []
+        this.items = []
+        this.missiles = []
+        this.particles = []
+        this.thingLookup = {}
+        this.itemLookup = {}
+        this.missileLookup = {}
+        this.particleLookup = {}
 
         let content = Parser.read(data)
         let blocks = content["b"]
@@ -88,7 +106,7 @@ class World {
                 let y = parseInt(light["y"])
                 let z = parseInt(light["z"])
                 let rgb = parseInt(light["v"])
-                block.add_light(new Light(x, y, z, rgb))
+                block.AddLight(new Light(x, y, z, rgb))
             }
 
             this.blocks[bx + by * this.width + bz * this.slice] = block
@@ -111,9 +129,9 @@ class World {
             let bz = parseInt(data["z"]) - back
             let things = data["e"]
 
-            let px = bx * BLOCK_SIZE
-            let py = by * BLOCK_SIZE
-            let pz = bz * BLOCK_SIZE
+            let px = bx * BlockSize
+            let py = by * BlockSize
+            let pz = bz * BlockSize
 
             for (let t = 0; t < things.length; t++) {
                 let thing = things[t]
@@ -148,83 +166,83 @@ class World {
             Occluder.SetBlockVisible(block)
         }
         for (let i = 0; i < this.all; i++)
-            this.blocks[i].build_mesh(this)
+            this.blocks[i].BuildMesh(this)
     }
-    find_block(x, y, z) {
+    FindBlock(x, y, z) {
         let gx = Math.floor(x)
         let gy = Math.floor(y)
         let gz = Math.floor(z)
-        let bx = Math.floor(gx * INV_BLOCK_SIZE)
-        let by = Math.floor(gy * INV_BLOCK_SIZE)
-        let bz = Math.floor(gz * INV_BLOCK_SIZE)
-        let tx = gx - bx * BLOCK_SIZE
-        let ty = gy - by * BLOCK_SIZE
-        let tz = gz - bz * BLOCK_SIZE
+        let bx = Math.floor(gx * InverseBlockSize)
+        let by = Math.floor(gy * InverseBlockSize)
+        let bz = Math.floor(gz * InverseBlockSize)
+        let tx = gx - bx * BlockSize
+        let ty = gy - by * BlockSize
+        let tz = gz - bz * BlockSize
         let block = this.blocks[bx + by * this.width + bz * this.slice]
-        return block.tiles[tx + ty * BLOCK_SIZE + tz * BLOCK_SLICE].type
+        return block.tiles[tx + ty * BlockSize + tz * BLOCK_SLICE].type
     }
-    get_tile_pointer(cx, cy, cz, bx, by, bz) {
+    GetTilePointer(cx, cy, cz, bx, by, bz) {
         while (bx < 0) {
-            bx += BLOCK_SIZE
+            bx += BlockSize
             cx--
         }
-        while (bx >= BLOCK_SIZE) {
-            bx -= BLOCK_SIZE
+        while (bx >= BlockSize) {
+            bx -= BlockSize
             cx++
         }
         while (by < 0) {
-            by += BLOCK_SIZE
+            by += BlockSize
             cy--
         }
-        while (by >= BLOCK_SIZE) {
-            by -= BLOCK_SIZE
+        while (by >= BlockSize) {
+            by -= BlockSize
             cy++
         }
         while (bz < 0) {
-            bz += BLOCK_SIZE
+            bz += BlockSize
             cz--
         }
-        while (bz >= BLOCK_SIZE) {
-            bz -= BLOCK_SIZE
+        while (bz >= BlockSize) {
+            bz -= BlockSize
             cz++
         }
-        let block = this.get_block(cx, cy, cz)
+        let block = this.GetBlock(cx, cy, cz)
         if (block === null)
             return null
-        return block.get_tile_pointer_unsafe(bx, by, bz)
+        return block.GetTilePointerUnsafe(bx, by, bz)
     }
-    get_tile_type(cx, cy, cz, bx, by, bz) {
+    GetTileType(cx, cy, cz, bx, by, bz) {
         while (bx < 0) {
-            bx += BLOCK_SIZE
+            bx += BlockSize
             cx--
         }
-        while (bx >= BLOCK_SIZE) {
-            bx -= BLOCK_SIZE
+        while (bx >= BlockSize) {
+            bx -= BlockSize
             cx++
         }
         while (by < 0) {
-            by += BLOCK_SIZE
+            by += BlockSize
             cy--
         }
-        while (by >= BLOCK_SIZE) {
-            by -= BLOCK_SIZE
+        while (by >= BlockSize) {
+            by -= BlockSize
             cy++
         }
         while (bz < 0) {
-            bz += BLOCK_SIZE
+            bz += BlockSize
             cz--
         }
-        while (bz >= BLOCK_SIZE) {
-            bz -= BLOCK_SIZE
+        while (bz >= BlockSize) {
+            bz -= BlockSize
             cz++
         }
-        let block = this.get_block(cx, cy, cz)
+        let block = this.GetBlock(cx, cy, cz)
         if (block === null) {
             return TILE_NONE
         }
-        return block.get_tile_type_unsafe(bx, by, bz)
+        return block.GetTileTypeUnsafe(bx, by, bz)
     }
-    get_block(x, y, z) {
+    GetBlock(x, y, z) {
         if (x < 0 || x >= this.width)
             return null
         if (y < 0 || y >= this.height)
@@ -236,7 +254,7 @@ class World {
     AddThing(thing) {
         this.things[this.thingCount] = thing
         this.thingCount++
-        this.things_net[thing.NID] = thing
+        this.thingLookup[thing.NID] = thing
 
         let count = this.spriteCount[thing.SID]
         if (count) {
@@ -254,7 +272,85 @@ class World {
                 for (let j = i; j < this.thingCount - 1; j++) this.things[j] = this.things[j + 1]
                 this.thingCount--
                 this.spriteCount[thing.SID]--
-                delete this.things_net[thing.NID]
+                delete this.thingLookup[thing.NID]
+                break
+            }
+        }
+    }
+    AddItem(item) {
+        this.items[this.itemCount] = item
+        this.itemCount++
+        this.itemLookup[item.NID] = item
+
+        let count = this.spriteCount[item.SID]
+        if (count) {
+            this.spriteCount[item.SID] = count + 1
+            if ((count + 2) * 16 > this.spriteBuffer[item.SID].vertices.length)
+                this.spriteBuffer[item.SID] = RenderBuffer.Expand(this.gl, this.spriteBuffer[item.SID])
+        } else {
+            this.spriteCount[item.SID] = 1
+            this.spriteBuffer[item.SID] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
+        }
+    }
+    RemoveItem(item) {
+        for (let i = 0; i < this.itemCount; i++) {
+            if (this.items[i] === item) {
+                for (let j = i; j < this.itemCount - 1; j++) this.items[j] = this.items[j + 1]
+                this.itemCount--
+                this.spriteCount[item.SID]--
+                delete this.itemLookup[item.NID]
+                break
+            }
+        }
+    }
+    AddMissile(missile) {
+        this.missiles[this.missileCount] = missile
+        this.missileCount++
+        this.missileLookup[missile.NID] = missile
+
+        let count = this.spriteCount[missile.SID]
+        if (count) {
+            this.spriteCount[missile.SID] = count + 1
+            if ((count + 2) * 16 > this.spriteBuffer[missile.SID].vertices.length)
+                this.spriteBuffer[missile.SID] = RenderBuffer.Expand(this.gl, this.spriteBuffer[missile.SID])
+        } else {
+            this.spriteCount[missile.SID] = 1
+            this.spriteBuffer[missile.SID] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
+        }
+    }
+    RemoveMissile(missile) {
+        for (let i = 0; i < this.missileCount; i++) {
+            if (this.missiles[i] === missile) {
+                for (let j = i; j < this.missileCount - 1; j++) this.missiles[j] = this.missiles[j + 1]
+                this.missileCount--
+                this.spriteCount[missile.SID]--
+                delete this.missileLookup[missile.NID]
+                break
+            }
+        }
+    }
+    AddParticle(particle) {
+        this.particles[this.particleCount] = particle
+        this.particleCount++
+        this.particleLookup[particle.NID] = particle
+
+        let count = this.spriteCount[particle.SID]
+        if (count) {
+            this.spriteCount[particle.SID] = count + 1
+            if ((count + 2) * 16 > this.spriteBuffer[particle.SID].vertices.length)
+                this.spriteBuffer[particle.SID] = RenderBuffer.Expand(this.gl, this.spriteBuffer[particle.SID])
+        } else {
+            this.spriteCount[particle.SID] = 1
+            this.spriteBuffer[particle.SID] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
+        }
+    }
+    RemoveParticle(particle) {
+        for (let i = 0; i < this.particleCount; i++) {
+            if (this.particles[i] === particle) {
+                for (let j = i; j < this.particleCount - 1; j++) this.particles[j] = this.particles[j + 1]
+                this.particleCount--
+                this.spriteCount[particle.SID]--
+                delete this.particleLookup[particle.NID]
                 break
             }
         }
@@ -262,6 +358,10 @@ class World {
     update() {
         for (let i = 0; i < this.thingCount; i++)
             this.things[i].Update()
+        for (let i = 0; i < this.missileCount; i++)
+            this.missiles[i].Update()
+        for (let i = 0; i < this.particleCount; i++)
+            this.particles[i].Update()
     }
     render(g, interpolation, x, y, z, camX, camZ, camAngle) {
         let gl = this.gl
@@ -282,7 +382,7 @@ class World {
         for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
             let block = this.viewable[i]
 
-            block.render_things(interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle)
+            block.RenderThings(interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle)
 
             let mesh = block.mesh
             if (mesh.vertex_pos === 0)

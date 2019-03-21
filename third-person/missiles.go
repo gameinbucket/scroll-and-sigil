@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"strconv"
+)
+
 // Missile struct
 type Missile struct {
 	World               *World
@@ -11,7 +16,6 @@ type Missile struct {
 	MaxBX, MaxBY, MaxBZ int
 	Radius              float32
 	Height              float32
-	GC                  bool
 	Damage              int
 	Hit                 func(thing *Thing)
 }
@@ -63,11 +67,13 @@ func (me *Missile) Collision() bool {
 				block := me.World.GetBlock(gx, gy, gz)
 				for t := 0; t < block.ThingCount; t++ {
 					thing := block.Things[t]
-					if _, ok := searched[thing]; !ok {
-						searched[thing] = true
-						if me.Overlap(thing) {
-							me.Hit(thing)
-							return true
+					if thing.Health > 0 {
+						if _, ok := searched[thing]; !ok {
+							searched[thing] = true
+							if me.Overlap(thing) {
+								me.Hit(thing)
+								return true
+							}
 						}
 					}
 				}
@@ -101,14 +107,14 @@ func (me *Missile) Collision() bool {
 }
 
 // Update func
-func (me *Missile) Update() {
+func (me *Missile) Update() bool {
 	if me.Collision() {
-		return
+		return true
 	}
 	me.X += me.DX
 	me.Y += me.DY
 	me.Z += me.DZ
-	me.Collision()
+	return me.Collision()
 }
 
 // NewPlasma func
@@ -130,18 +136,37 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) *Missile {
 	world.AddMissile(me)
 	me.BlockBorders()
 	me.AddToBlocks()
+
+	fmt.Println("plasma!")
+	world.Snapshot.WriteString("{u:")
+	world.Snapshot.WriteString(me.UID)
+	world.Snapshot.WriteString(",n:")
+	world.Snapshot.WriteString(me.NID)
+	world.Snapshot.WriteString(",x:")
+	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+	world.Snapshot.WriteString(",y:")
+	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	world.Snapshot.WriteString(",z:")
+	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	world.Snapshot.WriteString(",dx:")
+	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.DX), 'f', -1, 32))
+	world.Snapshot.WriteString(",dy:")
+	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.DY), 'f', -1, 32))
+	world.Snapshot.WriteString(",dz:")
+	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.DZ), 'f', -1, 32))
+	world.Snapshot.WriteString("},")
+
 	return me
 }
 
 // PlasmaHit func
 func (me *Missile) PlasmaHit(thing *Thing) {
+	fmt.Println("plasma hit", thing)
 	me.X -= me.DX
 	me.Y -= me.DY
 	me.Z -= me.DZ
 	if thing != nil {
 		thing.Damage(1)
 	}
-	// client impact sound
 	NewPlasmaExplosion(me.World, me.X, me.Y, me.Z)
-	me.GC = true
 }

@@ -1,4 +1,4 @@
-# sword and sigil
+# scroll and sigil
 
 ## todo
 

@@ -30,8 +30,8 @@ class Light {
         ]
     }
     static Visit(world, bx, by, bz, red, green, blue) {
-        let tile = world.get_tile_pointer(LIGHT_BLOCK_X, LIGHT_BLOCK_Y, LIGHT_BLOCK_Z, bx, by, bz)
-        if (tile === null || TILE_CLOSED[tile.type])
+        let tile = world.GetTilePointer(LIGHT_BLOCK_X, LIGHT_BLOCK_Y, LIGHT_BLOCK_Z, bx, by, bz)
+        if (tile === null || TileClosed[tile.type])
             return
         if (tile.red >= red || tile.green >= green || tile.blue >= blue)
             return
@@ -54,7 +54,7 @@ class Light {
 
         let color = Render.UnpackRgb(light.rgb)
 
-        let index = light.x + light.y * BLOCK_SIZE + light.z * BLOCK_SLICE
+        let index = light.x + light.y * BlockSize + light.z * BLOCK_SLICE
         let tile = block.tiles[index]
         tile.red = color[0]
         tile.green = color[1]
@@ -76,7 +76,7 @@ class Light {
                 LIGHT_POS = 0
             LIGHT_NUM--
 
-            let node = world.get_tile_pointer(LIGHT_BLOCK_X, LIGHT_BLOCK_Y, LIGHT_BLOCK_Z, x, y, z)
+            let node = world.GetTilePointer(LIGHT_BLOCK_X, LIGHT_BLOCK_Y, LIGHT_BLOCK_Z, x, y, z)
             if (node === null)
                 continue
 
@@ -93,12 +93,12 @@ class Light {
         }
     }
     static Remove(world, x, y, z) {
-        let cx = Math.floor(x * INV_BLOCK_SIZE)
-        let cy = Math.floor(y * INV_BLOCK_SIZE)
-        let cz = Math.floor(z * INV_BLOCK_SIZE)
-        let bx = x % BLOCK_SIZE
-        let by = y % BLOCK_SIZE
-        let bz = z % BLOCK_SIZE
+        let cx = Math.floor(x * InverseBlockSize)
+        let cy = Math.floor(y * InverseBlockSize)
+        let cz = Math.floor(z * InverseBlockSize)
+        let bx = x % BlockSize
+        let by = y % BlockSize
+        let bz = z % BlockSize
         let block = world.blocks[cx + cy * world.width + cz * world.slice]
         for (let i = 0; i < block.lights.length; i++) {
             let light = block.lights[i]

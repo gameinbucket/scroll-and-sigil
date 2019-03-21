@@ -1,5 +1,7 @@
 animations{
     idle[walk-0]
     walk[walk-0, walk-1]
+    melee[melee-0, melee-1]
+    missile[missile-0, missile-1]
     death[death-0, death-1]
 }
