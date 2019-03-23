@@ -8,7 +8,7 @@ import (
 
 // Thing constants
 const (
-	AnimationRate       = 10 // 50 millisecond tick = 20 updates per second (want 1 frame every 2 seconds)
+	AnimationRate       = 5
 	Gravity             = 0.01
 	AnimationNotDone    = 0
 	AnimationAlmostDone = 1

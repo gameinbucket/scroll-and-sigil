@@ -1,6 +1,6 @@
 const Gravity = 0.01
 
-const AnimationRate = 32 // Math.floor(NetworkUpdateRate / 16)
+const AnimationRate = 16
 
 const AnimationNotDone = 0
 const AnimationAlmostDone = 1
@@ -11,6 +11,28 @@ const AnimationFrontSide = 1
 const AnimationSide = 2
 const AnimationBackSide = 3
 const AnimationBack = 4
+
+const DirectionNorth = 0
+const DirectionNorthEast = 1
+const DirectionEast = 2
+const DirectionSouthEast = 3
+const DirectionSouth = 4
+const DirectionSouthWest = 5
+const DirectionWest = 6
+const DirectionNorthWest = 7
+const DirectionCount = 8
+const DirectionNone = 8
+
+const DirectionToAngle = [
+    0.0 * DegToRad,
+    45.0 * DegToRad,
+    90.0 * DegToRad,
+    135.0 * DegToRad,
+    180.0 * DegToRad,
+    225.0 * DegToRad,
+    270.0 * DegToRad,
+    315.0 * DegToRad
+]
 
 class Thing {
     constructor() {

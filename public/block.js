@@ -188,35 +188,35 @@ class Block {
                     let ao_ppp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by + 1, bz + 1)]
                     let ao_pmp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by - 1, bz + 1)]
 
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_X][0] = Tile.Ambient(ao_pmz, ao_pzm, ao_pmm)
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_X][1] = Tile.Ambient(ao_ppz, ao_pzm, ao_ppm)
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_X][2] = Tile.Ambient(ao_ppz, ao_pzp, ao_ppp)
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_X][3] = Tile.Ambient(ao_pmz, ao_pzp, ao_pmp)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveX][0] = Tile.Ambient(ao_pmz, ao_pzm, ao_pmm)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveX][1] = Tile.Ambient(ao_ppz, ao_pzm, ao_ppm)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveX][2] = Tile.Ambient(ao_ppz, ao_pzp, ao_ppp)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveX][3] = Tile.Ambient(ao_pmz, ao_pzp, ao_pmp)
 
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_X][0] = Tile.Ambient(ao_mmz, ao_mzm, ao_mmm)
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_X][1] = Tile.Ambient(ao_mmz, ao_mzp, ao_mmp)
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_X][2] = Tile.Ambient(ao_mpz, ao_mzp, ao_mpp)
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_X][3] = Tile.Ambient(ao_mpz, ao_mzm, ao_mpm)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeX][0] = Tile.Ambient(ao_mmz, ao_mzm, ao_mmm)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeX][1] = Tile.Ambient(ao_mmz, ao_mzp, ao_mmp)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeX][2] = Tile.Ambient(ao_mpz, ao_mzp, ao_mpp)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeX][3] = Tile.Ambient(ao_mpz, ao_mzm, ao_mpm)
 
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_Y][0] = Tile.Ambient(ao_mpz, ao_zpm, ao_mpm)
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_Y][1] = Tile.Ambient(ao_mpz, ao_zpp, ao_mpp)
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_Y][2] = Tile.Ambient(ao_ppz, ao_zpp, ao_ppp)
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_Y][3] = Tile.Ambient(ao_ppz, ao_zpm, ao_ppm)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveY][0] = Tile.Ambient(ao_mpz, ao_zpm, ao_mpm)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveY][1] = Tile.Ambient(ao_mpz, ao_zpp, ao_mpp)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveY][2] = Tile.Ambient(ao_ppz, ao_zpp, ao_ppp)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveY][3] = Tile.Ambient(ao_ppz, ao_zpm, ao_ppm)
 
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_Y][0] = Tile.Ambient(ao_mmz, ao_zmm, ao_mmm)
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_Y][1] = Tile.Ambient(ao_pmz, ao_zmm, ao_pmm)
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_Y][2] = Tile.Ambient(ao_pmz, ao_zmp, ao_pmp)
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_Y][3] = Tile.Ambient(ao_mmz, ao_zmp, ao_mmp)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeY][0] = Tile.Ambient(ao_mmz, ao_zmm, ao_mmm)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeY][1] = Tile.Ambient(ao_pmz, ao_zmm, ao_pmm)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeY][2] = Tile.Ambient(ao_pmz, ao_zmp, ao_pmp)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeY][3] = Tile.Ambient(ao_mmz, ao_zmp, ao_mmp)
 
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_Z][0] = Tile.Ambient(ao_pzp, ao_zmp, ao_pmp)
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_Z][1] = Tile.Ambient(ao_pzp, ao_zpp, ao_ppp)
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_Z][2] = Tile.Ambient(ao_mzp, ao_zpp, ao_mpp)
-                    BLOCK_MESH_AMBIENT[index][WORLD_POSITIVE_Z][3] = Tile.Ambient(ao_mzp, ao_zmp, ao_mmp)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveZ][0] = Tile.Ambient(ao_pzp, ao_zmp, ao_pmp)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveZ][1] = Tile.Ambient(ao_pzp, ao_zpp, ao_ppp)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveZ][2] = Tile.Ambient(ao_mzp, ao_zpp, ao_mpp)
+                    BLOCK_MESH_AMBIENT[index][WorldPositiveZ][3] = Tile.Ambient(ao_mzp, ao_zmp, ao_mmp)
 
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_Z][0] = Tile.Ambient(ao_mzm, ao_zmm, ao_mmm)
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_Z][1] = Tile.Ambient(ao_mzm, ao_zpm, ao_mpm)
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_Z][2] = Tile.Ambient(ao_pzm, ao_zpm, ao_ppm)
-                    BLOCK_MESH_AMBIENT[index][WORLD_NEGATIVE_Z][3] = Tile.Ambient(ao_pzm, ao_zmm, ao_pmm)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeZ][0] = Tile.Ambient(ao_mzm, ao_zmm, ao_mmm)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeZ][1] = Tile.Ambient(ao_mzm, ao_zpm, ao_mpm)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeZ][2] = Tile.Ambient(ao_pzm, ao_zpm, ao_ppm)
+                    BLOCK_MESH_AMBIENT[index][WorldNegativeZ][3] = Tile.Ambient(ao_pzm, ao_zmm, ao_pmm)
                 }
             }
         }
@@ -303,35 +303,35 @@ class Block {
     }
     LightOfSide(xs, ys, zs, side) {
         switch (side) {
-            case WORLD_POSITIVE_X:
+            case WorldPositiveX:
                 return [
                     BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE]
                 ]
-            case WORLD_NEGATIVE_X:
+            case WorldNegativeX:
                 return [
                     BLOCK_MESH_COLOR[xs + ys * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + (ys + 1) * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE]
                 ]
-            case WORLD_POSITIVE_Y:
+            case WorldPositiveY:
                 return [
                     BLOCK_MESH_COLOR[xs + (ys + 1) * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE]
                 ]
-            case WORLD_NEGATIVE_Y:
+            case WorldNegativeY:
                 return [
                     BLOCK_MESH_COLOR[xs + ys * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE]
                 ]
-            case WORLD_POSITIVE_Z:
+            case WorldPositiveZ:
                 return [
                     BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
                     BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],

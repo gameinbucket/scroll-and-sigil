@@ -59,27 +59,27 @@ class Occluder {
         let y = B.y
         let z = B.z
         switch (to) {
-            case WORLD_POSITIVE_X:
+            case WorldPositiveX:
                 x++
                 if (x === world.width) return
                 break
-            case WORLD_NEGATIVE_X:
+            case WorldNegativeX:
                 x--
                 if (x === -1) return
                 break
-            case WORLD_POSITIVE_Y:
+            case WorldPositiveY:
                 y++
                 if (y === world.height) return
                 break
-            case WORLD_NEGATIVE_Y:
+            case WorldNegativeY:
                 y--
                 if (y === -1) return
                 break
-            case WORLD_POSITIVE_Z:
+            case WorldPositiveZ:
                 z++
                 if (z === world.length) return
                 break
-            case WORLD_NEGATIVE_Z:
+            case WorldNegativeZ:
                 z--
                 if (z === -1) return
                 break
@@ -89,23 +89,23 @@ class Occluder {
             return
         if (from >= 0) {
             switch (from) {
-                case WORLD_POSITIVE_X:
-                    from = WORLD_NEGATIVE_X
+                case WorldPositiveX:
+                    from = WorldNegativeX
                     break
-                case WORLD_NEGATIVE_X:
-                    from = WORLD_POSITIVE_X
+                case WorldNegativeX:
+                    from = WorldPositiveX
                     break
-                case WORLD_POSITIVE_Y:
-                    from = WORLD_NEGATIVE_Y
+                case WorldPositiveY:
+                    from = WorldNegativeY
                     break
-                case WORLD_NEGATIVE_Y:
-                    from = WORLD_POSITIVE_Y
+                case WorldNegativeY:
+                    from = WorldPositiveY
                     break
-                case WORLD_POSITIVE_Z:
-                    from = WORLD_NEGATIVE_Z
+                case WorldPositiveZ:
+                    from = WorldNegativeZ
                     break
-                case WORLD_NEGATIVE_Z:
-                    from = WORLD_POSITIVE_Z
+                case WorldNegativeZ:
+                    from = WorldPositiveZ
                     break
             }
             let side_a, side_b
@@ -255,23 +255,23 @@ class Occluder {
 
             OCCLUSION_QUEUE_NUM--
 
-            if (from !== WORLD_NEGATIVE_X)
-                this.visit(world, from, B, WORLD_POSITIVE_X)
+            if (from !== WorldNegativeX)
+                this.visit(world, from, B, WorldPositiveX)
 
-            if (from !== WORLD_POSITIVE_X)
-                this.visit(world, from, B, WORLD_NEGATIVE_X)
+            if (from !== WorldPositiveX)
+                this.visit(world, from, B, WorldNegativeX)
 
-            if (from !== WORLD_NEGATIVE_Y)
-                this.visit(world, from, B, WORLD_POSITIVE_Y)
+            if (from !== WorldNegativeY)
+                this.visit(world, from, B, WorldPositiveY)
 
-            if (from !== WORLD_POSITIVE_Y)
-                this.visit(world, from, B, WORLD_NEGATIVE_Y)
+            if (from !== WorldPositiveY)
+                this.visit(world, from, B, WorldNegativeY)
 
-            if (from !== WORLD_NEGATIVE_Z)
-                this.visit(world, from, B, WORLD_POSITIVE_Z)
+            if (from !== WorldNegativeZ)
+                this.visit(world, from, B, WorldPositiveZ)
 
-            if (from !== WORLD_POSITIVE_Z)
-                this.visit(world, from, B, WORLD_NEGATIVE_Z)
+            if (from !== WorldPositiveZ)
+                this.visit(world, from, B, WorldNegativeZ)
         }
     }
 }

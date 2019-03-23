@@ -132,7 +132,7 @@ class Cast {
                 if (next_x < next_z) {
                     x += inc_x
                     if (x < 0 || x >= world.blocks_w) {
-                        return [x + 0.5, y + 0.5, z + 0.5, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
+                        return [x + 0.5, y + 0.5, z + 0.5, inc_x < 0 ? WorldPositiveX : WorldNegativeX]
                     }
                     let cx = Math.floor(x * InverseBlockSize)
                     let cy = Math.floor(y * InverseBlockSize)
@@ -142,7 +142,7 @@ class Cast {
                     let bz = z % BlockSize
                     if (TileClosed[world.GetTileType(cx, cy, cz, bx, by, bz)]) {
                         x -= inc_x
-                        return [x, y, z, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
+                        return [x, y, z, inc_x < 0 ? WorldPositiveX : WorldNegativeX]
                     }
                     next_x += dt_dx
                 } else {
@@ -158,7 +158,7 @@ class Cast {
                     let bz = z % BlockSize
                     if (TileClosed[world.GetTileType(cx, cy, cz, bx, by, bz)]) {
                         z -= inc_z
-                        return [x, y, z, inc_x < 0 ? WORLD_POSITIVE_X : WORLD_NEGATIVE_X]
+                        return [x, y, z, inc_x < 0 ? WorldPositiveX : WorldNegativeX]
                     }
                     next_z += dt_dz
                 }

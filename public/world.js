@@ -1,15 +1,11 @@
 const NetworkUpdateRate = 50
 
-const WORLD_POSITIVE_X = 0
-const WORLD_POSITIVE_Y = 1
-const WORLD_POSITIVE_Z = 2
-const WORLD_NEGATIVE_X = 3
-const WORLD_NEGATIVE_Y = 4
-const WORLD_NEGATIVE_Z = 5
-
-const Tau = Math.PI * 2.0
-const RadToDeg = 180.0 / Math.PI
-const DegToRad = Math.PI / 180.0
+const WorldPositiveX = 0
+const WorldPositiveY = 1
+const WorldPositiveZ = 2
+const WorldNegativeX = 3
+const WorldNegativeY = 4
+const WorldNegativeZ = 5
 
 class World {
     constructor(g, gl) {
@@ -415,28 +411,28 @@ class World {
             RenderSystem.BindVao(gl, mesh)
 
             if (x == block.x) {
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_X], block.count_side[WORLD_POSITIVE_X])
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_X], block.count_side[WORLD_NEGATIVE_X])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveX], block.count_side[WorldPositiveX])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeX], block.count_side[WorldNegativeX])
             } else if (x > block.x)
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_X], block.count_side[WORLD_POSITIVE_X])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveX], block.count_side[WorldPositiveX])
             else
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_X], block.count_side[WORLD_NEGATIVE_X])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeX], block.count_side[WorldNegativeX])
 
             if (y == block.y) {
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_Y], block.count_side[WORLD_POSITIVE_Y])
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_Y], block.count_side[WORLD_NEGATIVE_Y])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveY], block.count_side[WorldPositiveY])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeY], block.count_side[WorldNegativeY])
             } else if (y > block.y)
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_Y], block.count_side[WORLD_POSITIVE_Y])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveY], block.count_side[WorldPositiveY])
             else
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_Y], block.count_side[WORLD_NEGATIVE_Y])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeY], block.count_side[WorldNegativeY])
 
             if (z == block.z) {
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_Z], block.count_side[WORLD_POSITIVE_Z])
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_Z], block.count_side[WORLD_NEGATIVE_Z])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveZ], block.count_side[WorldPositiveZ])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeZ], block.count_side[WorldNegativeZ])
             } else if (z > block.z)
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_POSITIVE_Z], block.count_side[WORLD_POSITIVE_Z])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveZ], block.count_side[WorldPositiveZ])
             else
-                RenderSystem.DrawRange(gl, block.begin_side[WORLD_NEGATIVE_Z], block.count_side[WORLD_NEGATIVE_Z])
+                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeZ], block.count_side[WorldNegativeZ])
         }
 
         g.set_program(gl, "texture3d")

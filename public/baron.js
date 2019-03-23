@@ -51,7 +51,8 @@ class Baron extends Thing {
                 Sounds["baron-missile"].play()
                 break
             case BaronChase:
-                Sounds["baron-scream"].play()
+                if (Math.random() < 0.1)
+                    Sounds["baron-scream"].play()
                 for (let i = 0; i < 20; i++) {
                     let spriteName = "blood-" + Math.floor(Math.random() * 3)
 
@@ -67,7 +68,6 @@ class Baron extends Thing {
 
                     new Blood(this.World, x, y, z, dx, dy, dz, spriteName)
                 }
-                break
             default:
                 this.Animation = BaronAnimationWalk
                 break

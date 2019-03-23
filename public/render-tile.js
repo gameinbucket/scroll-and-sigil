@@ -1,7 +1,7 @@
 class RenderTile {
 	static Side(buffer, side, x, y, z, texture, rgb_a, rgb_b, rgb_c, rgb_d) {
 		switch (side) {
-			case WORLD_POSITIVE_X:
+			case WorldPositiveX:
 				buffer.vertices[buffer.vertex_pos++] = x + 1.0
 				buffer.vertices[buffer.vertex_pos++] = y
 				buffer.vertices[buffer.vertex_pos++] = z
@@ -38,7 +38,7 @@ class RenderTile {
 				buffer.vertices[buffer.vertex_pos++] = texture[0]
 				buffer.vertices[buffer.vertex_pos++] = texture[3]
 				break
-			case WORLD_NEGATIVE_X:
+			case WorldNegativeX:
 				buffer.vertices[buffer.vertex_pos++] = x
 				buffer.vertices[buffer.vertex_pos++] = y
 				buffer.vertices[buffer.vertex_pos++] = z
@@ -75,7 +75,7 @@ class RenderTile {
 				buffer.vertices[buffer.vertex_pos++] = texture[2]
 				buffer.vertices[buffer.vertex_pos++] = texture[1]
 				break
-			case WORLD_POSITIVE_Y:
+			case WorldPositiveY:
 				buffer.vertices[buffer.vertex_pos++] = x
 				buffer.vertices[buffer.vertex_pos++] = y + 1.0
 				buffer.vertices[buffer.vertex_pos++] = z
@@ -112,7 +112,7 @@ class RenderTile {
 				buffer.vertices[buffer.vertex_pos++] = texture[2]
 				buffer.vertices[buffer.vertex_pos++] = texture[1]
 				break
-			case WORLD_NEGATIVE_Y:
+			case WorldNegativeY:
 				buffer.vertices[buffer.vertex_pos++] = x
 				buffer.vertices[buffer.vertex_pos++] = y
 				buffer.vertices[buffer.vertex_pos++] = z
@@ -149,7 +149,7 @@ class RenderTile {
 				buffer.vertices[buffer.vertex_pos++] = texture[0]
 				buffer.vertices[buffer.vertex_pos++] = texture[3]
 				break
-			case WORLD_POSITIVE_Z:
+			case WorldPositiveZ:
 				buffer.vertices[buffer.vertex_pos++] = x + 1.0
 				buffer.vertices[buffer.vertex_pos++] = y
 				buffer.vertices[buffer.vertex_pos++] = z + 1.0
@@ -186,7 +186,7 @@ class RenderTile {
 				buffer.vertices[buffer.vertex_pos++] = texture[0]
 				buffer.vertices[buffer.vertex_pos++] = texture[1]
 				break
-			case WORLD_NEGATIVE_Z:
+			case WorldNegativeZ:
 				buffer.vertices[buffer.vertex_pos++] = x
 				buffer.vertices[buffer.vertex_pos++] = y
 				buffer.vertices[buffer.vertex_pos++] = z

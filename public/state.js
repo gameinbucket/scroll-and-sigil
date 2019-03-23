@@ -27,18 +27,8 @@ class WorldState {
                         thing.Angle = parseFloat(snap["a"])
                     } else if ("d" in snap) {
                         let direction = parseInt(snap["d"])
-                        const angles = [
-                            22.5 * DegToRad,
-                            67.5 * DegToRad,
-                            112.5 * DegToRad,
-                            157.5 * DegToRad,
-                            202.5 * DegToRad,
-                            247.5 * DegToRad,
-                            292.5 * DegToRad,
-                            337.5 * DegToRad,
-                            22.5 * DegToRad, // MoveDirection = None
-                        ]
-                        thing.Angle = angles[direction]
+                        if (direction !== DirectionNone)
+                            thing.Angle = DirectionToAngle[direction]
                     }
                     if ("s" in snap)
                         thing.NetUpdateState(parseInt(snap["s"]))
@@ -75,10 +65,12 @@ class WorldState {
             if (cam.ry >= Tau)
                 cam.ry -= Tau
         }
-        if (cam.rx > -0.25 && Input.Is("ArrowUp"))
+        if (cam.rx > -0.25 && Input.Is("ArrowUp")) {
             cam.rx -= 0.05
-        if (cam.rx < 0.25 && Input.Is("ArrowDown"))
+        }
+        if (cam.rx < 0.25 && Input.Is("ArrowDown")) {
             cam.rx += 0.05
+        }
 
         SOCKET_SEND += "a:" + cam.ry + " "
 
