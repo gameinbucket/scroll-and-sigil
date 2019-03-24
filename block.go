@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -133,8 +132,6 @@ func (me *Block) RemoveItem(t *Item) {
 
 // AddMissile func
 func (me *Block) AddMissile(t *Missile) {
-	fmt.Println(t)
-	fmt.Println(me.Missiles)
 	if me.MissileCount == len(me.Missiles) {
 		array := make([]*Missile, me.MissileCount+5)
 		copy(array, me.Missiles)

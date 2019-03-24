@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -35,6 +36,7 @@ func (me *Missile) AddToBlocks() {
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
+				fmt.Println("fix out of bounds>", gx, gy, gz)
 				me.World.GetBlock(gx, gy, gz).AddMissile(me)
 			}
 		}

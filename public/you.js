@@ -42,102 +42,73 @@ class You extends Thing {
         }
     }
     Update() {
-        let moving = false
-
-        let goalA = 999.0
-        let goalB = 999.0
+        let direction = null
+        let goal = null
 
         if (Input.Is("w")) {
-            SocketSend += "mf "
-            moving = true
-            goalA = this.camera.ry
+            direction = "w"
+            goal = this.camera.ry
         }
 
         if (Input.Is("s")) {
-            SocketSend += "mb "
-            moving = true
-            if (goalA === 999.0) {
-                goalA = this.camera.ry + Math.PI
-                if (goalA >= Tau)
-                    goalA -= Tau
+            if (direction === null) {
+                direction = "s"
+                goal = this.camera.ry + Math.PI
             } else {
-                goalA = 999.0
+                direction = null
+                goal = null
             }
         }
 
         if (Input.Is("a")) {
-            SocketSend += "sl "
-            moving = true
-            goalB = this.camera.ry - HalfPi
-            if (goalB < 0)
-                goalB += Tau
+            if (direction === null) {
+                direction = "a"
+                goal = this.camera.ry - HalfPi
+            } else if (direction === "w") {
+                direction = "wa"
+                goal -= QuarterPi
+            } else if (direction === "s") {
+                direction = "sa"
+                goal += QuarterPi
+            }
         }
 
         if (Input.Is("d")) {
-            SocketSend += "sr "
-            moving = true
-            if (goalB === 999.0) {
-                goalB = this.camera.ry + HalfPi
-                if (goalB >= Tau)
-                    goalB -= Tau
-            } else {
-                goalB = 999.0
-            }
+            if (direction === null)
+                goal = this.camera.ry + HalfPi
+            else if (direction === "a")
+                goal = null
+            else if (direction === "wa")
+                goal = this.camera.ry
+            else if (direction === "sa")
+                goal = this.camera.ry + Math.PI
+            else if (direction === "w")
+                goal += QuarterPi
+            else if (direction === "s")
+                goal -= QuarterPi
         }
 
-        const rate = 0.03
-
-        let goal
-        if (goalA === 999.0) {
-            if (goalB === 999.0) {
-                goal = 999.0
-            } else {
-                goal = goalB
-            }
-        } else {
-            if (goalB === 999.0) {
-                goal = goalA
-            } else {
-                goal = (goalA + goalB) * 0.5
-                if (goal >= Tau)
-                    goal -= Tau
-            }
-        }
-
-        if (goal != 999.0) {
-            let diff = this.Angle - goal
-            while (diff <= Math.PI)
-                diff += Tau
-            while (diff > Math.PI)
-                diff -= Tau
-            if (diff < 0) {
-                if (-diff < rate)
-                    this.Angle = goal
-                else {
-                    this.Angle += rate
-                    if (this.Angle >= Tau)
-                        this.Angle -= Tau
-                }
-            } else if (diff < rate)
-                this.Angle = goal
-            else {
-                this.Angle -= rate
-                if (this.Angle < 0)
-                    this.Angle += Tau
-            }
-            SocketSend += "a:" + this.Angle + " "
-        }
-
-        if (moving) {
-            if (this.Animation === BaronAnimationIdle)
-                this.Animation = BaronAnimationWalk
-            if (this.UpdateAnimation() === AnimationDone) {
-                this.AnimationFrame = 0
-            }
-        } else {
+        if (goal === null) {
             this.AnimationMod = 0
             this.AnimationFrame = 0
             this.Animation = BaronAnimationIdle
+        } else {
+            if (goal < 0)
+                goal += Tau
+            else if (goal >= Tau)
+                goal -= Tau
+
+            if (this.Angle !== goal) {
+                this.Angle = goal
+                SocketSend += "a:" + this.Angle + " "
+            } else
+                SocketSend += "m "
+
+            if (this.Animation === BaronAnimationIdle)
+                this.Animation = BaronAnimationWalk
+
+            if (this.UpdateAnimation() === AnimationDone)
+                this.AnimationFrame = 0
         }
     }
 }

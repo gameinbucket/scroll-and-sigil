@@ -61,42 +61,26 @@ func (me *You) Update() {
 	person := me.Person
 
 	if person != nil && person.InputCount > 0 {
-		mf := false
-		mb := false
-		sl := false
-		sr := false
+
+		moved := false
 
 		for i := 0; i < person.InputCount; i++ {
 			input := person.InputQueue[i]
 
-			if strings.HasPrefix(input, "a:") {
-				angle := strings.Split(input, "a:")[1]
-				value, _ := strconv.ParseFloat(angle, 32)
-				me.Angle = float32(value)
-			}
+			if !moved {
+				if input == "m" {
+					me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
+					me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
+					moved = true
+				} else if strings.HasPrefix(input, "a:") {
+					angle := strings.Split(input, "a:")[1]
+					value, _ := strconv.ParseFloat(angle, 32)
+					me.Angle = float32(value)
 
-			if !mf && input == "mf" {
-				me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
-				me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
-				mf = true
-			}
-
-			if !mb && input == "mb" {
-				me.DX -= float32(math.Sin(float64(me.Angle))) * me.Speed
-				me.DZ += float32(math.Cos(float64(me.Angle))) * me.Speed
-				mb = true
-			}
-
-			if !sl && input == "sl" {
-				me.DX -= float32(math.Cos(float64(me.Angle))) * me.Speed
-				me.DZ -= float32(math.Sin(float64(me.Angle))) * me.Speed
-				sl = true
-			}
-
-			if !sr && input == "sr" {
-				me.DX += float32(math.Cos(float64(me.Angle))) * me.Speed
-				me.DZ += float32(math.Sin(float64(me.Angle))) * me.Speed
-				sr = true
+					me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
+					me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
+					moved = true
+				}
 			}
 		}
 		person.InputCount = 0
