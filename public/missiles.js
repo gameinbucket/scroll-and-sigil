@@ -99,12 +99,15 @@ class Missile {
         if (this.Collision()) {
             return true
         }
+        this.RemoveFromBlocks()
         this.X += this.DX
         this.Y += this.DY
         this.Z += this.DZ
+        this.BlockBorders()
+        this.AddToBlocks()
         return this.Collision()
     }
-    Render(interpolation, spriteBuffer, camX, camZ, camAngle) {
+    Render(spriteBuffer, camX, camZ, camAngle) {
         let sin = camX - this.X
         let cos = camZ - this.Z
         let length = Math.sqrt(sin * sin + cos * cos)
@@ -128,8 +131,8 @@ class Plasma extends Missile {
         this.DX = dx
         this.DY = dy
         this.DZ = dz
-        this.Radius = 0.4
-        this.Height = 1.0
+        this.Radius = 0.2
+        this.Height = 0.2
         this.Damage = damage
         this.Hit = this.PlasmaHit
         world.AddMissile(this)

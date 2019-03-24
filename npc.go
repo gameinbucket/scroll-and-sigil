@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 // Npc constants
 const (
 	DirectionNorth     = 0
@@ -36,10 +34,12 @@ var (
 		DirectionNorthWest,
 	}
 	NpcMoveX = []float32{
-		0.0, 0.5, 1.0, 0.5, 0.0, -0.5, -1.0, -0.5,
+		0.0, -0.5, -1.0, -0.5, 0.0, 0.5, 1.0, 0.5,
+		// new 0.0, 0.5, 1.0, 0.5, 0.0, -0.5, -1.0, -0.5,
 	}
 	NpcMoveZ = []float32{
-		-1.0, -0.5, 0.0, 0.5, 1.0, 0.5, 0.0, -0.5,
+		1.0, 0.5, 0.0, -0.5, -1.0, -0.5, 0.0, 0.5,
+		// new -1.0, -0.5, 0.0, 0.5, 1.0, 0.5, 0.0, -0.5,
 	}
 )
 
@@ -63,22 +63,22 @@ func (me *Npc) NewDirection() {
 
 	var directionX int
 	if dx > epsilon {
-		directionX = DirectionEast
-		// fmt.Println("East (+)", dx)
-	} else if dx < -epsilon {
+		// new directionX = DirectionEast
 		directionX = DirectionWest
-		// fmt.Println("West (-)", dx)
+	} else if dx < -epsilon {
+		// new directionX = DirectionWest
+		directionX = DirectionEast
 	} else {
 		directionX = DirectionNone
 	}
 
 	var directionZ int
 	if dz > epsilon {
-		directionZ = DirectionSouth
-		// fmt.Println("South (+)", dz)
-	} else if dz < -epsilon {
+		// directionZ = DirectionSouth
 		directionZ = DirectionNorth
-		// fmt.Println("North (-)", dz)
+	} else if dz < -epsilon {
+		// directionZ = DirectionNorth
+		directionZ = DirectionSouth
 	} else {
 		directionZ = DirectionNone
 	}
@@ -223,9 +223,7 @@ func (me *Npc) Move() bool {
 	}
 	tryX := me.X + NpcMoveX[me.MoveDirection]*me.Speed
 	tryZ := me.Z + NpcMoveZ[me.MoveDirection]*me.Speed
-	fmt.Println("Moving", me.MoveDirection, NpcMoveX[me.MoveDirection], NpcMoveZ[me.MoveDirection])
 	if me.TryMove(tryX, tryZ) {
-		fmt.Println("Go")
 		me.RemoveFromBlocks()
 		me.X = tryX
 		me.Z = tryZ

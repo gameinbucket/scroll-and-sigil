@@ -406,13 +406,13 @@ class Block {
             let item = this.items[i]
             if (spriteSet.has(item)) continue
             spriteSet.add(item)
-            item.Render(interpolation, spriteBuffer, camX, camZ, camAngle)
+            item.Render(spriteBuffer, camX, camZ, camAngle)
         }
         for (let i = 0; i < this.missileCount; i++) {
             let missile = this.missiles[i]
             if (spriteSet.has(missile)) continue
             spriteSet.add(missile)
-            missile.Render(interpolation, spriteBuffer, camX, camZ, camAngle)
+            missile.Render(spriteBuffer, camX, camZ, camAngle)
         }
         for (let i = 0; i < this.particleCount; i++) {
             let particle = this.particles[i]

@@ -2,6 +2,7 @@ package main
 
 import (
 	"strconv"
+	"strings"
 )
 
 // Missile struct
@@ -110,10 +111,34 @@ func (me *Missile) Update() bool {
 	if me.Collision() {
 		return true
 	}
+	me.RemoveFromBlocks()
 	me.X += me.DX
 	me.Y += me.DY
 	me.Z += me.DZ
+	me.BlockBorders()
+	me.AddToBlocks()
 	return me.Collision()
+}
+
+// Snap func
+func (me *Missile) Snap(snap *strings.Builder) {
+	snap.WriteString("{u:")
+	snap.WriteString(me.UID)
+	snap.WriteString(",n:")
+	snap.WriteString(me.NID)
+	snap.WriteString(",x:")
+	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+	snap.WriteString(",y:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	snap.WriteString(",z:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	snap.WriteString(",dx:")
+	snap.WriteString(strconv.FormatFloat(float64(me.DX), 'f', -1, 32))
+	snap.WriteString(",dy:")
+	snap.WriteString(strconv.FormatFloat(float64(me.DY), 'f', -1, 32))
+	snap.WriteString(",dz:")
+	snap.WriteString(strconv.FormatFloat(float64(me.DZ), 'f', -1, 32))
+	snap.WriteString("},")
 }
 
 // NewPlasma func
@@ -128,31 +153,15 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) *Missile {
 	me.DX = dx
 	me.DY = dy
 	me.DZ = dz
-	me.Radius = 0.4
-	me.Height = 1.0
+	me.Radius = 0.2
+	me.Height = 0.2
 	me.Damage = damage
 	me.Hit = me.PlasmaHit
 	world.AddMissile(me)
 	me.BlockBorders()
 	me.AddToBlocks()
 
-	world.Snapshot.WriteString("{u:")
-	world.Snapshot.WriteString(me.UID)
-	world.Snapshot.WriteString(",n:")
-	world.Snapshot.WriteString(me.NID)
-	world.Snapshot.WriteString(",x:")
-	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-	world.Snapshot.WriteString(",y:")
-	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	world.Snapshot.WriteString(",z:")
-	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
-	world.Snapshot.WriteString(",dx:")
-	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.DX), 'f', -1, 32))
-	world.Snapshot.WriteString(",dy:")
-	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.DY), 'f', -1, 32))
-	world.Snapshot.WriteString(",dz:")
-	world.Snapshot.WriteString(strconv.FormatFloat(float64(me.DZ), 'f', -1, 32))
-	world.Snapshot.WriteString("},")
+	me.Snap(&me.World.Snapshot)
 
 	return me
 }

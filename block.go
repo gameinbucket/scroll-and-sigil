@@ -1,13 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
 
 // Block constants
 const (
-	BlockShift       = 4
 	BlockSize        = 8
 	InverseBlockSize = 1.0 / BlockSize
 	BlockSlice       = BlockSize * BlockSize
@@ -31,7 +31,6 @@ type Block struct {
 // NewBlock func
 func NewBlock(x, y, z int) *Block {
 	b := &Block{X: x, Y: y, Z: z}
-	b.Things = make([]*Thing, 5)
 	return b
 }
 
@@ -134,6 +133,8 @@ func (me *Block) RemoveItem(t *Item) {
 
 // AddMissile func
 func (me *Block) AddMissile(t *Missile) {
+	fmt.Println(t)
+	fmt.Println(me.Missiles)
 	if me.MissileCount == len(me.Missiles) {
 		array := make([]*Missile, me.MissileCount+5)
 		copy(array, me.Missiles)

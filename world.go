@@ -187,10 +187,6 @@ func (me *World) FindBlock(x, y, z float32) int {
 	bx := int(x * InverseBlockSize)
 	by := int(y * InverseBlockSize)
 	bz := int(z * InverseBlockSize)
-	// TODO
-	// bx := int(x) >> BlockShift
-	// by := int(y) >> BlockShift
-	// bz := int(z) >> BlockShift
 	tx := gx - bx*BlockSize
 	ty := gy - by*BlockSize
 	tz := gz - bz*BlockSize

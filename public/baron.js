@@ -53,21 +53,6 @@ class Baron extends Thing {
             case BaronChase:
                 if (Math.random() < 0.1)
                     Sounds["baron-scream"].play()
-                for (let i = 0; i < 20; i++) {
-                    let spriteName = "blood-" + Math.floor(Math.random() * 3)
-
-                    let x = this.X + this.Radius * (1 - Math.random() * 2)
-                    let y = this.Y + this.Height * Math.random()
-                    let z = this.Z + this.Radius * (1 - Math.random() * 2)
-
-                    const spread = 0.2
-
-                    let dx = spread * (1 - Math.random() * 2)
-                    let dy = spread * Math.random()
-                    let dz = spread * (1 - Math.random() * 2)
-
-                    new Blood(this.World, x, y, z, dx, dy, dz, spriteName)
-                }
             default:
                 this.Animation = BaronAnimationWalk
                 break

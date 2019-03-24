@@ -55,7 +55,7 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	baron.Speed = 0.1
 	baron.MoveDirection = DirectionNone
 	baron.Status = BaronLook
-	baron.MeleeRange = 3.0
+	baron.MeleeRange = 2.0
 	baron.MissileRange = 10.0
 	world.AddThing(baron.Thing)
 	baron.BlockBorders()
