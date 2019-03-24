@@ -13,15 +13,19 @@ type Person struct {
 	Character  *You
 	InputQueue []string
 	InputCount int
+	UUID       string
 }
 
 // NewPerson func
 func NewPerson(connection *websocket.Conn, world *World) *Person {
-	p := &Person{Connection: connection}
-	p.InputQueue = make([]string, 3)
-	p.Character = world.You
-	world.You.Person = p
-	return p
+	person := &Person{Connection: connection}
+	person.InputQueue = make([]string, 3)
+	person.Character = world.You
+	world.You.Person = person
+	uuid := UUID()
+	fmt.Println("person>", uuid)
+	person.UUID = uuid
+	return person
 }
 
 // Input func

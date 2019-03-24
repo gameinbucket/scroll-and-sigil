@@ -245,33 +245,62 @@ class Thing {
         const AngleH = 22.5 * DegToRad
 
         if (angle > AngleA) {
-            direction = AnimationFront
-            mirror = false
-        } else if (angle > AngleB) {
-            direction = AnimationFrontSide
-            mirror = false
-        } else if (angle > AngleC) {
-            direction = AnimationSide
-            mirror = false
-        } else if (angle > AngleD) {
-            direction = AnimationBackSide
-            mirror = false
-        } else if (angle > AngleE) {
             direction = AnimationBack
             mirror = false
-        } else if (angle > AngleF) {
+        } else if (angle > AngleB) {
             direction = AnimationBackSide
             mirror = true
-        } else if (angle > AngleG) {
+        } else if (angle > AngleC) {
             direction = AnimationSide
             mirror = true
-        } else if (angle > AngleH) {
+        } else if (angle > AngleD) {
             direction = AnimationFrontSide
             mirror = true
-        } else {
+        } else if (angle > AngleE) {
             direction = AnimationFront
             mirror = false
+        } else if (angle > AngleF) {
+            direction = AnimationFrontSide
+            mirror = false
+        } else if (angle > AngleG) {
+            direction = AnimationSide
+            mirror = false
+        } else if (angle > AngleH) {
+            direction = AnimationBackSide
+            mirror = false
+        } else {
+            direction = AnimationBack
+            mirror = false
         }
+
+        // if (angle > AngleA) {
+        //     direction = AnimationFront
+        //     mirror = false
+        // } else if (angle > AngleB) {
+        //     direction = AnimationFrontSide
+        //     mirror = false
+        // } else if (angle > AngleC) {
+        //     direction = AnimationSide
+        //     mirror = false
+        // } else if (angle > AngleD) {
+        //     direction = AnimationBackSide
+        //     mirror = false
+        // } else if (angle > AngleE) {
+        //     direction = AnimationBack
+        //     mirror = false
+        // } else if (angle > AngleF) {
+        //     direction = AnimationBackSide
+        //     mirror = true
+        // } else if (angle > AngleG) {
+        //     direction = AnimationSide
+        //     mirror = true
+        // } else if (angle > AngleH) {
+        //     direction = AnimationFrontSide
+        //     mirror = true
+        // } else {
+        //     direction = AnimationFront
+        //     mirror = false
+        // }
 
         let sprite = this.Animation[this.AnimationFrame][direction]
 

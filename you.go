@@ -22,6 +22,7 @@ func NewYou(world *World, x, y, z float32) *You {
 	you.World = world
 	you.Thing.Update = you.Update
 	you.Thing.Damage = you.Damage
+	you.Thing.Snap = you.Snap
 	you.X = x
 	you.Y = y
 	you.Z = z
@@ -38,6 +39,21 @@ func NewYou(world *World, x, y, z float32) *You {
 // Damage func
 func (me *You) Damage(amount int) {
 	fmt.Println("ouch!", amount)
+}
+
+// Snap func
+func (me *You) Snap(snap *strings.Builder) {
+	snap.WriteString("{n:")
+	snap.WriteString(me.NID)
+	snap.WriteString(",x:")
+	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+	snap.WriteString(",y:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	snap.WriteString(",z:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	snap.WriteString(",a:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
+	snap.WriteString("},")
 }
 
 // Update func
@@ -60,26 +76,26 @@ func (me *You) Update() {
 			}
 
 			if !mf && input == "mf" {
-				me.DX -= float32(math.Sin(float64(me.Angle))) * me.Speed
-				me.DZ += float32(math.Cos(float64(me.Angle))) * me.Speed
+				me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
+				me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
 				mf = true
 			}
 
 			if !mb && input == "mb" {
-				me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
-				me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
+				me.DX -= float32(math.Sin(float64(me.Angle))) * me.Speed
+				me.DZ += float32(math.Cos(float64(me.Angle))) * me.Speed
 				mb = true
 			}
 
 			if !sl && input == "sl" {
-				me.DX += float32(math.Cos(float64(me.Angle))) * me.Speed
-				me.DZ += float32(math.Sin(float64(me.Angle))) * me.Speed
+				me.DX -= float32(math.Cos(float64(me.Angle))) * me.Speed
+				me.DZ -= float32(math.Sin(float64(me.Angle))) * me.Speed
 				sl = true
 			}
 
 			if !sr && input == "sr" {
-				me.DX -= float32(math.Cos(float64(me.Angle))) * me.Speed
-				me.DZ -= float32(math.Sin(float64(me.Angle))) * me.Speed
+				me.DX += float32(math.Cos(float64(me.Angle))) * me.Speed
+				me.DZ += float32(math.Sin(float64(me.Angle))) * me.Speed
 				sr = true
 			}
 		}
@@ -88,15 +104,5 @@ func (me *You) Update() {
 
 	me.Integrate()
 
-	me.World.Snapshot.WriteString("{n:")
-	me.World.Snapshot.WriteString(me.NID)
-	me.World.Snapshot.WriteString(",x:")
-	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-	me.World.Snapshot.WriteString(",y:")
-	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	me.World.Snapshot.WriteString(",z:")
-	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
-	me.World.Snapshot.WriteString(",a:")
-	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
-	me.World.Snapshot.WriteString("},")
+	me.Snap(&me.World.Snapshot)
 }

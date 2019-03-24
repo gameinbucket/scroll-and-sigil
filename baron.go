@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"strconv"
+	"strings"
 )
 
 // Animation constants
@@ -43,6 +44,7 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	baron.World = world
 	baron.Thing.Update = baron.Update
 	baron.Thing.Damage = baron.Damage
+	baron.Thing.Snap = baron.Snap
 	baron.X = x
 	baron.Y = y
 	baron.Z = z
@@ -179,6 +181,29 @@ func (me *Baron) Chase() {
 	}
 }
 
+// Snap func
+func (me *Baron) Snap(snap *strings.Builder) {
+	snap.WriteString("{n:")
+	snap.WriteString(me.NID)
+	snap.WriteString(",x:")
+	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+	snap.WriteString(",y:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	snap.WriteString(",z:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	if me.DeltaMoveDirection {
+		me.DeltaMoveDirection = false
+		snap.WriteString(",d:")
+		snap.WriteString(strconv.Itoa(me.MoveDirection))
+	}
+	if me.DeltaStatus {
+		snap.WriteString(",s:")
+		snap.WriteString(strconv.Itoa(me.Status))
+		me.DeltaStatus = false
+	}
+	snap.WriteString("},")
+}
+
 // Update func
 func (me *Baron) Update() {
 	switch me.Status {
@@ -195,25 +220,7 @@ func (me *Baron) Update() {
 	}
 	me.Integrate()
 
-	me.World.Snapshot.WriteString("{n:")
-	me.World.Snapshot.WriteString(me.NID)
-	me.World.Snapshot.WriteString(",x:")
-	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-	me.World.Snapshot.WriteString(",y:")
-	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	me.World.Snapshot.WriteString(",z:")
-	me.World.Snapshot.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
-	if me.DeltaMoveDirection {
-		me.DeltaMoveDirection = false
-		me.World.Snapshot.WriteString(",d:")
-		me.World.Snapshot.WriteString(strconv.Itoa(me.MoveDirection))
-	}
-	if me.DeltaStatus {
-		me.World.Snapshot.WriteString(",s:")
-		me.World.Snapshot.WriteString(strconv.Itoa(me.Status))
-		me.DeltaStatus = false
-	}
-	me.World.Snapshot.WriteString("},")
+	me.Snap(&me.World.Snapshot)
 }
 
 // EmptyUpdate func

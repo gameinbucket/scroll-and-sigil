@@ -54,29 +54,9 @@ class WorldState {
 
         world.update()
 
-        let cam = this.app.camera
-        if (Input.Is("ArrowLeft")) {
-            cam.ry -= 0.05
-            if (cam.ry < 0)
-                cam.ry += Tau
-        }
-        if (Input.Is("ArrowRight")) {
-            cam.ry += 0.05
-            if (cam.ry >= Tau)
-                cam.ry -= Tau
-        }
-        if (cam.rx > -0.25 && Input.Is("ArrowUp")) {
-            cam.rx -= 0.05
-        }
-        if (cam.rx < 0.25 && Input.Is("ArrowDown")) {
-            cam.rx += 0.05
-        }
-
-        SOCKET_SEND += "a:" + cam.ry + " "
-
-        if (SOCKET_SEND.length > 0) {
-            SOCKET.send(SOCKET_SEND)
-            SOCKET_SEND = ""
+        if (SocketSend.length > 0) {
+            SOCKET.send(SocketSend)
+            SocketSend = ""
         }
     }
     render() {

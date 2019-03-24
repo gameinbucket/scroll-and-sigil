@@ -1,6 +1,6 @@
 let SOCKET = null
 let SOCKET_QUEUE = []
-let SOCKET_SEND = []
+let SocketSend = []
 
 class Application {
     constructor() {

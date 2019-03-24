@@ -41,6 +41,7 @@ type Thing struct {
 	Health              int
 	Update              func()
 	Damage              func(int)
+	Snap                func(data *strings.Builder)
 }
 
 // NextNID func

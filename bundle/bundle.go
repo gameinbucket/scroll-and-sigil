@@ -52,7 +52,7 @@ func main() {
 }
 
 func tileBundle(pwd string) string {
-	return compress(filepath.Join(pwd, "data", "tiles"))
+	return compress(filepath.Join(pwd, "raw", "tiles"))
 }
 
 func resourceBundle(pwd string) string {
@@ -128,7 +128,7 @@ func resourceBundle(pwd string) string {
 }
 
 func animationBundle(pwd string) string {
-	path := filepath.Join(pwd, "data", "animations")
+	path := filepath.Join(pwd, "raw", "animations")
 	fmt.Println("animations", path)
 
 	dir, err := ioutil.ReadDir(path)
@@ -150,7 +150,7 @@ func animationBundle(pwd string) string {
 }
 
 func spriteBundle(pwd string) string {
-	path := filepath.Join(pwd, "data", "sprites")
+	path := filepath.Join(pwd, "raw", "sprites")
 	fmt.Println("sprites", path)
 
 	dir, err := ioutil.ReadDir(path)

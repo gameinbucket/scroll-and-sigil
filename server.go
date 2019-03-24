@@ -169,8 +169,9 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 	me.mux.Lock()
 	person := NewPerson(connection, server.world)
 	me.people = append(me.people, person)
+	data := me.world.Save("map")
 	me.mux.Unlock()
-	person.WriteToClient(me.world.Save("map"))
+	person.WriteToClient(data)
 	go person.ConnectionLoop(me)
 }
 

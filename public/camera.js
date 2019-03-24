@@ -10,6 +10,24 @@ class Camera {
         this.update()
     }
     update(interpolation) {
+        if (Input.Is("ArrowLeft")) {
+            this.ry -= 0.05
+            if (this.ry < 0)
+                this.ry += Tau
+        }
+
+        if (Input.Is("ArrowRight")) {
+            this.ry += 0.05
+            if (this.ry >= Tau)
+                this.ry -= Tau
+        }
+
+        if (this.rx > -0.25 && Input.Is("ArrowUp"))
+            this.rx -= 0.05
+
+        if (this.rx < 0.25 && Input.Is("ArrowDown"))
+            this.rx += 0.05
+
         let sin_x = Math.sin(this.rx)
         let cos_x = Math.cos(this.rx)
         let sin_y = Math.sin(this.ry)
