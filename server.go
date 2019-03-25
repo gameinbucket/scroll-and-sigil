@@ -169,7 +169,7 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 	me.mux.Lock()
 	person := NewPerson(connection, server.world)
 	me.people = append(me.people, person)
-	data := me.world.Save("map")
+	data := me.world.Save("", person)
 	me.mux.Unlock()
 	person.WriteToClient(data)
 	go person.ConnectionLoop(me)
@@ -178,11 +178,12 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 // RemovePerson func
 func (me *Server) RemovePerson(person *Person) {
 	me.mux.Lock()
-	for i := 0; i < len(me.people); i++ {
+	len := len(me.people)
+	for i := 0; i < len; i++ {
 		if me.people[i] == person {
-			copy(me.people[i:], me.people[i+1:])
-			me.people[len(me.people)-1] = nil
-			me.people = me.people[:len(me.people)-1]
+			me.people[i] = me.people[len-1]
+			me.people[len-1] = nil
+			me.people = me.people[:len-1]
 			break
 		}
 	}

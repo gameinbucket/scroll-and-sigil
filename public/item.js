@@ -1,0 +1,33 @@
+class Item {
+    constructor() {
+        this.World = null
+        this.UID = ""
+        this.SID = ""
+        this.NID = ""
+        this.Sprite = null
+        this.X = 0
+        this.Y = 0
+        this.Z = 0
+        this.DX = 0
+        this.DY = 0
+        this.DZ = 0
+        this.MinBX = 0
+        this.MinBY = 0
+        this.MinBZ = 0
+        this.MaxBX = 0
+        this.MaxBY = 0
+        this.MaxBZ = 0
+        this.Radius = 0
+        this.Height = 0
+    }
+    static LoadNewItem(world, uid, nid, x, y, z) {
+        switch (uid) {
+            case "medkit":
+                return new Medkit(world, nid, x, y, z)
+        }
+    }
+}
+
+class Medkit extends Item {
+
+}

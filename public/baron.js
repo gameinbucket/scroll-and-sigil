@@ -59,6 +59,12 @@ class Baron extends Thing {
         }
         this.Status = status
     }
+    NetUpdateHealth(health) {
+        if (this.Health != health) {
+            console.log("health was not synchronized")
+            this.Health = health
+        }
+    }
     Damage(amount) {
         this.Health -= amount
         if (this.Health <= 0)

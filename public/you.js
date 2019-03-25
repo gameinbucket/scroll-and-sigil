@@ -22,7 +22,6 @@ class You extends Thing {
         world.AddThing(this)
         this.BlockBorders()
         this.AddToBlocks()
-        this.camera = null
     }
     Damage(_) {
         for (let i = 0; i < 20; i++) {
@@ -40,6 +39,14 @@ class You extends Thing {
 
             new Blood(this.World, x, y, z, dx, dy, dz, spriteName)
         }
+    }
+    Update() {}
+}
+
+class PlayerYou extends You {
+    constructor(world, nid, x, y, z) {
+        super(world, nid, x, y, z)
+        this.camera = null
     }
     Update() {
         let direction = null

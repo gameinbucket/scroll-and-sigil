@@ -39,9 +39,11 @@ type Thing struct {
 	Height              float32
 	Speed               float32
 	Health              int
+	DeltaHealth         bool
 	Update              func()
 	Damage              func(int)
 	Snap                func(data *strings.Builder)
+	Save                func(data *strings.Builder)
 }
 
 // NextNID func
@@ -53,31 +55,16 @@ func NextNID() string {
 // LoadNewThing func
 func LoadNewThing(world *World, uid string, x, y, z float32) *Thing {
 	switch uid {
-	case "you":
-		y := NewYou(world, x, y, z)
-		world.You = y
-		return y.Thing
+	case "spawn":
+		world.SpawnYouX = x
+		world.SpawnYouY = y
+		world.SpawnYouZ = z
 	case "baron":
 		return NewBaron(world, x, y, z).Thing
 	case "tree":
 		return NewTree(world, x, y, z)
 	}
 	return nil
-}
-
-// Save func
-func (me *Thing) Save(data *strings.Builder, x, y, z float32) {
-	data.WriteString("{u:")
-	data.WriteString(me.UID)
-	data.WriteString(",n:")
-	data.WriteString(me.NID)
-	data.WriteString(",x:")
-	data.WriteString(strconv.FormatFloat(float64(me.X-x), 'f', -1, 32))
-	data.WriteString(",y:")
-	data.WriteString(strconv.FormatFloat(float64(me.Y-y), 'f', -1, 32))
-	data.WriteString(",z:")
-	data.WriteString(strconv.FormatFloat(float64(me.Z-z), 'f', -1, 32))
-	data.WriteString("}")
 }
 
 // BlockBorders func

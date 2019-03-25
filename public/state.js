@@ -7,9 +7,9 @@ class WorldState {
     update() {
         let world = this.app.world
 
-        if (SOCKET_QUEUE.length > 0) {
-            let raw = SOCKET_QUEUE[SOCKET_QUEUE.length - 1]
-            SOCKET_QUEUE = []
+        if (SocketQueue.length > 0) {
+            let raw = SocketQueue[SocketQueue.length - 1]
+            SocketQueue = []
             let data = Parser.read(raw)
             let things = data["t"]
             for (let i = 0; i < things.length; i++) {
@@ -32,6 +32,8 @@ class WorldState {
                     }
                     if ("s" in snap)
                         thing.NetUpdateState(parseInt(snap["s"]))
+                    if ("h" in snap)
+                        thing.NetUpdateHealth(parseInt(snap["h"]))
                     thing.RemoveFromBlocks()
                     thing.BlockBorders()
                     thing.AddToBlocks()

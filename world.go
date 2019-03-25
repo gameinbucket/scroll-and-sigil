@@ -25,22 +25,22 @@ var (
 
 // World struct
 type World struct {
-	Width        int
-	Height       int
-	Length       int
-	Slice        int
-	All          int
-	Blocks       []*Block
-	You          *You
-	ThingCount   int
-	ItemCount    int
-	MissileCount int
-	Things       []*Thing
-	Items        []*Item
-	Missiles     []*Missile
-	ThreadIndex  int
-	ThreadID     string
-	Snapshot     strings.Builder
+	Width                           int
+	Height                          int
+	Length                          int
+	Slice                           int
+	All                             int
+	Blocks                          []*Block
+	ThingCount                      int
+	ItemCount                       int
+	MissileCount                    int
+	Things                          []*Thing
+	Items                           []*Item
+	Missiles                        []*Missile
+	ThreadIndex                     int
+	ThreadID                        string
+	Snapshot                        strings.Builder
+	SpawnYouX, SpawnYouY, SpawnYouZ float32 // TODO temp
 }
 
 // NewWorld func
@@ -162,18 +162,22 @@ func (me *World) Load(data []byte) {
 	}
 }
 
+// NewPlayer func
+func (me *World) NewPlayer(person *Person) *You {
+	return NewYou(me, person, me.SpawnYouX, me.SpawnYouY, me.SpawnYouZ)
+}
+
 // Save func
-func (me *World) Save(name string) string {
+func (me *World) Save(name string, person *Person) string {
 	var data strings.Builder
 	data.WriteString("n:")
 	data.WriteString(name)
+	data.WriteString(",p:")
+	data.WriteString(person.Character.NID)
 	data.WriteString(",b[")
 	for i := 0; i < me.All; i++ {
-		block := me.Blocks[i]
-		if !block.IsEmpty() {
-			block.Save(&data)
-			data.WriteString(",")
-		}
+		me.Blocks[i].Save(&data)
+		data.WriteString(",")
 	}
 	data.WriteString("]")
 	return data.String()

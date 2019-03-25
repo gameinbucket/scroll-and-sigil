@@ -14,7 +14,7 @@ type You struct {
 }
 
 // NewYou func
-func NewYou(world *World, x, y, z float32) *You {
+func NewYou(world *World, person *Person, x, y, z float32) *You {
 	you := &You{}
 	you.Thing = &Thing{}
 	you.UID = "you"
@@ -23,6 +23,7 @@ func NewYou(world *World, x, y, z float32) *You {
 	you.Thing.Update = you.Update
 	you.Thing.Damage = you.Damage
 	you.Thing.Snap = you.Snap
+	you.Thing.Save = you.Save
 	you.X = x
 	you.Y = y
 	you.Z = z
@@ -30,6 +31,7 @@ func NewYou(world *World, x, y, z float32) *You {
 	you.Height = 1.0
 	you.Speed = 0.1
 	you.Health = 1
+	you.Person = person
 	world.AddThing(you.Thing)
 	you.BlockBorders()
 	you.AddToBlocks()
@@ -39,6 +41,26 @@ func NewYou(world *World, x, y, z float32) *You {
 // Damage func
 func (me *You) Damage(amount int) {
 	fmt.Println("ouch!", amount)
+	me.DeltaHealth = true
+}
+
+// Save func
+func (me *You) Save(snap *strings.Builder) {
+	snap.WriteString("{u:")
+	snap.WriteString(me.UID)
+	snap.WriteString(",n:")
+	snap.WriteString(me.NID)
+	snap.WriteString(",x:")
+	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+	snap.WriteString(",y:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	snap.WriteString(",z:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	snap.WriteString(",a:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
+	snap.WriteString(",h:")
+	snap.WriteString(strconv.Itoa(me.Health))
+	snap.WriteString("}")
 }
 
 // Snap func
@@ -53,6 +75,11 @@ func (me *You) Snap(snap *strings.Builder) {
 	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
 	snap.WriteString(",a:")
 	snap.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
+	if me.DeltaHealth {
+		snap.WriteString(",h:")
+		snap.WriteString(strconv.Itoa(me.Health))
+		me.DeltaHealth = false
+	}
 	snap.WriteString("},")
 }
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -32,15 +31,20 @@ func (me *Missile) BlockBorders() {
 }
 
 // AddToBlocks func
-func (me *Missile) AddToBlocks() {
+func (me *Missile) AddToBlocks() bool {
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				fmt.Println("fix out of bounds>", gx, gy, gz)
-				me.World.GetBlock(gx, gy, gz).AddMissile(me)
+				block := me.World.GetBlock(gx, gy, gz)
+				if block == nil {
+					me.RemoveFromBlocks()
+					return true
+				}
+				block.AddMissile(me)
 			}
 		}
 	}
+	return false
 }
 
 // RemoveFromBlocks func
@@ -48,7 +52,10 @@ func (me *Missile) RemoveFromBlocks() {
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				me.World.GetBlock(gx, gy, gz).RemoveMissile(me)
+				block := me.World.GetBlock(gx, gy, gz)
+				if block != nil {
+					block.RemoveMissile(me)
+				}
 			}
 		}
 	}
@@ -118,7 +125,9 @@ func (me *Missile) Update() bool {
 	me.Y += me.DY
 	me.Z += me.DZ
 	me.BlockBorders()
-	me.AddToBlocks()
+	if me.AddToBlocks() {
+		return true
+	}
 	return me.Collision()
 }
 
@@ -144,28 +153,28 @@ func (me *Missile) Snap(snap *strings.Builder) {
 }
 
 // NewPlasma func
-func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) *Missile {
+func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
 	me := &Missile{}
-	me.UID = "plasma"
-	me.NID = NextNID()
 	me.World = world
 	me.X = x
 	me.Y = y
 	me.Z = z
+	me.Radius = 0.2
+	me.Height = 0.2
+	me.BlockBorders()
+	if me.AddToBlocks() {
+		return
+	}
+	me.UID = "plasma"
+	me.NID = NextNID()
 	me.DX = dx
 	me.DY = dy
 	me.DZ = dz
-	me.Radius = 0.2
-	me.Height = 0.2
 	me.Damage = damage
 	me.Hit = me.PlasmaHit
+
 	world.AddMissile(me)
-	me.BlockBorders()
-	me.AddToBlocks()
-
 	me.Snap(&me.World.Snapshot)
-
-	return me
 }
 
 // PlasmaHit func
@@ -176,6 +185,5 @@ func (me *Missile) PlasmaHit(thing *Thing) {
 	if thing != nil {
 		thing.Damage(1)
 	}
-	NewPlasmaExplosion(me.World, me.X, me.Y, me.Z)
 	me.RemoveFromBlocks()
 }

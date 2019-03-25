@@ -42,19 +42,26 @@ func (me *Block) Save(data *strings.Builder) {
 	data.WriteString(",z:")
 	data.WriteString(strconv.Itoa(me.Z))
 	data.WriteString(",t[")
-	for i := 0; i < BlockAll; i++ {
-		data.WriteString(strconv.FormatInt(int64(me.Tiles[i]), 10))
-		data.WriteString(",")
-	}
-	data.WriteString("],e[")
-	if me.ThingCount > 0 {
-		x := float32(me.X * BlockSize)
-		y := float32(me.Y * BlockSize)
-		z := float32(me.Z * BlockSize)
-		for i := 0; i < me.ThingCount; i++ {
-			me.Things[i].Save(data, x, y, z)
+	if me.NotEmpty() {
+		for i := 0; i < BlockAll; i++ {
+			data.WriteString(strconv.FormatInt(int64(me.Tiles[i]), 10))
 			data.WriteString(",")
 		}
+	}
+	data.WriteString("],e[")
+	for i := 0; i < me.ThingCount; i++ {
+		me.Things[i].Save(data)
+		data.WriteString(",")
+	}
+	data.WriteString("],i[")
+	for i := 0; i < me.ItemCount; i++ {
+		me.Items[i].Save(data)
+		data.WriteString(",")
+	}
+	data.WriteString("],m[")
+	for i := 0; i < me.MissileCount; i++ {
+		me.Missiles[i].Snap(data)
+		data.WriteString(",")
 	}
 	data.WriteString("],c[")
 	for i := 0; i < me.LightCount; i++ {
@@ -64,17 +71,14 @@ func (me *Block) Save(data *strings.Builder) {
 	data.WriteString("]}")
 }
 
-// IsEmpty func
-func (me *Block) IsEmpty() bool {
-	if me.ThingCount > 0 {
-		return false
-	}
+// NotEmpty func
+func (me *Block) NotEmpty() bool {
 	for i := 0; i < BlockAll; i++ {
 		if me.Tiles[i] != TileNone {
-			return false
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 // GetTileTypeUnsafe func

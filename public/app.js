@@ -1,5 +1,5 @@
 let SOCKET = null
-let SOCKET_QUEUE = []
+let SocketQueue = []
 let SocketSend = []
 
 class Application {
@@ -117,18 +117,16 @@ class Application {
         })
 
         socket.onmessage = function (event) {
-            SOCKET_QUEUE.push(event.data)
+            SocketQueue.push(event.data)
         }
 
         this.world.load(data)
-        for (let index = 0; index < this.world.thingCount; index++) {
-            if (this.world.things[index].UID === "you") {
-                this.player = this.world.things[index]
-                this.camera = new Camera(this.player, 10.0, 0.0, 0.0)
-                this.player.camera = this.camera
-                break
-            }
-        }
+
+        this.player = this.world.thingLookup[this.world.PID]
+        this.camera = new Camera(this.player, 10.0, 0.0, 0.0)
+        this.player.camera = this.camera
+        console.log(this.player)
+        console.log(this.camera)
     }
     async run() {
         await this.init()

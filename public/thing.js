@@ -68,7 +68,8 @@ class Thing {
     static LoadNewThing(world, uid, nid, x, y, z) {
         switch (uid) {
             case "you":
-                return new You(world, nid, x, y, z)
+                if (nid === world.PID) return new PlayerYou(world, nid, x, y, z)
+                else return new You(world, nid, x, y, z)
             case "baron":
                 return new Baron(world, nid, x, y, z)
             case "tree":
@@ -118,6 +119,7 @@ class Thing {
         return AnimationNotDone
     }
     NetUpdateState(_) {}
+    NetUpdateHealth(_) {}
     TerrainCollisionY(world) {
         if (this.DY < 0) {
             let gx = Math.floor(this.X)

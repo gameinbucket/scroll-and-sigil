@@ -33,6 +33,7 @@ class World {
         this.itemLookup
         this.missileLookup
         this.occluder = new Occluder()
+        this.PID = ""
     }
     load(data) {
         this.blocks = []
@@ -54,6 +55,10 @@ class World {
 
         let content = Parser.read(data)
         let blocks = content["b"]
+
+        this.PID = content["p"]
+
+        console.log(content)
 
         let left = null
         let right = null
@@ -120,23 +125,38 @@ class World {
 
         for (let b = 0; b < blocks.length; b++) {
             let data = blocks[b]
-            let bx = parseInt(data["x"]) - left
-            let by = parseInt(data["y"]) - bottom
-            let bz = parseInt(data["z"]) - back
             let things = data["e"]
-
-            let px = bx * BlockSize
-            let py = by * BlockSize
-            let pz = bz * BlockSize
+            let items = data["i"]
+            let missiles = data["m"]
 
             for (let t = 0; t < things.length; t++) {
                 let thing = things[t]
                 let uid = thing["u"]
                 let nid = thing["n"]
-                let x = parseFloat(thing["x"]) + px
-                let y = parseFloat(thing["y"]) + py
-                let z = parseFloat(thing["z"]) + pz
+                let x = parseFloat(thing["x"])
+                let y = parseFloat(thing["y"])
+                let z = parseFloat(thing["z"])
                 Thing.LoadNewThing(this, uid, nid, x, y, z)
+            }
+
+            for (let t = 0; t < items.length; t++) {
+                let item = items[t]
+                let uid = item["u"]
+                let nid = item["n"]
+                let x = parseFloat(item["x"])
+                let y = parseFloat(item["y"])
+                let z = parseFloat(item["z"])
+                Item.LoadNewItem(this, uid, nid, x, y, z)
+            }
+
+            for (let t = 0; t < missiles.length; t++) {
+                let missile = missiles[t]
+                let uid = missile["u"]
+                let nid = missile["n"]
+                let x = parseFloat(missile["x"])
+                let y = parseFloat(missile["y"])
+                let z = parseFloat(missile["z"])
+                Missile.LoadNewMissile(this, uid, nid, x, y, z)
             }
         }
 

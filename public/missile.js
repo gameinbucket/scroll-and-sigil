@@ -20,6 +20,12 @@ class Missile {
         this.Radius = 0
         this.Height = 0
     }
+    static LoadNewMissile(world, uid, nid, x, y, z) {
+        switch (uid) {
+            case "plasma":
+                return new Plasma(world, nid, x, y, z)
+        }
+    }
     BlockBorders() {
         this.MinBX = Math.floor((this.X - this.Radius) * InverseBlockSize)
         this.MinBY = Math.floor(this.Y * InverseBlockSize)
@@ -32,16 +38,24 @@ class Missile {
         for (let gx = this.MinBX; gx <= this.MaxBX; gx++) {
             for (let gy = this.MinBY; gy <= this.MaxBY; gy++) {
                 for (let gz = this.MinBZ; gz <= this.MaxBZ; gz++) {
-                    this.World.GetBlock(gx, gy, gz).AddMissile(this)
+                    let block = this.World.GetBlock(gx, gy, gz)
+                    if (block === null) {
+                        this.RemoveFromBlocks()
+                        return true
+                    }
+                    block.AddMissile(this)
                 }
             }
         }
+        return false
     }
     RemoveFromBlocks() {
         for (let gx = this.MinBX; gx <= this.MaxBX; gx++) {
             for (let gy = this.MinBY; gy <= this.MaxBY; gy++) {
                 for (let gz = this.MinBZ; gz <= this.MaxBZ; gz++) {
-                    this.World.GetBlock(gx, gy, gz).RemoveMissile(this)
+                    let block = this.World.GetBlock(gx, gy, gz)
+                    if (block !== null)
+                        block.RemoveMissile(this)
                 }
             }
         }
@@ -104,7 +118,8 @@ class Missile {
         this.Y += this.DY
         this.Z += this.DZ
         this.BlockBorders()
-        this.AddToBlocks()
+        if (this.AddToBlocks())
+            return true
         return this.Collision()
     }
     Render(spriteBuffer, camX, camZ, camAngle) {
@@ -120,14 +135,17 @@ class Missile {
 class Plasma extends Missile {
     constructor(world, nid, damage, x, y, z, dx, dy, dz) {
         super()
-        this.UID = "plasma"
-        this.SID = "missiles"
-        this.NID = nid
-        this.Sprite = SpriteData[this.SID]["baron-missile-front-1"]
         this.World = world
         this.X = x
         this.Y = y
         this.Z = z
+        this.BlockBorders()
+        if (this.AddToBlocks())
+            return this
+        this.UID = "plasma"
+        this.SID = "missiles"
+        this.NID = nid
+        this.Sprite = SpriteData[this.SID]["baron-missile-front-1"]
         this.DX = dx
         this.DY = dy
         this.DZ = dz
@@ -136,14 +154,13 @@ class Plasma extends Missile {
         this.Damage = damage
         this.Hit = this.PlasmaHit
         world.AddMissile(this)
-        this.BlockBorders()
-        this.AddToBlocks()
         return this
     }
     PlasmaHit(thing) {
         this.X -= this.DX
         this.Y -= this.DY
         this.Z -= this.DZ
+        // TODO need to confirm with server correct health
         if (thing !== null)
             thing.Damage(1)
         Sounds["plasma-impact"].play()

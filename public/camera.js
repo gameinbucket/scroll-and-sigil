@@ -2,9 +2,9 @@ class Camera {
     constructor(thing, radius, rx, ry) {
         this.thing = thing
         this.radius = radius
-        this.x
-        this.y
-        this.z
+        this.x = 0
+        this.y = 0
+        this.z = 0
         this.rx = rx
         this.ry = ry
         this.update()

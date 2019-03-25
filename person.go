@@ -10,21 +10,18 @@ import (
 // Person struct
 type Person struct {
 	Connection *websocket.Conn
-	Character  *You
+	UUID       string
 	InputQueue []string
 	InputCount int
-	UUID       string
+	Character  *You
 }
 
 // NewPerson func
 func NewPerson(connection *websocket.Conn, world *World) *Person {
 	person := &Person{Connection: connection}
+	person.UUID = UUID()
 	person.InputQueue = make([]string, 3)
-	person.Character = world.You
-	world.You.Person = person
-	uuid := UUID()
-	fmt.Println("person>", uuid)
-	person.UUID = uuid
+	person.Character = world.NewPlayer(person)
 	return person
 }
 
@@ -59,6 +56,7 @@ func (me *Person) ConnectionLoop(server *Server) {
 		}
 		server.mux.Unlock()
 	}
+	// me.Character.RemoveFromBlocks()
 	server.RemovePerson(me)
 }
 
