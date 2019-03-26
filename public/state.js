@@ -1,8 +1,8 @@
 class WorldState {
     constructor(app) {
         this.app = app
-        this.snapshot_time = new Date().getTime()
-        this.previous_update = new Date().getTime()
+        this.snapshotTime = new Date().getTime()
+        this.previousUpdate = new Date().getTime()
     }
     update() {
         let world = this.app.world
@@ -17,12 +17,16 @@ class WorldState {
                 let nid = snap["n"]
                 if (nid in world.thingLookup) {
                     let thing = world.thingLookup[nid]
-                    thing.OX = thing.X
-                    thing.OY = thing.Y
-                    thing.OZ = thing.Z
-                    thing.X = parseFloat(snap["x"])
-                    thing.Y = parseFloat(snap["y"])
-                    thing.Z = parseFloat(snap["z"])
+                    if ("x" in snap) {
+                        thing.OX = thing.X
+                        thing.OZ = thing.Z
+                        thing.X = parseFloat(snap["x"])
+                        thing.Z = parseFloat(snap["z"])
+                    }
+                    if ("y" in snap) {
+                        thing.OY = thing.Y
+                        thing.Y = parseFloat(snap["y"])
+                    }
                     if ("a" in snap) {
                         thing.Angle = parseFloat(snap["a"])
                     } else if ("d" in snap) {
@@ -50,8 +54,8 @@ class WorldState {
                     }
                 }
             }
-            this.snapshot_time = parseInt(data["s"]) + 1552330000000
-            this.previous_update = new Date().getTime()
+            this.snapshotTime = parseInt(data["s"]) + 1552330000000
+            this.previousUpdate = new Date().getTime()
         }
 
         world.update()
@@ -73,9 +77,9 @@ class WorldState {
         let cam = this.app.camera
 
         let time = new Date().getTime()
-        let interpolation = (time - this.previous_update) / NetworkUpdateRate
+        let interpolation = (time - this.previousUpdate) / NetworkUpdateRate
         if (interpolation > 1.0) interpolation = 1.0
-        // console.log(time, this.previous_update, this.snapshot_time, interpolation)
+        // console.log(time, this.previousUpdate, this.snapshotTime, interpolation)
 
         cam.update(interpolation)
 

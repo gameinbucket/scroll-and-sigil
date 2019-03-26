@@ -319,11 +319,12 @@ class World {
         let count = this.spriteCount[particle.SID]
         if (count) {
             this.spriteCount[particle.SID] = count + 1
-            if ((count + 2) * 16 > this.spriteBuffer[particle.SID].vertices.length)
+            if ((count + 2) * 16 > this.spriteBuffer[particle.SID].vertices.length) {
                 this.spriteBuffer[particle.SID] = RenderBuffer.Expand(this.gl, this.spriteBuffer[particle.SID])
+            }
         } else {
             this.spriteCount[particle.SID] = 1
-            this.spriteBuffer[particle.SID] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
+            this.spriteBuffer[particle.SID] = RenderBuffer.Init(this.gl, 3, 0, 2, 120, 180)
         }
     }
     RemoveThing(thing) {
@@ -413,7 +414,7 @@ class World {
 
         spriteSet.clear()
         for (let key in spriteBuffer)
-            spriteBuffer[key].zero()
+            spriteBuffer[key].Zero()
 
         g.set_program(gl, "texcol3d")
         g.update_mvp(gl)

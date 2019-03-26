@@ -40,7 +40,7 @@ type Thing struct {
 	Speed               float32
 	Health              int
 	DeltaHealth         bool
-	Update              func()
+	Update              func() bool
 	Damage              func(int)
 	Snap                func(data *strings.Builder)
 	Save                func(data *strings.Builder)

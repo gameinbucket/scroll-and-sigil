@@ -56,7 +56,7 @@ class RenderBuffer {
 
         return buffer
     }
-    zero() {
+    Zero() {
         this.vertex_pos = 0
         this.index_pos = 0
         this.index_offset = 0

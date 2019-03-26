@@ -7,13 +7,12 @@ let window
 
 function createWindow() {
     window = new BrowserWindow({
-        width: 800,
-        height: 600
+        width: 1200,
+        height: 1100
     })
 
-    // win.webContents.openDevTools()
-
     window.setMenuBarVisibility(false)
+    window.webContents.openDevTools()
 
     window.on("closed", () => {
         window = null

@@ -9,7 +9,7 @@ class RenderCopy {
         this.vertices = new Float32Array(vertex_limit * (position + color + texture))
         this.indices = new Uint32Array(index_limit)
     }
-    zero() {
+    Zero() {
         this.vertex_pos = 0
         this.index_pos = 0
         this.index_offset = 0

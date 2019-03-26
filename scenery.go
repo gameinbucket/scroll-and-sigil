@@ -41,7 +41,8 @@ func (me *Thing) ScenerySave(snap *strings.Builder) {
 }
 
 // SceneryUpdate func
-func (me *Thing) SceneryUpdate() {
+func (me *Thing) SceneryUpdate() bool {
+	return false
 }
 
 // SceneryDamage func

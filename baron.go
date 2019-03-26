@@ -173,7 +173,9 @@ func (me *Baron) Chase() {
 			me.Animation = BaronMissileAnimation
 		} else {
 			me.MoveCount--
-			if me.MoveCount < 0 || !me.Move() {
+			move := me.Move()
+			// fmt.Println(strconv.FormatInt(time.Now().UnixNano()/1000000, 10), "b>", move, "none?", me.MoveDirection == DirectionNone)
+			if me.MoveCount < 0 || !move {
 				me.NewDirection()
 			}
 			if me.UpdateAnimation() == AnimationDone {
@@ -208,12 +210,16 @@ func (me *Baron) Save(snap *strings.Builder) {
 func (me *Baron) Snap(snap *strings.Builder) {
 	snap.WriteString("{n:")
 	snap.WriteString(me.NID)
-	snap.WriteString(",x:")
-	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-	snap.WriteString(",y:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	snap.WriteString(",z:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	if me.DeltaMoveXZ {
+		snap.WriteString(",x:")
+		snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+		snap.WriteString(",z:")
+		snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	}
+	if me.DeltaMoveY {
+		snap.WriteString(",y:")
+		snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	}
 	if me.DeltaMoveDirection {
 		me.DeltaMoveDirection = false
 		snap.WriteString(",d:")
@@ -233,7 +239,7 @@ func (me *Baron) Snap(snap *strings.Builder) {
 }
 
 // Update func
-func (me *Baron) Update() {
+func (me *Baron) Update() bool {
 	switch me.Status {
 	case BaronDead:
 		me.Dead()
@@ -246,11 +252,13 @@ func (me *Baron) Update() {
 	case BaronChase:
 		me.Chase()
 	}
-	me.Integrate()
+	me.NpcIntegrate()
 
 	me.Snap(&me.World.Snapshot)
+	return false
 }
 
 // EmptyUpdate func
-func (me *Baron) EmptyUpdate() {
+func (me *Baron) EmptyUpdate() bool {
+	return false
 }

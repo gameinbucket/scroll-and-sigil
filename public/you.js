@@ -52,6 +52,12 @@ class PlayerYou extends You {
         let direction = null
         let goal = null
 
+        // TODO filter input into map to reduce uploaded traffic
+
+        if (Input.Is(" ")) {
+            SocketSend += "b "
+        }
+
         if (Input.Is("w")) {
             direction = "w"
             goal = this.camera.ry
@@ -110,6 +116,10 @@ class PlayerYou extends You {
                 SocketSend += "a:" + this.Angle + " "
             } else
                 SocketSend += "m "
+
+            // TODO improve
+            // this.X += Math.sin(this.Angle) * this.Speed * (16.0 / 50.0)
+            // this.Z -= Math.cos(this.Angle) * this.Speed * (16.0 / 50.0)
 
             if (this.Animation === BaronAnimationIdle)
                 this.Animation = BaronAnimationWalk

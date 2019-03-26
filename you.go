@@ -84,21 +84,34 @@ func (me *You) Snap(snap *strings.Builder) {
 }
 
 // Update func
-func (me *You) Update() {
+func (me *You) Update() bool {
 	person := me.Person
 
 	if person != nil && person.InputCount > 0 {
 
-		moved := false
+		move := false
+		attack := false
 
 		for i := 0; i < person.InputCount; i++ {
 			input := person.InputQueue[i]
 
-			if !moved {
+			if input == "b" {
+				if !attack {
+					const speed = 0.3
+					angle := float64(me.Angle)
+					dx := float32(math.Sin(angle))
+					dz := -float32(math.Cos(angle))
+					x := me.X + dx*me.Radius*3.0
+					y := me.Y + me.Height*0.75
+					z := me.Z + dz*me.Radius*3.0
+					NewPlasma(me.World, 1+NextRandP()%3, x, y, z, dx*speed, 0.0, dz*speed)
+					attack = true
+				}
+			} else if !move {
 				if input == "m" {
 					me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
 					me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
-					moved = true
+					move = true
 				} else if strings.HasPrefix(input, "a:") {
 					angle := strings.Split(input, "a:")[1]
 					value, _ := strconv.ParseFloat(angle, 32)
@@ -106,7 +119,7 @@ func (me *You) Update() {
 
 					me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
 					me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
-					moved = true
+					move = true
 				}
 			}
 		}
@@ -114,6 +127,6 @@ func (me *You) Update() {
 	}
 
 	me.Integrate()
-
 	me.Snap(&me.World.Snapshot)
+	return false
 }

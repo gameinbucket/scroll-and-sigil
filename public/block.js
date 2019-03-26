@@ -350,7 +350,7 @@ class Block {
     BuildMesh(world) {
         this.AmbientMesh(world)
         this.ColorMesh(world)
-        BLOCK_MESH.zero()
+        BLOCK_MESH.Zero()
         for (let side = 0; side < 6; side++) {
             let mesh_begin_index = BLOCK_MESH.index_pos
             let ptr_x = SLICE_X[side]

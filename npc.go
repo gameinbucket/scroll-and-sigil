@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 // Npc constants
 const (
 	DirectionNorth     = 0
@@ -34,12 +36,12 @@ var (
 		DirectionNorthWest,
 	}
 	NpcMoveX = []float32{
-		0.0, -0.5, -1.0, -0.5, 0.0, 0.5, 1.0, 0.5,
-		// new 0.0, 0.5, 1.0, 0.5, 0.0, -0.5, -1.0, -0.5,
+		// old 0.0, -0.5, -1.0, -0.5, 0.0, 0.5, 1.0, 0.5,
+		0.0, 0.5, 1.0, 0.5, 0.0, -0.5, -1.0, -0.5,
 	}
 	NpcMoveZ = []float32{
-		1.0, 0.5, 0.0, -0.5, -1.0, -0.5, 0.0, 0.5,
-		// new -1.0, -0.5, 0.0, 0.5, 1.0, 0.5, 0.0, -0.5,
+		// old 1.0, 0.5, 0.0, -0.5, -1.0, -0.5, 0.0, 0.5,
+		-1.0, -0.5, 0.0, 0.5, 1.0, 0.5, 0.0, -0.5,
 	}
 )
 
@@ -49,6 +51,8 @@ type Npc struct {
 	Target             *Thing
 	MoveCount          int
 	MoveDirection      int
+	DeltaMoveXZ        bool
+	DeltaMoveY         bool
 	DeltaMoveDirection bool
 }
 
@@ -63,21 +67,17 @@ func (me *Npc) NewDirection() {
 
 	var directionX int
 	if dx > epsilon {
-		// new directionX = DirectionEast
-		directionX = DirectionWest
-	} else if dx < -epsilon {
-		// new directionX = DirectionWest
 		directionX = DirectionEast
+	} else if dx < -epsilon {
+		directionX = DirectionWest
 	} else {
 		directionX = DirectionNone
 	}
 
 	var directionZ int
 	if dz > epsilon {
-		// directionZ = DirectionSouth
 		directionZ = DirectionNorth
 	} else if dz < -epsilon {
-		// directionZ = DirectionNorth
 		directionZ = DirectionSouth
 	} else {
 		directionZ = DirectionNone
@@ -85,7 +85,7 @@ func (me *Npc) NewDirection() {
 
 	if directionX != DirectionNone && directionZ != DirectionNone {
 		d := 0
-		if dz > 0 {
+		if dz < 0 {
 			d += 2
 		}
 		if dx > 0 {
@@ -108,8 +108,6 @@ func (me *Npc) NewDirection() {
 		if me.TestMove() {
 			return
 		}
-	} else {
-		directionX = DirectionNone
 	}
 
 	if directionZ != opposite {
@@ -117,8 +115,6 @@ func (me *Npc) NewDirection() {
 		if me.TestMove() {
 			return
 		}
-	} else {
-		directionZ = DirectionNone
 	}
 
 	if old != DirectionNone {
@@ -157,6 +153,7 @@ func (me *Npc) NewDirection() {
 		}
 	}
 
+	fmt.Println("b> cant move")
 	me.MoveDirection = DirectionNone
 }
 
@@ -171,33 +168,65 @@ func (me *Npc) TestMove() bool {
 
 // TryMove func
 func (me *Npc) TryMove(x, z float32) bool {
-	minGX := int((me.X - me.Radius))
+	minGX := int((x - me.Radius))
 	minGY := int(me.Y)
-	minGZ := int((me.Z - me.Radius))
-	maxGX := int((me.X + me.Radius))
+	minGZ := int((z - me.Radius))
+	maxGX := int((x + me.Radius))
 	maxGY := int((me.Y + me.Height))
-	maxGZ := int((me.Z + me.Radius))
+	maxGZ := int((z + me.Radius))
+
+	minBX := int(float32(minGX) * InverseBlockSize)
+	minBY := int(float32(minGY) * InverseBlockSize)
+	minBZ := int(float32(minGZ) * InverseBlockSize)
+	maxBX := int(float32(maxGX) * InverseBlockSize)
+	maxBY := int(float32(maxGY) * InverseBlockSize)
+	maxBZ := int(float32(maxGZ) * InverseBlockSize)
+
+	minTX := minGX - minBX*BlockSize
+	minTY := minGY - minBY*BlockSize
+	minTZ := minGZ - minBZ*BlockSize
+
+	world := me.World
+
+	bx := minBX
+	tx := minTX
 	for gx := minGX; gx <= maxGX; gx++ {
+		by := minBY
+		ty := minTY
 		for gy := minGY; gy <= maxGY; gy++ {
+			bz := minBZ
+			tz := minTZ
 			for gz := minGZ; gz <= maxGZ; gz++ {
-				bx := int(float32(gx) * InverseBlockSize)
-				by := int(float32(gy) * InverseBlockSize)
-				bz := int(float32(gz) * InverseBlockSize)
-				tx := gx - bx*BlockSize
-				ty := gy - by*BlockSize
-				tz := gz - bz*BlockSize
-				tile := me.World.GetTileType(bx, by, bz, tx, ty, tz)
+				block := world.GetBlock(bx, by, bz)
+				tile := block.GetTileTypeUnsafe(tx, ty, tz)
 				if TileClosed[tile] {
 					return false
 				}
+				tz++
+				if tz == BlockSize {
+					tz = 0
+					bz++
+				}
+			}
+			ty++
+			if ty == BlockSize {
+				ty = 0
+				by++
 			}
 		}
+		tx++
+		if tx == BlockSize {
+			tx = 0
+			bx++
+		}
 	}
+
 	searched := make(map[*Thing]bool)
-	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
-		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
-			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				block := me.World.GetBlock(gx, gy, gz)
+
+	for bx := minBX; bx <= maxBX; bx++ {
+		for by := minBY; by <= maxBY; by++ {
+			for bz := minBZ; bz <= maxBZ; bz++ {
+				block := world.GetBlock(bx, by, bz)
 				for t := 0; t < block.ThingCount; t++ {
 					thing := block.Things[t]
 					if me.Thing == thing {
@@ -213,6 +242,7 @@ func (me *Npc) TryMove(x, z float32) bool {
 			}
 		}
 	}
+
 	return true
 }
 
@@ -225,11 +255,28 @@ func (me *Npc) Move() bool {
 	tryZ := me.Z + NpcMoveZ[me.MoveDirection]*me.Speed
 	if me.TryMove(tryX, tryZ) {
 		me.RemoveFromBlocks()
+		me.OldX = me.X
+		me.OldZ = me.Z
 		me.X = tryX
 		me.Z = tryZ
+		me.DeltaMoveXZ = true
 		me.BlockBorders()
 		me.AddToBlocks()
 		return true
 	}
 	return false
+}
+
+// NpcIntegrate func
+func (me *Npc) NpcIntegrate() {
+	if !me.Ground || me.DY != 0.0 {
+		me.DY -= Gravity
+		me.Y += me.DY
+		me.DeltaMoveY = true
+		me.TerrainCollisionY()
+
+		me.RemoveFromBlocks()
+		me.BlockBorders()
+		me.AddToBlocks()
+	}
 }

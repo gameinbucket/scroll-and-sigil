@@ -88,7 +88,7 @@ class Application {
         else
             FrameBuffer.Resize(gl, this.frame, draw_width, draw_height)
 
-        screen.zero()
+        screen.Zero()
         Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0)
         RenderSystem.UpdateVao(gl, screen)
 
@@ -126,7 +126,6 @@ class Application {
         this.camera = new Camera(this.player, 10.0, 0.0, 0.0)
         this.player.camera = this.camera
         console.log(this.player)
-        console.log(this.camera)
     }
     async run() {
         await this.init()

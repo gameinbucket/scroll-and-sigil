@@ -137,8 +137,8 @@ func (me *World) Load(data []byte) {
 	me.MissileCount = 0
 
 	me.Things = make([]*Thing, 5)
-	me.Items = make([]*Item, 1)
-	me.Missiles = make([]*Missile, 1)
+	me.Items = make([]*Item, 5)
+	me.Missiles = make([]*Missile, 5)
 
 	for b := 0; b < len(blocks); b++ {
 		bdata := blocks[b].(map[string]interface{})
@@ -199,36 +199,36 @@ func (me *World) FindBlock(x, y, z float32) int {
 }
 
 // GetTileType func
-func (me *World) GetTileType(cx, cy, cz, bx, by, bz int) int {
-	for bx < 0 {
-		bx += BlockSize
-		cx--
+func (me *World) GetTileType(bx, by, bz, tx, ty, tz int) int {
+	for tx < 0 {
+		tx += BlockSize
+		bx--
 	}
-	for bx >= BlockSize {
-		bx -= BlockSize
-		cx++
+	for tx >= BlockSize {
+		tx -= BlockSize
+		bx++
 	}
-	for by < 0 {
-		by += BlockSize
-		cy--
+	for ty < 0 {
+		ty += BlockSize
+		by--
 	}
-	for by >= BlockSize {
-		by -= BlockSize
-		cy++
+	for ty >= BlockSize {
+		ty -= BlockSize
+		by++
 	}
-	for bz < 0 {
-		bz += BlockSize
-		cz--
+	for tz < 0 {
+		tz += BlockSize
+		bz--
 	}
 	for bz >= BlockSize {
-		bz -= BlockSize
-		cz++
+		tz -= BlockSize
+		bz++
 	}
-	block := me.GetBlock(cx, cy, cz)
+	block := me.GetBlock(bx, by, bz)
 	if block == nil {
 		return TileNone
 	}
-	return block.GetTileTypeUnsafe(bx, by, bz)
+	return block.GetTileTypeUnsafe(tx, ty, tz)
 }
 
 // GetBlock func
@@ -314,7 +314,13 @@ func (me *World) Update() {
 	len := me.ThingCount
 	for i := 0; i < len; i++ {
 		thing := me.Things[i]
-		thing.Update()
+		if thing.Update() {
+			me.Things[i] = me.Things[len-1]
+			me.Things[len-1] = nil
+			me.ThingCount--
+			len--
+			i--
+		}
 	}
 	len = me.MissileCount
 	for i := 0; i < len; i++ {

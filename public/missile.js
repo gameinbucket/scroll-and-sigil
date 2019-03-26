@@ -160,10 +160,10 @@ class Plasma extends Missile {
         this.X -= this.DX
         this.Y -= this.DY
         this.Z -= this.DZ
-        // TODO need to confirm with server correct health
         if (thing !== null)
             thing.Damage(1)
-        Sounds["plasma-impact"].play()
+        let sound = Sounds["plasma-impact"].play()
+        if (sound !== undefined) sound.then(_ => {}).catch(_ => {})
         new PlasmaExplosion(this.World, this.X, this.Y, this.Z)
         this.RemoveFromBlocks()
     }

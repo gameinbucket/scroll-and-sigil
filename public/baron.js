@@ -44,15 +44,19 @@ class Baron extends Thing {
                 break
             case BaronMelee:
                 this.Animation = BaronAnimationMelee
-                Sounds["baron-melee"].play()
+                let meleeSound = Sounds["baron-melee"].play()
+                if (meleeSound !== undefined) meleeSound.then(_ => {}).catch(_ => {})
                 break
             case BaronMissile:
                 this.Animation = BaronAnimationMissile
-                Sounds["baron-missile"].play()
+                let missileSound = Sounds["baron-missile"].play()
+                if (missileSound !== undefined) missileSound.then(_ => {}).catch(_ => {})
                 break
             case BaronChase:
-                if (Math.random() < 0.1)
-                    Sounds["baron-scream"].play()
+                if (Math.random() < 0.1) {
+                    let screamSound = Sounds["baron-scream"].play()
+                    if (screamSound !== undefined) screamSound.then(_ => {}).catch(_ => {})
+                }
             default:
                 this.Animation = BaronAnimationWalk
                 break
@@ -67,10 +71,13 @@ class Baron extends Thing {
     }
     Damage(amount) {
         this.Health -= amount
-        if (this.Health <= 0)
-            Sounds["baron-death"].play()
-        else
-            Sounds["baron-pain"].play()
+        if (this.Health <= 0) {
+            let sound = Sounds["baron-death"].play()
+            if (sound !== undefined) sound.then(_ => {}).catch(_ => {})
+        } else {
+            let sound = Sounds["baron-pain"].play()
+            if (sound !== undefined) sound.then(_ => {}).catch(_ => {})
+        }
     }
     Dead() {
         if (this.AnimationFrame === this.Animation.length - 1) {
