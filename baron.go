@@ -64,6 +64,59 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	return baron
 }
 
+// Save func
+func (me *Baron) Save(snap *strings.Builder) {
+	snap.WriteString("{u:")
+	snap.WriteString(me.UID)
+	snap.WriteString(",n:")
+	snap.WriteString(me.NID)
+	snap.WriteString(",x:")
+	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+	snap.WriteString(",y:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	snap.WriteString(",z:")
+	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	snap.WriteString(",d:")
+	snap.WriteString(strconv.Itoa(me.MoveDirection))
+	snap.WriteString(",s:")
+	snap.WriteString(strconv.Itoa(me.Status))
+	snap.WriteString(",h:")
+	snap.WriteString(strconv.Itoa(me.Health))
+	snap.WriteString("},")
+}
+
+// Snap func
+func (me *Baron) Snap(snap *strings.Builder) {
+	snap.WriteString("{n:")
+	snap.WriteString(me.NID)
+	if me.DeltaMoveXZ {
+		snap.WriteString(",x:")
+		snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+		snap.WriteString(",z:")
+		snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+	}
+	if me.DeltaMoveY {
+		snap.WriteString(",y:")
+		snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+	}
+	if me.DeltaMoveDirection {
+		me.DeltaMoveDirection = false
+		snap.WriteString(",d:")
+		snap.WriteString(strconv.Itoa(me.MoveDirection))
+	}
+	if me.DeltaStatus {
+		snap.WriteString(",s:")
+		snap.WriteString(strconv.Itoa(me.Status))
+		me.DeltaStatus = false
+	}
+	if me.DeltaHealth {
+		snap.WriteString(",h:")
+		snap.WriteString(strconv.Itoa(me.Health))
+		me.DeltaHealth = false
+	}
+	snap.WriteString("},")
+}
+
 // Damage func
 func (me *Baron) Damage(amount int) {
 	if me.Status != BaronDead {
@@ -183,59 +236,6 @@ func (me *Baron) Chase() {
 			}
 		}
 	}
-}
-
-// Save func
-func (me *Baron) Save(snap *strings.Builder) {
-	snap.WriteString("{u:")
-	snap.WriteString(me.UID)
-	snap.WriteString(",n:")
-	snap.WriteString(me.NID)
-	snap.WriteString(",x:")
-	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-	snap.WriteString(",y:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	snap.WriteString(",z:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
-	snap.WriteString(",d:")
-	snap.WriteString(strconv.Itoa(me.MoveDirection))
-	snap.WriteString(",s:")
-	snap.WriteString(strconv.Itoa(me.Status))
-	snap.WriteString(",h:")
-	snap.WriteString(strconv.Itoa(me.Health))
-	snap.WriteString("},")
-}
-
-// Snap func
-func (me *Baron) Snap(snap *strings.Builder) {
-	snap.WriteString("{n:")
-	snap.WriteString(me.NID)
-	if me.DeltaMoveXZ {
-		snap.WriteString(",x:")
-		snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-		snap.WriteString(",z:")
-		snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
-	}
-	if me.DeltaMoveY {
-		snap.WriteString(",y:")
-		snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	}
-	if me.DeltaMoveDirection {
-		me.DeltaMoveDirection = false
-		snap.WriteString(",d:")
-		snap.WriteString(strconv.Itoa(me.MoveDirection))
-	}
-	if me.DeltaStatus {
-		snap.WriteString(",s:")
-		snap.WriteString(strconv.Itoa(me.Status))
-		me.DeltaStatus = false
-	}
-	if me.DeltaHealth {
-		snap.WriteString(",h:")
-		snap.WriteString(strconv.Itoa(me.Health))
-		me.DeltaHealth = false
-	}
-	snap.WriteString("},")
 }
 
 // Update func

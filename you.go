@@ -7,9 +7,26 @@ import (
 	"strings"
 )
 
+// Animation constants
+const (
+	HumanWalkAnimation    int = 2
+	HumanMeleeAnimation   int = 2
+	HumanMissileAnimation int = 3
+	HumanDeathAnimation   int = 2
+)
+
+// Human constants
+const (
+	HumanDead    = 0
+	HumanWalk    = 1
+	HumanMelee   = 2
+	HumanMissile = 3
+)
+
 // You struct
 type You struct {
 	*Thing
+	Status int
 	Person *Person
 }
 
@@ -31,17 +48,12 @@ func NewYou(world *World, person *Person, x, y, z float32) *You {
 	you.Height = 1.0
 	you.Speed = 0.1
 	you.Health = 1
+	you.Status = HumanWalk
 	you.Person = person
 	world.AddThing(you.Thing)
 	you.BlockBorders()
 	you.AddToBlocks()
 	return you
-}
-
-// Damage func
-func (me *You) Damage(amount int) {
-	fmt.Println("ouch!", amount)
-	me.DeltaHealth = true
 }
 
 // Save func
@@ -83,28 +95,47 @@ func (me *You) Snap(snap *strings.Builder) {
 	snap.WriteString("},")
 }
 
-// Update func
-func (me *You) Update() bool {
+// Damage func
+func (me *You) Damage(amount int) {
+	if me.Status != HumanDead {
+		fmt.Println("ouch!", amount)
+		me.DeltaHealth = true
+	}
+}
+
+// Missile func
+func (me *You) Missile() {
+	anim := me.UpdateAnimation()
+	if anim == AnimationAlmostDone {
+		const speed = 0.3
+		angle := float64(me.Angle)
+		dx := float32(math.Sin(angle))
+		dz := -float32(math.Cos(angle))
+		x := me.X + dx*me.Radius*3.0
+		y := me.Y + me.Height*0.75
+		z := me.Z + dz*me.Radius*3.0
+		NewPlasma(me.World, 1+NextRandP()%3, x, y, z, dx*speed, 0.0, dz*speed)
+	} else if anim == AnimationDone {
+		me.Status = HumanWalk
+		me.AnimationFrame = 0
+		me.Animation = HumanWalkAnimation
+	}
+}
+
+// Walk func
+func (me *You) Walk() {
 	person := me.Person
-
 	if person != nil && person.InputCount > 0 {
-
 		move := false
 		attack := false
-
 		for i := 0; i < person.InputCount; i++ {
 			input := person.InputQueue[i]
-
 			if input == "b" {
 				if !attack {
-					const speed = 0.3
-					angle := float64(me.Angle)
-					dx := float32(math.Sin(angle))
-					dz := -float32(math.Cos(angle))
-					x := me.X + dx*me.Radius*3.0
-					y := me.Y + me.Height*0.75
-					z := me.Z + dz*me.Radius*3.0
-					NewPlasma(me.World, 1+NextRandP()%3, x, y, z, dx*speed, 0.0, dz*speed)
+					me.Status = HumanMissile
+					me.AnimationMod = 0
+					me.AnimationFrame = 0
+					me.Animation = HumanMissileAnimation
 					attack = true
 				}
 			} else if !move {
@@ -125,7 +156,16 @@ func (me *You) Update() bool {
 		}
 		person.InputCount = 0
 	}
+}
 
+// Update func
+func (me *You) Update() bool {
+	switch me.Status {
+	case HumanMissile:
+		me.Missile()
+	default:
+		me.Walk()
+	}
 	me.Integrate()
 	me.Snap(&me.World.Snapshot)
 	return false

@@ -1,5 +1,13 @@
-const YouAnimationIdle = []
-const YouAnimationWalk = []
+const HumanAnimationIdle = []
+const HumanAnimationWalk = []
+const HumanAnimationMelee = []
+const HumanAnimationMissile = []
+const HumanAnimationDeath = []
+
+const HumanDead = 0
+const HumanWalk = 1
+const HumanMelee = 2
+const HumanMissile = 3
 
 class You extends Thing {
     constructor(world, nid, x, y, z) {
@@ -8,7 +16,7 @@ class You extends Thing {
         this.UID = "you"
         this.SID = "baron"
         this.NID = nid
-        this.Animation = BaronAnimationWalk
+        this.Animation = HumanAnimationWalk
         this.X = x
         this.Y = y
         this.Z = z
@@ -19,6 +27,7 @@ class You extends Thing {
         this.Height = 1.0
         this.Speed = 0.1
         this.Health = 1
+        this.Status = HumanWalk
         world.AddThing(this)
         this.BlockBorders()
         this.AddToBlocks()
@@ -48,7 +57,14 @@ class PlayerYou extends You {
         super(world, nid, x, y, z)
         this.camera = null
     }
-    Update() {
+    Missile() {
+        if (this.UpdateAnimation() === AnimationDone) {
+            this.AnimationFrame = 0
+            this.Animation = HumanAnimationWalk
+            this.Status = HumanWalk
+        }
+    }
+    Walk() {
         let direction = null
         let goal = null
 
@@ -56,6 +72,16 @@ class PlayerYou extends You {
 
         if (Input.Is(" ")) {
             SocketSend += "b "
+
+            this.Status = HumanMissile
+            this.AnimationMod = 0
+            this.AnimationFrame = 0
+            this.Animation = HumanAnimationMissile
+
+            let missileSound = Sounds["baron-missile"].play()
+            if (missileSound !== undefined) missileSound.then(_ => {}).catch(_ => {})
+
+            return
         }
 
         if (Input.Is("w")) {
@@ -104,7 +130,7 @@ class PlayerYou extends You {
         if (goal === null) {
             this.AnimationMod = 0
             this.AnimationFrame = 0
-            this.Animation = BaronAnimationIdle
+            this.Animation = HumanAnimationIdle
         } else {
             if (goal < 0)
                 goal += Tau
@@ -121,11 +147,21 @@ class PlayerYou extends You {
             // this.X += Math.sin(this.Angle) * this.Speed * (16.0 / 50.0)
             // this.Z -= Math.cos(this.Angle) * this.Speed * (16.0 / 50.0)
 
-            if (this.Animation === BaronAnimationIdle)
-                this.Animation = BaronAnimationWalk
+            if (this.Animation === HumanAnimationIdle)
+                this.Animation = HumanAnimationWalk
 
             if (this.UpdateAnimation() === AnimationDone)
                 this.AnimationFrame = 0
+        }
+    }
+    Update() {
+        switch (this.Status) {
+            case HumanMissile:
+                this.Missile()
+                break
+            default:
+                this.Walk()
+                break
         }
     }
 }

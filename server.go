@@ -53,6 +53,12 @@ var (
 )
 
 func main() {
+	if len(os.Args) != 2 {
+		fmt.Println("port?")
+		return
+	}
+	port := os.Args[1]
+
 	stop := make(chan os.Signal)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
@@ -87,7 +93,6 @@ func main() {
 		}
 	}()
 
-	const port = "3000"
 	httpserver := &http.Server{Addr: ":" + port, Handler: http.HandlerFunc(serve)}
 	fmt.Println("listening on port " + port)
 

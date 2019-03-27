@@ -93,6 +93,12 @@ class Wad {
         Wad.SpriteBuilderDirectional("baron", BaronAnimationMissile, "missile")
         Wad.SpriteBuilderDirectional("baron", BaronAnimationDeath, "death")
 
+        HumanAnimationIdle.push.apply(HumanAnimationIdle, BaronAnimationIdle)
+        HumanAnimationWalk.push.apply(HumanAnimationWalk, BaronAnimationWalk)
+        HumanAnimationMelee.push.apply(HumanAnimationMelee, BaronAnimationMelee)
+        HumanAnimationMissile.push.apply(HumanAnimationMissile, BaronAnimationMissile)
+        HumanAnimationDeath.push.apply(HumanAnimationDeath, BaronAnimationDeath)
+
         Wad.SpriteBuilder("particles", PlasmaExplosionAnimation, "plasma-explosion")
     }
     static SpriteBuilder(sid, array, name) {

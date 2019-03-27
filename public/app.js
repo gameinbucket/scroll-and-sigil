@@ -103,7 +103,7 @@ class Application {
         let data = await Network.Request("wad")
         await Wad.Load(g, gl, data)
 
-        let socket = await Network.Socket("ws://localhost:3000/websocket")
+        let socket = await Network.Socket("ws://" + window.location.host + "/websocket")
         socket.onclose = function () {
             socket = null
         }
