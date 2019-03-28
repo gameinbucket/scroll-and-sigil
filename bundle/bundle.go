@@ -3,31 +3,22 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"image"
-	"image/draw"
-	"image/png"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
-type sprite struct {
-	x     int
-	y     int
-	image *image.RGBA
-}
-
 func main() {
-	pwd, err := os.Getwd()
-	if err != nil {
-		panic(err)
+	if len(os.Args) != 2 {
+		fmt.Println("path?")
+		return
 	}
-	resources := resourceBundle(pwd)
+	pwd := os.Args[1]
 	sprites := spriteBundle(pwd)
 	animations := animationBundle(pwd)
 	tiles := tileBundle(pwd)
+	resources := resourceBundle(pwd)
 
 	var data strings.Builder
 	data.WriteString("resources{")
@@ -149,8 +140,34 @@ func animationBundle(pwd string) string {
 	return data.String()
 }
 
-func spriteBundle(pwd string) string {
+func scaleSprites(pwd string) string {
 	path := filepath.Join(pwd, "raw", "sprites")
+	fmt.Println("sprites", path)
+
+	dir, err := ioutil.ReadDir(path)
+	if err != nil {
+		panic(err)
+	}
+
+	var data strings.Builder
+	for _, info := range dir {
+		name := info.Name()
+		fmt.Println(name)
+		from := filepath.Join(path, name)
+		to := filepath.Join(pwd, "raw", "sprites-upscale", name)
+		err := os.MkdirAll(to, os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
+		upscaleSprite(from, to)
+	}
+
+	return data.String()
+}
+
+func spriteBundle(pwd string) string {
+	scaleSprites(pwd)
+	path := filepath.Join(pwd, "raw", "sprites-upscale")
 	fmt.Println("sprites", path)
 
 	dir, err := ioutil.ReadDir(path)
@@ -164,124 +181,12 @@ func spriteBundle(pwd string) string {
 		fmt.Println(name)
 		data.WriteString(name)
 		data.WriteString("{")
-		str := spritePacker(pwd, name, filepath.Join(path, name))
+		str := spritePacker(name, filepath.Join(path, name), filepath.Join(pwd, "public", "images"))
 		data.WriteString(str)
 		data.WriteString("},")
 	}
 
 	return data.String()
-}
-
-func spritePacker(pwd, spriteName, path string) string {
-	dir, err := ioutil.ReadDir(path)
-	if err != nil {
-		panic(err)
-	}
-
-	const limit = 1024
-
-	var data strings.Builder
-	x := 0
-	y := 0
-	atlasWidth := 0
-	atlasHeight := 0
-
-	images := make([]*sprite, 0)
-
-	for _, info := range dir {
-		name := info.Name()
-		extension := filepath.Ext(name)
-		base := strings.TrimSuffix(name, extension)
-		if extension != ".png" {
-			continue
-		}
-		fmt.Println(name)
-		rgba := getPNG(filepath.Join(path, info.Name()))
-		width := rgba.Rect.Size().X
-		height := rgba.Rect.Size().Y
-
-		if x+width+1 > limit {
-			atlasWidth = x - 1
-			x = 0
-			y = atlasHeight + 1
-		}
-
-		save := &sprite{x: x, y: y, image: rgba}
-		images = append(images, save)
-
-		data.WriteString(base)
-		data.WriteString("[")
-		data.WriteString(strconv.Itoa(x))
-		data.WriteString(",")
-		data.WriteString(strconv.Itoa(y))
-		data.WriteString(",")
-		data.WriteString(strconv.Itoa(width))
-		data.WriteString(",")
-		data.WriteString(strconv.Itoa(height))
-		data.WriteString("],")
-
-		x += width + 1
-
-		if y+height > atlasHeight {
-			atlasHeight = y + height
-		}
-	}
-
-	if x-1 > atlasWidth {
-		atlasWidth = x - 1
-	}
-
-	power := 1
-	for power < atlasWidth {
-		power *= 2
-	}
-	atlasWidth = power
-
-	power = 1
-	for power < atlasHeight {
-		power *= 2
-	}
-	atlasHeight = power
-
-	bundle := image.NewRGBA(image.Rect(0, 0, atlasWidth, atlasHeight))
-
-	for i := 0; i < len(images); i++ {
-		source := images[i]
-		point := image.Point{source.x, source.y}
-		bounds := image.Rectangle{point, point.Add(source.image.Bounds().Size())}
-		draw.Draw(bundle, bounds, source.image, image.Point{0, 0}, draw.Src)
-	}
-
-	writePNG(filepath.Join(pwd, "public", "images", spriteName+".png"), bundle)
-
-	return data.String()
-}
-
-func getPNG(path string) *image.RGBA {
-	file, err := os.Open(path)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-	png, err := png.Decode(file)
-	if err != nil {
-		panic(err)
-	}
-	rgba := image.NewRGBA(png.Bounds())
-	draw.Draw(rgba, rgba.Bounds(), png, image.Point{0, 0}, draw.Src)
-	return rgba
-}
-
-func writePNG(path string, image *image.RGBA) {
-	file, err := os.Create(path)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-	err = png.Encode(file, image)
-	if err != nil {
-		panic(err)
-	}
 }
 
 func compress(path string) string {

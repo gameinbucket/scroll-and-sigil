@@ -1,4 +1,4 @@
-const SCALE = 1.0 / 32.0
+const SpriteScale = 1.0 / 64.0
 
 class Sprite {
     constructor(atlas, width, height, left, top, right, bottom, ox, oy) {
@@ -45,14 +45,14 @@ class Sprite {
         let right = (atlas[0] + atlas[2]) * atlas_width
         let bottom = (atlas[1] + atlas[3]) * atlas_height
 
-        let width = atlas[2] * SCALE
-        let height = atlas[3] * SCALE
+        let width = atlas[2] * SpriteScale
+        let height = atlas[3] * SpriteScale
 
         let ox = 0
         let oy = 0
         if (atlas.length > 4) {
-            ox = atlas[4] * SCALE
-            oy = atlas[5] * SCALE
+            ox = atlas[4] * SpriteScale
+            oy = atlas[5] * SpriteScale
         }
 
         return new Sprite(atlas, width, height, left, top, right, bottom, ox, oy)
