@@ -26,8 +26,11 @@ const (
 // You struct
 type You struct {
 	*Thing
-	Status int
-	Person *Person
+	Status      int
+	DeltaMoveXZ bool
+	DeltaMoveY  bool
+	DeltaAngle  bool
+	Person      *Person
 }
 
 // NewYou func
@@ -79,14 +82,23 @@ func (me *You) Save(snap *strings.Builder) {
 func (me *You) Snap(snap *strings.Builder) {
 	snap.WriteString("{n:")
 	snap.WriteString(me.NID)
-	snap.WriteString(",x:")
-	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+	if me.DeltaMoveXZ {
+		snap.WriteString(",x:")
+		snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
+		snap.WriteString(",z:")
+		snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+		me.DeltaMoveXZ = false
+	}
+	// if me.DeltaMoveY {
 	snap.WriteString(",y:")
 	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	snap.WriteString(",z:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
-	snap.WriteString(",a:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
+	// me.DeltaMoveY = false
+	// }
+	if me.DeltaAngle {
+		snap.WriteString(",a:")
+		snap.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
+		me.DeltaAngle = false
+	}
 	if me.DeltaHealth {
 		snap.WriteString(",h:")
 		snap.WriteString(strconv.Itoa(me.Health))
@@ -143,14 +155,17 @@ func (me *You) Walk() {
 					me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
 					me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
 					move = true
+					me.DeltaMoveXZ = true
 				} else if strings.HasPrefix(input, "a:") {
 					angle := strings.Split(input, "a:")[1]
 					value, _ := strconv.ParseFloat(angle, 32)
 					me.Angle = float32(value)
+					me.DeltaAngle = true
 
 					me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
 					me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
 					move = true
+					me.DeltaMoveXZ = true
 				}
 			}
 		}
@@ -167,6 +182,5 @@ func (me *You) Update() bool {
 		me.Walk()
 	}
 	me.Integrate()
-	me.Snap(&me.World.Snapshot)
 	return false
 }

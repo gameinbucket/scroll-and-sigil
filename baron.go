@@ -94,15 +94,17 @@ func (me *Baron) Snap(snap *strings.Builder) {
 		snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
 		snap.WriteString(",z:")
 		snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+		me.DeltaMoveXZ = false
 	}
 	if me.DeltaMoveY {
 		snap.WriteString(",y:")
 		snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+		me.DeltaMoveY = false
 	}
 	if me.DeltaMoveDirection {
-		me.DeltaMoveDirection = false
 		snap.WriteString(",d:")
 		snap.WriteString(strconv.Itoa(me.MoveDirection))
+		me.DeltaMoveDirection = false
 	}
 	if me.DeltaStatus {
 		snap.WriteString(",s:")
@@ -136,7 +138,8 @@ func (me *Baron) Damage(amount int) {
 // Dead func
 func (me *Baron) Dead() {
 	if me.AnimationFrame == me.Animation-1 {
-		me.Thing.Update = me.EmptyUpdate
+		me.Thing.Update = me.NopUpdate
+		me.Thing.Snap = me.NopSnap
 	} else {
 		me.UpdateAnimation()
 	}
@@ -253,12 +256,5 @@ func (me *Baron) Update() bool {
 		me.Chase()
 	}
 	me.NpcIntegrate()
-
-	me.Snap(&me.World.Snapshot)
-	return false
-}
-
-// EmptyUpdate func
-func (me *Baron) EmptyUpdate() bool {
 	return false
 }

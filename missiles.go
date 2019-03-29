@@ -152,6 +152,13 @@ func (me *Missile) Snap(snap *strings.Builder) {
 	snap.WriteString("},")
 }
 
+// Broadcast func
+func (me *Missile) Broadcast() string {
+	var build strings.Builder
+	me.Snap(&build)
+	return build.String()
+}
+
 // NewPlasma func
 func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
 	me := &Missile{}
@@ -174,7 +181,7 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
 	me.Hit = me.PlasmaHit
 
 	world.AddMissile(me)
-	me.Snap(&me.World.Snapshot)
+	world.SendBroadcast(me.Broadcast())
 }
 
 // PlasmaHit func

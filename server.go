@@ -81,12 +81,14 @@ func main() {
 	go func() {
 		for range ticker.C {
 			server.mux.Lock()
-			if len(server.people) > 0 {
+			num := len(server.people)
+			if num > 0 {
 				server.world.Update()
-				broadcast := server.world.Snapshot.String()
-				for i := 0; i < len(server.people); i++ {
+				server.world.BuildSnapshots(server.people)
+				for i := 0; i < num; i++ {
 					person := server.people[i]
-					go person.WriteToClient(broadcast)
+					snap := person.snap.String()
+					go person.WriteToClient(snap)
 				}
 			}
 			server.mux.Unlock()
@@ -183,14 +185,18 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 // RemovePerson func
 func (me *Server) RemovePerson(person *Person) {
 	me.mux.Lock()
-	len := len(me.people)
-	for i := 0; i < len; i++ {
+	defer me.mux.Unlock()
+	fmt.Println("removing person...")
+	me.world.broadcast.WriteString("{del:")
+	me.world.broadcast.WriteString(person.Character.NID)
+	me.world.broadcast.WriteString("},")
+	num := len(me.people)
+	for i := 0; i < num; i++ {
 		if me.people[i] == person {
-			me.people[i] = me.people[len-1]
-			me.people[len-1] = nil
-			me.people = me.people[:len-1]
-			break
+			me.people[i] = me.people[num-1]
+			me.people[num-1] = nil
+			me.people = me.people[:num-1]
+			return
 		}
 	}
-	me.mux.Unlock()
 }

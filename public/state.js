@@ -11,20 +11,53 @@ class WorldState {
             let raw = SocketQueue[SocketQueue.length - 1]
             SocketQueue = []
             let data = Parser.read(raw)
+            console.log("raw>", raw)
+
+            if ("b" in data) {
+                let broadcast = data["b"]
+                for (let i = 0; i < broadcast.length; i++) {
+                    let snap = broadcast[i]
+                    if ("del" in snap) {
+                        let nid = snap["del"]
+                        let thing = world.thingLookup[nid]
+                        if (thing) {
+                            console.log("REMOVING THING")
+                            world.RemoveThing(thing)
+                            thing.RemoveFromBlocks()
+                        }
+                    } else {
+                        let nid = snap["n"]
+                        if (!(nid in world.thingLookup)) {
+                            let uid = snap["u"]
+                            if (uid === "plasma") {
+                                let x = parseFloat(snap["x"])
+                                let y = parseFloat(snap["y"])
+                                let z = parseFloat(snap["z"])
+                                let dx = parseFloat(snap["dx"])
+                                let dy = parseFloat(snap["dy"])
+                                let dz = parseFloat(snap["dz"])
+                                new Plasma(world, nid, 2, x, y, z, dx, dy, dz)
+                            }
+                        }
+                    }
+                }
+            }
+
             let things = data["t"]
             for (let i = 0; i < things.length; i++) {
                 let snap = things[i]
                 let nid = snap["n"]
-                if (nid in world.thingLookup) {
-                    let thing = world.thingLookup[nid]
+                let thing = world.thingLookup[nid]
+                if (thing) {
+                    thing.OX = thing.X
+                    thing.OY = thing.Y
+                    thing.OZ = thing.Z
+
                     if ("x" in snap) {
-                        thing.OX = thing.X
-                        thing.OZ = thing.Z
                         thing.X = parseFloat(snap["x"])
                         thing.Z = parseFloat(snap["z"])
                     }
                     if ("y" in snap) {
-                        thing.OY = thing.Y
                         thing.Y = parseFloat(snap["y"])
                     }
                     if ("a" in snap) {
@@ -42,18 +75,10 @@ class WorldState {
                     thing.BlockBorders()
                     thing.AddToBlocks()
                 } else {
-                    let uid = snap["u"]
-                    if (uid === "plasma") {
-                        let x = parseFloat(snap["x"])
-                        let y = parseFloat(snap["y"])
-                        let z = parseFloat(snap["z"])
-                        let dx = parseFloat(snap["dx"])
-                        let dy = parseFloat(snap["dy"])
-                        let dz = parseFloat(snap["dz"])
-                        new Plasma(world, nid, 2, x, y, z, dx, dy, dz)
-                    }
+                    console.log("error: missing thing!")
                 }
             }
+
             this.snapshotTime = parseInt(data["s"]) + 1552330000000
             this.previousUpdate = new Date().getTime()
         }
@@ -70,8 +95,8 @@ class WorldState {
         let gl = this.app.gl
         let frame = this.app.frame
         let canvas = this.app.canvas
-        let canvas_ortho = this.app.canvas_ortho
-        let draw_perspective = this.app.draw_perspective
+        let canvasOrtho = this.app.canvasOrtho
+        let drawPerspective = this.app.drawPerspective
         let screen = this.app.screen
         let world = this.app.world
         let cam = this.app.camera
@@ -91,7 +116,7 @@ class WorldState {
         gl.enable(gl.DEPTH_TEST)
         gl.enable(gl.CULL_FACE)
 
-        g.set_perspective(draw_perspective, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry)
+        g.set_perspective(drawPerspective, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry)
         Matrix.Inverse(g.iv, g.v)
 
         let cam_block_x = Math.floor(cam.x * InverseBlockSize)
@@ -106,7 +131,7 @@ class WorldState {
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)
         g.set_program(gl, "texture")
-        g.set_orthographic(canvas_ortho, 0, 0)
+        g.set_orthographic(canvasOrtho, 0, 0)
         g.update_mvp(gl)
         g.set_texture_direct(gl, frame.textures[0])
         RenderSystem.BindAndDraw(gl, screen)

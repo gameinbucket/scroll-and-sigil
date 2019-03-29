@@ -69,32 +69,32 @@ class Application {
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
 
-        let canvas_ortho = []
-        let draw_ortho = []
-        let draw_perspective = []
+        let canvasOrtho = []
+        let drawOrtho = []
+        let drawPerspective = []
 
         let scale = 1.0
-        let draw_width = canvas.width * scale
-        let draw_height = canvas.height * scale
-        let ratio = draw_width / draw_height
+        let drawWidth = canvas.width * scale
+        let drawHeight = canvas.height * scale
+        let ratio = drawWidth / drawHeight
         let fov = 2 * Math.atan(Math.tan(60 * (Math.PI / 180) / 2) / ratio) * (180 / Math.PI)
 
-        Matrix.Orthographic(canvas_ortho, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
-        Matrix.Orthographic(draw_ortho, 0.0, draw_width, 0.0, draw_height, 0.0, 1.0)
-        Matrix.Perspective(draw_perspective, fov, 0.01, 100.0, ratio)
+        Matrix.Orthographic(canvasOrtho, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
+        Matrix.Orthographic(drawOrtho, 0.0, drawWidth, 0.0, drawHeight, 0.0, 1.0)
+        Matrix.Perspective(drawPerspective, fov, 0.01, 100.0, ratio)
 
         if (this.frame === null)
-            this.frame = FrameBuffer.Make(gl, draw_width, draw_height, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "depth")
+            this.frame = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "depth")
         else
-            FrameBuffer.Resize(gl, this.frame, draw_width, draw_height)
+            FrameBuffer.Resize(gl, this.frame, drawWidth, drawHeight)
 
         screen.Zero()
         Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0)
         RenderSystem.UpdateVao(gl, screen)
 
-        this.canvas_ortho = canvas_ortho
-        this.draw_ortho = draw_ortho
-        this.draw_perspective = draw_perspective
+        this.canvasOrtho = canvasOrtho
+        this.drawOrtho = drawOrtho
+        this.drawPerspective = drawPerspective
     }
     async init() {
         let g = this.g

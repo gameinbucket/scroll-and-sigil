@@ -14,6 +14,7 @@ type Person struct {
 	InputQueue []string
 	InputCount int
 	Character  *You
+	snap       *strings.Builder
 }
 
 // NewPerson func
@@ -21,8 +22,8 @@ func NewPerson(connection *websocket.Conn, world *World) *Person {
 	person := &Person{Connection: connection}
 	person.UUID = UUID()
 	person.InputQueue = make([]string, 3)
-	// TODO broadcast new player to clients
 	person.Character = world.NewPlayer(person)
+	person.snap = &strings.Builder{}
 	return person
 }
 
@@ -62,7 +63,6 @@ func (me *Person) ConnectionLoop(server *Server) {
 	char.Health = 0
 	char.World.RemoveThing(char.Thing)
 	char.RemoveFromBlocks()
-	// TODO broadcast delete to clients
 
 	server.RemovePerson(me)
 }

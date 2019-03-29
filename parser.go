@@ -13,8 +13,8 @@ func ParserRead(str []byte) map[string]interface{} {
 	var key strings.Builder
 	var value strings.Builder
 	state := "key"
-	len := len(str)
-	for i := 0; i < len; i++ {
+	num := len(str)
+	for i := 0; i < num; i++ {
 		c := str[i]
 		if c == ':' {
 			state = "value"
@@ -97,7 +97,7 @@ func ParserRead(str []byte) map[string]interface{} {
 			value.WriteByte(c)
 		}
 	}
-	pc := str[len-1]
+	pc := str[num-1]
 	if pc != ',' && pc != ']' && pc != '}' {
 		front := stack.Front().Value
 		front.(map[string]interface{})[key.String()] = value.String()

@@ -39,14 +39,15 @@ type World struct {
 	Missiles                        []*Missile
 	ThreadIndex                     int
 	ThreadID                        string
-	Snapshot                        strings.Builder
 	SpawnYouX, SpawnYouY, SpawnYouZ float32 // TODO temp
+	broadcast                       strings.Builder
 }
 
 // NewWorld func
 func NewWorld() *World {
-	w := &World{}
-	return w
+	world := &World{}
+	world.broadcast = strings.Builder{}
+	return world
 }
 
 // Load func
@@ -165,6 +166,47 @@ func (me *World) Load(data []byte) {
 // NewPlayer func
 func (me *World) NewPlayer(person *Person) *You {
 	return NewYou(me, person, me.SpawnYouX, me.SpawnYouY, me.SpawnYouZ)
+}
+
+// SendBroadcast func
+func (me *World) SendBroadcast(snap string) {
+	me.broadcast.WriteString(snap)
+}
+
+// BuildSnapshots func
+func (me *World) BuildSnapshots(people []*Person) {
+	// TODO build separate snapshot list for every player and avoid broadcasting what isn't needed
+	// hold a map of what things are up-to-date for player, and resend full thing if there is a gap
+	// must build snapshot AFTER world update, else what happens if thing state changes after an event within same loop
+	num := len(server.people)
+	time := strconv.FormatInt(time.Now().UnixNano()/1000000-1552330000000, 10)
+
+	var mapSnap strings.Builder
+	mapSnap.Reset()
+	mapSnap.WriteString("s:")
+	mapSnap.WriteString(time)
+	mapSnap.WriteString(",t[")
+	numThings := me.ThingCount
+	for i := 0; i < numThings; i++ {
+		thing := me.Things[i]
+		thing.Snap(&mapSnap)
+
+	}
+	mapSnap.WriteString("]")
+	if me.broadcast.Len() > 0 {
+		mapSnap.WriteString(",b[")
+		mapSnap.WriteString(me.broadcast.String())
+		mapSnap.WriteString("]")
+	}
+	snap := mapSnap.String()
+	me.broadcast.Reset()
+
+	for i := 0; i < num; i++ {
+		person := server.people[i]
+		personSnap := person.snap
+		personSnap.Reset()
+		personSnap.WriteString(snap)
+	}
 }
 
 // Save func
@@ -302,36 +344,31 @@ func (me *World) AddMissile(t *Missile) {
 
 // Update func
 func (me *World) Update() {
-	me.Snapshot.Reset()
-	me.Snapshot.WriteString("s:")
-	me.Snapshot.WriteString(strconv.FormatInt(time.Now().UnixNano()/1000000-1552330000000, 10))
-	me.Snapshot.WriteString(",t[")
 	me.ThreadID = WorldThreads[me.ThreadIndex]
 	me.ThreadIndex++
 	if me.ThreadIndex == len(WorldThreads) {
 		me.ThreadIndex = 0
 	}
-	len := me.ThingCount
-	for i := 0; i < len; i++ {
+	num := me.ThingCount
+	for i := 0; i < num; i++ {
 		thing := me.Things[i]
 		if thing.Update() {
-			me.Things[i] = me.Things[len-1]
-			me.Things[len-1] = nil
+			me.Things[i] = me.Things[num-1]
+			me.Things[num-1] = nil
 			me.ThingCount--
-			len--
+			num--
 			i--
 		}
 	}
-	len = me.MissileCount
-	for i := 0; i < len; i++ {
+	num = me.MissileCount
+	for i := 0; i < num; i++ {
 		missile := me.Missiles[i]
 		if missile.Update() {
-			me.Missiles[i] = me.Missiles[len-1]
-			me.Missiles[len-1] = nil
+			me.Missiles[i] = me.Missiles[num-1]
+			me.Missiles[num-1] = nil
 			me.MissileCount--
-			len--
+			num--
 			i--
 		}
 	}
-	me.Snapshot.WriteString("]")
 }

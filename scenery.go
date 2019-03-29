@@ -11,8 +11,9 @@ func NewTree(world *World, x, y, z float32) *Thing {
 	tree.UID = "tree"
 	tree.NID = NextNID()
 	tree.World = world
-	tree.Update = tree.SceneryUpdate
-	tree.Damage = tree.SceneryDamage
+	tree.Update = tree.NopUpdate
+	tree.Damage = tree.NopDamage
+	tree.Snap = tree.NopSnap
 	tree.Save = tree.ScenerySave
 	tree.X = x
 	tree.Y = y
@@ -38,13 +39,4 @@ func (me *Thing) ScenerySave(snap *strings.Builder) {
 	snap.WriteString(",z:")
 	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
 	snap.WriteString("}")
-}
-
-// SceneryUpdate func
-func (me *Thing) SceneryUpdate() bool {
-	return false
-}
-
-// SceneryDamage func
-func (me *Thing) SceneryDamage(amount int) {
 }

@@ -67,6 +67,19 @@ func LoadNewThing(world *World, uid string, x, y, z float32) *Thing {
 	return nil
 }
 
+// NopUpdate func
+func (me *Thing) NopUpdate() bool {
+	return false
+}
+
+// NopSnap func
+func (me *Thing) NopSnap(data *strings.Builder) {
+}
+
+// NopDamage func
+func (me *Thing) NopDamage(amount int) {
+}
+
 // BlockBorders func
 func (me *Thing) BlockBorders() {
 	me.MinBX = int((me.X - me.Radius) * InverseBlockSize)
