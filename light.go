@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"strconv"
 	"strings"
 )
@@ -30,4 +32,12 @@ func (me *Light) Save(data *strings.Builder) {
 	data.WriteString(",v:")
 	data.WriteString(strconv.Itoa(me.RGB))
 	data.WriteString("}")
+}
+
+// SaveBinary func
+func (me *Light) SaveBinary(raw *bytes.Buffer) {
+	binary.Write(raw, binary.LittleEndian, uint8(me.X))
+	binary.Write(raw, binary.LittleEndian, uint8(me.Y))
+	binary.Write(raw, binary.LittleEndian, uint8(me.Z))
+	binary.Write(raw, binary.LittleEndian, int32(me.RGB))
 }

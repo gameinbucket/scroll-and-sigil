@@ -33,9 +33,9 @@ class World {
         this.itemLookup
         this.missileLookup
         this.occluder = new Occluder()
-        this.PID = ""
+        this.PID
     }
-    load(data) {
+    Load(raw) {
         this.blocks = []
         this.viewable = []
         this.spriteSet = new Set()
@@ -53,126 +53,161 @@ class World {
         this.itemLookup = {}
         this.missileLookup = {}
 
-        let content = Parser.read(data)
-        let blocks = content["b"]
+        let dat = new DataView(raw)
+        let dex = 0
 
-        this.PID = content["p"]
+        this.PID = dat.getUint16(dex, true)
+        dex += 2
 
-        console.log(content)
-
-        let left = null
-        let right = null
-        let top = null
-        let bottom = null
-        let front = null
-        let back = null
-        for (let b = 0; b < blocks.length; b++) {
-            let data = blocks[b]
-            let bx = parseInt(data["x"])
-            let by = parseInt(data["y"])
-            let bz = parseInt(data["z"])
-
-            if (left === null || bx < left) left = bx
-            if (right === null || bx > right) right = bx
-            if (top === null || by > top) top = by
-            if (bottom === null || by < bottom) bottom = by
-            if (front === null || bz > front) front = bz
-            if (back === null || bz < back) back = bz
-        }
-
-        this.width = right - left + 1
-        this.height = top - bottom + 1
-        this.length = front - back + 1
+        this.width = dat.getUint16(dex, true)
+        dex += 2
+        this.height = dat.getUint16(dex, true)
+        dex += 2
+        this.length = dat.getUint16(dex, true)
+        dex += 2
         this.slice = this.width * this.height
         this.all = this.slice * this.length
 
-        for (let b = 0; b < blocks.length; b++) {
-            let data = blocks[b]
-            let bx = parseInt(data["x"]) - left
-            let by = parseInt(data["y"]) - bottom
-            let bz = parseInt(data["z"]) - back
-            let tiles = data["t"]
-            let lights = data["c"]
-
-            let block = new Block(bx, by, bz)
-
-            if (tiles.length > 0) {
-                for (let t = 0; t < BLOCK_ALL; t++)
-                    block.tiles[t].type = parseInt(tiles[t])
-            }
-
-            for (let t = 0; t < lights.length; t++) {
-                let light = lights[t]
-                let x = parseInt(light["x"])
-                let y = parseInt(light["y"])
-                let z = parseInt(light["z"])
-                let rgb = parseInt(light["v"])
-                block.AddLight(new Light(x, y, z, rgb))
-            }
-
-            this.blocks[bx + by * this.width + bz * this.slice] = block
-        }
-
-        for (let x = 0; x < this.width; x++) {
-            for (let y = 0; y < this.height; y++) {
-                for (let z = 0; z < this.length; z++) {
-                    let i = x + y * this.width + z * this.slice
-                    if (this.blocks[i] === null || this.blocks[i] === undefined)
-                        this.blocks[i] = new Block(x, y, z)
+        let bx = 0
+        let by = 0
+        let bz = 0
+        for (let b = 0; b < this.all; b++) {
+            this.blocks[b] = new Block(bx, by, bz)
+            bx++
+            if (bx === this.width) {
+                bx = 0
+                by++
+                if (by === this.height) {
+                    by = 0
+                    bz++
                 }
             }
         }
 
-        for (let b = 0; b < blocks.length; b++) {
-            let data = blocks[b]
-            let things = data["e"]
-            let items = data["i"]
-            let missiles = data["m"]
+        for (let b = 0; b < this.all; b++) {
+            let block = this.blocks[b]
+            let notEmpty = dat.getUint8(dex, true)
+            dex += 1
 
-            for (let t = 0; t < things.length; t++) {
-                let thing = things[t]
-                let uid = thing["u"]
-                let nid = thing["n"]
-                let x = parseFloat(thing["x"])
-                let y = parseFloat(thing["y"])
-                let z = parseFloat(thing["z"])
-                Thing.LoadNewThing(this, uid, nid, x, y, z)
+            if (notEmpty) {
+                for (let t = 0; t < BlockAll; t++) {
+                    let tileType = dat.getUint8(dex, true)
+                    dex += 1
+                    block.tiles[t].type = tileType
+                }
             }
 
-            for (let t = 0; t < items.length; t++) {
-                let item = items[t]
-                let uid = item["u"]
-                let nid = item["n"]
-                let x = parseFloat(item["x"])
-                let y = parseFloat(item["y"])
-                let z = parseFloat(item["z"])
-                Item.LoadNewItem(this, uid, nid, x, y, z)
+            let thingCount = dat.getUint8(dex, true)
+            dex += 1
+            for (let t = 0; t < thingCount; t++) {
+                let uid = dat.getUint16(dex, true)
+                dex += 2
+                switch (uid) {
+                    case HumanUID:
+                        {
+                            let nid = dat.getUint16(dex, true)
+                            dex += 2
+                            let x = dat.getFloat32(dex, true)
+                            dex += 4
+                            let y = dat.getFloat32(dex, true)
+                            dex += 4
+                            let z = dat.getFloat32(dex, true)
+                            dex += 4
+                            let angle = dat.getFloat32(dex, true)
+                            dex += 4
+                            let health = dat.getUint16(dex, true)
+                            dex += 2
+                            if (nid === this.PID) new PlayerYou(this, nid, x, y, z, angle, health)
+                            else new You(this, nid, x, y, z, angle, health)
+                        }
+                        continue
+                    case BaronUID:
+                        {
+                            let nid = dat.getUint16(dex, true)
+                            dex += 2
+                            let x = dat.getFloat32(dex, true)
+                            dex += 4
+                            let y = dat.getFloat32(dex, true)
+                            dex += 4
+                            let z = dat.getFloat32(dex, true)
+                            dex += 4
+                            let direction = dat.getUint8(dex, true)
+                            dex += 1
+                            let health = dat.getUint16(dex, true)
+                            dex += 2
+                            let status = dat.getUint8(dex, true)
+                            dex += 1
+                            new Baron(this, nid, x, y, z, direction, health, status)
+                        }
+                        continue
+                    case TreeUID:
+                        {
+                            let nid = dat.getUint16(dex, true)
+                            dex += 2
+                            let x = dat.getFloat32(dex, true)
+                            dex += 4
+                            let y = dat.getFloat32(dex, true)
+                            dex += 4
+                            let z = dat.getFloat32(dex, true)
+                            dex += 4
+                            new Tree(this, nid, x, y, z)
+                        }
+                        continue
+                }
             }
 
-            for (let t = 0; t < missiles.length; t++) {
-                let missile = missiles[t]
-                let uid = missile["u"]
-                let nid = missile["n"]
-                let x = parseFloat(missile["x"])
-                let y = parseFloat(missile["y"])
-                let z = parseFloat(missile["z"])
-                Missile.LoadNewMissile(this, uid, nid, x, y, z)
+            let itemCount = dat.getUint8(dex, true)
+            for (let t = 0; t < itemCount; t++) {
+                console.log("new item")
+            }
+            dex += 1
+
+            let missileCount = dat.getUint8(dex, true)
+            dex += 1
+            for (let t = 0; t < missileCount; t++) {
+                let uid = dat.getUint16(dex, true)
+                dex += 2
+                switch (uid) {
+                    case PlasmaUID:
+                        {
+                            let nid = dat.getUint16(dex, true)
+                            dex += 2
+                            let x = dat.getFloat32(dex, true)
+                            dex += 4
+                            let y = dat.getFloat32(dex, true)
+                            dex += 4
+                            let z = dat.getFloat32(dex, true)
+                            dex += 4
+                            let dx = dat.getFloat32(dex, true)
+                            dex += 4
+                            let dy = dat.getFloat32(dex, true)
+                            dex += 4
+                            let dz = dat.getFloat32(dex, true)
+                            dex += 4
+                            let damage = dat.getUint16(dex, true)
+                            dex += 2
+                            new Plasma(this, nid, damage, x, y, z, dx, dy, dz)
+                        }
+                        continue
+                }
+            }
+
+            let lightCount = dat.getUint8(dex, true)
+            dex += 1
+            for (let t = 0; t < lightCount; t++) {
+                let x = dat.getUint8(dex, true)
+                dex += 1
+                let y = dat.getUint8(dex, true)
+                dex += 1
+                let z = dat.getUint8(dex, true)
+                dex += 1
+                let rgb = dat.getInt32(dex, true)
+                dex += 4
+                block.AddLight(new Light(x, y, z, rgb))
             }
         }
 
         this.build()
-    }
-    save(name) {
-        let data = "n:" + name + ",b["
-        for (let i = 0; i < this.all; i++) {
-            let block = this.blocks[i]
-            if (!block.empty()) {
-                data += block.save()
-                data += ","
-            }
-        }
-        data += "]"
-        return data
     }
     build() {
         for (let i = 0; i < this.all; i++) {

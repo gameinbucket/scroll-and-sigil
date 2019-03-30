@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"math"
 	"strconv"
 	"strings"
@@ -39,13 +41,15 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	baron := &Baron{}
 	baron.Npc = &Npc{}
 	baron.Thing = &Thing{}
-	baron.UID = "baron"
+	baron.UID = BaronUID
 	baron.NID = NextNID()
 	baron.World = world
 	baron.Thing.Update = baron.Update
 	baron.Thing.Damage = baron.Damage
 	baron.Thing.Snap = baron.Snap
 	baron.Thing.Save = baron.Save
+	baron.Thing.SnapBinary = baron.SnapBinary
+	baron.Thing.SaveBinary = baron.SaveBinary
 	baron.X = x
 	baron.Y = y
 	baron.Z = z
@@ -64,12 +68,36 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	return baron
 }
 
+// SaveBinary func
+func (me *Baron) SaveBinary(raw *bytes.Buffer) {
+	binary.Write(raw, binary.LittleEndian, me.UID)
+	binary.Write(raw, binary.LittleEndian, me.NID)
+	binary.Write(raw, binary.LittleEndian, float32(me.X))
+	binary.Write(raw, binary.LittleEndian, float32(me.Y))
+	binary.Write(raw, binary.LittleEndian, float32(me.Z))
+	binary.Write(raw, binary.LittleEndian, uint8(me.MoveDirection))
+	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
+	binary.Write(raw, binary.LittleEndian, uint8(me.Status))
+}
+
+// SnapBinary func
+func (me *Baron) SnapBinary(raw *bytes.Buffer) int {
+	binary.Write(raw, binary.LittleEndian, me.NID)
+	binary.Write(raw, binary.LittleEndian, float32(me.X))
+	binary.Write(raw, binary.LittleEndian, float32(me.Y))
+	binary.Write(raw, binary.LittleEndian, float32(me.Z))
+	binary.Write(raw, binary.LittleEndian, uint8(me.MoveDirection))
+	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
+	binary.Write(raw, binary.LittleEndian, uint8(me.Status))
+	return 1
+}
+
 // Save func
 func (me *Baron) Save(snap *strings.Builder) {
 	snap.WriteString("{u:")
-	snap.WriteString(me.UID)
+	snap.WriteString(strconv.Itoa(int(me.UID)))
 	snap.WriteString(",n:")
-	snap.WriteString(me.NID)
+	snap.WriteString(strconv.Itoa(int(me.NID)))
 	snap.WriteString(",x:")
 	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
 	snap.WriteString(",y:")
@@ -88,7 +116,7 @@ func (me *Baron) Save(snap *strings.Builder) {
 // Snap func
 func (me *Baron) Snap(snap *strings.Builder) {
 	snap.WriteString("{n:")
-	snap.WriteString(me.NID)
+	snap.WriteString(strconv.Itoa(int(me.NID)))
 	if me.DeltaMoveXZ {
 		snap.WriteString(",x:")
 		snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))

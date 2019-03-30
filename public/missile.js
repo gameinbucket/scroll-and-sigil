@@ -1,9 +1,9 @@
 class Missile {
     constructor() {
         this.World = null
-        this.UID = ""
+        this.UID = 0
         this.SID = ""
-        this.NID = ""
+        this.NID = 0
         this.Sprite = null
         this.X = 0
         this.Y = 0
@@ -142,7 +142,7 @@ class Plasma extends Missile {
         this.BlockBorders()
         if (this.AddToBlocks())
             return this
-        this.UID = "plasma"
+        this.UID = PlasmaUID
         this.SID = "missiles"
         this.NID = nid
         this.Sprite = SpriteData[this.SID]["baron-missile-front-1"]
@@ -151,7 +151,7 @@ class Plasma extends Missile {
         this.DZ = dz
         this.Radius = 0.2
         this.Height = 0.2
-        this.Damage = damage
+        this.DamageAmount = damage
         this.Hit = this.PlasmaHit
         world.AddMissile(this)
         return this
@@ -161,7 +161,7 @@ class Plasma extends Missile {
         this.Y -= this.DY
         this.Z -= this.DZ
         if (thing !== null)
-            thing.Damage(1)
+            thing.Damage(this.DamageAmount)
         let sound = Sounds["plasma-impact"].play()
         if (sound !== undefined) sound.then(_ => {}).catch(_ => {})
         new PlasmaExplosion(this.World, this.X, this.Y, this.Z)

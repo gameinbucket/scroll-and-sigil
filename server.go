@@ -87,8 +87,9 @@ func main() {
 				server.world.BuildSnapshots(server.people)
 				for i := 0; i < num; i++ {
 					person := server.people[i]
-					snap := person.snap.String()
-					go person.WriteToClient(snap)
+					// snap := person.snap.String()
+					// go person.WriteToClient(snap)
+					go person.WriteBinaryToClient(person.binarySnap.Bytes())
 				}
 			}
 			server.mux.Unlock()
@@ -176,9 +177,9 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 	me.mux.Lock()
 	person := NewPerson(connection, server.world)
 	me.people = append(me.people, person)
-	data := me.world.Save("map", person)
+	data := me.world.SaveBinary(person)
 	me.mux.Unlock()
-	person.WriteToClient(data)
+	person.WriteBinaryToClient(data)
 	go person.ConnectionLoop(me)
 }
 
@@ -187,9 +188,10 @@ func (me *Server) RemovePerson(person *Person) {
 	me.mux.Lock()
 	defer me.mux.Unlock()
 	fmt.Println("removing person...")
-	me.world.broadcast.WriteString("{del:")
-	me.world.broadcast.WriteString(person.Character.NID)
-	me.world.broadcast.WriteString("},")
+	// TODO
+	// me.world.broadcast.WriteString("{del:")
+	// me.world.broadcast.WriteString(person.Character.NID)
+	// me.world.broadcast.WriteString("},")
 	num := len(me.people)
 	for i := 0; i < num; i++ {
 		if me.people[i] == person {

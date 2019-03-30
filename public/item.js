@@ -1,9 +1,9 @@
 class Item {
     constructor() {
         this.World = null
-        this.UID = ""
+        this.UID = 0
         this.SID = ""
-        this.NID = ""
+        this.NID = 0
         this.Sprite = null
         this.X = 0
         this.Y = 0

@@ -34,12 +34,17 @@ const DirectionToAngle = [
     315.0 * DegToRad
 ]
 
+const HumanUID = 0
+const BaronUID = 1
+const TreeUID = 2
+const PlasmaUID = 3
+
 class Thing {
     constructor() {
         this.World = null
-        this.UID = ""
+        this.UID = 0
         this.SID = ""
-        this.NID = ""
+        this.NID = 0
         this.Animation = null
         this.AnimationMod = 0
         this.AnimationFrame = 0
@@ -75,9 +80,6 @@ class Thing {
             case "tree":
                 return new Tree(world, nid, x, y, z)
         }
-    }
-    Save(x, y, z) {
-        return "{u:" + this.UID + ",x:" + (this.X - x) + ",y:" + (this.Y - y) + ",z:" + (this.Z - z) + "}"
     }
     BlockBorders() {
         this.MinBX = Math.floor((this.X - this.Radius) * InverseBlockSize)

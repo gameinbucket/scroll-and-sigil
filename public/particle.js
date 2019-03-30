@@ -3,7 +3,6 @@ const PlasmaExplosionAnimation = []
 class Particle {
     constructor() {
         this.World = null
-        this.UID = ""
         this.SID = ""
         this.Sprite = null
         this.X = 0
@@ -86,7 +85,6 @@ class Particle {
 class PlasmaExplosion extends Particle {
     constructor(world, x, y, z) {
         super()
-        this.UID = "plasma-explosion"
         this.SID = "particles"
         this.AnimationMod = 0
         this.AnimationFrame = 0
@@ -133,7 +131,6 @@ class PlasmaExplosion extends Particle {
 class Blood extends Particle {
     constructor(world, x, y, z, dx, dy, dz, spriteName) {
         super()
-        this.UID = "blood"
         this.SID = "particles"
         this.Sprite = SpriteData[this.SID][spriteName]
         this.World = world

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"strconv"
 	"strings"
 )
@@ -8,15 +10,15 @@ import (
 // Missile struct
 type Missile struct {
 	World               *World
-	UID                 string
-	NID                 string
+	UID                 uint16
+	NID                 uint16
 	X, Y, Z             float32
 	DX, DY, DZ          float32
 	MinBX, MinBY, MinBZ int
 	MaxBX, MaxBY, MaxBZ int
 	Radius              float32
 	Height              float32
-	Damage              int
+	DamageAmount        int
 	Hit                 func(thing *Thing)
 }
 
@@ -134,9 +136,9 @@ func (me *Missile) Update() bool {
 // Snap func
 func (me *Missile) Snap(snap *strings.Builder) {
 	snap.WriteString("{u:")
-	snap.WriteString(me.UID)
+	snap.WriteString(strconv.Itoa(int(me.UID)))
 	snap.WriteString(",n:")
-	snap.WriteString(me.NID)
+	snap.WriteString(strconv.Itoa(int(me.NID)))
 	snap.WriteString(",x:")
 	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
 	snap.WriteString(",y:")
@@ -150,6 +152,19 @@ func (me *Missile) Snap(snap *strings.Builder) {
 	snap.WriteString(",dz:")
 	snap.WriteString(strconv.FormatFloat(float64(me.DZ), 'f', -1, 32))
 	snap.WriteString("},")
+}
+
+// SnapBinary func
+func (me *Missile) SnapBinary(raw *bytes.Buffer) {
+	binary.Write(raw, binary.LittleEndian, me.UID)
+	binary.Write(raw, binary.LittleEndian, me.NID)
+	binary.Write(raw, binary.LittleEndian, float32(me.X))
+	binary.Write(raw, binary.LittleEndian, float32(me.Y))
+	binary.Write(raw, binary.LittleEndian, float32(me.Z))
+	binary.Write(raw, binary.LittleEndian, float32(me.DX))
+	binary.Write(raw, binary.LittleEndian, float32(me.DY))
+	binary.Write(raw, binary.LittleEndian, float32(me.DZ))
+	binary.Write(raw, binary.LittleEndian, uint16(me.DamageAmount))
 }
 
 // Broadcast func
@@ -172,12 +187,12 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
 	if me.AddToBlocks() {
 		return
 	}
-	me.UID = "plasma"
+	me.UID = PlasmaUID
 	me.NID = NextNID()
 	me.DX = dx
 	me.DY = dy
 	me.DZ = dz
-	me.Damage = damage
+	me.DamageAmount = damage
 	me.Hit = me.PlasmaHit
 
 	world.AddMissile(me)
@@ -190,7 +205,7 @@ func (me *Missile) PlasmaHit(thing *Thing) {
 	me.Y -= me.DY
 	me.Z -= me.DZ
 	if thing != nil {
-		thing.Damage(1)
+		thing.Damage(me.DamageAmount)
 	}
 	me.RemoveFromBlocks()
 }

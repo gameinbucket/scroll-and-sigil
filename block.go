@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"strconv"
 	"strings"
 )
@@ -42,7 +44,7 @@ func (me *Block) Save(data *strings.Builder) {
 	data.WriteString(",z:")
 	data.WriteString(strconv.Itoa(me.Z))
 	data.WriteString(",t[")
-	if me.NotEmpty() {
+	if me.NotEmpty() == 1 {
 		for i := 0; i < BlockAll; i++ {
 			data.WriteString(strconv.FormatInt(int64(me.Tiles[i]), 10))
 			data.WriteString(",")
@@ -71,14 +73,41 @@ func (me *Block) Save(data *strings.Builder) {
 	data.WriteString("]}")
 }
 
-// NotEmpty func
-func (me *Block) NotEmpty() bool {
-	for i := 0; i < BlockAll; i++ {
-		if me.Tiles[i] != TileNone {
-			return true
+// SaveBinary func
+func (me *Block) SaveBinary(raw *bytes.Buffer) {
+	notEmpty := me.NotEmpty()
+	binary.Write(raw, binary.LittleEndian, notEmpty)
+	if notEmpty == 1 {
+		for i := 0; i < BlockAll; i++ {
+			binary.Write(raw, binary.LittleEndian, uint8(me.Tiles[i]))
 		}
 	}
-	return false
+	binary.Write(raw, binary.LittleEndian, uint8(me.ThingCount))
+	for i := 0; i < me.ThingCount; i++ {
+		me.Things[i].SaveBinary(raw)
+	}
+	binary.Write(raw, binary.LittleEndian, uint8(me.ItemCount))
+	for i := 0; i < me.ItemCount; i++ {
+		me.Items[i].SaveBinary(raw)
+	}
+	binary.Write(raw, binary.LittleEndian, uint8(me.MissileCount))
+	for i := 0; i < me.MissileCount; i++ {
+		me.Missiles[i].SnapBinary(raw)
+	}
+	binary.Write(raw, binary.LittleEndian, uint8(me.LightCount))
+	for i := 0; i < me.LightCount; i++ {
+		me.Lights[i].SaveBinary(raw)
+	}
+}
+
+// NotEmpty func
+func (me *Block) NotEmpty() uint8 {
+	for i := 0; i < BlockAll; i++ {
+		if me.Tiles[i] != TileNone {
+			return 1
+		}
+	}
+	return 0
 }
 
 // GetTileTypeUnsafe func

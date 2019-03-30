@@ -10,23 +10,24 @@ const HumanMelee = 2
 const HumanMissile = 3
 
 class You extends Thing {
-    constructor(world, nid, x, y, z) {
+    constructor(world, nid, x, y, z, angle, health) {
         super()
         this.World = world
-        this.UID = "you"
+        this.UID = HumanUID
         this.SID = "baron"
         this.NID = nid
         this.Animation = HumanAnimationWalk
         this.X = x
         this.Y = y
         this.Z = z
+        this.Angle = angle
         this.OX = x
         this.OY = y
         this.OZ = z
         this.Radius = 0.4
         this.Height = 1.0
         this.Speed = 0.1
-        this.Health = 1
+        this.Health = health
         this.Status = HumanWalk
         world.AddThing(this)
         this.BlockBorders()
@@ -53,8 +54,8 @@ class You extends Thing {
 }
 
 class PlayerYou extends You {
-    constructor(world, nid, x, y, z) {
-        super(world, nid, x, y, z)
+    constructor(world, nid, x, y, z, angle, health) {
+        super(world, nid, x, y, z, angle, health)
         this.camera = null
     }
     Missile() {

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"math"
 	"strconv"
 	"strings"
@@ -179,33 +181,53 @@ func (me *World) BuildSnapshots(people []*Person) {
 	// hold a map of what things are up-to-date for player, and resend full thing if there is a gap
 	// must build snapshot AFTER world update, else what happens if thing state changes after an event within same loop
 	num := len(server.people)
-	time := strconv.FormatInt(time.Now().UnixNano()/1000000-1552330000000, 10)
+	// time := strconv.FormatInt(time.Now().UnixNano()/1000000-1552330000000, 10)
+	time := time.Now().UnixNano()/1000000 - 1552330000000
 
-	var mapSnap strings.Builder
-	mapSnap.Reset()
-	mapSnap.WriteString("s:")
-	mapSnap.WriteString(time)
-	mapSnap.WriteString(",t[")
+	// var mapSnap strings.Builder
+	// mapSnap.WriteString("s:")
+	// mapSnap.WriteString(time)
+	// mapSnap.WriteString(",t[")
+	// numThings := me.ThingCount
+	// for i := 0; i < numThings; i++ {
+	// 	thing := me.Things[i]
+	// 	thing.Snap(&mapSnap)
+
+	// }
+	// mapSnap.WriteString("]")
+	// if me.broadcast.Len() > 0 {
+	// 	mapSnap.WriteString(",b[")
+	// 	mapSnap.WriteString(me.broadcast.String())
+	// 	mapSnap.WriteString("]")
+	// }
+	// snap := mapSnap.String()
+	// me.broadcast.Reset()
+
+	// for i := 0; i < num; i++ {
+	// 	person := server.people[i]
+	// 	personSnap := person.snap
+	// 	personSnap.Reset()
+	// 	personSnap.WriteString(snap)
+	// }
+
+	body := new(bytes.Buffer)
 	numThings := me.ThingCount
+	updatedThings := 0
 	for i := 0; i < numThings; i++ {
 		thing := me.Things[i]
-		thing.Snap(&mapSnap)
-
+		updatedThings += thing.SnapBinary(body)
 	}
-	mapSnap.WriteString("]")
-	if me.broadcast.Len() > 0 {
-		mapSnap.WriteString(",b[")
-		mapSnap.WriteString(me.broadcast.String())
-		mapSnap.WriteString("]")
-	}
-	snap := mapSnap.String()
-	me.broadcast.Reset()
 
+	raw := new(bytes.Buffer)
+	binary.Write(raw, binary.LittleEndian, uint32(time))
+	binary.Write(raw, binary.LittleEndian, uint16(updatedThings))
+	raw.Write(body.Bytes())
+
+	dat := raw.Bytes()
 	for i := 0; i < num; i++ {
 		person := server.people[i]
-		personSnap := person.snap
-		personSnap.Reset()
-		personSnap.WriteString(snap)
+		person.binarySnap.Reset()
+		person.binarySnap.Write(dat)
 	}
 }
 
@@ -215,7 +237,7 @@ func (me *World) Save(name string, person *Person) string {
 	data.WriteString("n:")
 	data.WriteString(name)
 	data.WriteString(",p:")
-	data.WriteString(person.Character.NID)
+	data.WriteString(strconv.Itoa(int(person.Character.NID)))
 	data.WriteString(",b[")
 	for i := 0; i < me.All; i++ {
 		me.Blocks[i].Save(&data)
@@ -223,6 +245,19 @@ func (me *World) Save(name string, person *Person) string {
 	}
 	data.WriteString("]")
 	return data.String()
+}
+
+// SaveBinary func
+func (me *World) SaveBinary(person *Person) []byte {
+	raw := new(bytes.Buffer)
+	binary.Write(raw, binary.LittleEndian, person.Character.NID)
+	binary.Write(raw, binary.LittleEndian, uint16(me.Width))
+	binary.Write(raw, binary.LittleEndian, uint16(me.Height))
+	binary.Write(raw, binary.LittleEndian, uint16(me.Length))
+	for i := 0; i < me.All; i++ {
+		me.Blocks[i].SaveBinary(raw)
+	}
+	return raw.Bytes()
 }
 
 // FindBlock func

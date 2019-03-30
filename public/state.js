@@ -10,8 +10,73 @@ class WorldState {
         if (SocketQueue.length > 0) {
             let raw = SocketQueue[SocketQueue.length - 1]
             SocketQueue = []
-            let data = Parser.read(raw)
-            console.log("raw>", raw)
+
+            let dat = new DataView(raw)
+            let dex = 0
+
+            let serverTime = dat.getUint32(dex, true)
+            dex += 4
+
+            let thingCount = dat.getUint16(dex, true)
+            dex += 2
+            for (let t = 0; t < thingCount; t++) {
+                let nid = dat.getUint16(dex, true)
+                dex += 2
+                let thing = world.thingLookup[nid]
+                if (thing) {
+                    thing.OX = thing.X
+                    thing.OY = thing.Y
+                    thing.OZ = thing.Z
+                    switch (thing.UID) {
+                        case HumanUID:
+                            {
+                                thing.X = dat.getFloat32(dex, true)
+                                dex += 4
+                                thing.Y = dat.getFloat32(dex, true)
+                                dex += 4
+                                thing.Z = dat.getFloat32(dex, true)
+                                dex += 4
+                                thing.Angle = dat.getFloat32(dex, true)
+                                dex += 4
+                                let health = dat.getUint16(dex, true)
+                                dex += 2
+                                thing.NetUpdateHealth(health)
+                            }
+                            continue
+                        case BaronUID:
+                            {
+                                thing.X = dat.getFloat32(dex, true)
+                                dex += 4
+                                thing.Y = dat.getFloat32(dex, true)
+                                dex += 4
+                                thing.Z = dat.getFloat32(dex, true)
+                                dex += 4
+                                let direction = dat.getUint8(dex, true)
+                                dex += 1
+                                let health = dat.getUint16(dex, true)
+                                dex += 2
+                                let status = dat.getUint8(dex, true)
+                                dex += 1
+                                if (direction !== DirectionNone)
+                                    thing.Angle = DirectionToAngle[direction]
+                                thing.NetUpdateState(status)
+                                thing.NetUpdateHealth(health)
+                            }
+                            continue
+                    }
+                    thing.RemoveFromBlocks()
+                    thing.BlockBorders()
+                    thing.AddToBlocks()
+                } else {
+                    console.log("error: missing thing!", nid)
+                    console.log(world.thingLookup)
+                }
+            }
+
+            // let data = Parser.read(raw)
+            let data = {}
+            data["s"] = 1
+            data["t"] = []
 
             if ("b" in data) {
                 let broadcast = data["b"]
@@ -79,14 +144,14 @@ class WorldState {
                 }
             }
 
-            this.snapshotTime = parseInt(data["s"]) + 1552330000000
+            this.snapshotTime = serverTime + 1552330000000
             this.previousUpdate = new Date().getTime()
         }
 
         world.update()
 
         if (SocketSend.length > 0) {
-            SOCKET.send(SocketSend)
+            SocketConnection.send(SocketSend)
             SocketSend = ""
         }
     }

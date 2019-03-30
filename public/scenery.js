@@ -2,7 +2,7 @@ class Tree extends Thing {
     constructor(world, nid, x, y, z) {
         super()
         this.World = world
-        this.UID = "tree"
+        this.UID = TreeUID
         this.SID = "scenery"
         this.NID = nid
         this.Sprite = SpriteData[this.SID]["dead-tree"]

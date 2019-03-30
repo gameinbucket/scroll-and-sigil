@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"math"
-	"strconv"
 	"strings"
 )
 
@@ -15,16 +15,24 @@ const (
 	AnimationDone       = 2
 )
 
+// UID constants
+const (
+	HumanUID  = uint16(0)
+	BaronUID  = uint16(1)
+	TreeUID   = uint16(2)
+	PlasmaUID = uint16(3)
+)
+
 // Thing variables
 var (
-	ThingNetworkNum = 0
+	ThingNetworkNum = uint16(0)
 )
 
 // Thing struct
 type Thing struct {
 	World               *World
-	UID                 string
-	NID                 string
+	UID                 uint16
+	NID                 uint16
 	Animation           int
 	AnimationMod        int
 	AnimationFrame      int
@@ -44,12 +52,14 @@ type Thing struct {
 	Damage              func(int)
 	Snap                func(data *strings.Builder)
 	Save                func(data *strings.Builder)
+	SnapBinary          func(raw *bytes.Buffer) int
+	SaveBinary          func(raw *bytes.Buffer)
 }
 
 // NextNID func
-func NextNID() string {
+func NextNID() uint16 {
 	ThingNetworkNum++
-	return "nid" + strconv.Itoa(ThingNetworkNum)
+	return ThingNetworkNum
 }
 
 // LoadNewThing func
@@ -74,6 +84,11 @@ func (me *Thing) NopUpdate() bool {
 
 // NopSnap func
 func (me *Thing) NopSnap(data *strings.Builder) {
+}
+
+// NopSnapBinary func
+func (me *Thing) NopSnapBinary(raw *bytes.Buffer) int {
+	return 0
 }
 
 // NopDamage func

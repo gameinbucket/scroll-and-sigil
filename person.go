@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -15,6 +16,7 @@ type Person struct {
 	InputCount int
 	Character  *You
 	snap       *strings.Builder
+	binarySnap *bytes.Buffer
 }
 
 // NewPerson func
@@ -24,6 +26,7 @@ func NewPerson(connection *websocket.Conn, world *World) *Person {
 	person.InputQueue = make([]string, 3)
 	person.Character = world.NewPlayer(person)
 	person.snap = &strings.Builder{}
+	person.binarySnap = new(bytes.Buffer)
 	return person
 }
 
@@ -41,22 +44,26 @@ func (me *Person) Input(in string) {
 // ConnectionLoop func
 func (me *Person) ConnectionLoop(server *Server) {
 	for {
-		_, data, err := me.Connection.ReadMessage()
+		messageType, data, err := me.Connection.ReadMessage()
 		if err != nil {
 			fmt.Println(err)
 			me.Connection.Close()
 			break
 		}
-		in := string(data)
-		if in == "exit" {
-			break
+		if messageType == websocket.TextMessage {
+			in := string(data)
+			if in == "exit" {
+				break
+			}
+			words := strings.Fields(in)
+			server.mux.Lock()
+			for _, w := range words {
+				me.Input(w)
+			}
+			server.mux.Unlock()
+		} else {
+
 		}
-		words := strings.Fields(in)
-		server.mux.Lock()
-		for _, w := range words {
-			me.Input(w)
-		}
-		server.mux.Unlock()
 	}
 
 	char := me.Character
@@ -71,6 +78,14 @@ func (me *Person) ConnectionLoop(server *Server) {
 func (me *Person) WriteToClient(message string) {
 	err := me.Connection.WriteMessage(websocket.TextMessage, []byte(message))
 	if err != nil {
-		fmt.Println("write error>", err)
+		fmt.Println("write error:", err)
+	}
+}
+
+// WriteBinaryToClient func
+func (me *Person) WriteBinaryToClient(binary []byte) {
+	err := me.Connection.WriteMessage(websocket.BinaryMessage, binary)
+	if err != nil {
+		fmt.Println("write error:", err)
 	}
 }

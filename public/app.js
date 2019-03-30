@@ -1,4 +1,4 @@
-let SOCKET = null
+let SocketConnection = null
 let SocketQueue = []
 let SocketSend = []
 
@@ -103,24 +103,23 @@ class Application {
         let data = await Network.Request("wad")
         await Wad.Load(g, gl, data)
 
-        let socket = await Network.Socket("ws://" + window.location.host + "/websocket")
-        socket.onclose = function () {
-            socket = null
+        SocketConnection = await Network.Socket("ws://" + window.location.host + "/websocket")
+        SocketConnection.binaryType = "arraybuffer"
+        SocketConnection.onclose = function () {
+            SocketConnection = null
         }
-        this.socket = socket
-        SOCKET = socket
 
-        data = await new Promise(function (resolve) {
-            socket.onmessage = function (event) {
+        let raw = await new Promise(function (resolve) {
+            SocketConnection.onmessage = function (event) {
                 resolve(event.data)
             }
         })
 
-        socket.onmessage = function (event) {
+        SocketConnection.onmessage = function (event) {
             SocketQueue.push(event.data)
         }
 
-        this.world.load(data)
+        this.world.Load(raw)
 
         this.player = this.world.thingLookup[this.world.PID]
         this.camera = new Camera(this.player, 10.0, 0.0, 0.0)

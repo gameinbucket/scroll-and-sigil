@@ -19,9 +19,6 @@ class Light {
         this.z = z
         this.rgb = rgb
     }
-    save() {
-        return "{x:" + this.x + ",y:" + this.y + ",z:" + this.z + ",v:" + this.rgb + "}"
-    }
     static Colorize(rgb, ambient) {
         return [
             rgb[0] * ambient / 65025.0,

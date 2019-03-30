@@ -2,10 +2,10 @@ const BlockSize = 8
 const InverseBlockSize = 1.0 / BlockSize
 
 const BLOCK_SLICE = BlockSize * BlockSize
-const BLOCK_ALL = BLOCK_SLICE * BlockSize
-const BLOCK_MESH = new RenderCopy(3, 3, 2, BLOCK_ALL * 6 * 4, BLOCK_ALL * 6 * 6)
-const BLOCK_MESH_AMBIENT = new Array(BLOCK_ALL)
-for (let i = 0; i < BLOCK_ALL; i++) {
+const BlockAll = BLOCK_SLICE * BlockSize
+const BLOCK_MESH = new RenderCopy(3, 3, 2, BlockAll * 6 * 4, BlockAll * 6 * 6)
+const BLOCK_MESH_AMBIENT = new Array(BlockAll)
+for (let i = 0; i < BlockAll; i++) {
     BLOCK_MESH_AMBIENT[i] = new Array(6)
     for (let j = 0; j < 6; j++) {
         BLOCK_MESH_AMBIENT[i][j] = new Uint8Array(4)
@@ -44,40 +44,8 @@ class Block {
         this.lights = []
         this.light_count = 0
         this.tiles = []
-        for (let t = 0; t < BLOCK_ALL; t++)
+        for (let t = 0; t < BlockAll; t++)
             this.tiles[t] = new Tile()
-    }
-    save() {
-        let data = "{x:" + this.x + ",y:" + this.y + ",z:" + this.z + ",t["
-        for (let i = 0; i < BLOCK_ALL; i++) {
-            data += this.tiles[i].type
-            data += ","
-        }
-        data += "],e["
-        if (this.thingCount > 0) {
-            let x = this.x * BlockSize
-            let y = this.y * BlockSize
-            let z = this.z * BlockSize
-            for (let i = 0; i < this.thingCount; i++) {
-                data += this.things[i].save(x, y, z)
-                data += ","
-            }
-        }
-        data += "],c["
-        for (let i = 0; i < this.lights.length; i++) {
-            data += this.lights[i].save()
-            data += ","
-        }
-        data += "]}"
-        return data
-    }
-    empty() {
-        if (this.thingCount > 0)
-            return false
-        for (let i = 0; i < BLOCK_ALL; i++)
-            if (this.tiles[i].type !== TILE_NONE)
-                return false
-        return true
     }
     GetTilePointerUnsafe(x, y, z) {
         return this.tiles[x + y * BlockSize + z * BLOCK_SLICE]
