@@ -52,8 +52,8 @@ type Thing struct {
 	Damage              func(int)
 	Snap                func(data *strings.Builder)
 	Save                func(data *strings.Builder)
-	SnapBinary          func(raw *bytes.Buffer) int
-	SaveBinary          func(raw *bytes.Buffer)
+	BinarySnap          func(raw *bytes.Buffer) int
+	BinarySave          func(raw *bytes.Buffer)
 }
 
 // NextNID func

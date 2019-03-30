@@ -42,7 +42,7 @@ class WorldState {
                                 dex += 2
                                 thing.NetUpdateHealth(health)
                             }
-                            continue
+                            break
                         case BaronUID:
                             {
                                 thing.X = dat.getFloat32(dex, true)
@@ -62,7 +62,7 @@ class WorldState {
                                 thing.NetUpdateState(status)
                                 thing.NetUpdateHealth(health)
                             }
-                            continue
+                            break
                     }
                     thing.RemoveFromBlocks()
                     thing.BlockBorders()
@@ -73,74 +73,53 @@ class WorldState {
                 }
             }
 
-            // let data = Parser.read(raw)
-            let data = {}
-            data["s"] = 1
-            data["t"] = []
-
-            if ("b" in data) {
-                let broadcast = data["b"]
-                for (let i = 0; i < broadcast.length; i++) {
-                    let snap = broadcast[i]
-                    if ("del" in snap) {
-                        let nid = snap["del"]
-                        let thing = world.thingLookup[nid]
-                        if (thing) {
-                            console.log("REMOVING THING")
-                            world.RemoveThing(thing)
-                            thing.RemoveFromBlocks()
-                        }
-                    } else {
-                        let nid = snap["n"]
-                        if (!(nid in world.thingLookup)) {
-                            let uid = snap["u"]
-                            if (uid === "plasma") {
-                                let x = parseFloat(snap["x"])
-                                let y = parseFloat(snap["y"])
-                                let z = parseFloat(snap["z"])
-                                let dx = parseFloat(snap["dx"])
-                                let dy = parseFloat(snap["dy"])
-                                let dz = parseFloat(snap["dz"])
-                                new Plasma(world, nid, 2, x, y, z, dx, dy, dz)
+            let broadcastCount = dat.getUint8(dex, true)
+            dex += 1
+            for (let b = 0; b < broadcastCount; b++) {
+                let broadcastType = dat.getUint8(dex, true)
+                dex += 1
+                switch (broadcastType) {
+                    case BroadcastNew:
+                        {
+                            let uid = dat.getUint16(dex, true)
+                            dex += 2
+                            let nid = dat.getUint16(dex, true)
+                            dex += 2
+                            if (uid === PlasmaUID) {
+                                let x = dat.getFloat32(dex, true)
+                                dex += 4
+                                let y = dat.getFloat32(dex, true)
+                                dex += 4
+                                let z = dat.getFloat32(dex, true)
+                                dex += 4
+                                let dx = dat.getFloat32(dex, true)
+                                dex += 4
+                                let dy = dat.getFloat32(dex, true)
+                                dex += 4
+                                let dz = dat.getFloat32(dex, true)
+                                dex += 4
+                                let damage = dat.getUint16(dex, true)
+                                dex += 2
+                                new Plasma(world, nid, damage, x, y, z, dx, dy, dz)
                             }
                         }
-                    }
-                }
-            }
-
-            let things = data["t"]
-            for (let i = 0; i < things.length; i++) {
-                let snap = things[i]
-                let nid = snap["n"]
-                let thing = world.thingLookup[nid]
-                if (thing) {
-                    thing.OX = thing.X
-                    thing.OY = thing.Y
-                    thing.OZ = thing.Z
-
-                    if ("x" in snap) {
-                        thing.X = parseFloat(snap["x"])
-                        thing.Z = parseFloat(snap["z"])
-                    }
-                    if ("y" in snap) {
-                        thing.Y = parseFloat(snap["y"])
-                    }
-                    if ("a" in snap) {
-                        thing.Angle = parseFloat(snap["a"])
-                    } else if ("d" in snap) {
-                        let direction = parseInt(snap["d"])
-                        if (direction !== DirectionNone)
-                            thing.Angle = DirectionToAngle[direction]
-                    }
-                    if ("s" in snap)
-                        thing.NetUpdateState(parseInt(snap["s"]))
-                    if ("h" in snap)
-                        thing.NetUpdateHealth(parseInt(snap["h"]))
-                    thing.RemoveFromBlocks()
-                    thing.BlockBorders()
-                    thing.AddToBlocks()
-                } else {
-                    console.log("error: missing thing!")
+                        break
+                    case BroadcastDelete:
+                        {
+                            console.log("broadcast delete")
+                            let nid = dat.getUint16(dex, true)
+                            dex += 2
+                            // TODO need to have separate thing / missile lookup based on UID
+                            let thing = world.thingLookup[nid]
+                            if (thing) {
+                                console.log("removing thing")
+                                world.RemoveThing(thing)
+                                thing.RemoveFromBlocks()
+                            } else {
+                                console.log("missing nid", nid, " to delete")
+                            }
+                        }
+                        break
                 }
             }
 
@@ -150,9 +129,14 @@ class WorldState {
 
         world.update()
 
-        if (SocketSend.length > 0) {
-            SocketConnection.send(SocketSend)
-            SocketSend = ""
+        if (SocketSendOperations > 0) {
+            let buffer = SocketSend.buffer.slice(0, SocketSendIndex)
+            let view = new DataView(buffer)
+            view.setUint8(0, SocketSendOperations, true)
+
+            SocketConnection.send(buffer)
+            SocketSendIndex = 1
+            SocketSendOperations = 0
         }
     }
     render() {

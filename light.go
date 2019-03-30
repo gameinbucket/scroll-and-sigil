@@ -34,8 +34,8 @@ func (me *Light) Save(data *strings.Builder) {
 	data.WriteString("}")
 }
 
-// SaveBinary func
-func (me *Light) SaveBinary(raw *bytes.Buffer) {
+// BinarySave func
+func (me *Light) BinarySave(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, uint8(me.X))
 	binary.Write(raw, binary.LittleEndian, uint8(me.Y))
 	binary.Write(raw, binary.LittleEndian, uint8(me.Z))

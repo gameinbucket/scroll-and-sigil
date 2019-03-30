@@ -25,6 +25,13 @@ const (
 	HumanMissile = 3
 )
 
+// Input constants
+const (
+	InputOpNewMove      = uint8(0)
+	InputOpContinueMove = uint8(1)
+	InputOpMissile      = uint8(2)
+)
+
 // You struct
 type You struct {
 	*Thing
@@ -46,8 +53,8 @@ func NewYou(world *World, person *Person, x, y, z float32) *You {
 	you.Thing.Damage = you.Damage
 	you.Thing.Snap = you.Snap
 	you.Thing.Save = you.Save
-	you.Thing.SnapBinary = you.SnapBinary
-	you.Thing.SaveBinary = you.SaveBinary
+	you.Thing.BinarySnap = you.BinarySnap
+	you.Thing.BinarySave = you.BinarySave
 	you.X = x
 	you.Y = y
 	you.Z = z
@@ -63,8 +70,8 @@ func NewYou(world *World, person *Person, x, y, z float32) *You {
 	return you
 }
 
-// SaveBinary func
-func (me *You) SaveBinary(raw *bytes.Buffer) {
+// BinarySave func
+func (me *You) BinarySave(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, me.UID)
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, float32(me.X))
@@ -74,8 +81,8 @@ func (me *You) SaveBinary(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
 }
 
-// SnapBinary func
-func (me *You) SnapBinary(raw *bytes.Buffer) int {
+// BinarySnap func
+func (me *You) BinarySnap(raw *bytes.Buffer) int {
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, float32(me.X))
 	binary.Write(raw, binary.LittleEndian, float32(me.Y))
@@ -163,12 +170,27 @@ func (me *You) Missile() {
 // Walk func
 func (me *You) Walk() {
 	person := me.Person
-	if person != nil && person.InputCount > 0 {
-		move := false
-		attack := false
-		for i := 0; i < person.InputCount; i++ {
-			input := person.InputQueue[i]
-			if input == "b" {
+	if person.InputCount == 0 {
+		return
+	}
+	move := false
+	attack := false
+readLabel:
+	for i := 0; i < person.InputCount; i++ {
+		input := person.InputQueue[i]
+		reader := bytes.NewReader(input)
+		var opCount uint8
+		err := binary.Read(reader, binary.LittleEndian, &opCount)
+		if err != nil {
+			break readLabel
+		}
+		for c := uint8(0); c < opCount; c++ {
+			var opUint8 uint8
+			err = binary.Read(reader, binary.LittleEndian, &opUint8)
+			if err != nil {
+				break readLabel
+			}
+			if opUint8 == InputOpMissile {
 				if !attack {
 					me.Status = HumanMissile
 					me.AnimationMod = 0
@@ -177,15 +199,18 @@ func (me *You) Walk() {
 					attack = true
 				}
 			} else if !move {
-				if input == "m" {
+				if opUint8 == InputOpContinueMove {
 					me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
 					me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
 					move = true
 					me.DeltaMoveXZ = true
-				} else if strings.HasPrefix(input, "a:") {
-					angle := strings.Split(input, "a:")[1]
-					value, _ := strconv.ParseFloat(angle, 32)
-					me.Angle = float32(value)
+				} else if opUint8 == InputOpNewMove {
+					var opFloat32 float32
+					err = binary.Read(reader, binary.LittleEndian, &opFloat32)
+					if err != nil {
+						break readLabel
+					}
+					me.Angle = opFloat32
 					me.DeltaAngle = true
 
 					me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
@@ -195,8 +220,8 @@ func (me *You) Walk() {
 				}
 			}
 		}
-		person.InputCount = 0
 	}
+	person.InputCount = 0
 }
 
 // Update func

@@ -48,8 +48,8 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	baron.Thing.Damage = baron.Damage
 	baron.Thing.Snap = baron.Snap
 	baron.Thing.Save = baron.Save
-	baron.Thing.SnapBinary = baron.SnapBinary
-	baron.Thing.SaveBinary = baron.SaveBinary
+	baron.Thing.BinarySnap = baron.BinarySnap
+	baron.Thing.BinarySave = baron.BinarySave
 	baron.X = x
 	baron.Y = y
 	baron.Z = z
@@ -68,8 +68,8 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	return baron
 }
 
-// SaveBinary func
-func (me *Baron) SaveBinary(raw *bytes.Buffer) {
+// BinarySave func
+func (me *Baron) BinarySave(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, me.UID)
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, float32(me.X))
@@ -80,8 +80,8 @@ func (me *Baron) SaveBinary(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, uint8(me.Status))
 }
 
-// SnapBinary func
-func (me *Baron) SnapBinary(raw *bytes.Buffer) int {
+// BinarySnap func
+func (me *Baron) BinarySnap(raw *bytes.Buffer) int {
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, float32(me.X))
 	binary.Write(raw, binary.LittleEndian, float32(me.Y))

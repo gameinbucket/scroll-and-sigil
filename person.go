@@ -12,7 +12,7 @@ import (
 type Person struct {
 	Connection *websocket.Conn
 	UUID       string
-	InputQueue []string
+	InputQueue [][]byte
 	InputCount int
 	Character  *You
 	snap       *strings.Builder
@@ -23,7 +23,7 @@ type Person struct {
 func NewPerson(connection *websocket.Conn, world *World) *Person {
 	person := &Person{Connection: connection}
 	person.UUID = UUID()
-	person.InputQueue = make([]string, 3)
+	person.InputQueue = make([][]byte, 3)
 	person.Character = world.NewPlayer(person)
 	person.snap = &strings.Builder{}
 	person.binarySnap = new(bytes.Buffer)
@@ -31,9 +31,9 @@ func NewPerson(connection *websocket.Conn, world *World) *Person {
 }
 
 // Input func
-func (me *Person) Input(in string) {
+func (me *Person) Input(in []byte) {
 	if me.InputCount == len(me.InputQueue) {
-		array := make([]string, me.InputCount+2)
+		array := make([][]byte, me.InputCount+2)
 		copy(array, me.InputQueue)
 		me.InputQueue = array
 	}
@@ -44,26 +44,15 @@ func (me *Person) Input(in string) {
 // ConnectionLoop func
 func (me *Person) ConnectionLoop(server *Server) {
 	for {
-		messageType, data, err := me.Connection.ReadMessage()
+		_, data, err := me.Connection.ReadMessage()
 		if err != nil {
 			fmt.Println(err)
 			me.Connection.Close()
 			break
 		}
-		if messageType == websocket.TextMessage {
-			in := string(data)
-			if in == "exit" {
-				break
-			}
-			words := strings.Fields(in)
-			server.mux.Lock()
-			for _, w := range words {
-				me.Input(w)
-			}
-			server.mux.Unlock()
-		} else {
-
-		}
+		server.mux.Lock()
+		me.Input(data)
+		server.mux.Unlock()
 	}
 
 	char := me.Character

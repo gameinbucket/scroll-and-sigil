@@ -73,8 +73,8 @@ func (me *Block) Save(data *strings.Builder) {
 	data.WriteString("]}")
 }
 
-// SaveBinary func
-func (me *Block) SaveBinary(raw *bytes.Buffer) {
+// BinarySave func
+func (me *Block) BinarySave(raw *bytes.Buffer) {
 	notEmpty := me.NotEmpty()
 	binary.Write(raw, binary.LittleEndian, notEmpty)
 	if notEmpty == 1 {
@@ -84,19 +84,19 @@ func (me *Block) SaveBinary(raw *bytes.Buffer) {
 	}
 	binary.Write(raw, binary.LittleEndian, uint8(me.ThingCount))
 	for i := 0; i < me.ThingCount; i++ {
-		me.Things[i].SaveBinary(raw)
+		me.Things[i].BinarySave(raw)
 	}
 	binary.Write(raw, binary.LittleEndian, uint8(me.ItemCount))
 	for i := 0; i < me.ItemCount; i++ {
-		me.Items[i].SaveBinary(raw)
+		me.Items[i].BinarySave(raw)
 	}
 	binary.Write(raw, binary.LittleEndian, uint8(me.MissileCount))
 	for i := 0; i < me.MissileCount; i++ {
-		me.Missiles[i].SnapBinary(raw)
+		me.Missiles[i].BinarySnap(raw)
 	}
 	binary.Write(raw, binary.LittleEndian, uint8(me.LightCount))
 	for i := 0; i < me.LightCount; i++ {
-		me.Lights[i].SaveBinary(raw)
+		me.Lights[i].BinarySave(raw)
 	}
 }
 

@@ -1,6 +1,8 @@
 let SocketConnection = null
 let SocketQueue = []
-let SocketSend = []
+let SocketSend = new DataView(new ArrayBuffer(128))
+let SocketSendIndex = 1
+let SocketSendOperations = 0
 
 class Application {
     constructor() {
@@ -45,11 +47,11 @@ class Application {
         document.onmousemove = Input.MouseMove
 
         window.onblur = function () {
-            self.on = false
+            // self.on = false
         }
 
         window.onfocus = function () {
-            self.on = true
+            // self.on = true
         }
     }
     configure_opengl(gl) {

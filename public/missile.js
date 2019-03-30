@@ -163,7 +163,7 @@ class Plasma extends Missile {
         if (thing !== null)
             thing.Damage(this.DamageAmount)
         let sound = Sounds["plasma-impact"].play()
-        if (sound !== undefined) sound.then(_ => {}).catch(_ => {})
+        if (sound) sound.then(_ => {}).catch(_ => {})
         new PlasmaExplosion(this.World, this.X, this.Y, this.Z)
         this.RemoveFromBlocks()
     }

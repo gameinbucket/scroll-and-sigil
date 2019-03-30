@@ -9,6 +9,10 @@ const HumanWalk = 1
 const HumanMelee = 2
 const HumanMissile = 3
 
+const InputOpNewMove = 0
+const InputOpContinueMove = 1
+const InputOpMissile = 2
+
 class You extends Thing {
     constructor(world, nid, x, y, z, angle, health) {
         super()
@@ -72,7 +76,9 @@ class PlayerYou extends You {
         // TODO filter input into map to reduce uploaded traffic
 
         if (Input.Is(" ")) {
-            SocketSend += "b "
+            SocketSend.setUint8(SocketSendIndex, InputOpMissile, true)
+            SocketSendIndex++
+            SocketSendOperations++
 
             this.Status = HumanMissile
             this.AnimationMod = 0
@@ -80,7 +86,7 @@ class PlayerYou extends You {
             this.Animation = HumanAnimationMissile
 
             let missileSound = Sounds["baron-missile"].play()
-            if (missileSound !== undefined) missileSound.then(_ => {}).catch(_ => {})
+            if (missileSound) missileSound.then(_ => {}).catch(_ => {})
 
             return
         }
@@ -140,9 +146,16 @@ class PlayerYou extends You {
 
             if (this.Angle !== goal) {
                 this.Angle = goal
-                SocketSend += "a:" + this.Angle + " "
-            } else
-                SocketSend += "m "
+                SocketSend.setUint8(SocketSendIndex, InputOpNewMove, true)
+                SocketSendIndex++
+                SocketSend.setFloat32(SocketSendIndex, this.Angle, true)
+                SocketSendIndex += 4
+                SocketSendOperations++
+            } else {
+                SocketSend.setUint8(SocketSendIndex, InputOpContinueMove, true)
+                SocketSendIndex++
+                SocketSendOperations++
+            }
 
             // TODO improve
             // this.X += Math.sin(this.Angle) * this.Speed * (16.0 / 50.0)

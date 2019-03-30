@@ -7,6 +7,9 @@ const WorldNegativeX = 3
 const WorldNegativeY = 4
 const WorldNegativeZ = 5
 
+const BroadcastNew = 0
+const BroadcastDelete = 1
+
 class World {
     constructor(g, gl) {
         this.g = g
@@ -120,7 +123,7 @@ class World {
                             if (nid === this.PID) new PlayerYou(this, nid, x, y, z, angle, health)
                             else new You(this, nid, x, y, z, angle, health)
                         }
-                        continue
+                        break
                     case BaronUID:
                         {
                             let nid = dat.getUint16(dex, true)
@@ -139,7 +142,7 @@ class World {
                             dex += 1
                             new Baron(this, nid, x, y, z, direction, health, status)
                         }
-                        continue
+                        break
                     case TreeUID:
                         {
                             let nid = dat.getUint16(dex, true)
@@ -152,7 +155,7 @@ class World {
                             dex += 4
                             new Tree(this, nid, x, y, z)
                         }
-                        continue
+                        break
                 }
             }
 
@@ -188,7 +191,7 @@ class World {
                             dex += 2
                             new Plasma(this, nid, damage, x, y, z, dx, dy, dz)
                         }
-                        continue
+                        break
                 }
             }
 

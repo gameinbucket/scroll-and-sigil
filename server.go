@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -87,8 +88,6 @@ func main() {
 				server.world.BuildSnapshots(server.people)
 				for i := 0; i < num; i++ {
 					person := server.people[i]
-					// snap := person.snap.String()
-					// go person.WriteToClient(snap)
 					go person.WriteBinaryToClient(person.binarySnap.Bytes())
 				}
 			}
@@ -173,11 +172,10 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 		http.Error(writer, "could not open websocket", 400)
 		return
 	}
-
 	me.mux.Lock()
 	person := NewPerson(connection, server.world)
 	me.people = append(me.people, person)
-	data := me.world.SaveBinary(person)
+	data := me.world.BinarySave(person)
 	me.mux.Unlock()
 	person.WriteBinaryToClient(data)
 	go person.ConnectionLoop(me)
@@ -187,11 +185,11 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 func (me *Server) RemovePerson(person *Person) {
 	me.mux.Lock()
 	defer me.mux.Unlock()
-	fmt.Println("removing person...")
-	// TODO
-	// me.world.broadcast.WriteString("{del:")
-	// me.world.broadcast.WriteString(person.Character.NID)
-	// me.world.broadcast.WriteString("},")
+
+	me.world.broadcastCount++
+	binary.Write(me.world.broadcast, binary.LittleEndian, BroadcastDelete)
+	binary.Write(me.world.broadcast, binary.LittleEndian, person.Character.NID)
+
 	num := len(me.people)
 	for i := 0; i < num; i++ {
 		if me.people[i] == person {

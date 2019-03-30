@@ -17,8 +17,8 @@ func NewTree(world *World, x, y, z float32) *Thing {
 	tree.Damage = tree.NopDamage
 	tree.Snap = tree.NopSnap
 	tree.Save = tree.ScenerySave
-	tree.SnapBinary = tree.NopSnapBinary
-	tree.SaveBinary = tree.ScenerySaveBinary
+	tree.BinarySnap = tree.NopSnapBinary
+	tree.BinarySave = tree.ScenerySaveBinary
 	tree.X = x
 	tree.Y = y
 	tree.Z = z

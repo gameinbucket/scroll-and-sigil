@@ -20,6 +20,12 @@ const (
 	WorldNegativeZ = 5
 )
 
+// Broadcast constants
+const (
+	BroadcastNew    = uint8(0)
+	BroadcastDelete = uint8(1)
+)
+
 // World variables
 var (
 	WorldThreads = []string{"ai", "pathing"}
@@ -42,13 +48,14 @@ type World struct {
 	ThreadIndex                     int
 	ThreadID                        string
 	SpawnYouX, SpawnYouY, SpawnYouZ float32 // TODO temp
-	broadcast                       strings.Builder
+	broadcastCount                  uint8
+	broadcast                       *bytes.Buffer
 }
 
 // NewWorld func
 func NewWorld() *World {
 	world := &World{}
-	world.broadcast = strings.Builder{}
+	world.broadcast = new(bytes.Buffer)
 	return world
 }
 
@@ -170,58 +177,33 @@ func (me *World) NewPlayer(person *Person) *You {
 	return NewYou(me, person, me.SpawnYouX, me.SpawnYouY, me.SpawnYouZ)
 }
 
-// SendBroadcast func
-func (me *World) SendBroadcast(snap string) {
-	me.broadcast.WriteString(snap)
-}
-
 // BuildSnapshots func
 func (me *World) BuildSnapshots(people []*Person) {
 	// TODO build separate snapshot list for every player and avoid broadcasting what isn't needed
 	// hold a map of what things are up-to-date for player, and resend full thing if there is a gap
 	// must build snapshot AFTER world update, else what happens if thing state changes after an event within same loop
 	num := len(server.people)
-	// time := strconv.FormatInt(time.Now().UnixNano()/1000000-1552330000000, 10)
 	time := time.Now().UnixNano()/1000000 - 1552330000000
-
-	// var mapSnap strings.Builder
-	// mapSnap.WriteString("s:")
-	// mapSnap.WriteString(time)
-	// mapSnap.WriteString(",t[")
-	// numThings := me.ThingCount
-	// for i := 0; i < numThings; i++ {
-	// 	thing := me.Things[i]
-	// 	thing.Snap(&mapSnap)
-
-	// }
-	// mapSnap.WriteString("]")
-	// if me.broadcast.Len() > 0 {
-	// 	mapSnap.WriteString(",b[")
-	// 	mapSnap.WriteString(me.broadcast.String())
-	// 	mapSnap.WriteString("]")
-	// }
-	// snap := mapSnap.String()
-	// me.broadcast.Reset()
-
-	// for i := 0; i < num; i++ {
-	// 	person := server.people[i]
-	// 	personSnap := person.snap
-	// 	personSnap.Reset()
-	// 	personSnap.WriteString(snap)
-	// }
 
 	body := new(bytes.Buffer)
 	numThings := me.ThingCount
 	updatedThings := 0
 	for i := 0; i < numThings; i++ {
 		thing := me.Things[i]
-		updatedThings += thing.SnapBinary(body)
+		updatedThings += thing.BinarySnap(body)
 	}
 
 	raw := new(bytes.Buffer)
 	binary.Write(raw, binary.LittleEndian, uint32(time))
 	binary.Write(raw, binary.LittleEndian, uint16(updatedThings))
 	raw.Write(body.Bytes())
+
+	binary.Write(raw, binary.LittleEndian, me.broadcastCount)
+	if me.broadcastCount > 0 {
+		raw.Write(me.broadcast.Bytes())
+		me.broadcast.Reset()
+		me.broadcastCount = 0
+	}
 
 	dat := raw.Bytes()
 	for i := 0; i < num; i++ {
@@ -247,15 +229,15 @@ func (me *World) Save(name string, person *Person) string {
 	return data.String()
 }
 
-// SaveBinary func
-func (me *World) SaveBinary(person *Person) []byte {
+// BinarySave func
+func (me *World) BinarySave(person *Person) []byte {
 	raw := new(bytes.Buffer)
 	binary.Write(raw, binary.LittleEndian, person.Character.NID)
 	binary.Write(raw, binary.LittleEndian, uint16(me.Width))
 	binary.Write(raw, binary.LittleEndian, uint16(me.Height))
 	binary.Write(raw, binary.LittleEndian, uint16(me.Length))
 	for i := 0; i < me.All; i++ {
-		me.Blocks[i].SaveBinary(raw)
+		me.Blocks[i].BinarySave(raw)
 	}
 	return raw.Bytes()
 }
