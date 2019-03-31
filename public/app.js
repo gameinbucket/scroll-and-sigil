@@ -99,6 +99,7 @@ class Application {
         this.drawPerspective = drawPerspective
     }
     async init() {
+        let self = this
         let g = this.g
         let gl = this.gl
 
@@ -107,8 +108,11 @@ class Application {
 
         SocketConnection = await Network.Socket("ws://" + window.location.host + "/websocket")
         SocketConnection.binaryType = "arraybuffer"
+
         SocketConnection.onclose = function () {
             SocketConnection = null
+            self.on = false
+            throw new Error("Lost connection to server")
         }
 
         let raw = await new Promise(function (resolve) {
@@ -123,7 +127,7 @@ class Application {
 
         this.world.Load(raw)
 
-        this.player = this.world.thingLookup[this.world.PID]
+        this.player = this.world.netLookup[this.world.PID]
         this.camera = new Camera(this.player, 10.0, 0.0, 0.0)
         this.player.camera = this.camera
         console.log(this.player)
@@ -155,4 +159,13 @@ app.run()
 
 function loop() {
     app.loop()
+}
+
+function PlaySound(name) {
+    let sound = Sounds[name]
+    sound.pause()
+    sound.volume = 0.25
+    sound.currentTime = 0
+    let promise = sound.play()
+    if (promise) promise.then(_ => {}).catch(_ => {})
 }

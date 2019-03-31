@@ -17,62 +17,6 @@ class WorldState {
             let serverTime = dat.getUint32(dex, true)
             dex += 4
 
-            let thingCount = dat.getUint16(dex, true)
-            dex += 2
-            for (let t = 0; t < thingCount; t++) {
-                let nid = dat.getUint16(dex, true)
-                dex += 2
-                let thing = world.thingLookup[nid]
-                if (thing) {
-                    thing.OX = thing.X
-                    thing.OY = thing.Y
-                    thing.OZ = thing.Z
-                    switch (thing.UID) {
-                        case HumanUID:
-                            {
-                                thing.X = dat.getFloat32(dex, true)
-                                dex += 4
-                                thing.Y = dat.getFloat32(dex, true)
-                                dex += 4
-                                thing.Z = dat.getFloat32(dex, true)
-                                dex += 4
-                                thing.Angle = dat.getFloat32(dex, true)
-                                dex += 4
-                                let health = dat.getUint16(dex, true)
-                                dex += 2
-                                thing.NetUpdateHealth(health)
-                            }
-                            break
-                        case BaronUID:
-                            {
-                                thing.X = dat.getFloat32(dex, true)
-                                dex += 4
-                                thing.Y = dat.getFloat32(dex, true)
-                                dex += 4
-                                thing.Z = dat.getFloat32(dex, true)
-                                dex += 4
-                                let direction = dat.getUint8(dex, true)
-                                dex += 1
-                                let health = dat.getUint16(dex, true)
-                                dex += 2
-                                let status = dat.getUint8(dex, true)
-                                dex += 1
-                                if (direction !== DirectionNone)
-                                    thing.Angle = DirectionToAngle[direction]
-                                thing.NetUpdateState(status)
-                                thing.NetUpdateHealth(health)
-                            }
-                            break
-                    }
-                    thing.RemoveFromBlocks()
-                    thing.BlockBorders()
-                    thing.AddToBlocks()
-                } else {
-                    console.log("error: missing thing!", nid)
-                    console.log(world.thingLookup)
-                }
-            }
-
             let broadcastCount = dat.getUint8(dex, true)
             dex += 1
             for (let b = 0; b < broadcastCount; b++) {
@@ -85,13 +29,15 @@ class WorldState {
                             dex += 2
                             let nid = dat.getUint16(dex, true)
                             dex += 2
+                            if (nid in world.netLookup)
+                                break
+                            let x = dat.getFloat32(dex, true)
+                            dex += 4
+                            let y = dat.getFloat32(dex, true)
+                            dex += 4
+                            let z = dat.getFloat32(dex, true)
+                            dex += 4
                             if (uid === PlasmaUID) {
-                                let x = dat.getFloat32(dex, true)
-                                dex += 4
-                                let y = dat.getFloat32(dex, true)
-                                dex += 4
-                                let z = dat.getFloat32(dex, true)
-                                dex += 4
                                 let dx = dat.getFloat32(dex, true)
                                 dex += 4
                                 let dy = dat.getFloat32(dex, true)
@@ -101,25 +47,124 @@ class WorldState {
                                 let damage = dat.getUint16(dex, true)
                                 dex += 2
                                 new Plasma(world, nid, damage, x, y, z, dx, dy, dz)
+                            } else if (uid === HumanUID) {
+                                let angle = dat.getFloat32(dex, true)
+                                dex += 4
+                                let health = dat.getUint16(dex, true)
+                                dex += 2
+                                let status = dat.getUint8(dex, true)
+                                dex += 1
+                                new Human(world, nid, x, y, z, angle, health, status)
+                            } else {
+                                throw new Error("missing new uid " + uid)
                             }
                         }
                         break
                     case BroadcastDelete:
                         {
-                            console.log("broadcast delete")
                             let nid = dat.getUint16(dex, true)
                             dex += 2
-                            // TODO need to have separate thing / missile lookup based on UID
-                            let thing = world.thingLookup[nid]
-                            if (thing) {
-                                console.log("removing thing")
-                                world.RemoveThing(thing)
-                                thing.RemoveFromBlocks()
-                            } else {
-                                console.log("missing nid", nid, " to delete")
-                            }
+                            let entity = world.netLookup[nid]
+                            if (entity) entity.Cleanup()
+                            else throw new Error("missing nid " + nid + " to delete")
                         }
                         break
+                }
+            }
+
+            let thingCount = dat.getUint16(dex, true)
+            dex += 2
+            for (let t = 0; t < thingCount; t++) {
+                let nid = dat.getUint16(dex, true)
+                dex += 2
+                let delta = dat.getUint8(dex, true)
+                dex += 1
+                let thing = world.netLookup[nid]
+                if (thing) {
+                    switch (thing.UID) {
+                        case HumanUID:
+                            {
+                                let updateBlocks = false
+                                if (delta & 0x1) {
+                                    thing.OX = thing.X
+                                    thing.OZ = thing.Z
+                                    updateBlocks = true
+                                    thing.X = dat.getFloat32(dex, true)
+                                    dex += 4
+                                    thing.Z = dat.getFloat32(dex, true)
+                                    dex += 4
+                                }
+                                if (delta & 0x2) {
+                                    thing.OY = thing.Y
+                                    updateBlocks = true
+                                    thing.Y = dat.getFloat32(dex, true)
+                                    dex += 4
+                                }
+                                if (delta & 0x4) {
+                                    thing.Angle = dat.getFloat32(dex, true)
+                                    dex += 4
+                                }
+                                if (delta & 0x8) {
+                                    let health = dat.getUint16(dex, true)
+                                    dex += 2
+                                    thing.NetUpdateHealth(health)
+                                }
+                                if (delta & 0x10) {
+                                    let status = dat.getUint8(dex, true)
+                                    dex += 1
+                                    thing.NetUpdateState(status)
+                                }
+                                if (updateBlocks) {
+                                    thing.RemoveFromBlocks()
+                                    thing.BlockBorders()
+                                    thing.AddToBlocks()
+                                }
+                            }
+                            break
+                        case BaronUID:
+                            {
+                                let updateBlocks = false
+                                if (delta & 0x1) {
+                                    thing.OX = thing.X
+                                    thing.OZ = thing.Z
+                                    updateBlocks = true
+                                    thing.X = dat.getFloat32(dex, true)
+                                    dex += 4
+                                    thing.Z = dat.getFloat32(dex, true)
+                                    dex += 4
+                                }
+                                if (delta & 0x2) {
+                                    thing.OY = thing.Y
+                                    updateBlocks = true
+                                    thing.Y = dat.getFloat32(dex, true)
+                                    dex += 4
+                                }
+                                if (delta & 0x4) {
+                                    let direction = dat.getUint8(dex, true)
+                                    dex += 1
+                                    if (direction !== DirectionNone)
+                                        thing.Angle = DirectionToAngle[direction]
+                                }
+                                if (delta & 0x8) {
+                                    let health = dat.getUint16(dex, true)
+                                    dex += 2
+                                    thing.NetUpdateHealth(health)
+                                }
+                                if (delta & 0x10) {
+                                    let status = dat.getUint8(dex, true)
+                                    dex += 1
+                                    thing.NetUpdateState(status)
+                                }
+                                if (updateBlocks) {
+                                    thing.RemoveFromBlocks()
+                                    thing.BlockBorders()
+                                    thing.AddToBlocks()
+                                }
+                            }
+                            break
+                    }
+                } else {
+                    throw new Error("missing thing nid " + nid)
                 }
             }
 

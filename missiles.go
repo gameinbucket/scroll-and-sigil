@@ -123,7 +123,6 @@ func (me *Missile) Update() bool {
 		return true
 	}
 	me.RemoveFromBlocks()
-	// TODO out of sync with client, different tick rates
 	me.X += me.DX
 	me.Y += me.DY
 	me.Z += me.DZ
@@ -168,11 +167,18 @@ func (me *Missile) BinarySnap(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, uint16(me.DamageAmount))
 }
 
-// Broadcast func
-func (me *Missile) Broadcast() {
+// BroadcastNew func
+func (me *Missile) BroadcastNew() {
 	me.World.broadcastCount++
 	binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastNew)
 	me.BinarySnap(me.World.broadcast)
+}
+
+// BroadcastDelete func
+func (me *Missile) BroadcastDelete() {
+	me.World.broadcastCount++
+	binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastDelete)
+	binary.Write(me.World.broadcast, binary.LittleEndian, me.NID)
 }
 
 // NewPlasma func
@@ -197,7 +203,7 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
 	me.Hit = me.PlasmaHit
 
 	world.AddMissile(me)
-	me.Broadcast()
+	me.BroadcastNew()
 }
 
 // PlasmaHit func
@@ -209,4 +215,5 @@ func (me *Missile) PlasmaHit(thing *Thing) {
 		thing.Damage(me.DamageAmount)
 	}
 	me.RemoveFromBlocks()
+	me.BroadcastDelete()
 }

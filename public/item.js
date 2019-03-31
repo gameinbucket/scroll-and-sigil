@@ -20,12 +20,6 @@ class Item {
         this.Radius = 0
         this.Height = 0
     }
-    static LoadNewItem(world, uid, nid, x, y, z) {
-        switch (uid) {
-            case "medkit":
-                return new Medkit(world, nid, x, y, z)
-        }
-    }
 }
 
 class Medkit extends Item {

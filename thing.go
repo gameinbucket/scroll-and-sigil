@@ -47,13 +47,13 @@ type Thing struct {
 	Height              float32
 	Speed               float32
 	Health              int
-	DeltaHealth         bool
+	DeltaMoveXZ         bool
+	DeltaMoveY          bool
 	Update              func() bool
 	Damage              func(int)
-	Snap                func(data *strings.Builder)
 	Save                func(data *strings.Builder)
-	BinarySnap          func(raw *bytes.Buffer) int
 	BinarySave          func(raw *bytes.Buffer)
+	Snap                func(raw *bytes.Buffer) int
 }
 
 // NextNID func
@@ -83,11 +83,7 @@ func (me *Thing) NopUpdate() bool {
 }
 
 // NopSnap func
-func (me *Thing) NopSnap(data *strings.Builder) {
-}
-
-// NopSnapBinary func
-func (me *Thing) NopSnapBinary(raw *bytes.Buffer) int {
+func (me *Thing) NopSnap(raw *bytes.Buffer) int {
 	return 0
 }
 
@@ -150,16 +146,28 @@ func (me *Thing) TerrainCollisionXZ() {
 	maxGX := int((me.X + me.Radius))
 	maxGY := int((me.Y + me.Height))
 	maxGZ := int((me.Z + me.Radius))
+
+	minBX := int(float32(minGX) * InverseBlockSize)
+	minBY := int(float32(minGY) * InverseBlockSize)
+	minBZ := int(float32(minGZ) * InverseBlockSize)
+
+	minTX := minGX - minBX*BlockSize
+	minTY := minGY - minBY*BlockSize
+	minTZ := minGZ - minBZ*BlockSize
+
+	world := me.World
+
+	bx := minBX
+	tx := minTX
 	for gx := minGX; gx <= maxGX; gx++ {
+		by := minBY
+		ty := minTY
 		for gy := minGY; gy <= maxGY; gy++ {
+			bz := minBZ
+			tz := minTZ
 			for gz := minGZ; gz <= maxGZ; gz++ {
-				bx := int(float32(gx) * InverseBlockSize)
-				by := int(float32(gy) * InverseBlockSize)
-				bz := int(float32(gz) * InverseBlockSize)
-				tx := gx - bx*BlockSize
-				ty := gy - by*BlockSize
-				tz := gz - bz*BlockSize
-				tile := me.World.GetTileType(bx, by, bz, tx, ty, tz)
+				block := world.GetBlock(bx, by, bz)
+				tile := block.GetTileTypeUnsafe(tx, ty, tz)
 				if TileClosed[tile] {
 					xx := float32(gx)
 					closeX := me.X
@@ -177,7 +185,6 @@ func (me *Thing) TerrainCollisionXZ() {
 						closeZ = zz + 1
 					}
 
-					// TODO line intersection collision for non bounding box walls
 					dxx := me.X - closeX
 					dzz := me.Z - closeZ
 					dist := dxx*dxx + dzz*dzz
@@ -193,7 +200,22 @@ func (me *Thing) TerrainCollisionXZ() {
 					me.X += dxx*mult - dxx
 					me.Z += dzz*mult - dzz
 				}
+				tz++
+				if tz == BlockSize {
+					tz = 0
+					bz++
+				}
 			}
+			ty++
+			if ty == BlockSize {
+				ty = 0
+				by++
+			}
+		}
+		tx++
+		if tx == BlockSize {
+			tx = 0
+			bx++
 		}
 	}
 }
@@ -263,67 +285,70 @@ func (me *Thing) ApproximateDistance(other *Thing) float32 {
 	return dx + dy - dx*0.5
 }
 
-// Integrate func
-func (me *Thing) Integrate() {
-	if me.DX != 0.0 || me.DZ != 0.0 {
-		me.OldX = me.X
-		me.OldZ = me.Z
+// IntegrateXZ func
+func (me *Thing) IntegrateXZ() {
+	me.OldX = me.X
+	me.OldZ = me.Z
 
-		me.X += me.DX
-		me.Z += me.DZ
+	me.X += me.DX
+	me.Z += me.DZ
+	me.DeltaMoveXZ = true
 
-		collided := make([]*Thing, 0)
-		searched := make(map[*Thing]bool)
+	collided := make([]*Thing, 0)
+	searched := make(map[*Thing]bool)
 
-		me.RemoveFromBlocks()
-		me.BlockBorders()
+	me.RemoveFromBlocks()
+	me.BlockBorders()
 
-		for gx := me.MinBX; gx <= me.MaxBX; gx++ {
-			for gy := me.MinBY; gy <= me.MaxBY; gy++ {
-				for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-					block := me.World.GetBlock(gx, gy, gz)
-					for t := 0; t < block.ThingCount; t++ {
-						thing := block.Things[t]
-						if _, ok := searched[thing]; !ok {
-							searched[thing] = true
-							if me.Overlap(thing) {
-								collided = append(collided, thing)
-							}
+	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
+		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
+			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
+				block := me.World.GetBlock(gx, gy, gz)
+				for t := 0; t < block.ThingCount; t++ {
+					thing := block.Things[t]
+					if _, ok := searched[thing]; !ok {
+						searched[thing] = true
+						if me.Overlap(thing) {
+							collided = append(collided, thing)
 						}
 					}
 				}
 			}
 		}
-
-		for len(collided) > 0 {
-			closest := 0
-			manhattan := float32(math.MaxFloat32)
-			for i := 0; i < len(collided); i++ {
-				thing := collided[i]
-				dist := Abs(me.OldX-thing.X) + Abs(me.OldZ-thing.Z)
-				if dist < manhattan {
-					manhattan = dist
-					closest = i
-				}
-			}
-			me.Resolve(collided[closest])
-			copy(collided[closest:], collided[closest+1:])
-			collided[len(collided)-1] = nil
-			collided = collided[:len(collided)-1]
-		}
-
-		me.TerrainCollisionXZ()
-
-		me.BlockBorders()
-		me.AddToBlocks()
-
-		me.DX = 0.0
-		me.DZ = 0.0
 	}
 
-	if !me.Ground || me.DY != 0.0 {
+	for len(collided) > 0 {
+		closest := 0
+		manhattan := float32(math.MaxFloat32)
+		for i := 0; i < len(collided); i++ {
+			thing := collided[i]
+			dist := Abs(me.OldX-thing.X) + Abs(me.OldZ-thing.Z)
+			if dist < manhattan {
+				manhattan = dist
+				closest = i
+			}
+		}
+		me.Resolve(collided[closest])
+		copy(collided[closest:], collided[closest+1:])
+		collided[len(collided)-1] = nil
+		collided = collided[:len(collided)-1]
+	}
+
+	me.TerrainCollisionXZ()
+
+	me.BlockBorders()
+	me.AddToBlocks()
+
+	me.DX = 0.0
+	me.DZ = 0.0
+}
+
+// IntegrateY func
+func (me *Thing) IntegrateY() {
+	if !me.Ground {
 		me.DY -= Gravity
 		me.Y += me.DY
+		me.DeltaMoveY = true
 		me.TerrainCollisionY()
 
 		me.RemoveFromBlocks()

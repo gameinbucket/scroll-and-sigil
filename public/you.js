@@ -1,73 +1,11 @@
-const HumanAnimationIdle = []
-const HumanAnimationWalk = []
-const HumanAnimationMelee = []
-const HumanAnimationMissile = []
-const HumanAnimationDeath = []
-
-const HumanDead = 0
-const HumanWalk = 1
-const HumanMelee = 2
-const HumanMissile = 3
-
 const InputOpNewMove = 0
 const InputOpContinueMove = 1
 const InputOpMissile = 2
 
-class You extends Thing {
-    constructor(world, nid, x, y, z, angle, health) {
-        super()
-        this.World = world
-        this.UID = HumanUID
-        this.SID = "baron"
-        this.NID = nid
-        this.Animation = HumanAnimationWalk
-        this.X = x
-        this.Y = y
-        this.Z = z
-        this.Angle = angle
-        this.OX = x
-        this.OY = y
-        this.OZ = z
-        this.Radius = 0.4
-        this.Height = 1.0
-        this.Speed = 0.1
-        this.Health = health
-        this.Status = HumanWalk
-        world.AddThing(this)
-        this.BlockBorders()
-        this.AddToBlocks()
-    }
-    Damage(_) {
-        for (let i = 0; i < 20; i++) {
-            let spriteName = "blood-" + Math.floor(Math.random() * 3)
-
-            let x = this.X + this.Radius * (1 - Math.random() * 2)
-            let y = this.Y + this.Height * Math.random()
-            let z = this.Z + this.Radius * (1 - Math.random() * 2)
-
-            const spread = 0.2
-
-            let dx = spread * (1 - Math.random() * 2)
-            let dy = spread * Math.random()
-            let dz = spread * (1 - Math.random() * 2)
-
-            new Blood(this.World, x, y, z, dx, dy, dz, spriteName)
-        }
-    }
-    Update() {}
-}
-
-class PlayerYou extends You {
-    constructor(world, nid, x, y, z, angle, health) {
-        super(world, nid, x, y, z, angle, health)
+class You extends Human {
+    constructor(world, nid, x, y, z, angle, health, status) {
+        super(world, nid, x, y, z, angle, health, status)
         this.camera = null
-    }
-    Missile() {
-        if (this.UpdateAnimation() === AnimationDone) {
-            this.AnimationFrame = 0
-            this.Animation = HumanAnimationWalk
-            this.Status = HumanWalk
-        }
     }
     Walk() {
         let direction = null
@@ -80,14 +18,12 @@ class PlayerYou extends You {
             SocketSendIndex++
             SocketSendOperations++
 
-            this.Status = HumanMissile
-            this.AnimationMod = 0
-            this.AnimationFrame = 0
-            this.Animation = HumanAnimationMissile
+            // this.Status = HumanMissile
+            // this.AnimationMod = 0
+            // this.AnimationFrame = 0
+            // this.Animation = HumanAnimationMissile
 
-            let missileSound = Sounds["baron-missile"].play()
-            if (missileSound) missileSound.then(_ => {}).catch(_ => {})
-
+            // PlaySound("baron-missile")
             return
         }
 
@@ -158,8 +94,8 @@ class PlayerYou extends You {
             }
 
             // TODO improve
-            // this.X += Math.sin(this.Angle) * this.Speed * (16.0 / 50.0)
-            // this.Z -= Math.cos(this.Angle) * this.Speed * (16.0 / 50.0)
+            // this.X += Math.sin(this.Angle) * this.Speed * NetworkConversionRate
+            // this.Z -= Math.cos(this.Angle) * this.Speed * NetworkConversionRate
 
             if (this.Animation === HumanAnimationIdle)
                 this.Animation = HumanAnimationWalk
@@ -170,6 +106,8 @@ class PlayerYou extends You {
     }
     Update() {
         switch (this.Status) {
+            case HumanDead:
+                this.Dead()
             case HumanMissile:
                 this.Missile()
                 break

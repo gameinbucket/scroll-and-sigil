@@ -176,6 +176,9 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 	person := NewPerson(connection, server.world)
 	me.people = append(me.people, person)
 	data := me.world.BinarySave(person)
+	me.world.broadcastCount++
+	binary.Write(me.world.broadcast, binary.LittleEndian, BroadcastNew)
+	person.Character.BinarySave(me.world.broadcast)
 	me.mux.Unlock()
 	person.WriteBinaryToClient(data)
 	go person.ConnectionLoop(me)

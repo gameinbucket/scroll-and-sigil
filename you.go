@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -20,9 +19,10 @@ const (
 // Human constants
 const (
 	HumanDead    = 0
-	HumanWalk    = 1
-	HumanMelee   = 2
-	HumanMissile = 3
+	HumanIdle    = 1
+	HumanWalk    = 2
+	HumanMelee   = 3
+	HumanMissile = 4
 )
 
 // Input constants
@@ -36,9 +36,9 @@ const (
 type You struct {
 	*Thing
 	Status      int
-	DeltaMoveXZ bool
-	DeltaMoveY  bool
 	DeltaAngle  bool
+	DeltaHealth bool
+	DeltaStatus bool
 	Person      *Person
 }
 
@@ -51,45 +51,22 @@ func NewYou(world *World, person *Person, x, y, z float32) *You {
 	you.World = world
 	you.Thing.Update = you.Update
 	you.Thing.Damage = you.Damage
-	you.Thing.Snap = you.Snap
 	you.Thing.Save = you.Save
-	you.Thing.BinarySnap = you.BinarySnap
 	you.Thing.BinarySave = you.BinarySave
+	you.Thing.Snap = you.Snap
 	you.X = x
 	you.Y = y
 	you.Z = z
 	you.Radius = 0.4
 	you.Height = 1.0
 	you.Speed = 0.1
-	you.Health = 1
-	you.Status = HumanWalk
+	you.Health = 8
+	you.Status = HumanIdle
 	you.Person = person
 	world.AddThing(you.Thing)
 	you.BlockBorders()
 	you.AddToBlocks()
 	return you
-}
-
-// BinarySave func
-func (me *You) BinarySave(raw *bytes.Buffer) {
-	binary.Write(raw, binary.LittleEndian, me.UID)
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, float32(me.X))
-	binary.Write(raw, binary.LittleEndian, float32(me.Y))
-	binary.Write(raw, binary.LittleEndian, float32(me.Z))
-	binary.Write(raw, binary.LittleEndian, float32(me.Angle))
-	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
-}
-
-// BinarySnap func
-func (me *You) BinarySnap(raw *bytes.Buffer) int {
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, float32(me.X))
-	binary.Write(raw, binary.LittleEndian, float32(me.Y))
-	binary.Write(raw, binary.LittleEndian, float32(me.Z))
-	binary.Write(raw, binary.LittleEndian, float32(me.Angle))
-	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
-	return 1
 }
 
 // Save func
@@ -111,40 +88,90 @@ func (me *You) Save(snap *strings.Builder) {
 	snap.WriteString("}")
 }
 
+// BinarySave func
+func (me *You) BinarySave(raw *bytes.Buffer) {
+	binary.Write(raw, binary.LittleEndian, me.UID)
+	binary.Write(raw, binary.LittleEndian, me.NID)
+	binary.Write(raw, binary.LittleEndian, float32(me.X))
+	binary.Write(raw, binary.LittleEndian, float32(me.Y))
+	binary.Write(raw, binary.LittleEndian, float32(me.Z))
+	binary.Write(raw, binary.LittleEndian, float32(me.Angle))
+	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
+	binary.Write(raw, binary.LittleEndian, uint8(me.Status))
+}
+
 // Snap func
-func (me *You) Snap(snap *strings.Builder) {
-	snap.WriteString("{n:")
-	snap.WriteString(strconv.Itoa(int(me.NID)))
+func (me *You) Snap(raw *bytes.Buffer) int {
+	delta := uint8(0)
 	if me.DeltaMoveXZ {
-		snap.WriteString(",x:")
-		snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-		snap.WriteString(",z:")
-		snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+		delta |= 0x1
+	}
+	if me.DeltaMoveY {
+		delta |= 0x2
+	}
+	if me.DeltaAngle {
+		delta |= 0x4
+	}
+	if me.DeltaHealth {
+		delta |= 0x8
+	}
+	if me.DeltaStatus {
+		delta |= 0x10
+	}
+	if delta == 0 {
+		return 0
+	}
+	binary.Write(raw, binary.LittleEndian, me.NID)
+	binary.Write(raw, binary.LittleEndian, delta)
+	if me.DeltaMoveXZ {
+		binary.Write(raw, binary.LittleEndian, float32(me.X))
+		binary.Write(raw, binary.LittleEndian, float32(me.Z))
 		me.DeltaMoveXZ = false
 	}
-	// if me.DeltaMoveY {
-	snap.WriteString(",y:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	// me.DeltaMoveY = false
-	// }
+	if me.DeltaMoveY {
+		binary.Write(raw, binary.LittleEndian, float32(me.Y))
+		me.DeltaMoveY = false
+	}
 	if me.DeltaAngle {
-		snap.WriteString(",a:")
-		snap.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
+		binary.Write(raw, binary.LittleEndian, float32(me.Angle))
 		me.DeltaAngle = false
 	}
 	if me.DeltaHealth {
-		snap.WriteString(",h:")
-		snap.WriteString(strconv.Itoa(me.Health))
+		binary.Write(raw, binary.LittleEndian, uint16(me.Health))
 		me.DeltaHealth = false
 	}
-	snap.WriteString("},")
+	if me.DeltaStatus {
+		binary.Write(raw, binary.LittleEndian, uint8(me.Status))
+		me.DeltaStatus = false
+	}
+	return 1
 }
 
 // Damage func
 func (me *You) Damage(amount int) {
-	if me.Status != HumanDead {
-		fmt.Println("ouch!", amount)
-		me.DeltaHealth = true
+	if me.Status == HumanDead {
+		return
+	}
+	me.Health -= amount
+	me.DeltaHealth = true
+	if me.Health < 1 {
+		me.Health = 0
+		me.Status = HumanDead
+		me.DeltaStatus = true
+		me.AnimationMod = 0
+		me.AnimationFrame = 0
+		me.Animation = HumanDeathAnimation
+		me.RemoveFromBlocks()
+	}
+}
+
+// Dead func
+func (me *You) Dead() {
+	if me.AnimationFrame == me.Animation-1 {
+		me.Thing.Update = me.NopUpdate
+		me.Thing.Snap = me.NopSnap
+	} else {
+		me.UpdateAnimation()
 	}
 }
 
@@ -152,7 +179,7 @@ func (me *You) Damage(amount int) {
 func (me *You) Missile() {
 	anim := me.UpdateAnimation()
 	if anim == AnimationAlmostDone {
-		const speed = 0.3
+		const speed = 0.5
 		angle := float64(me.Angle)
 		dx := float32(math.Sin(angle))
 		dz := -float32(math.Cos(angle))
@@ -161,9 +188,8 @@ func (me *You) Missile() {
 		z := me.Z + dz*me.Radius*3.0
 		NewPlasma(me.World, 1+NextRandP()%3, x, y, z, dx*speed, 0.0, dz*speed)
 	} else if anim == AnimationDone {
-		me.Status = HumanWalk
-		me.AnimationFrame = 0
-		me.Animation = HumanWalkAnimation
+		me.Status = HumanIdle
+		me.DeltaStatus = true
 	}
 }
 
@@ -175,63 +201,69 @@ func (me *You) Walk() {
 	}
 	move := false
 	attack := false
-readLabel:
+gotoRead:
 	for i := 0; i < person.InputCount; i++ {
 		input := person.InputQueue[i]
 		reader := bytes.NewReader(input)
 		var opCount uint8
 		err := binary.Read(reader, binary.LittleEndian, &opCount)
 		if err != nil {
-			break readLabel
+			break gotoRead
 		}
 		for c := uint8(0); c < opCount; c++ {
 			var opUint8 uint8
 			err = binary.Read(reader, binary.LittleEndian, &opUint8)
 			if err != nil {
-				break readLabel
+				break gotoRead
 			}
 			if opUint8 == InputOpMissile {
-				if !attack {
-					me.Status = HumanMissile
-					me.AnimationMod = 0
-					me.AnimationFrame = 0
-					me.Animation = HumanMissileAnimation
-					attack = true
+				attack = true
+			} else if opUint8 == InputOpContinueMove {
+				move = true
+			} else if opUint8 == InputOpNewMove {
+				var opFloat32 float32
+				err = binary.Read(reader, binary.LittleEndian, &opFloat32)
+				if err != nil {
+					break gotoRead
 				}
-			} else if !move {
-				if opUint8 == InputOpContinueMove {
-					me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
-					me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
-					move = true
-					me.DeltaMoveXZ = true
-				} else if opUint8 == InputOpNewMove {
-					var opFloat32 float32
-					err = binary.Read(reader, binary.LittleEndian, &opFloat32)
-					if err != nil {
-						break readLabel
-					}
-					me.Angle = opFloat32
-					me.DeltaAngle = true
-
-					me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
-					me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
-					move = true
-					me.DeltaMoveXZ = true
-				}
+				me.Angle = opFloat32
+				move = true
 			}
 		}
 	}
 	person.InputCount = 0
+
+	if attack {
+		me.Status = HumanMissile
+		me.DeltaStatus = true
+		me.AnimationMod = 0
+		me.AnimationFrame = 0
+		// TODO animation mod is not necessary on server...
+		me.Animation = HumanMissileAnimation
+	} else if move {
+		me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
+		me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
+		me.IntegrateXZ()
+		if me.Status == HumanIdle {
+			me.Status = HumanWalk
+			me.DeltaStatus = true
+		}
+	} else if me.Status == HumanWalk {
+		me.Status = HumanIdle
+		me.DeltaStatus = true
+	}
 }
 
 // Update func
 func (me *You) Update() bool {
 	switch me.Status {
+	case HumanDead:
+		me.Dead()
 	case HumanMissile:
 		me.Missile()
 	default:
 		me.Walk()
 	}
-	me.Integrate()
+	me.IntegrateY()
 	return false
 }

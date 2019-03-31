@@ -1,36 +1,34 @@
-const BaronAnimationIdle = []
-const BaronAnimationWalk = []
-const BaronAnimationMelee = []
-const BaronAnimationMissile = []
-const BaronAnimationDeath = []
+const HumanAnimationIdle = []
+const HumanAnimationWalk = []
+const HumanAnimationMelee = []
+const HumanAnimationMissile = []
+const HumanAnimationDeath = []
 
-const BaronSleep = 0
-const BaronDead = 1
-const BaronLook = 2
-const BaronChase = 3
-const BaronMelee = 4
-const BaronMissile = 5
+const HumanDead = 0
+const HumanIdle = 1
+const HumanWalk = 2
+const HumanMelee = 3
+const HumanMissile = 4
 
-class Baron extends Thing {
-    constructor(world, nid, x, y, z, direction, heatlh, status) {
+class Human extends Thing {
+    constructor(world, nid, x, y, z, angle, health, status) {
         super()
         this.World = world
-        this.UID = BaronUID
+        this.UID = HumanUID
         this.SID = "baron"
         this.NID = nid
-        this.Update = this.BaronUpdate
-        this.Animation = BaronAnimationWalk
+        this.Animation = HumanAnimationWalk
         this.X = x
         this.Y = y
         this.Z = z
-        this.Angle = DirectionToAngle[direction]
+        this.Angle = angle
         this.OX = x
         this.OY = y
         this.OZ = z
         this.Radius = 0.4
         this.Height = 1.0
         this.Speed = 0.1
-        this.Health = heatlh
+        this.Health = health
         this.Status = status
         world.AddThing(this)
         this.BlockBorders()
@@ -39,25 +37,22 @@ class Baron extends Thing {
     NetUpdateState(status) {
         if (this.Status === status)
             return
+        console.log("human new status", status)
         this.AnimationMod = 0
         this.AnimationFrame = 0
         switch (status) {
-            case BaronDead:
-                this.Animation = BaronAnimationDeath
+            case HumanDead:
+                this.Animation = HumanAnimationDeath
                 break
-            case BaronMelee:
-                this.Animation = BaronAnimationMelee
-                PlaySound("baron-melee")
-                break
-            case BaronMissile:
-                this.Animation = BaronAnimationMissile
+            case HumanMissile:
+                this.Animation = HumanAnimationMissile
                 PlaySound("baron-missile")
+                console.log("baron-missile")
                 break
-            case BaronChase:
-                if (Math.random() < 0.1)
-                    PlaySound("baron-scream")
+            case HumanIdle:
+                this.Animation = HumanAnimationIdle
             default:
-                this.Animation = BaronAnimationWalk
+                this.Animation = HumanAnimationWalk
                 break
         }
         this.Status = status
@@ -80,7 +75,6 @@ class Baron extends Thing {
                 let dz = spread * (1 - Math.random() * 2)
                 new Blood(this.World, x, y, z, dx, dy, dz, spriteName)
             }
-
         }
         this.Health = health
     }
@@ -91,44 +85,28 @@ class Baron extends Thing {
             this.UpdateAnimation()
         }
     }
-    Look() {
-        if (this.UpdateAnimation() === AnimationDone) {
-            this.AnimationFrame = 0
-        }
-    }
-    Melee() {
-        if (this.UpdateAnimation() === AnimationDone) {
-            this.AnimationFrame = 0
-            this.Animation = BaronAnimationWalk
-        }
-    }
     Missile() {
         if (this.UpdateAnimation() === AnimationDone) {
             this.AnimationFrame = 0
-            this.Animation = BaronAnimationWalk
+            this.Animation = HumanAnimationIdle
+            this.Status = HumanIdle
         }
     }
-    Chase() {
-        if (this.UpdateAnimation() === AnimationDone) {
+    Walk() {
+        if (this.UpdateAnimation() === AnimationDone)
             this.AnimationFrame = 0
-        }
     }
-    BaronUpdate() {
+    Update() {
         switch (this.Status) {
-            case BaronDead:
+            case HumanDead:
                 this.Dead()
-                break
-            case BaronLook:
-                this.Look()
-                break
-            case BaronMelee:
-                this.Melee()
-                break
-            case BaronMissile:
+            case HumanMissile:
                 this.Missile()
                 break
-            case BaronChase:
-                this.Chase()
+            case HumanIdle:
+                break
+            default:
+                this.Walk()
                 break
         }
     }

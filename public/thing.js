@@ -70,17 +70,6 @@ class Thing {
         this.Speed = 0
         this.Health = 0
     }
-    static LoadNewThing(world, uid, nid, x, y, z) {
-        switch (uid) {
-            case "you":
-                if (nid === world.PID) return new PlayerYou(world, nid, x, y, z)
-                else return new You(world, nid, x, y, z)
-            case "baron":
-                return new Baron(world, nid, x, y, z)
-            case "tree":
-                return new Tree(world, nid, x, y, z)
-        }
-    }
     BlockBorders() {
         this.MinBX = Math.floor((this.X - this.Radius) * InverseBlockSize)
         this.MinBY = Math.floor(this.Y * InverseBlockSize)
@@ -106,6 +95,10 @@ class Thing {
                 }
             }
         }
+    }
+    Cleanup() {
+        this.World.RemoveThing(this)
+        this.RemoveFromBlocks()
     }
     UpdateAnimation() {
         this.AnimationMod++
@@ -160,7 +153,6 @@ class Thing {
         let square = this.Radius + b.Radius
         return Math.abs(this.X - b.X) <= square && Math.abs(this.Z - b.Z) <= square
     }
-    Damage(_) {}
     Integrate() {
         // OX and snapshot need to be different things
         // this.OX = this.X

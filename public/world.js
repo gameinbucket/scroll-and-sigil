@@ -1,4 +1,5 @@
 const NetworkUpdateRate = 50
+const NetworkConversionRate = 16.67 / NetworkUpdateRate
 
 const WorldPositiveX = 0
 const WorldPositiveY = 1
@@ -32,9 +33,7 @@ class World {
         this.items
         this.missiles
         this.particles
-        this.thingLookup
-        this.itemLookup
-        this.missileLookup
+        this.netLookup
         this.occluder = new Occluder()
         this.PID
     }
@@ -52,9 +51,7 @@ class World {
         this.items = []
         this.missiles = []
         this.particles = []
-        this.thingLookup = {}
-        this.itemLookup = {}
-        this.missileLookup = {}
+        this.netLookup = {}
 
         let dat = new DataView(raw)
         let dex = 0
@@ -105,35 +102,29 @@ class World {
             for (let t = 0; t < thingCount; t++) {
                 let uid = dat.getUint16(dex, true)
                 dex += 2
+                let nid = dat.getUint16(dex, true)
+                dex += 2
+                let x = dat.getFloat32(dex, true)
+                dex += 4
+                let y = dat.getFloat32(dex, true)
+                dex += 4
+                let z = dat.getFloat32(dex, true)
+                dex += 4
                 switch (uid) {
                     case HumanUID:
                         {
-                            let nid = dat.getUint16(dex, true)
-                            dex += 2
-                            let x = dat.getFloat32(dex, true)
-                            dex += 4
-                            let y = dat.getFloat32(dex, true)
-                            dex += 4
-                            let z = dat.getFloat32(dex, true)
-                            dex += 4
                             let angle = dat.getFloat32(dex, true)
                             dex += 4
                             let health = dat.getUint16(dex, true)
                             dex += 2
-                            if (nid === this.PID) new PlayerYou(this, nid, x, y, z, angle, health)
-                            else new You(this, nid, x, y, z, angle, health)
+                            let status = dat.getUint8(dex, true)
+                            dex += 1
+                            if (nid === this.PID) new You(this, nid, x, y, z, angle, health, status)
+                            else new Human(this, nid, x, y, z, angle, health, status)
                         }
                         break
                     case BaronUID:
                         {
-                            let nid = dat.getUint16(dex, true)
-                            dex += 2
-                            let x = dat.getFloat32(dex, true)
-                            dex += 4
-                            let y = dat.getFloat32(dex, true)
-                            dex += 4
-                            let z = dat.getFloat32(dex, true)
-                            dex += 4
                             let direction = dat.getUint8(dex, true)
                             dex += 1
                             let health = dat.getUint16(dex, true)
@@ -144,17 +135,7 @@ class World {
                         }
                         break
                     case TreeUID:
-                        {
-                            let nid = dat.getUint16(dex, true)
-                            dex += 2
-                            let x = dat.getFloat32(dex, true)
-                            dex += 4
-                            let y = dat.getFloat32(dex, true)
-                            dex += 4
-                            let z = dat.getFloat32(dex, true)
-                            dex += 4
-                            new Tree(this, nid, x, y, z)
-                        }
+                        new Tree(this, nid, x, y, z)
                         break
                 }
             }
@@ -308,7 +289,7 @@ class World {
     AddThing(thing) {
         this.things[this.thingCount] = thing
         this.thingCount++
-        this.thingLookup[thing.NID] = thing
+        this.netLookup[thing.NID] = thing
 
         let count = this.spriteCount[thing.SID]
         if (count) {
@@ -323,7 +304,7 @@ class World {
     AddItem(item) {
         this.items[this.itemCount] = item
         this.itemCount++
-        this.itemLookup[item.NID] = item
+        this.netLookup[item.NID] = item
 
         let count = this.spriteCount[item.SID]
         if (count) {
@@ -338,7 +319,7 @@ class World {
     AddMissile(missile) {
         this.missiles[this.missileCount] = missile
         this.missileCount++
-        this.missileLookup[missile.NID] = missile
+        this.netLookup[missile.NID] = missile
 
         let count = this.spriteCount[missile.SID]
         if (count) {
@@ -373,7 +354,7 @@ class World {
                 this.things[len - 1] = null
                 this.thingCount--
                 this.spriteCount[thing.SID]--
-                delete this.thingLookup[thing.NID]
+                delete this.netLookup[thing.NID]
                 break
             }
         }
@@ -386,7 +367,7 @@ class World {
                 this.items[len - 1] = null
                 this.itemCount--
                 this.spriteCount[item.SID]--
-                delete this.itemLookup[item.NID]
+                delete this.netLookup[item.NID]
                 break
             }
         }
@@ -399,7 +380,7 @@ class World {
                 this.missiles[len - 1] = null
                 this.missileCount--
                 this.spriteCount[missile.SID]--
-                delete this.missileLookup[missile.NID]
+                delete this.netLookup[missile.NID]
                 break
             }
         }

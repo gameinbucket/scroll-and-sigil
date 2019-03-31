@@ -37,12 +37,12 @@ class Block {
         this.itemCount = 0
         this.missileCount = 0
         this.particleCount = 0
+        this.lightCount = 0
         this.things = []
         this.items = []
         this.missiles = []
         this.particles = []
         this.lights = []
-        this.light_count = 0
         this.tiles = []
         for (let t = 0; t < BlockAll; t++)
             this.tiles[t] = new Tile()
@@ -114,15 +114,15 @@ class Block {
         }
     }
     AddLight(light) {
-        this.lights[this.light_count] = light
-        this.light_count++
+        this.lights[this.lightCount] = light
+        this.lightCount++
     }
     RemoveLight(light) {
-        for (let i = 0; i < this.light_count; i++) {
+        for (let i = 0; i < this.lightCount; i++) {
             if (this.lights[i] === light) {
-                for (let j = i; j < this.light_count - 1; j++)
+                for (let j = i; j < this.lightCount - 1; j++)
                     this.lights[j] = this.lights[j + 1]
-                this.light_count--
+                this.lightCount--
                 return
             }
         }

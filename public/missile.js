@@ -20,12 +20,6 @@ class Missile {
         this.Radius = 0
         this.Height = 0
     }
-    static LoadNewMissile(world, uid, nid, x, y, z) {
-        switch (uid) {
-            case "plasma":
-                return new Plasma(world, nid, x, y, z)
-        }
-    }
     BlockBorders() {
         this.MinBX = Math.floor((this.X - this.Radius) * InverseBlockSize)
         this.MinBY = Math.floor(this.Y * InverseBlockSize)
@@ -60,59 +54,11 @@ class Missile {
             }
         }
     }
-    Overlap(b) {
-        let square = this.Radius + b.Radius
-        return Math.abs(this.X - b.X) <= square && Math.abs(this.Z - b.Z) <= square
-    }
-    Collision() {
-        let searched = new Set()
-        for (let gx = this.MinBX; gx <= this.MaxBX; gx++) {
-            for (let gy = this.MinBY; gy <= this.MaxBY; gy++) {
-                for (let gz = this.MinBZ; gz <= this.MaxBZ; gz++) {
-                    let block = this.World.GetBlock(gx, gy, gz)
-                    for (let t = 0; t < block.thingCount; t++) {
-                        let thing = block.things[t]
-                        if (thing.Health > 0) {
-                            if (searched.has(thing)) continue
-                            searched.add(thing)
-                            if (this.Overlap(thing)) {
-                                this.Hit(thing)
-                                return true
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        let minGX = Math.floor(this.X - this.Radius)
-        let minGY = Math.floor(this.Y)
-        let minGZ = Math.floor(this.Z - this.Radius)
-        let maxGX = Math.floor(this.X + this.Radius)
-        let maxGY = Math.floor(this.Y + this.Height)
-        let maxGZ = Math.floor(this.Z + this.Radius)
-        for (let gx = minGX; gx <= maxGX; gx++) {
-            for (let gy = minGY; gy <= maxGY; gy++) {
-                for (let gz = minGZ; gz <= maxGZ; gz++) {
-                    let bx = Math.floor(gx * InverseBlockSize)
-                    let by = Math.floor(gy * InverseBlockSize)
-                    let bz = Math.floor(gz * InverseBlockSize)
-                    let tx = gx - bx * BlockSize
-                    let ty = gy - by * BlockSize
-                    let tz = gz - bz * BlockSize
-                    let tile = this.World.GetTileType(bx, by, bz, tx, ty, tz)
-                    if (TileClosed[tile]) {
-                        this.Hit(null)
-                        return true
-                    }
-                }
-            }
-        }
-        return false
+    Cleanup() {
+        this.World.RemoveMissile(this)
+        this.RemoveFromBlocks()
     }
     Update() {
-        if (this.Collision()) {
-            return true
-        }
         this.RemoveFromBlocks()
         this.X += this.DX
         this.Y += this.DY
@@ -120,7 +66,7 @@ class Missile {
         this.BlockBorders()
         if (this.AddToBlocks())
             return true
-        return this.Collision()
+        return false
     }
     Render(spriteBuffer, camX, camZ, camAngle) {
         let sin = camX - this.X
@@ -146,9 +92,9 @@ class Plasma extends Missile {
         this.SID = "missiles"
         this.NID = nid
         this.Sprite = SpriteData[this.SID]["baron-missile-front-1"]
-        this.DX = dx
-        this.DY = dy
-        this.DZ = dz
+        this.DX = dx * NetworkConversionRate
+        this.DY = dy * NetworkConversionRate
+        this.DZ = dz * NetworkConversionRate
         this.Radius = 0.2
         this.Height = 0.2
         this.DamageAmount = damage
@@ -156,15 +102,9 @@ class Plasma extends Missile {
         world.AddMissile(this)
         return this
     }
-    PlasmaHit(thing) {
-        this.X -= this.DX
-        this.Y -= this.DY
-        this.Z -= this.DZ
-        if (thing !== null)
-            thing.Damage(this.DamageAmount)
-        let sound = Sounds["plasma-impact"].play()
-        if (sound) sound.then(_ => {}).catch(_ => {})
+    Cleanup() {
+        super.Cleanup()
+        PlaySound("plasma-impact")
         new PlasmaExplosion(this.World, this.X, this.Y, this.Z)
-        this.RemoveFromBlocks()
     }
 }

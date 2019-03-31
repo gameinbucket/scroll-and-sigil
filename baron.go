@@ -33,6 +33,7 @@ type Baron struct {
 	Reaction     int
 	MeleeRange   float32
 	MissileRange float32
+	DeltaHealth  bool
 	DeltaStatus  bool
 }
 
@@ -46,10 +47,9 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	baron.World = world
 	baron.Thing.Update = baron.Update
 	baron.Thing.Damage = baron.Damage
-	baron.Thing.Snap = baron.Snap
 	baron.Thing.Save = baron.Save
-	baron.Thing.BinarySnap = baron.BinarySnap
 	baron.Thing.BinarySave = baron.BinarySave
+	baron.Thing.Snap = baron.Snap
 	baron.X = x
 	baron.Y = y
 	baron.Z = z
@@ -66,30 +66,6 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	baron.BlockBorders()
 	baron.AddToBlocks()
 	return baron
-}
-
-// BinarySave func
-func (me *Baron) BinarySave(raw *bytes.Buffer) {
-	binary.Write(raw, binary.LittleEndian, me.UID)
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, float32(me.X))
-	binary.Write(raw, binary.LittleEndian, float32(me.Y))
-	binary.Write(raw, binary.LittleEndian, float32(me.Z))
-	binary.Write(raw, binary.LittleEndian, uint8(me.MoveDirection))
-	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
-	binary.Write(raw, binary.LittleEndian, uint8(me.Status))
-}
-
-// BinarySnap func
-func (me *Baron) BinarySnap(raw *bytes.Buffer) int {
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, float32(me.X))
-	binary.Write(raw, binary.LittleEndian, float32(me.Y))
-	binary.Write(raw, binary.LittleEndian, float32(me.Z))
-	binary.Write(raw, binary.LittleEndian, uint8(me.MoveDirection))
-	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
-	binary.Write(raw, binary.LittleEndian, uint8(me.Status))
-	return 1
 }
 
 // Save func
@@ -113,53 +89,80 @@ func (me *Baron) Save(snap *strings.Builder) {
 	snap.WriteString("},")
 }
 
+// BinarySave func
+func (me *Baron) BinarySave(raw *bytes.Buffer) {
+	binary.Write(raw, binary.LittleEndian, me.UID)
+	binary.Write(raw, binary.LittleEndian, me.NID)
+	binary.Write(raw, binary.LittleEndian, float32(me.X))
+	binary.Write(raw, binary.LittleEndian, float32(me.Y))
+	binary.Write(raw, binary.LittleEndian, float32(me.Z))
+	binary.Write(raw, binary.LittleEndian, uint8(me.MoveDirection))
+	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
+	binary.Write(raw, binary.LittleEndian, uint8(me.Status))
+}
+
 // Snap func
-func (me *Baron) Snap(snap *strings.Builder) {
-	snap.WriteString("{n:")
-	snap.WriteString(strconv.Itoa(int(me.NID)))
+func (me *Baron) Snap(raw *bytes.Buffer) int {
+	delta := uint8(0)
 	if me.DeltaMoveXZ {
-		snap.WriteString(",x:")
-		snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-		snap.WriteString(",z:")
-		snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
+		delta |= 0x1
+	}
+	if me.DeltaMoveY {
+		delta |= 0x2
+	}
+	if me.DeltaMoveDirection {
+		delta |= 0x4
+	}
+	if me.DeltaHealth {
+		delta |= 0x8
+	}
+	if me.DeltaStatus {
+		delta |= 0x10
+	}
+	if delta == 0 {
+		return 0
+	}
+	binary.Write(raw, binary.LittleEndian, me.NID)
+	binary.Write(raw, binary.LittleEndian, delta)
+	if me.DeltaMoveXZ {
+		binary.Write(raw, binary.LittleEndian, float32(me.X))
+		binary.Write(raw, binary.LittleEndian, float32(me.Z))
 		me.DeltaMoveXZ = false
 	}
 	if me.DeltaMoveY {
-		snap.WriteString(",y:")
-		snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
+		binary.Write(raw, binary.LittleEndian, float32(me.Y))
 		me.DeltaMoveY = false
 	}
 	if me.DeltaMoveDirection {
-		snap.WriteString(",d:")
-		snap.WriteString(strconv.Itoa(me.MoveDirection))
+		binary.Write(raw, binary.LittleEndian, uint8(me.MoveDirection))
 		me.DeltaMoveDirection = false
 	}
-	if me.DeltaStatus {
-		snap.WriteString(",s:")
-		snap.WriteString(strconv.Itoa(me.Status))
-		me.DeltaStatus = false
-	}
 	if me.DeltaHealth {
-		snap.WriteString(",h:")
-		snap.WriteString(strconv.Itoa(me.Health))
+		binary.Write(raw, binary.LittleEndian, uint16(me.Health))
 		me.DeltaHealth = false
 	}
-	snap.WriteString("},")
+	if me.DeltaStatus {
+		binary.Write(raw, binary.LittleEndian, uint8(me.Status))
+		me.DeltaStatus = false
+	}
+	return 1
 }
 
 // Damage func
 func (me *Baron) Damage(amount int) {
-	if me.Status != BaronDead {
-		me.DeltaHealth = true
-		me.Health -= amount
-		if me.Health < 1 {
-			me.DeltaStatus = true
-			me.Status = BaronDead
-			me.AnimationMod = 0
-			me.AnimationFrame = 0
-			me.Animation = BaronDeathAnimation
-			me.RemoveFromBlocks()
-		}
+	if me.Status == BaronDead {
+		return
+	}
+	me.Health -= amount
+	me.DeltaHealth = true
+	if me.Health < 1 {
+		me.Health = 0
+		me.Status = BaronDead
+		me.DeltaStatus = true
+		me.AnimationMod = 0
+		me.AnimationFrame = 0
+		me.Animation = BaronDeathAnimation
+		me.RemoveFromBlocks()
 	}
 }
 
@@ -182,8 +185,8 @@ func (me *Baron) Look() {
 		}
 		if thing.Health > 0 {
 			me.Target = thing
-			me.DeltaStatus = true
 			me.Status = BaronChase
+			me.DeltaStatus = true
 			return
 		}
 	}
@@ -201,8 +204,8 @@ func (me *Baron) Melee() {
 			me.Target.Damage(1 + NextRandP()%3)
 		}
 	} else if anim == AnimationDone {
-		me.DeltaStatus = true
 		me.Status = BaronChase
+		me.DeltaStatus = true
 		me.AnimationFrame = 0
 		me.Animation = BaronWalkAnimation
 	}
@@ -219,14 +222,13 @@ func (me *Baron) Missile() {
 		dz := float32(math.Sin(angle))
 		dist := me.ApproximateDistance(me.Target)
 		dy := (me.Target.Y + me.Target.Height*0.5 - me.Y - me.Height*0.5) / (dist / speed)
-		// TODO should me.Radius & plasma.Radius, update once after init?
 		x := me.X + dx*me.Radius*3.0
 		y := me.Y + me.Height*0.75
 		z := me.Z + dz*me.Radius*3.0
 		NewPlasma(me.World, 1+NextRandP()%3, x, y, z, dx*speed, dy, dz*speed)
 	} else if anim == AnimationDone {
-		me.DeltaStatus = true
 		me.Status = BaronChase
+		me.DeltaStatus = true
 		me.AnimationFrame = 0
 		me.Animation = BaronWalkAnimation
 	}
@@ -244,14 +246,14 @@ func (me *Baron) Chase() {
 	} else {
 		dist := me.ApproximateDistance(me.Target)
 		if me.Reaction == 0 && dist < me.MeleeRange {
-			me.DeltaStatus = true
 			me.Status = BaronMelee
+			me.DeltaStatus = true
 			me.AnimationMod = 0
 			me.AnimationFrame = 0
 			me.Animation = BaronMeleeAnimation
 		} else if me.Reaction == 0 && dist <= me.MissileRange {
-			me.DeltaStatus = true
 			me.Status = BaronMissile
+			me.DeltaStatus = true
 			me.AnimationMod = 0
 			me.AnimationFrame = 0
 			me.Animation = BaronMissileAnimation
@@ -283,6 +285,6 @@ func (me *Baron) Update() bool {
 	case BaronChase:
 		me.Chase()
 	}
-	me.NpcIntegrate()
+	me.IntegrateY()
 	return false
 }

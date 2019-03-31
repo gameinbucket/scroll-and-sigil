@@ -49,8 +49,6 @@ type Npc struct {
 	Target             *Thing
 	MoveCount          int
 	MoveDirection      int
-	DeltaMoveXZ        bool
-	DeltaMoveY         bool
 	DeltaMoveDirection bool
 }
 
@@ -263,18 +261,4 @@ func (me *Npc) Move() bool {
 		return true
 	}
 	return false
-}
-
-// NpcIntegrate func
-func (me *Npc) NpcIntegrate() {
-	if !me.Ground || me.DY != 0.0 {
-		me.DY -= Gravity
-		me.Y += me.DY
-		me.DeltaMoveY = true
-		me.TerrainCollisionY()
-
-		me.RemoveFromBlocks()
-		me.BlockBorders()
-		me.AddToBlocks()
-	}
 }

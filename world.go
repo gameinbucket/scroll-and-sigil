@@ -190,13 +190,11 @@ func (me *World) BuildSnapshots(people []*Person) {
 	updatedThings := 0
 	for i := 0; i < numThings; i++ {
 		thing := me.Things[i]
-		updatedThings += thing.BinarySnap(body)
+		updatedThings += thing.Snap(body)
 	}
 
 	raw := new(bytes.Buffer)
 	binary.Write(raw, binary.LittleEndian, uint32(time))
-	binary.Write(raw, binary.LittleEndian, uint16(updatedThings))
-	raw.Write(body.Bytes())
 
 	binary.Write(raw, binary.LittleEndian, me.broadcastCount)
 	if me.broadcastCount > 0 {
@@ -204,6 +202,9 @@ func (me *World) BuildSnapshots(people []*Person) {
 		me.broadcast.Reset()
 		me.broadcastCount = 0
 	}
+
+	binary.Write(raw, binary.LittleEndian, uint16(updatedThings))
+	raw.Write(body.Bytes())
 
 	dat := raw.Bytes()
 	for i := 0; i < num; i++ {
