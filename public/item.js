@@ -8,9 +8,9 @@ class Item {
         this.X = 0
         this.Y = 0
         this.Z = 0
-        this.DX = 0
-        this.DY = 0
-        this.DZ = 0
+        this.DeltaX = 0
+        this.DeltaY = 0
+        this.DeltaZ = 0
         this.MinBX = 0
         this.MinBY = 0
         this.MinBZ = 0

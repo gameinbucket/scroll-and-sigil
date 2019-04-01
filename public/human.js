@@ -22,9 +22,9 @@ class Human extends Thing {
         this.Y = y
         this.Z = z
         this.Angle = angle
-        this.OX = x
-        this.OY = y
-        this.OZ = z
+        this.OldX = x
+        this.OldY = y
+        this.OldZ = z
         this.Radius = 0.4
         this.Height = 1.0
         this.Speed = 0.1

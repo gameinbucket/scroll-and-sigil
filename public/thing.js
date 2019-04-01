@@ -34,6 +34,15 @@ const DirectionToAngle = [
     315.0 * DegToRad
 ]
 
+const ThingAngleA = 337.5 * DegToRad
+const ThingAngleB = 292.5 * DegToRad
+const ThingAngleC = 247.5 * DegToRad
+const ThingAngleD = 202.5 * DegToRad
+const ThingAngleE = 157.5 * DegToRad
+const ThingAngleF = 112.5 * DegToRad
+const ThingAngleG = 67.5 * DegToRad
+const ThingAngleH = 22.5 * DegToRad
+
 const HumanUID = 0
 const BaronUID = 1
 const TreeUID = 2
@@ -52,12 +61,13 @@ class Thing {
         this.Y = 0
         this.Z = 0
         this.Angle = 0
-        this.DX = 0
-        this.DY = 0
-        this.DZ = 0
-        this.OX = 0
-        this.OY = 0
-        this.OZ = 0
+        this.DeltaX = 0
+        this.DeltaY = 0
+        this.DeltaZ = 0
+        this.OldX = 0
+        this.OldY = 0
+        this.OldZ = 0
+        this.SnapshotEnd = 0
         this.MinBX = 0
         this.MinBY = 0
         this.MinBZ = 0
@@ -116,7 +126,7 @@ class Thing {
     NetUpdateState(_) {}
     NetUpdateHealth(_) {}
     TerrainCollisionY(world) {
-        if (this.DY < 0) {
+        if (this.DeltaY < 0) {
             let gx = Math.floor(this.X)
             let gy = Math.floor(this.Y)
             let gz = Math.floor(this.Z)
@@ -131,7 +141,7 @@ class Thing {
             if (TileClosed[tile]) {
                 this.Y = gy + 1
                 this.Ground = true
-                this.DY = 0
+                this.DeltaY = 0
             }
         }
     }
@@ -139,14 +149,14 @@ class Thing {
         let square = this.Radius + b.Radius
         if (Math.abs(this.X - b.X) > square || Math.abs(this.Z - b.Z) > square)
             return
-        if (Math.abs(this.OX - b.X) > Math.abs(this.OZ - b.Z)) {
-            if (this.OX - b.X < 0) this.X = b.X - square
+        if (Math.abs(this.OldX - b.X) > Math.abs(this.OldZ - b.Z)) {
+            if (this.OldX - b.X < 0) this.X = b.X - square
             else this.X = b.X + square
-            this.DX = 0.0
+            this.DeltaX = 0.0
         } else {
-            if (this.OZ - b.Z < 0) this.Z = b.Z - square
+            if (this.OldZ - b.Z < 0) this.Z = b.Z - square
             else this.Z = b.Z + square
-            this.DZ = 0.0
+            this.DeltaZ = 0.0
         }
     }
     Overlap(b) {
@@ -154,14 +164,15 @@ class Thing {
         return Math.abs(this.X - b.X) <= square && Math.abs(this.Z - b.Z) <= square
     }
     Integrate() {
-        // OX and snapshot need to be different things
-        // this.OX = this.X
-        // this.OY = this.Y
-        // this.OZ = this.Z
+        // OldX and snapshot need to be different things
 
-        // if (this.DX != 0.0 || this.DZ != 0.0) {
-        //     this.X += this.DX
-        //     this.Z += this.DZ
+        // this.OldX = this.X
+        // this.OldY = this.Y
+        // this.OldZ = this.Z
+
+        // if (this.DeltaX != 0.0 || this.DeltaZ != 0.0) {
+        //     this.X += this.DeltaX
+        //     this.Z += this.DeltaZ
 
         //     let collided = []
         //     let searched = new Set()
@@ -187,7 +198,7 @@ class Thing {
         //         let manhattan = Number.MAX_VALUE
         //         for (let i = 0; i < collided.length; i++) {
         //             let thing = collided[i]
-        //             let dist = Math.abs(this.OX - thing.X) + Math.abs(this.OZ - thing.Z)
+        //             let dist = Math.abs(this.OldX - thing.X) + Math.abs(this.OldZ - thing.Z)
         //             if (dist < manhattan) {
         //                 manhattan = dist
         //                 closest = thing
@@ -200,13 +211,13 @@ class Thing {
         //     this.BlockBorders()
         //     this.AddToBlocks(world)
 
-        //     this.DX = 0.0
-        //     this.DZ = 0.0
+        //     this.DeltaX = 0.0
+        //     this.DeltaZ = 0.0
         // }
 
-        // if (!this.Ground || this.DY != 0.0) {
-        //     this.DY -= GRAVITY
-        //     this.Y += this.DY
+        // if (!this.Ground || this.DeltaY != 0.0) {
+        //     this.DeltaY -= GRAVITY
+        //     this.Y += this.DeltaY
         //     this.TerrainCollisionY(world)
 
         //     this.RemoveFromBlocks(world)
@@ -214,13 +225,37 @@ class Thing {
         //     this.AddToBlocks(world)
         // }
     }
-    Render(interpolation, spriteBuffer, camX, camZ, camAngle) {
-        let vx = this.OX + interpolation * (this.X - this.OX)
-        let vy = this.OY + interpolation * (this.Y - this.OY)
-        let vz = this.OZ + interpolation * (this.Z - this.OZ)
+    Render(timeNow, interpolation, spriteBuffer, camX, camZ, camAngle) {
 
-        let sin = camX - vx
-        let cos = camZ - vz
+        if (this.DeltaNetX > 0) {
+            this.X += this.DeltaNetX
+            if (this.X >= this.NetX) {
+                this.X = this.NetX
+                this.DeltaNetX = 0
+            }
+        } else if (this.DeltaNetX < 0) {
+            tthis.X += this.DeltaNetX
+            if (this.X <= this.NetX) {
+                this.X = this.NetX
+                this.DeltaNetX = 0
+            }
+        }
+
+        let viewX
+        let viewY
+        let viewZ
+        if (this.SnapshotEnd < timeNow) {
+            viewX = this.X
+            viewY = this.Y
+            viewZ = this.Z
+        } else {
+            viewX = this.OldX + interpolation * (this.X - this.OldX)
+            viewY = this.OldY + interpolation * (this.Y - this.OldY)
+            viewZ = this.OldZ + interpolation * (this.Z - this.OldZ)
+        }
+
+        let sin = camX - viewX
+        let cos = camZ - viewZ
         let length = Math.sqrt(sin * sin + cos * cos)
         sin /= length
         cos /= length
@@ -231,37 +266,28 @@ class Thing {
         let direction
         let mirror
 
-        const AngleA = 337.5 * DegToRad
-        const AngleB = 292.5 * DegToRad
-        const AngleC = 247.5 * DegToRad
-        const AngleD = 202.5 * DegToRad
-        const AngleE = 157.5 * DegToRad
-        const AngleF = 112.5 * DegToRad
-        const AngleG = 67.5 * DegToRad
-        const AngleH = 22.5 * DegToRad
-
-        if (angle > AngleA) {
+        if (angle > ThingAngleA) {
             direction = AnimationBack
             mirror = false
-        } else if (angle > AngleB) {
+        } else if (angle > ThingAngleB) {
             direction = AnimationBackSide
             mirror = true
-        } else if (angle > AngleC) {
+        } else if (angle > ThingAngleC) {
             direction = AnimationSide
             mirror = true
-        } else if (angle > AngleD) {
+        } else if (angle > ThingAngleD) {
             direction = AnimationFrontSide
             mirror = true
-        } else if (angle > AngleE) {
+        } else if (angle > ThingAngleE) {
             direction = AnimationFront
             mirror = false
-        } else if (angle > AngleF) {
+        } else if (angle > ThingAngleF) {
             direction = AnimationFrontSide
             mirror = false
-        } else if (angle > AngleG) {
+        } else if (angle > ThingAngleG) {
             direction = AnimationSide
             mirror = false
-        } else if (angle > AngleH) {
+        } else if (angle > ThingAngleH) {
             direction = AnimationBackSide
             mirror = false
         } else {
@@ -271,7 +297,7 @@ class Thing {
 
         let sprite = this.Animation[this.AnimationFrame][direction]
 
-        if (mirror) Render3.MirrorSprite(spriteBuffer[this.SID], vx, vy, vz, sin, cos, sprite)
-        else Render3.Sprite(spriteBuffer[this.SID], vx, vy, vz, sin, cos, sprite)
+        if (mirror) Render3.MirrorSprite(spriteBuffer[this.SID], viewX, viewY, viewZ, sin, cos, sprite)
+        else Render3.Sprite(spriteBuffer[this.SID], viewX, viewY, viewZ, sin, cos, sprite)
     }
 }

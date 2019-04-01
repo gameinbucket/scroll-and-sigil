@@ -13,7 +13,7 @@ type Missile struct {
 	UID                 uint16
 	NID                 uint16
 	X, Y, Z             float32
-	DX, DY, DZ          float32
+	DeltaX, DeltaY, DeltaZ          float32
 	MinBX, MinBY, MinBZ int
 	MaxBX, MaxBY, MaxBZ int
 	Radius              float32
@@ -123,9 +123,9 @@ func (me *Missile) Update() bool {
 		return true
 	}
 	me.RemoveFromBlocks()
-	me.X += me.DX
-	me.Y += me.DY
-	me.Z += me.DZ
+	me.X += me.DeltaX
+	me.Y += me.DeltaY
+	me.Z += me.DeltaZ
 	me.BlockBorders()
 	if me.AddToBlocks() {
 		return true
@@ -146,11 +146,11 @@ func (me *Missile) Snap(snap *strings.Builder) {
 	snap.WriteString(",z:")
 	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
 	snap.WriteString(",dx:")
-	snap.WriteString(strconv.FormatFloat(float64(me.DX), 'f', -1, 32))
+	snap.WriteString(strconv.FormatFloat(float64(me.DeltaX), 'f', -1, 32))
 	snap.WriteString(",dy:")
-	snap.WriteString(strconv.FormatFloat(float64(me.DY), 'f', -1, 32))
+	snap.WriteString(strconv.FormatFloat(float64(me.DeltaY), 'f', -1, 32))
 	snap.WriteString(",dz:")
-	snap.WriteString(strconv.FormatFloat(float64(me.DZ), 'f', -1, 32))
+	snap.WriteString(strconv.FormatFloat(float64(me.DeltaZ), 'f', -1, 32))
 	snap.WriteString("},")
 }
 
@@ -161,9 +161,9 @@ func (me *Missile) BinarySnap(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, float32(me.X))
 	binary.Write(raw, binary.LittleEndian, float32(me.Y))
 	binary.Write(raw, binary.LittleEndian, float32(me.Z))
-	binary.Write(raw, binary.LittleEndian, float32(me.DX))
-	binary.Write(raw, binary.LittleEndian, float32(me.DY))
-	binary.Write(raw, binary.LittleEndian, float32(me.DZ))
+	binary.Write(raw, binary.LittleEndian, float32(me.DeltaX))
+	binary.Write(raw, binary.LittleEndian, float32(me.DeltaY))
+	binary.Write(raw, binary.LittleEndian, float32(me.DeltaZ))
 	binary.Write(raw, binary.LittleEndian, uint16(me.DamageAmount))
 }
 
@@ -196,9 +196,9 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
 	}
 	me.UID = PlasmaUID
 	me.NID = NextNID()
-	me.DX = dx
-	me.DY = dy
-	me.DZ = dz
+	me.DeltaX = dx
+	me.DeltaY = dy
+	me.DeltaZ = dz
 	me.DamageAmount = damage
 	me.Hit = me.PlasmaHit
 
@@ -208,9 +208,9 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
 
 // PlasmaHit func
 func (me *Missile) PlasmaHit(thing *Thing) {
-	me.X -= me.DX
-	me.Y -= me.DY
-	me.Z -= me.DZ
+	me.X -= me.DeltaX
+	me.Y -= me.DeltaY
+	me.Z -= me.DeltaZ
 	if thing != nil {
 		thing.Damage(me.DamageAmount)
 	}

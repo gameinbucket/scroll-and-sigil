@@ -423,7 +423,7 @@ class World {
             }
         }
     }
-    render(g, interpolation, x, y, z, camX, camZ, camAngle) {
+    render(g, timeNow, interpolation, x, y, z, camX, camZ, camAngle) {
         let gl = this.gl
         let spriteSet = this.spriteSet
         let spriteBuffer = this.spriteBuffer
@@ -442,7 +442,7 @@ class World {
         for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
             let block = this.viewable[i]
 
-            block.RenderThings(interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle)
+            block.RenderThings(timeNow, interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle)
 
             let mesh = block.mesh
             if (mesh.vertex_pos === 0)

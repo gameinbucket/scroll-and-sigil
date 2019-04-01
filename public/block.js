@@ -363,12 +363,12 @@ class Block {
         }
         this.mesh = RenderBuffer.InitCopy(world.gl, BLOCK_MESH)
     }
-    RenderThings(interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle) {
+    RenderThings(timeNow, interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle) {
         for (let i = 0; i < this.thingCount; i++) {
             let thing = this.things[i]
             if (spriteSet.has(thing)) continue
             spriteSet.add(thing)
-            thing.Render(interpolation, spriteBuffer, camX, camZ, camAngle)
+            thing.Render(timeNow, interpolation, spriteBuffer, camX, camZ, camAngle)
         }
         for (let i = 0; i < this.itemCount; i++) {
             let item = this.items[i]

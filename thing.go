@@ -38,7 +38,7 @@ type Thing struct {
 	AnimationFrame      int
 	X, Y, Z             float32
 	Angle               float32
-	DX, DY, DZ          float32
+	DeltaX, DeltaY, DeltaZ          float32
 	OldX, OldZ          float32
 	MinBX, MinBY, MinBZ int
 	MaxBX, MaxBY, MaxBZ int
@@ -222,7 +222,7 @@ func (me *Thing) TerrainCollisionXZ() {
 
 // TerrainCollisionY func
 func (me *Thing) TerrainCollisionY() {
-	if me.DY < 0 {
+	if me.DeltaY < 0 {
 		gx := int(me.X)
 		gy := int(me.Y)
 		gz := int(me.Z)
@@ -237,7 +237,7 @@ func (me *Thing) TerrainCollisionY() {
 		if TileClosed[tile] {
 			me.Y = float32(gy + 1)
 			me.Ground = true
-			me.DY = 0
+			me.DeltaY = 0
 		}
 	}
 }
@@ -258,14 +258,14 @@ func (me *Thing) Resolve(b *Thing) {
 		} else {
 			me.X = b.X + square
 		}
-		me.DX = 0.0
+		me.DeltaX = 0.0
 	} else {
 		if z < 0 {
 			me.Z = b.Z - square
 		} else {
 			me.Z = b.Z + square
 		}
-		me.DZ = 0.0
+		me.DeltaZ = 0.0
 	}
 }
 
@@ -290,8 +290,8 @@ func (me *Thing) IntegrateXZ() {
 	me.OldX = me.X
 	me.OldZ = me.Z
 
-	me.X += me.DX
-	me.Z += me.DZ
+	me.X += me.DeltaX
+	me.Z += me.DeltaZ
 	me.DeltaMoveXZ = true
 
 	collided := make([]*Thing, 0)
@@ -339,15 +339,15 @@ func (me *Thing) IntegrateXZ() {
 	me.BlockBorders()
 	me.AddToBlocks()
 
-	me.DX = 0.0
-	me.DZ = 0.0
+	me.DeltaX = 0.0
+	me.DeltaZ = 0.0
 }
 
 // IntegrateY func
 func (me *Thing) IntegrateY() {
 	if !me.Ground {
-		me.DY -= Gravity
-		me.Y += me.DY
+		me.DeltaY -= Gravity
+		me.Y += me.DeltaY
 		me.DeltaMoveY = true
 		me.TerrainCollisionY()
 

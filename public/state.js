@@ -17,6 +17,9 @@ class WorldState {
             let serverTime = dat.getUint32(dex, true)
             dex += 4
 
+            this.snapshotTime = serverTime + 1552330000000
+            this.previousUpdate = new Date().getTime()
+
             let broadcastCount = dat.getUint8(dex, true)
             dex += 1
             for (let b = 0; b < broadcastCount; b++) {
@@ -81,13 +84,14 @@ class WorldState {
                 dex += 1
                 let thing = world.netLookup[nid]
                 if (thing) {
+                    thing.SnapshotEnd = this.snapshotTime + NetworkUpdateRate
                     switch (thing.UID) {
                         case HumanUID:
                             {
                                 let updateBlocks = false
                                 if (delta & 0x1) {
-                                    thing.OX = thing.X
-                                    thing.OZ = thing.Z
+                                    thing.OldX = thing.X
+                                    thing.OldZ = thing.Z
                                     updateBlocks = true
                                     thing.X = dat.getFloat32(dex, true)
                                     dex += 4
@@ -95,7 +99,7 @@ class WorldState {
                                     dex += 4
                                 }
                                 if (delta & 0x2) {
-                                    thing.OY = thing.Y
+                                    thing.OldY = thing.Y
                                     updateBlocks = true
                                     thing.Y = dat.getFloat32(dex, true)
                                     dex += 4
@@ -125,8 +129,8 @@ class WorldState {
                             {
                                 let updateBlocks = false
                                 if (delta & 0x1) {
-                                    thing.OX = thing.X
-                                    thing.OZ = thing.Z
+                                    thing.OldX = thing.X
+                                    thing.OldZ = thing.Z
                                     updateBlocks = true
                                     thing.X = dat.getFloat32(dex, true)
                                     dex += 4
@@ -134,7 +138,7 @@ class WorldState {
                                     dex += 4
                                 }
                                 if (delta & 0x2) {
-                                    thing.OY = thing.Y
+                                    thing.OldY = thing.Y
                                     updateBlocks = true
                                     thing.Y = dat.getFloat32(dex, true)
                                     dex += 4
@@ -167,9 +171,6 @@ class WorldState {
                     throw new Error("missing thing nid " + nid)
                 }
             }
-
-            this.snapshotTime = serverTime + 1552330000000
-            this.previousUpdate = new Date().getTime()
         }
 
         world.update()
@@ -195,12 +196,11 @@ class WorldState {
         let world = this.app.world
         let cam = this.app.camera
 
-        let time = new Date().getTime()
-        let interpolation = (time - this.previousUpdate) / NetworkUpdateRate
+        let timeNow = new Date().getTime()
+        let interpolation = (timeNow - this.previousUpdate) / NetworkUpdateRate
         if (interpolation > 1.0) interpolation = 1.0
-        // console.log(time, this.previousUpdate, this.snapshotTime, interpolation)
 
-        cam.update(interpolation)
+        cam.update(timeNow, interpolation)
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
@@ -213,11 +213,11 @@ class WorldState {
         g.set_perspective(drawPerspective, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry)
         Matrix.Inverse(g.iv, g.v)
 
-        let cam_block_x = Math.floor(cam.x * InverseBlockSize)
-        let cam_block_y = Math.floor(cam.y * InverseBlockSize)
-        let cam_block_z = Math.floor(cam.z * InverseBlockSize)
+        let camBlockX = Math.floor(cam.x * InverseBlockSize)
+        let camBlockY = Math.floor(cam.y * InverseBlockSize)
+        let camBlockZ = Math.floor(cam.z * InverseBlockSize)
 
-        world.render(g, interpolation, cam_block_x, cam_block_y, cam_block_z, cam.x, cam.z, cam.ry)
+        world.render(g, timeNow, interpolation, camBlockX, camBlockY, camBlockZ, cam.x, cam.z, cam.ry)
 
         gl.disable(gl.DEPTH_TEST)
         gl.disable(gl.CULL_FACE)

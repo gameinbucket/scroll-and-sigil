@@ -8,9 +8,9 @@ class Missile {
         this.X = 0
         this.Y = 0
         this.Z = 0
-        this.DX = 0
-        this.DY = 0
-        this.DZ = 0
+        this.DeltaX = 0
+        this.DeltaY = 0
+        this.DeltaZ = 0
         this.MinBX = 0
         this.MinBY = 0
         this.MinBZ = 0
@@ -60,9 +60,9 @@ class Missile {
     }
     Update() {
         this.RemoveFromBlocks()
-        this.X += this.DX
-        this.Y += this.DY
-        this.Z += this.DZ
+        this.X += this.DeltaX
+        this.Y += this.DeltaY
+        this.Z += this.DeltaZ
         this.BlockBorders()
         if (this.AddToBlocks())
             return true
@@ -92,9 +92,9 @@ class Plasma extends Missile {
         this.SID = "missiles"
         this.NID = nid
         this.Sprite = SpriteData[this.SID]["baron-missile-front-1"]
-        this.DX = dx * NetworkConversionRate
-        this.DY = dy * NetworkConversionRate
-        this.DZ = dz * NetworkConversionRate
+        this.DeltaX = dx * NetworkConversionRate
+        this.DeltaY = dy * NetworkConversionRate
+        this.DeltaZ = dz * NetworkConversionRate
         this.Radius = 0.2
         this.Height = 0.2
         this.DamageAmount = damage

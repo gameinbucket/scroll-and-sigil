@@ -9,9 +9,9 @@ class Tree extends Thing {
         this.X = x
         this.Y = y
         this.Z = z
-        this.OX = x
-        this.OY = y
-        this.OZ = z
+        this.OldX = x
+        this.OldY = y
+        this.OldZ = z
         this.Radius = 0.4
         this.Height = 1.0
         this.Speed = 0.1
@@ -21,7 +21,7 @@ class Tree extends Thing {
         this.AddToBlocks()
     }
     Update() {}
-    Render(interpolation, spriteBuffer, camX, camZ, camAngle) {
+    Render(timeNow, interpolation, spriteBuffer, camX, camZ, camAngle) {
         let sin = camX - this.X
         let cos = camZ - this.Z
         let length = Math.sqrt(sin * sin + cos * cos)

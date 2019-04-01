@@ -9,7 +9,7 @@ class Camera {
         this.ry = ry
         this.update()
     }
-    update(interpolation) {
+    update(timeNow, interpolation) {
         if (Input.Is("ArrowLeft")) {
             this.ry -= 0.05
             if (this.ry < 0)
@@ -28,19 +28,29 @@ class Camera {
         if (this.rx < 0.25 && Input.Is("ArrowDown"))
             this.rx += 0.05
 
-        let sin_x = Math.sin(this.rx)
-        let cos_x = Math.cos(this.rx)
-        let sin_y = Math.sin(this.ry)
-        let cos_y = Math.cos(this.ry)
+        let sinX = Math.sin(this.rx)
+        let cosX = Math.cos(this.rx)
+        let sinY = Math.sin(this.ry)
+        let cosY = Math.cos(this.ry)
 
-        let vx = this.thing.OX + interpolation * (this.thing.X - this.thing.OX)
-        let vy = this.thing.OY + interpolation * (this.thing.Y - this.thing.OY)
-        let vz = this.thing.OZ + interpolation * (this.thing.Z - this.thing.OZ)
+        let thing = this.thing
+        let viewX
+        let viewY
+        let viewZ
+        if (thing.SnapshotEnd < timeNow) {
+            viewX = thing.X
+            viewY = thing.Y
+            viewZ = thing.Z
+        } else {
+            viewX = thing.OldX + interpolation * (thing.X - thing.OldX)
+            viewY = thing.OldY + interpolation * (thing.Y - thing.OldY)
+            viewZ = thing.OldZ + interpolation * (thing.Z - thing.OldZ)
+        }
 
-        this.x = vx - this.radius * cos_x * sin_y
-        this.y = vy + this.radius * sin_x
-        this.z = vz + this.radius * cos_x * cos_y
+        this.x = viewX - this.radius * cosX * sinY
+        this.y = viewY + this.radius * sinX
+        this.z = viewZ + this.radius * cosX * cosY
 
-        this.y += this.thing.Height
+        this.y += thing.Height
     }
 }

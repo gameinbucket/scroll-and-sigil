@@ -241,8 +241,8 @@ gotoRead:
 		// TODO animation mod is not necessary on server...
 		me.Animation = HumanMissileAnimation
 	} else if move {
-		me.DX += float32(math.Sin(float64(me.Angle))) * me.Speed
-		me.DZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
+		me.DeltaX += float32(math.Sin(float64(me.Angle))) * me.Speed
+		me.DeltaZ -= float32(math.Cos(float64(me.Angle))) * me.Speed
 		me.IntegrateXZ()
 		if me.Status == HumanIdle {
 			me.Status = HumanWalk
