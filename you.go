@@ -61,6 +61,7 @@ func NewYou(world *World, person *Person, x, y, z float32) *You {
 	you.Height = 1.0
 	you.Speed = 0.1
 	you.Health = 8
+	you.Group = HumanGroup
 	you.Status = HumanIdle
 	you.Person = person
 	world.AddThing(you.Thing)
@@ -109,13 +110,13 @@ func (me *You) Snap(raw *bytes.Buffer) int {
 	if me.DeltaMoveY {
 		delta |= 0x2
 	}
-	if me.DeltaAngle {
+	if me.DeltaHealth {
 		delta |= 0x4
 	}
-	if me.DeltaHealth {
+	if me.DeltaStatus {
 		delta |= 0x8
 	}
-	if me.DeltaStatus {
+	if me.DeltaAngle {
 		delta |= 0x10
 	}
 	if delta == 0 {
@@ -132,10 +133,6 @@ func (me *You) Snap(raw *bytes.Buffer) int {
 		binary.Write(raw, binary.LittleEndian, float32(me.Y))
 		me.DeltaMoveY = false
 	}
-	if me.DeltaAngle {
-		binary.Write(raw, binary.LittleEndian, float32(me.Angle))
-		me.DeltaAngle = false
-	}
 	if me.DeltaHealth {
 		binary.Write(raw, binary.LittleEndian, uint16(me.Health))
 		me.DeltaHealth = false
@@ -143,6 +140,10 @@ func (me *You) Snap(raw *bytes.Buffer) int {
 	if me.DeltaStatus {
 		binary.Write(raw, binary.LittleEndian, uint8(me.Status))
 		me.DeltaStatus = false
+	}
+	if me.DeltaAngle {
+		binary.Write(raw, binary.LittleEndian, float32(me.Angle))
+		me.DeltaAngle = false
 	}
 	return 1
 }
@@ -227,6 +228,7 @@ gotoRead:
 					break gotoRead
 				}
 				me.Angle = opFloat32
+				me.DeltaAngle = true
 				move = true
 			}
 		}

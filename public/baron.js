@@ -131,6 +131,7 @@ class Baron extends Thing {
                 this.Chase()
                 break
         }
+        this.LerpNetCode()
     }
     EmptyUpdate() {}
 }

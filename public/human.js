@@ -109,6 +109,7 @@ class Human extends Thing {
                 this.Walk()
                 break
         }
+        this.LerpNetCode()
     }
     EmptyUpdate() {}
 }

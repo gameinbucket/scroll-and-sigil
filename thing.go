@@ -23,6 +23,13 @@ const (
 	PlasmaUID = uint16(3)
 )
 
+// Group constants
+const (
+	NoGroup    = 0
+	HumanGroup = 1
+	DemonGroup = 2
+)
+
 // Thing variables
 var (
 	ThingNetworkNum = uint16(0)
@@ -30,30 +37,31 @@ var (
 
 // Thing struct
 type Thing struct {
-	World               *World
-	UID                 uint16
-	NID                 uint16
-	Animation           int
-	AnimationMod        int
-	AnimationFrame      int
-	X, Y, Z             float32
-	Angle               float32
-	DeltaX, DeltaY, DeltaZ          float32
-	OldX, OldZ          float32
-	MinBX, MinBY, MinBZ int
-	MaxBX, MaxBY, MaxBZ int
-	Ground              bool
-	Radius              float32
-	Height              float32
-	Speed               float32
-	Health              int
-	DeltaMoveXZ         bool
-	DeltaMoveY          bool
-	Update              func() bool
-	Damage              func(int)
-	Save                func(data *strings.Builder)
-	BinarySave          func(raw *bytes.Buffer)
-	Snap                func(raw *bytes.Buffer) int
+	World                  *World
+	UID                    uint16
+	NID                    uint16
+	Animation              int
+	AnimationMod           int
+	AnimationFrame         int
+	X, Y, Z                float32
+	Angle                  float32
+	DeltaX, DeltaY, DeltaZ float32
+	OldX, OldZ             float32
+	MinBX, MinBY, MinBZ    int
+	MaxBX, MaxBY, MaxBZ    int
+	Ground                 bool
+	Radius                 float32
+	Height                 float32
+	Speed                  float32
+	Health                 int
+	Group                  int
+	DeltaMoveXZ            bool
+	DeltaMoveY             bool
+	Update                 func() bool
+	Damage                 func(int)
+	Save                   func(data *strings.Builder)
+	BinarySave             func(raw *bytes.Buffer)
+	Snap                   func(raw *bytes.Buffer) int
 }
 
 // NextNID func

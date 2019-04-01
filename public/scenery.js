@@ -21,7 +21,7 @@ class Tree extends Thing {
         this.AddToBlocks()
     }
     Update() {}
-    Render(timeNow, interpolation, spriteBuffer, camX, camZ, camAngle) {
+    Render(spriteBuffer, camX, camZ, camAngle) {
         let sin = camX - this.X
         let cos = camZ - this.Z
         let length = Math.sqrt(sin * sin + cos * cos)

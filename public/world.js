@@ -1,5 +1,5 @@
-const NetworkUpdateRate = 50
-const NetworkConversionRate = 16.67 / NetworkUpdateRate
+const NetUpdateRate = 50
+const InverseNetRate = 16.67 / NetUpdateRate
 
 const WorldPositiveX = 0
 const WorldPositiveY = 1
@@ -423,7 +423,7 @@ class World {
             }
         }
     }
-    render(g, timeNow, interpolation, x, y, z, camX, camZ, camAngle) {
+    render(g, x, y, z, camX, camZ, camAngle) {
         let gl = this.gl
         let spriteSet = this.spriteSet
         let spriteBuffer = this.spriteBuffer
@@ -442,7 +442,7 @@ class World {
         for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
             let block = this.viewable[i]
 
-            block.RenderThings(timeNow, interpolation, spriteSet, spriteBuffer, camX, camZ, camAngle)
+            block.RenderThings(spriteSet, spriteBuffer, camX, camZ, camAngle)
 
             let mesh = block.mesh
             if (mesh.vertex_pos === 0)

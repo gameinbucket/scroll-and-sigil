@@ -57,6 +57,7 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	baron.Height = 1.0
 	baron.Animation = BaronWalkAnimation
 	baron.Health = 1
+	baron.Group = DemonGroup
 	baron.Speed = 0.1
 	baron.MoveDirection = DirectionNone
 	baron.Status = BaronLook
@@ -110,13 +111,13 @@ func (me *Baron) Snap(raw *bytes.Buffer) int {
 	if me.DeltaMoveY {
 		delta |= 0x2
 	}
-	if me.DeltaMoveDirection {
+	if me.DeltaHealth {
 		delta |= 0x4
 	}
-	if me.DeltaHealth {
+	if me.DeltaStatus {
 		delta |= 0x8
 	}
-	if me.DeltaStatus {
+	if me.DeltaMoveDirection {
 		delta |= 0x10
 	}
 	if delta == 0 {
@@ -133,10 +134,6 @@ func (me *Baron) Snap(raw *bytes.Buffer) int {
 		binary.Write(raw, binary.LittleEndian, float32(me.Y))
 		me.DeltaMoveY = false
 	}
-	if me.DeltaMoveDirection {
-		binary.Write(raw, binary.LittleEndian, uint8(me.MoveDirection))
-		me.DeltaMoveDirection = false
-	}
 	if me.DeltaHealth {
 		binary.Write(raw, binary.LittleEndian, uint16(me.Health))
 		me.DeltaHealth = false
@@ -144,6 +141,10 @@ func (me *Baron) Snap(raw *bytes.Buffer) int {
 	if me.DeltaStatus {
 		binary.Write(raw, binary.LittleEndian, uint8(me.Status))
 		me.DeltaStatus = false
+	}
+	if me.DeltaMoveDirection {
+		binary.Write(raw, binary.LittleEndian, uint8(me.MoveDirection))
+		me.DeltaMoveDirection = false
 	}
 	return 1
 }
@@ -180,10 +181,7 @@ func (me *Baron) Dead() {
 func (me *Baron) Look() {
 	for i := 0; i < me.World.ThingCount; i++ {
 		thing := me.World.Things[i]
-		if me.Thing == thing {
-			continue
-		}
-		if thing.Health > 0 {
+		if thing.Group == HumanGroup && thing.Health > 0 {
 			me.Target = thing
 			me.Status = BaronChase
 			me.DeltaStatus = true

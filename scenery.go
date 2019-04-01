@@ -23,10 +23,12 @@ func NewTree(world *World, x, y, z float32) *Thing {
 	tree.Z = z
 	tree.Radius = 0.4
 	tree.Height = 1.0
+	tree.Health = 1
 	world.AddThing(tree)
 	tree.BlockBorders()
 	tree.AddToBlocks()
 	return tree
+	// TODO make scenery its own entity
 }
 
 // ScenerySave func

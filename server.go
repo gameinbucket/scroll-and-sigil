@@ -166,6 +166,7 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 		http.Error(writer, "origin not allowed", 403)
 		return
 	}
+	// TODO client's need to be given a key to avoid DOS attacks / wasting resources on non players
 	upgrader := websocket.Upgrader{}
 	connection, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {

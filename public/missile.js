@@ -92,9 +92,9 @@ class Plasma extends Missile {
         this.SID = "missiles"
         this.NID = nid
         this.Sprite = SpriteData[this.SID]["baron-missile-front-1"]
-        this.DeltaX = dx * NetworkConversionRate
-        this.DeltaY = dy * NetworkConversionRate
-        this.DeltaZ = dz * NetworkConversionRate
+        this.DeltaX = dx * InverseNetRate
+        this.DeltaY = dy * InverseNetRate
+        this.DeltaZ = dz * InverseNetRate
         this.Radius = 0.2
         this.Height = 0.2
         this.DamageAmount = damage

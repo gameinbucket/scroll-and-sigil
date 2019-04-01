@@ -94,8 +94,8 @@ class You extends Human {
             }
 
             // TODO improve
-            // this.X += Math.sin(this.Angle) * this.Speed * NetworkConversionRate
-            // this.Z -= Math.cos(this.Angle) * this.Speed * NetworkConversionRate
+            // this.X += Math.sin(this.Angle) * this.Speed * InverseNetRate
+            // this.Z -= Math.cos(this.Angle) * this.Speed * InverseNetRate
 
             if (this.Animation === HumanAnimationIdle)
                 this.Animation = HumanAnimationWalk
@@ -115,5 +115,6 @@ class You extends Human {
                 this.Walk()
                 break
         }
+        this.LerpNetCode()
     }
 }

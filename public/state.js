@@ -84,86 +84,42 @@ class WorldState {
                 dex += 1
                 let thing = world.netLookup[nid]
                 if (thing) {
-                    thing.SnapshotEnd = this.snapshotTime + NetworkUpdateRate
+                    if (delta & 0x1) {
+                        thing.NetX = dat.getFloat32(dex, true)
+                        thing.DeltaNetX = (thing.NetX - thing.X) * InverseNetRate
+                        dex += 4
+                        thing.NetZ = dat.getFloat32(dex, true)
+                        thing.DeltaNetZ = (thing.NetZ - thing.Z) * InverseNetRate
+                        dex += 4
+                    }
+                    if (delta & 0x2) {
+                        thing.NetY = dat.getFloat32(dex, true)
+                        thing.DeltaNetY = (thing.NetY - thing.Y) * InverseNetRate
+                        dex += 4
+                    }
+                    if (delta & 0x4) {
+                        let health = dat.getUint16(dex, true)
+                        dex += 2
+                        thing.NetUpdateHealth(health)
+                    }
+                    if (delta & 0x8) {
+                        let status = dat.getUint8(dex, true)
+                        dex += 1
+                        thing.NetUpdateState(status)
+                    }
                     switch (thing.UID) {
                         case HumanUID:
-                            {
-                                let updateBlocks = false
-                                if (delta & 0x1) {
-                                    thing.OldX = thing.X
-                                    thing.OldZ = thing.Z
-                                    updateBlocks = true
-                                    thing.X = dat.getFloat32(dex, true)
-                                    dex += 4
-                                    thing.Z = dat.getFloat32(dex, true)
-                                    dex += 4
-                                }
-                                if (delta & 0x2) {
-                                    thing.OldY = thing.Y
-                                    updateBlocks = true
-                                    thing.Y = dat.getFloat32(dex, true)
-                                    dex += 4
-                                }
-                                if (delta & 0x4) {
-                                    thing.Angle = dat.getFloat32(dex, true)
-                                    dex += 4
-                                }
-                                if (delta & 0x8) {
-                                    let health = dat.getUint16(dex, true)
-                                    dex += 2
-                                    thing.NetUpdateHealth(health)
-                                }
-                                if (delta & 0x10) {
-                                    let status = dat.getUint8(dex, true)
-                                    dex += 1
-                                    thing.NetUpdateState(status)
-                                }
-                                if (updateBlocks) {
-                                    thing.RemoveFromBlocks()
-                                    thing.BlockBorders()
-                                    thing.AddToBlocks()
-                                }
+                            if (delta & 0x10) {
+                                thing.Angle = dat.getFloat32(dex, true)
+                                dex += 4
                             }
                             break
                         case BaronUID:
-                            {
-                                let updateBlocks = false
-                                if (delta & 0x1) {
-                                    thing.OldX = thing.X
-                                    thing.OldZ = thing.Z
-                                    updateBlocks = true
-                                    thing.X = dat.getFloat32(dex, true)
-                                    dex += 4
-                                    thing.Z = dat.getFloat32(dex, true)
-                                    dex += 4
-                                }
-                                if (delta & 0x2) {
-                                    thing.OldY = thing.Y
-                                    updateBlocks = true
-                                    thing.Y = dat.getFloat32(dex, true)
-                                    dex += 4
-                                }
-                                if (delta & 0x4) {
-                                    let direction = dat.getUint8(dex, true)
-                                    dex += 1
-                                    if (direction !== DirectionNone)
-                                        thing.Angle = DirectionToAngle[direction]
-                                }
-                                if (delta & 0x8) {
-                                    let health = dat.getUint16(dex, true)
-                                    dex += 2
-                                    thing.NetUpdateHealth(health)
-                                }
-                                if (delta & 0x10) {
-                                    let status = dat.getUint8(dex, true)
-                                    dex += 1
-                                    thing.NetUpdateState(status)
-                                }
-                                if (updateBlocks) {
-                                    thing.RemoveFromBlocks()
-                                    thing.BlockBorders()
-                                    thing.AddToBlocks()
-                                }
+                            if (delta & 0x10) {
+                                let direction = dat.getUint8(dex, true)
+                                dex += 1
+                                if (direction !== DirectionNone)
+                                    thing.Angle = DirectionToAngle[direction]
                             }
                             break
                     }
@@ -196,11 +152,7 @@ class WorldState {
         let world = this.app.world
         let cam = this.app.camera
 
-        let timeNow = new Date().getTime()
-        let interpolation = (timeNow - this.previousUpdate) / NetworkUpdateRate
-        if (interpolation > 1.0) interpolation = 1.0
-
-        cam.update(timeNow, interpolation)
+        cam.update()
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
@@ -217,7 +169,7 @@ class WorldState {
         let camBlockY = Math.floor(cam.y * InverseBlockSize)
         let camBlockZ = Math.floor(cam.z * InverseBlockSize)
 
-        world.render(g, timeNow, interpolation, camBlockX, camBlockY, camBlockZ, cam.x, cam.z, cam.ry)
+        world.render(g, camBlockX, camBlockY, camBlockZ, cam.x, cam.z, cam.ry)
 
         gl.disable(gl.DEPTH_TEST)
         gl.disable(gl.CULL_FACE)

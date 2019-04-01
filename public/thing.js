@@ -67,7 +67,12 @@ class Thing {
         this.OldX = 0
         this.OldY = 0
         this.OldZ = 0
-        this.SnapshotEnd = 0
+        this.NetX = 0
+        this.NetY = 0
+        this.NetZ = 0
+        this.DeltaNetX = 0
+        this.DeltaNetY = 0
+        this.DeltaNetZ = 0
         this.MinBX = 0
         this.MinBY = 0
         this.MinBZ = 0
@@ -163,6 +168,63 @@ class Thing {
         let square = this.Radius + b.Radius
         return Math.abs(this.X - b.X) <= square && Math.abs(this.Z - b.Z) <= square
     }
+    LerpNetCode() {
+        let updateBlocks = false
+
+        if (this.DeltaNetX > 0) {
+            this.X += this.DeltaNetX
+            updateBlocks = true
+            if (this.X >= this.NetX) {
+                this.X = this.NetX
+                this.DeltaNetX = 0
+            }
+        } else if (this.DeltaNetX < 0) {
+            this.X += this.DeltaNetX
+            updateBlocks = true
+            if (this.X <= this.NetX) {
+                this.X = this.NetX
+                this.DeltaNetX = 0
+            }
+        }
+
+        if (this.DeltaNetY > 0) {
+            this.Y += this.DeltaNetY
+            updateBlocks = true
+            if (this.Y >= this.NetY) {
+                this.Y = this.NetY
+                this.DeltaNetY = 0
+            }
+        } else if (this.DeltaNetY < 0) {
+            this.Y += this.DeltaNetY
+            updateBlocks = true
+            if (this.Y <= this.NetY) {
+                this.Y = this.NetY
+                this.DeltaNetY = 0
+            }
+        }
+
+        if (this.DeltaNetZ > 0) {
+            this.Z += this.DeltaNetZ
+            updateBlocks = true
+            if (this.Z >= this.NetZ) {
+                this.Z = this.NetZ
+                this.DeltaNetZ = 0
+            }
+        } else if (this.DeltaNetZ < 0) {
+            this.Z += this.DeltaNetZ
+            updateBlocks = true
+            if (this.Z <= this.NetZ) {
+                this.Z = this.NetZ
+                this.DeltaNetZ = 0
+            }
+        }
+
+        if (updateBlocks) {
+            this.RemoveFromBlocks()
+            this.BlockBorders()
+            this.AddToBlocks()
+        }
+    }
     Integrate() {
         // OldX and snapshot need to be different things
 
@@ -225,37 +287,9 @@ class Thing {
         //     this.AddToBlocks(world)
         // }
     }
-    Render(timeNow, interpolation, spriteBuffer, camX, camZ, camAngle) {
-
-        if (this.DeltaNetX > 0) {
-            this.X += this.DeltaNetX
-            if (this.X >= this.NetX) {
-                this.X = this.NetX
-                this.DeltaNetX = 0
-            }
-        } else if (this.DeltaNetX < 0) {
-            tthis.X += this.DeltaNetX
-            if (this.X <= this.NetX) {
-                this.X = this.NetX
-                this.DeltaNetX = 0
-            }
-        }
-
-        let viewX
-        let viewY
-        let viewZ
-        if (this.SnapshotEnd < timeNow) {
-            viewX = this.X
-            viewY = this.Y
-            viewZ = this.Z
-        } else {
-            viewX = this.OldX + interpolation * (this.X - this.OldX)
-            viewY = this.OldY + interpolation * (this.Y - this.OldY)
-            viewZ = this.OldZ + interpolation * (this.Z - this.OldZ)
-        }
-
-        let sin = camX - viewX
-        let cos = camZ - viewZ
+    Render(spriteBuffer, camX, camZ, camAngle) {
+        let sin = camX - this.X
+        let cos = camZ - this.Z
         let length = Math.sqrt(sin * sin + cos * cos)
         sin /= length
         cos /= length
@@ -297,7 +331,7 @@ class Thing {
 
         let sprite = this.Animation[this.AnimationFrame][direction]
 
-        if (mirror) Render3.MirrorSprite(spriteBuffer[this.SID], viewX, viewY, viewZ, sin, cos, sprite)
-        else Render3.Sprite(spriteBuffer[this.SID], viewX, viewY, viewZ, sin, cos, sprite)
+        if (mirror) Render3.MirrorSprite(spriteBuffer[this.SID], this.X, this.Y, this.Z, sin, cos, sprite)
+        else Render3.Sprite(spriteBuffer[this.SID], this.X, this.Y, this.Z, sin, cos, sprite)
     }
 }
