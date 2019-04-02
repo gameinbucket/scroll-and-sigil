@@ -10,10 +10,10 @@ import (
 
 // Animation constants
 const (
-	BaronWalkAnimation    int = 2
-	BaronMeleeAnimation   int = 2
-	BaronMissileAnimation int = 3
-	BaronDeathAnimation   int = 2
+	BaronWalkAnimation    int = 2 * AnimationRate
+	BaronMeleeAnimation   int = 2 * AnimationRate
+	BaronMissileAnimation int = 3 * AnimationRate
+	BaronDeathAnimation   int = 2 * AnimationRate
 )
 
 // Baron constants
@@ -160,7 +160,6 @@ func (me *Baron) Damage(amount int) {
 		me.Health = 0
 		me.Status = BaronDead
 		me.DeltaStatus = true
-		me.AnimationMod = 0
 		me.AnimationFrame = 0
 		me.Animation = BaronDeathAnimation
 		me.RemoveFromBlocks()
@@ -246,13 +245,11 @@ func (me *Baron) Chase() {
 		if me.Reaction == 0 && dist < me.MeleeRange {
 			me.Status = BaronMelee
 			me.DeltaStatus = true
-			me.AnimationMod = 0
 			me.AnimationFrame = 0
 			me.Animation = BaronMeleeAnimation
 		} else if me.Reaction == 0 && dist <= me.MissileRange {
 			me.Status = BaronMissile
 			me.DeltaStatus = true
-			me.AnimationMod = 0
 			me.AnimationFrame = 0
 			me.Animation = BaronMissileAnimation
 		} else {

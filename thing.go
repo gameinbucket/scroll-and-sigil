@@ -41,7 +41,6 @@ type Thing struct {
 	UID                    uint16
 	NID                    uint16
 	Animation              int
-	AnimationMod           int
 	AnimationFrame         int
 	X, Y, Z                float32
 	Angle                  float32
@@ -133,15 +132,11 @@ func (me *Thing) RemoveFromBlocks() {
 
 // UpdateAnimation func
 func (me *Thing) UpdateAnimation() int {
-	me.AnimationMod++
-	if me.AnimationMod == AnimationRate {
-		me.AnimationMod = 0
-		me.AnimationFrame++
-		if me.AnimationFrame == me.Animation-1 {
-			return AnimationAlmostDone
-		} else if me.AnimationFrame == me.Animation {
-			return AnimationDone
-		}
+	me.AnimationFrame++
+	if me.AnimationFrame == me.Animation-AnimationRate {
+		return AnimationAlmostDone
+	} else if me.AnimationFrame == me.Animation {
+		return AnimationDone
 	}
 	return AnimationNotDone
 }

@@ -10,10 +10,10 @@ import (
 
 // Animation constants
 const (
-	HumanWalkAnimation    int = 2
-	HumanMeleeAnimation   int = 2
-	HumanMissileAnimation int = 3
-	HumanDeathAnimation   int = 2
+	HumanWalkAnimation    int = 2 * AnimationRate
+	HumanMeleeAnimation   int = 2 * AnimationRate
+	HumanMissileAnimation int = 3 * AnimationRate
+	HumanDeathAnimation   int = 2 * AnimationRate
 )
 
 // Human constants
@@ -159,7 +159,6 @@ func (me *You) Damage(amount int) {
 		me.Health = 0
 		me.Status = HumanDead
 		me.DeltaStatus = true
-		me.AnimationMod = 0
 		me.AnimationFrame = 0
 		me.Animation = HumanDeathAnimation
 		me.RemoveFromBlocks()
@@ -238,7 +237,6 @@ gotoRead:
 	if attack {
 		me.Status = HumanMissile
 		me.DeltaStatus = true
-		me.AnimationMod = 0
 		me.AnimationFrame = 0
 		// TODO animation mod is not necessary on server...
 		me.Animation = HumanMissileAnimation

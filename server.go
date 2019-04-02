@@ -167,6 +167,8 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 		return
 	}
 	// TODO client's need to be given a key to avoid DOS attacks / wasting resources on non players
+	// TODO http server read list of acceptable path to files preventing attacks
+	// TODO editor should be publicly accesible, facilitates community and longevity
 	upgrader := websocket.Upgrader{}
 	connection, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {

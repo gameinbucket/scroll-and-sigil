@@ -6,8 +6,6 @@ let SocketSendOperations = 0
 
 class Application {
     constructor() {
-        let self = this
-
         let canvas = document.createElement("canvas")
         canvas.style.display = "block"
         canvas.style.position = "absolute"
@@ -45,6 +43,8 @@ class Application {
         document.onmouseup = Input.MouseUp
         document.onmousedown = Input.MouseDown
         document.onmousemove = Input.MouseMove
+
+        // let self = this
 
         window.onblur = function () {
             // self.on = false

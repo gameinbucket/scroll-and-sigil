@@ -61,6 +61,9 @@ func (me *Npc) NewDirection() {
 	old := me.MoveDirection
 	opposite := OppositeDirection[old]
 
+	// TODO something isnt right with movement
+	// TODO fix can't move problem
+
 	var directionX int
 	if dx > epsilon {
 		directionX = DirectionEast
