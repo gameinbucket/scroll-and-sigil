@@ -32,7 +32,7 @@ class WorldState {
                             dex += 2
                             let nid = dat.getUint16(dex, true)
                             dex += 2
-                            if (nid in world.netLookup)
+                            if (world.netLookup.has(nid))
                                 break
                             let x = dat.getFloat32(dex, true)
                             dex += 4
@@ -67,7 +67,7 @@ class WorldState {
                         {
                             let nid = dat.getUint16(dex, true)
                             dex += 2
-                            let entity = world.netLookup[nid]
+                            let entity = world.netLookup.get(nid)
                             if (entity) entity.Cleanup()
                             else throw new Error("missing nid " + nid + " to delete")
                         }
@@ -82,7 +82,7 @@ class WorldState {
                 dex += 2
                 let delta = dat.getUint8(dex, true)
                 dex += 1
-                let thing = world.netLookup[nid]
+                let thing = world.netLookup.get(nid)
                 if (thing) {
                     if (delta & 0x1) {
                         thing.NetX = dat.getFloat32(dex, true)
@@ -131,14 +131,23 @@ class WorldState {
 
         world.update()
 
+        for (var [op, value] of SocketSendSet) {
+            SocketSend.setUint8(SocketSendIndex, op, true)
+            SocketSendIndex++
+            if (op === InputOpNewMove) {
+                SocketSend.setFloat32(SocketSendIndex, value, true)
+                SocketSendIndex += 4
+            }
+            SocketSendOperations++
+        }
         if (SocketSendOperations > 0) {
             let buffer = SocketSend.buffer.slice(0, SocketSendIndex)
             let view = new DataView(buffer)
             view.setUint8(0, SocketSendOperations, true)
-
             SocketConnection.send(buffer)
             SocketSendIndex = 1
             SocketSendOperations = 0
+            SocketSendSet.clear()
         }
     }
     render() {
@@ -182,4 +191,8 @@ class WorldState {
         g.set_texture_direct(gl, frame.textures[0])
         RenderSystem.BindAndDraw(gl, screen)
     }
+}
+
+class EditorState {
+    // TODO
 }

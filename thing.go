@@ -278,6 +278,12 @@ func (me *Thing) Overlap(b *Thing) bool {
 	return Abs(me.X-b.X) <= square && Abs(me.Z-b.Z) <= square
 }
 
+// TryOverlap func
+func (me *Thing) TryOverlap(x, z float32, b *Thing) bool {
+	square := me.Radius + b.Radius
+	return Abs(x-b.X) <= square && Abs(z-b.Z) <= square
+}
+
 // ApproximateDistance func
 func (me *Thing) ApproximateDistance(other *Thing) float32 {
 	dx := Abs(me.X - other.X)
@@ -320,10 +326,11 @@ func (me *Thing) IntegrateXZ() {
 		}
 	}
 
-	for len(collided) > 0 {
+	num := len(collided)
+	for num > 0 {
 		closest := 0
 		manhattan := float32(math.MaxFloat32)
-		for i := 0; i < len(collided); i++ {
+		for i := 0; i < num; i++ {
 			thing := collided[i]
 			dist := Abs(me.OldX-thing.X) + Abs(me.OldZ-thing.Z)
 			if dist < manhattan {
@@ -332,9 +339,8 @@ func (me *Thing) IntegrateXZ() {
 			}
 		}
 		me.Resolve(collided[closest])
-		copy(collided[closest:], collided[closest+1:])
-		collided[len(collided)-1] = nil
-		collided = collided[:len(collided)-1]
+		collided[closest] = collided[num-1]
+		num--
 	}
 
 	me.TerrainCollisionXZ()

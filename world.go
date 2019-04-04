@@ -181,8 +181,7 @@ func (me *World) NewPlayer(person *Person) *You {
 func (me *World) BuildSnapshots(people []*Person) {
 	// TODO build separate snapshot list for every player and avoid broadcasting what isn't needed
 	// hold a map of what things are up-to-date for player, and resend full thing if there is a gap
-	// must build snapshot AFTER world update, else what happens if thing state changes after an event within same loop
-	num := len(server.people)
+	num := len(people)
 	time := time.Now().UnixNano()/1000000 - 1552330000000
 
 	body := new(bytes.Buffer)
@@ -208,7 +207,7 @@ func (me *World) BuildSnapshots(people []*Person) {
 
 	dat := raw.Bytes()
 	for i := 0; i < num; i++ {
-		person := server.people[i]
+		person := people[i]
 		person.binarySnap.Reset()
 		person.binarySnap.Write(dat)
 	}

@@ -238,7 +238,6 @@ gotoRead:
 		me.Status = HumanMissile
 		me.DeltaStatus = true
 		me.AnimationFrame = 0
-		// TODO animation mod is not necessary on server...
 		me.Animation = HumanMissileAnimation
 	} else if move {
 		me.DeltaX += float32(math.Sin(float64(me.Angle))) * me.Speed

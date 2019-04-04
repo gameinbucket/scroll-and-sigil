@@ -3,9 +3,12 @@ let SocketQueue = []
 let SocketSend = new DataView(new ArrayBuffer(128))
 let SocketSendIndex = 1
 let SocketSendOperations = 0
+let SocketSendSet = new Map()
 
-class Application {
-    constructor() {
+class App {
+    constructor(manager) {
+        this.manager = manager
+
         let canvas = document.createElement("canvas")
         canvas.style.display = "block"
         canvas.style.position = "absolute"
@@ -20,7 +23,13 @@ class Application {
         let gl = canvas.getContext("webgl2")
         let g = new RenderSystem()
 
-        this.configure_opengl(gl)
+        gl.clearColor(0, 0, 0, 1)
+        gl.depthFunc(gl.LEQUAL)
+        gl.cullFace(gl.BACK)
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+        gl.disable(gl.CULL_FACE)
+        gl.disable(gl.BLEND)
+        gl.disable(gl.DEPTH_TEST)
 
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
         let generics = RenderBuffer.Init(gl, 2, 3, 0, 1600, 2400)
@@ -54,15 +63,6 @@ class Application {
             // self.on = true
         }
     }
-    configure_opengl(gl) {
-        gl.clearColor(0, 0, 0, 1)
-        gl.depthFunc(gl.LEQUAL)
-        gl.cullFace(gl.BACK)
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-        gl.disable(gl.CULL_FACE)
-        gl.disable(gl.BLEND)
-        gl.disable(gl.DEPTH_TEST)
-    }
     resize() {
         let gl = this.gl
         let canvas = this.canvas
@@ -85,10 +85,11 @@ class Application {
         Matrix.Orthographic(drawOrtho, 0.0, drawWidth, 0.0, drawHeight, 0.0, 1.0)
         Matrix.Perspective(drawPerspective, fov, 0.01, 100.0, ratio)
 
-        if (this.frame === null)
+        if (this.frame === null) {
             this.frame = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "depth")
-        else
-            FrameBuffer.Resize(gl, this.frame, drawWidth, drawHeight)
+        } else {
+            this.frame.Resize(gl, drawWidth, drawHeight)
+        }
 
         screen.Zero()
         Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0)
@@ -127,10 +128,7 @@ class Application {
 
         this.world.Load(raw)
 
-        this.player = this.world.netLookup[this.world.PID]
-        this.camera = new Camera(this.player, 10.0, 0.0, 0.0)
-        this.player.camera = this.camera
-        console.log(this.player)
+        this.manager.init(this)
     }
     async run() {
         await this.init()
@@ -152,13 +150,6 @@ class Application {
         }
         requestAnimationFrame(loop)
     }
-}
-
-let app = new Application()
-app.run()
-
-function loop() {
-    app.loop()
 }
 
 function PlaySound(name) {

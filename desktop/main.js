@@ -3,6 +3,8 @@ const {
     BrowserWindow
 } = require("electron")
 
+const path = require("path")
+
 let window
 
 function createWindow() {
@@ -18,9 +20,7 @@ function createWindow() {
         window = null
     })
 
-    // win.loadFile("index.html")
-    // win.loadFile("../public/app.html")
-    window.loadURL("http://localhost:3000/app.html")
+    window.loadFile(path.join(__dirname, "..", "public", "game.html"))
 }
 
 app.on("ready", createWindow)

@@ -37,7 +37,7 @@ class World {
         this.occluder = new Occluder()
         this.PID
     }
-    Load(raw) {
+    Reset() {
         this.blocks = []
         this.viewable = []
         this.spriteSet = new Set()
@@ -51,7 +51,10 @@ class World {
         this.items = []
         this.missiles = []
         this.particles = []
-        this.netLookup = {}
+        this.netLookup = new Map()
+    }
+    Load(raw) {
+        this.Reset()
 
         let dat = new DataView(raw)
         let dex = 0
@@ -191,9 +194,9 @@ class World {
             }
         }
 
-        this.build()
+        this.Build()
     }
-    build() {
+    Build() {
         for (let i = 0; i < this.all; i++) {
             let block = this.blocks[i]
             for (let j = 0; j < block.lights.length; j++)
@@ -289,7 +292,7 @@ class World {
     AddThing(thing) {
         this.things[this.thingCount] = thing
         this.thingCount++
-        this.netLookup[thing.NID] = thing
+        this.netLookup.set(thing.NID, thing)
 
         let count = this.spriteCount[thing.SID]
         if (count) {
@@ -304,7 +307,7 @@ class World {
     AddItem(item) {
         this.items[this.itemCount] = item
         this.itemCount++
-        this.netLookup[item.NID] = item
+        this.netLookup.set(item.NID, item)
 
         let count = this.spriteCount[item.SID]
         if (count) {
@@ -319,7 +322,7 @@ class World {
     AddMissile(missile) {
         this.missiles[this.missileCount] = missile
         this.missileCount++
-        this.netLookup[missile.NID] = missile
+        this.netLookup.set(missile.NID, missile)
 
         let count = this.spriteCount[missile.SID]
         if (count) {
@@ -354,7 +357,7 @@ class World {
                 this.things[len - 1] = null
                 this.thingCount--
                 this.spriteCount[thing.SID]--
-                delete this.netLookup[thing.NID]
+                this.netLookup.delete(thing.NID)
                 break
             }
         }
@@ -367,7 +370,7 @@ class World {
                 this.items[len - 1] = null
                 this.itemCount--
                 this.spriteCount[item.SID]--
-                delete this.netLookup[item.NID]
+                this.netLookup.delete(item.NID)
                 break
             }
         }
@@ -380,7 +383,7 @@ class World {
                 this.missiles[len - 1] = null
                 this.missileCount--
                 this.spriteCount[missile.SID]--
-                delete this.netLookup[missile.NID]
+                this.netLookup.delete(missile.NID)
                 break
             }
         }

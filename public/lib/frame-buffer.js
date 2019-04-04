@@ -24,16 +24,16 @@ class FrameBuffer {
         this.linear = linear === "linear"
         this.depth = depth === "depth"
     }
+    Resize(gl, width, height) {
+        this.width = width
+        this.height = height
+        RenderSystem.SetFrameBuffer(gl, this.fbo)
+        RenderSystem.UpdateFrameBuffer(gl, this)
+    }
     static Make(gl, width, height, internalFormat, format, type, linear, depth) {
         let frame = new FrameBuffer()
         frame.set(width, height, internalFormat, format, type, linear, depth)
         RenderSystem.MakeFrameBuffer(gl, frame)
         return frame
-    }
-    static Resize(gl, frame, width, height) {
-        frame.width = width
-        frame.height = height
-        RenderSystem.SetFrameBuffer(gl, frame.fbo)
-        RenderSystem.UpdateFrameBuffer(gl, frame)
     }
 }

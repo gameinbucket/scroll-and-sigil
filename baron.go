@@ -255,9 +255,8 @@ func (me *Baron) Chase() {
 		} else {
 			me.MoveCount--
 			move := me.Move()
-			// fmt.Println(strconv.FormatInt(time.Now().UnixNano()/1000000, 10), "b>", move, "none?", me.MoveDirection == DirectionNone)
 			if me.MoveCount < 0 || !move {
-				me.NewDirection()
+				me.NewChaseDirection()
 			}
 			if me.UpdateAnimation() == AnimationDone {
 				me.AnimationFrame = 0

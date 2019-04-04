@@ -1,6 +1,6 @@
-echo "clean..."
+echo "clean"
 rm ss.app
-echo "build..."
+echo "build"
 go build -o ss.app
-echo "run..."
-./ss.app $1
+echo "run"
+./ss.app $@

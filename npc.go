@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 // Npc constants
 const (
 	DirectionNorth     = 0
@@ -12,8 +10,8 @@ const (
 	DirectionSouthWest = 5
 	DirectionWest      = 6
 	DirectionNorthWest = 7
-	DirectionCount     = 8
 	DirectionNone      = 8
+	DirectionCount     = 8
 )
 
 // Npc variables
@@ -30,10 +28,10 @@ var (
 		DirectionNone,
 	}
 	DiagonalDirection = []int{
-		DirectionSouthEast,
-		DirectionSouthWest,
 		DirectionNorthEast,
 		DirectionNorthWest,
+		DirectionSouthEast,
+		DirectionSouthWest,
 	}
 	NpcMoveX = []float32{
 		0.0, 0.5, 1.0, 0.5, 0.0, -0.5, -1.0, -0.5,
@@ -52,23 +50,20 @@ type Npc struct {
 	DeltaMoveDirection bool
 }
 
-// NewDirection func
-func (me *Npc) NewDirection() {
+// NewChaseDirection func
+func (me *Npc) NewChaseDirection() {
 	me.DeltaMoveDirection = true
 	const epsilon = 0.32
-	dx := me.Target.X - me.X
-	dz := me.Target.X - me.Z
+	dx := me.X - me.Target.X
+	dz := me.Z - me.Target.X
 	old := me.MoveDirection
 	opposite := OppositeDirection[old]
 
-	// TODO something isnt right with movement
-	// TODO fix can't move problem
-
 	var directionX int
 	if dx > epsilon {
-		directionX = DirectionEast
-	} else if dx < -epsilon {
 		directionX = DirectionWest
+	} else if dx < -epsilon {
+		directionX = DirectionEast
 	} else {
 		directionX = DirectionNone
 	}
@@ -152,7 +147,6 @@ func (me *Npc) NewDirection() {
 		}
 	}
 
-	fmt.Println("b> cant move")
 	me.MoveDirection = DirectionNone
 }
 
@@ -233,7 +227,7 @@ func (me *Npc) TryMove(x, z float32) bool {
 					}
 					if _, ok := searched[thing]; !ok {
 						searched[thing] = true
-						if me.Overlap(thing) {
+						if me.TryOverlap(x, z, thing) {
 							return false
 						}
 					}

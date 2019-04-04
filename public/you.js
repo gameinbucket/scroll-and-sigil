@@ -7,23 +7,37 @@ class You extends Human {
         super(world, nid, x, y, z, angle, health, status)
         this.camera = null
     }
+    NetUpdateState(status) {
+        if (this.Status === status)
+            return
+        this.AnimationMod = 0
+        this.AnimationFrame = 0
+        switch (status) {
+            case HumanDead:
+                this.Animation = HumanAnimationDeath
+                break
+            case HumanMissile:
+                this.Animation = HumanAnimationMissile
+                break
+            case HumanIdle:
+                this.Animation = HumanAnimationIdle
+            default:
+                this.Animation = HumanAnimationWalk
+                break
+        }
+        this.Status = status
+    }
     Walk() {
         let direction = null
         let goal = null
 
-        // TODO filter input into map to reduce uploaded traffic
-
         if (Input.Is(" ")) {
-            SocketSend.setUint8(SocketSendIndex, InputOpMissile, true)
-            SocketSendIndex++
-            SocketSendOperations++
-
-            // this.Status = HumanMissile
-            // this.AnimationMod = 0
-            // this.AnimationFrame = 0
-            // this.Animation = HumanAnimationMissile
-
-            // PlaySound("baron-missile")
+            SocketSendSet.set(InputOpMissile, true)
+            this.Status = HumanMissile
+            this.AnimationMod = 0
+            this.AnimationFrame = 0
+            this.Animation = HumanAnimationMissile
+            PlaySound("baron-missile")
             return
         }
 
@@ -82,15 +96,9 @@ class You extends Human {
 
             if (this.Angle !== goal) {
                 this.Angle = goal
-                SocketSend.setUint8(SocketSendIndex, InputOpNewMove, true)
-                SocketSendIndex++
-                SocketSend.setFloat32(SocketSendIndex, this.Angle, true)
-                SocketSendIndex += 4
-                SocketSendOperations++
+                SocketSendSet.set(InputOpNewMove, goal)
             } else {
-                SocketSend.setUint8(SocketSendIndex, InputOpContinueMove, true)
-                SocketSendIndex++
-                SocketSendOperations++
+                SocketSendSet.set(InputOpContinueMove, true)
             }
 
             // TODO improve

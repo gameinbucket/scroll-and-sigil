@@ -37,7 +37,6 @@ class Human extends Thing {
     NetUpdateState(status) {
         if (this.Status === status)
             return
-        console.log("human new status", status)
         this.AnimationMod = 0
         this.AnimationFrame = 0
         switch (status) {
@@ -47,7 +46,6 @@ class Human extends Thing {
             case HumanMissile:
                 this.Animation = HumanAnimationMissile
                 PlaySound("baron-missile")
-                console.log("baron-missile")
                 break
             case HumanIdle:
                 this.Animation = HumanAnimationIdle
