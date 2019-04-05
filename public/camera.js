@@ -1,5 +1,6 @@
 class SimpleCamera {
-    constructor() {
+    constructor(thing) {
+        this.thing = thing
         this.x = 0
         this.y = 0
         this.z = 0
@@ -7,7 +8,29 @@ class SimpleCamera {
         this.ry = 0
     }
     update() {
+        if (Input.Is("ArrowLeft")) {
+            this.ry -= 0.05
+            if (this.ry < 0)
+                this.ry += Tau
+        }
 
+        if (Input.Is("ArrowRight")) {
+            this.ry += 0.05
+            if (this.ry >= Tau)
+                this.ry -= Tau
+        }
+
+        if (this.rx > -Math.PI && Input.Is("ArrowUp"))
+            this.rx -= 0.05
+
+        if (this.rx < Math.PI && Input.Is("ArrowDown"))
+            this.rx += 0.05
+
+        let thing = this.thing
+
+        this.x = thing.X
+        this.y = thing.Y + thing.Height
+        this.z = thing.Z
     }
 }
 
@@ -49,9 +72,7 @@ class Camera {
         let thing = this.thing
 
         this.x = thing.X - this.radius * cosX * sinY
-        this.y = thing.Y + this.radius * sinX
+        this.y = thing.Y + this.radius * sinX + thing.Height
         this.z = thing.Z + this.radius * cosX * cosY
-
-        this.y += thing.Height
     }
 }

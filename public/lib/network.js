@@ -1,4 +1,4 @@
-class Network {
+class Net {
     static Request(file) {
         return new Promise(function (resolve, reject) {
             var request = new XMLHttpRequest()
@@ -8,6 +8,19 @@ class Network {
                     resolve(request.responseText)
             }
             request.onerror = reject
+            request.send()
+        })
+    }
+    static RequestBinary(file) {
+        return new Promise(function (resolve, reject) {
+            var request = new XMLHttpRequest()
+            request.open("GET", file)
+            request.onreadystatechange = function () {
+                if (request.readyState === XMLHttpRequest.DONE)
+                    resolve(request.response)
+            }
+            request.onerror = reject
+            request.responseType = "arraybuffer"
             request.send()
         })
     }

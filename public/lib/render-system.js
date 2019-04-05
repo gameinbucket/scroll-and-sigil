@@ -151,7 +151,7 @@ class RenderSystem {
             console.error("framebuffer error")
     }
     async make_program(gl, name) {
-        let file = await Network.Request("shaders/" + name)
+        let file = await Net.Request("shaders/" + name)
         let parts = file.split("===========================================================")
         let vertex = parts[0]
         let fragment = parts[1].trim()

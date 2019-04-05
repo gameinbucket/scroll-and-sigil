@@ -104,10 +104,10 @@ class App {
         let g = this.g
         let gl = this.gl
 
-        let data = await Network.Request("wad")
+        let data = await Net.Request("wad")
         await Wad.Load(g, gl, data)
 
-        SocketConnection = await Network.Socket("ws://" + window.location.host + "/websocket")
+        SocketConnection = await Net.Socket("ws://" + window.location.host + "/websocket")
         SocketConnection.binaryType = "arraybuffer"
 
         SocketConnection.onclose = function () {

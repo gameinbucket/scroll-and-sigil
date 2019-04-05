@@ -13,7 +13,8 @@ const (
 	contentType = "Content-type"
 	textPlain   = "text/plain"
 	dir         = "./public"
-	home        = dir + "/game.html"
+	api         = "/api"
+	home        = dir + "/editor.html"
 )
 
 var extensions = map[string]string{
@@ -46,7 +47,7 @@ func main() {
 	stop := make(chan os.Signal)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
-	serveFunction := game(level)
+	serveFunction := editor(level)
 
 	httpserver := &http.Server{Addr: ":" + port, Handler: http.HandlerFunc(serveFunction)}
 	fmt.Println("listening on port " + port)

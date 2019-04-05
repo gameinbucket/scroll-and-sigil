@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,7 +25,7 @@ var (
 	server *Server
 )
 
-func game(level string) func(w http.ResponseWriter, r *http.Request) {
+func editor(level string) func(w http.ResponseWriter, r *http.Request) {
 
 	server = &Server{}
 	server.mux = &sync.Mutex{}
@@ -58,11 +59,25 @@ func game(level string) func(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	return serve
+	return editorServe
 }
 
-func serve(w http.ResponseWriter, r *http.Request) {
+func editorServe(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.RemoteAddr, r.Method, r.URL.Path)
+
+	if strings.HasPrefix(r.URL.Path, api) {
+		if r.Method == "POST" {
+			w.Header().Set(contentType, textPlain)
+			_, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			w.Header().Set(contentType, textPlain)
+			w.Write([]byte("GET " + r.URL.Path))
+		}
+		return
+	}
 
 	var path string
 	if r.URL.Path == "/" {
