@@ -88,8 +88,8 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	typ, ok := extensions[filepath.Ext(path)]
-	if !ok {
+	typ, has := extensions[filepath.Ext(path)]
+	if !has {
 		typ = textPlain
 	}
 
@@ -114,10 +114,10 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 	me.mux.Lock()
 	person := NewPerson(connection, server.world)
 	me.people = append(me.people, person)
-	data := me.world.BinarySave(person)
+	data := me.world.Save(person)
 	me.world.broadcastCount++
 	binary.Write(me.world.broadcast, binary.LittleEndian, BroadcastNew)
-	person.Character.BinarySave(me.world.broadcast)
+	person.Character.Save(me.world.broadcast)
 	me.mux.Unlock()
 	person.WriteBinaryToClient(data)
 	go me.PersonConnectionLoop(person)

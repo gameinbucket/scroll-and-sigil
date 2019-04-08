@@ -1,13 +1,6 @@
-const TILE_NONE = 0
-const TILE_GROUND = 1
-const TILE_RAILS_RIGHT = 2
-const TILE_STAIRS_RIGHT = 3
-const TILE_RAIL = 4
-const TILE_WALL = 5
-const TILE_WATER_TOP = 6
-const TILE_WATER = 7
-const TILE_RAILS_LEFT = 8
-const TILE_STAIRS_LEFT = 9
+const TileNone = 0
+const TileGrass = 1
+const TilePlankFloor = 2
 
 const AMBIENT_LOW = 100
 const AMBIENT_HALF = 175
@@ -18,7 +11,7 @@ const TileClosed = []
 
 class Tile {
     constructor() {
-        this.type = TILE_NONE
+        this.type = TileNone
         this.red = 0
         this.green = 0
         this.blue = 0

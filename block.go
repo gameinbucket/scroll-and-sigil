@@ -3,8 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"strconv"
-	"strings"
 )
 
 // Block constants
@@ -36,45 +34,7 @@ func NewBlock(x, y, z int) *Block {
 }
 
 // Save func
-func (me *Block) Save(data *strings.Builder) {
-	data.WriteString("{x:")
-	data.WriteString(strconv.Itoa(me.X))
-	data.WriteString(",y:")
-	data.WriteString(strconv.Itoa(me.Y))
-	data.WriteString(",z:")
-	data.WriteString(strconv.Itoa(me.Z))
-	data.WriteString(",t[")
-	if me.NotEmpty() == 1 {
-		for i := 0; i < BlockAll; i++ {
-			data.WriteString(strconv.FormatInt(int64(me.Tiles[i]), 10))
-			data.WriteString(",")
-		}
-	}
-	data.WriteString("],e[")
-	for i := 0; i < me.ThingCount; i++ {
-		me.Things[i].Save(data)
-		data.WriteString(",")
-	}
-	data.WriteString("],i[")
-	for i := 0; i < me.ItemCount; i++ {
-		me.Items[i].Save(data)
-		data.WriteString(",")
-	}
-	data.WriteString("],m[")
-	for i := 0; i < me.MissileCount; i++ {
-		me.Missiles[i].Snap(data)
-		data.WriteString(",")
-	}
-	data.WriteString("],c[")
-	for i := 0; i < me.LightCount; i++ {
-		me.Lights[i].Save(data)
-		data.WriteString(",")
-	}
-	data.WriteString("]}")
-}
-
-// BinarySave func
-func (me *Block) BinarySave(raw *bytes.Buffer) {
+func (me *Block) Save(raw *bytes.Buffer) {
 	notEmpty := me.NotEmpty()
 	binary.Write(raw, binary.LittleEndian, notEmpty)
 	if notEmpty == 1 {
@@ -82,21 +42,9 @@ func (me *Block) BinarySave(raw *bytes.Buffer) {
 			binary.Write(raw, binary.LittleEndian, uint8(me.Tiles[i]))
 		}
 	}
-	binary.Write(raw, binary.LittleEndian, uint8(me.ThingCount))
-	for i := 0; i < me.ThingCount; i++ {
-		me.Things[i].BinarySave(raw)
-	}
-	binary.Write(raw, binary.LittleEndian, uint8(me.ItemCount))
-	for i := 0; i < me.ItemCount; i++ {
-		me.Items[i].BinarySave(raw)
-	}
-	binary.Write(raw, binary.LittleEndian, uint8(me.MissileCount))
-	for i := 0; i < me.MissileCount; i++ {
-		me.Missiles[i].BinarySnap(raw)
-	}
 	binary.Write(raw, binary.LittleEndian, uint8(me.LightCount))
 	for i := 0; i < me.LightCount; i++ {
-		me.Lights[i].BinarySave(raw)
+		me.Lights[i].Save(raw)
 	}
 }
 

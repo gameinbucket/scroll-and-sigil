@@ -20,6 +20,14 @@ class Tree extends Thing {
         this.BlockBorders()
         this.AddToBlocks()
     }
+    Save() {
+        let data = "{u:" + this.UID
+        data += ",x:" + this.X
+        data += ",y:" + this.Y
+        data += ",z:" + this.Z
+        data += "}"
+        return data
+    }
     Update() {}
     Render(spriteBuffer, camX, camZ, camAngle) {
         let sin = camX - this.X

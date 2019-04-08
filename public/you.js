@@ -31,7 +31,7 @@ class You extends Human {
         let direction = null
         let goal = null
 
-        if (Input.Is(" ")) {
+        if (Input.KeyDown(" ")) {
             SocketSendSet.set(InputOpMissile, true)
             this.Status = HumanMissile
             this.AnimationMod = 0
@@ -41,12 +41,12 @@ class You extends Human {
             return
         }
 
-        if (Input.Is("w")) {
+        if (Input.KeyDown("w")) {
             direction = "w"
             goal = this.camera.ry
         }
 
-        if (Input.Is("s")) {
+        if (Input.KeyDown("s")) {
             if (direction === null) {
                 direction = "s"
                 goal = this.camera.ry + Math.PI
@@ -56,7 +56,7 @@ class You extends Human {
             }
         }
 
-        if (Input.Is("a")) {
+        if (Input.KeyDown("a")) {
             if (direction === null) {
                 direction = "a"
                 goal = this.camera.ry - HalfPi
@@ -69,7 +69,7 @@ class You extends Human {
             }
         }
 
-        if (Input.Is("d")) {
+        if (Input.KeyDown("d")) {
             if (direction === null)
                 goal = this.camera.ry + HalfPi
             else if (direction === "a")

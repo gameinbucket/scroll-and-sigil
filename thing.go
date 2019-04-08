@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"math"
-	"strings"
 )
 
 // Thing constants
@@ -58,8 +57,7 @@ type Thing struct {
 	DeltaMoveY             bool
 	Update                 func() bool
 	Damage                 func(int)
-	Save                   func(data *strings.Builder)
-	BinarySave             func(raw *bytes.Buffer)
+	Save                   func(raw *bytes.Buffer)
 	Snap                   func(raw *bytes.Buffer) int
 }
 
@@ -70,15 +68,11 @@ func NextNID() uint16 {
 }
 
 // LoadNewThing func
-func LoadNewThing(world *World, uid string, x, y, z float32) *Thing {
+func LoadNewThing(world *World, uid uint16, x, y, z float32) *Thing {
 	switch uid {
-	case "spawn":
-		world.SpawnYouX = x
-		world.SpawnYouY = y
-		world.SpawnYouZ = z
-	case "baron":
+	case BaronUID:
 		return NewBaron(world, x, y, z).Thing
-	case "tree":
+	case TreeUID:
 		return NewTree(world, x, y, z)
 	}
 	return nil
@@ -315,7 +309,7 @@ func (me *Thing) IntegrateXZ() {
 				block := me.World.GetBlock(gx, gy, gz)
 				for t := 0; t < block.ThingCount; t++ {
 					thing := block.Things[t]
-					if _, ok := searched[thing]; !ok {
+					if _, has := searched[thing]; !has {
 						searched[thing] = true
 						if me.Overlap(thing) {
 							collided = append(collided, thing)

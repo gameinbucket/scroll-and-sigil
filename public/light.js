@@ -1,16 +1,14 @@
-const LIGHT_QUEUE_LIMIT = 30 * 30 * 30
-const LIGHT_QUEUE = new Array(LIGHT_QUEUE_LIMIT)
-const LIGHT_QUEUE_POS = 0
-const LIGHT_QUEUE_NUM = 1
-const LIGHT_FADE = 0.95
-for (let i = 0; i < LIGHT_QUEUE.length; i++) {
-    LIGHT_QUEUE[i] = new Int32Array(3)
+const LightQueueLimit = 30 * 30 * 30
+const LightFade = 0.95
+const LightQueue = new Array(LightQueueLimit)
+for (let i = 0; i < LightQueue.length; i++) {
+    LightQueue[i] = new Int32Array(3)
 }
-let LIGHT_BLOCK_X = 0
-let LIGHT_BLOCK_Y = 0
-let LIGHT_BLOCK_Z = 0
-let LIGHT_POS = 0
-let LIGHT_NUM = 0
+let LightBlockX = 0
+let LightBlockY = 0
+let LightBlockZ = 0
+let LightPos = 0
+let LightNum = 0
 
 class Light {
     constructor(x, y, z, rgb) {
@@ -18,6 +16,14 @@ class Light {
         this.y = y
         this.z = z
         this.rgb = rgb
+    }
+    Save() {
+        let data = "{x:" + this.x
+        data += ",y:" + this.y
+        data += ",z:" + this.z
+        data += ",v:" + this.rgb
+        data += "}"
+        return data
     }
     static Colorize(rgb, ambient) {
         return [
@@ -27,7 +33,7 @@ class Light {
         ]
     }
     static Visit(world, bx, by, bz, red, green, blue) {
-        let tile = world.GetTilePointer(LIGHT_BLOCK_X, LIGHT_BLOCK_Y, LIGHT_BLOCK_Z, bx, by, bz)
+        let tile = world.GetTilePointer(LightBlockX, LightBlockY, LightBlockZ, bx, by, bz)
         if (tile === null || TileClosed[tile.type])
             return
         if (tile.red >= red || tile.green >= green || tile.blue >= blue)
@@ -36,50 +42,50 @@ class Light {
         tile.green = green
         tile.blue = blue
 
-        let queue = LIGHT_POS + LIGHT_NUM
-        if (queue >= LIGHT_QUEUE_LIMIT)
-            queue -= LIGHT_QUEUE_LIMIT
-        LIGHT_QUEUE[queue][0] = bx
-        LIGHT_QUEUE[queue][1] = by
-        LIGHT_QUEUE[queue][2] = bz
-        LIGHT_NUM++
+        let queue = LightPos + LightNum
+        if (queue >= LightQueueLimit)
+            queue -= LightQueueLimit
+        LightQueue[queue][0] = bx
+        LightQueue[queue][1] = by
+        LightQueue[queue][2] = bz
+        LightNum++
     }
     static Add(world, block, light) {
-        LIGHT_BLOCK_X = block.x
-        LIGHT_BLOCK_Y = block.y
-        LIGHT_BLOCK_Z = block.z
+        LightBlockX = block.x
+        LightBlockY = block.y
+        LightBlockZ = block.z
 
         let color = Render.UnpackRgb(light.rgb)
 
-        let index = light.x + light.y * BlockSize + light.z * BLOCK_SLICE
+        let index = light.x + light.y * BlockSize + light.z * BlockSlice
         let tile = block.tiles[index]
         tile.red = color[0]
         tile.green = color[1]
         tile.blue = color[2]
 
-        LIGHT_QUEUE[0][0] = light.x
-        LIGHT_QUEUE[0][1] = light.y
-        LIGHT_QUEUE[0][2] = light.z
-        LIGHT_POS = 0
-        LIGHT_NUM = 1
+        LightQueue[0][0] = light.x
+        LightQueue[0][1] = light.y
+        LightQueue[0][2] = light.z
+        LightPos = 0
+        LightNum = 1
 
-        while (LIGHT_NUM > 0) {
-            let x = LIGHT_QUEUE[LIGHT_POS][0]
-            let y = LIGHT_QUEUE[LIGHT_POS][1]
-            let z = LIGHT_QUEUE[LIGHT_POS][2]
+        while (LightNum > 0) {
+            let x = LightQueue[LightPos][0]
+            let y = LightQueue[LightPos][1]
+            let z = LightQueue[LightPos][2]
 
-            LIGHT_POS++
-            if (LIGHT_POS === LIGHT_QUEUE_LIMIT)
-                LIGHT_POS = 0
-            LIGHT_NUM--
+            LightPos++
+            if (LightPos === LightQueueLimit)
+                LightPos = 0
+            LightNum--
 
-            let node = world.GetTilePointer(LIGHT_BLOCK_X, LIGHT_BLOCK_Y, LIGHT_BLOCK_Z, x, y, z)
+            let node = world.GetTilePointer(LightBlockX, LightBlockY, LightBlockZ, x, y, z)
             if (node === null)
                 continue
 
-            let r = Math.floor(node.red * LIGHT_FADE)
-            let g = Math.floor(node.green * LIGHT_FADE)
-            let b = Math.floor(node.blue * LIGHT_FADE)
+            let r = Math.floor(node.red * LightFade)
+            let g = Math.floor(node.green * LightFade)
+            let b = Math.floor(node.blue * LightFade)
 
             Light.Visit(world, x - 1, y, z, r, g, b)
             Light.Visit(world, x + 1, y, z, r, g, b)

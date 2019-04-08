@@ -1,43 +1,55 @@
-const INPUT_KEYS = {}
-const INPUT_MOUSE = [false, false]
-const INPUT_POS = [0, 0]
+const InputKeyboard = {}
+const InputMouse = [false, false]
+const InputPos = [0, 0]
+const InputMovement = [0, 0]
 
 class Input {
-    static Is(key) {
-        return INPUT_KEYS[key]
+    static KeyDown(key) {
+        return InputKeyboard[key]
+    }
+    static KeyPress(key) {
+        let val = InputKeyboard[key]
+        InputKeyboard[key] = false
+        return val
     }
     static Off(key) {
-        INPUT_KEYS[key] = false
+        InputKeyboard[key] = false
     }
     static IsClick(id) {
-        return INPUT_MOUSE[id]
+        return InputMouse[id]
     }
     static MovementY() {
-        return INPUT_MOVEMENT[1]
+        return InputMovement[1]
     }
     static Moved() {
-        INPUT_MOVEMENT[0] = 0
-        INPUT_MOVEMENT[1] = 0
+        InputMovement[0] = 0
+        InputMovement[1] = 0
     }
     static Clicked(id) {
-        INPUT_MOUSE[id] = false
+        InputMouse[id] = false
     }
-    static KeyUp(event) {
-        INPUT_KEYS[event.key] = false
+    static SetKeyUp(event) {
+        InputKeyboard[event.key] = false
     }
-    static KeyDown(event) {
-        INPUT_KEYS[event.key] = true
+    static SetKeyDown(event) {
+        InputKeyboard[event.key] = true
     }
-    static MouseUp(event) {
-        if (event.button === 0) INPUT_MOUSE[0] = false
-        else if (event.button === 2) INPUT_MOUSE[1] = false
+    static SetMouseUp(event) {
+        if (event.button === 0) {
+            InputMouse[0] = false
+        } else if (event.button === 2) {
+            InputMouse[1] = false
+        }
     }
-    static MouseDown(event) {
-        if (event.button === 0) INPUT_MOUSE[0] = true
-        else if (event.button === 2) INPUT_MOUSE[1] = true
+    static SetMouseDown(event) {
+        if (event.button === 0) {
+            InputMouse[0] = true
+        } else if (event.button === 2) {
+            InputMouse[1] = true
+        }
     }
-    static MouseMove(event) {
-        INPUT_POS[0] = event.clientX
-        INPUT_POS[1] = event.clientY
+    static SetMouseMove(event) {
+        InputPos[0] = event.clientX
+        InputPos[1] = event.clientY
     }
 }

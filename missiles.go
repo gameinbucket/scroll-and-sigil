@@ -3,23 +3,21 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"strconv"
-	"strings"
 )
 
 // Missile struct
 type Missile struct {
-	World               *World
-	UID                 uint16
-	NID                 uint16
-	X, Y, Z             float32
-	DeltaX, DeltaY, DeltaZ          float32
-	MinBX, MinBY, MinBZ int
-	MaxBX, MaxBY, MaxBZ int
-	Radius              float32
-	Height              float32
-	DamageAmount        int
-	Hit                 func(thing *Thing)
+	World                  *World
+	UID                    uint16
+	NID                    uint16
+	X, Y, Z                float32
+	DeltaX, DeltaY, DeltaZ float32
+	MinBX, MinBY, MinBZ    int
+	MaxBX, MaxBY, MaxBZ    int
+	Radius                 float32
+	Height                 float32
+	DamageAmount           int
+	Hit                    func(thing *Thing)
 }
 
 // BlockBorders func
@@ -79,7 +77,7 @@ func (me *Missile) Collision() bool {
 				for t := 0; t < block.ThingCount; t++ {
 					thing := block.Things[t]
 					if thing.Health > 0 {
-						if _, ok := searched[thing]; !ok {
+						if _, has := searched[thing]; !has {
 							searched[thing] = true
 							if me.Overlap(thing) {
 								me.Hit(thing)
@@ -134,28 +132,7 @@ func (me *Missile) Update() bool {
 }
 
 // Snap func
-func (me *Missile) Snap(snap *strings.Builder) {
-	snap.WriteString("{u:")
-	snap.WriteString(strconv.Itoa(int(me.UID)))
-	snap.WriteString(",n:")
-	snap.WriteString(strconv.Itoa(int(me.NID)))
-	snap.WriteString(",x:")
-	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-	snap.WriteString(",y:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	snap.WriteString(",z:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
-	snap.WriteString(",dx:")
-	snap.WriteString(strconv.FormatFloat(float64(me.DeltaX), 'f', -1, 32))
-	snap.WriteString(",dy:")
-	snap.WriteString(strconv.FormatFloat(float64(me.DeltaY), 'f', -1, 32))
-	snap.WriteString(",dz:")
-	snap.WriteString(strconv.FormatFloat(float64(me.DeltaZ), 'f', -1, 32))
-	snap.WriteString("},")
-}
-
-// BinarySnap func
-func (me *Missile) BinarySnap(raw *bytes.Buffer) {
+func (me *Missile) Snap(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, me.UID)
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, float32(me.X))
@@ -171,7 +148,7 @@ func (me *Missile) BinarySnap(raw *bytes.Buffer) {
 func (me *Missile) BroadcastNew() {
 	me.World.broadcastCount++
 	binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastNew)
-	me.BinarySnap(me.World.broadcast)
+	me.Snap(me.World.broadcast)
 }
 
 // BroadcastDelete func

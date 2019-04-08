@@ -1,28 +1,28 @@
 const BlockSize = 8
 const InverseBlockSize = 1.0 / BlockSize
 
-const BLOCK_SLICE = BlockSize * BlockSize
-const BlockAll = BLOCK_SLICE * BlockSize
-const BLOCK_MESH = new RenderCopy(3, 3, 2, BlockAll * 6 * 4, BlockAll * 6 * 6)
-const BLOCK_MESH_AMBIENT = new Array(BlockAll)
+const BlockSlice = BlockSize * BlockSize
+const BlockAll = BlockSlice * BlockSize
+const BlockMesh = new RenderCopy(3, 3, 2, BlockAll * 6 * 4, BlockAll * 6 * 6)
+const BlockMeshAmbient = new Array(BlockAll)
 for (let i = 0; i < BlockAll; i++) {
-    BLOCK_MESH_AMBIENT[i] = new Array(6)
+    BlockMeshAmbient[i] = new Array(6)
     for (let j = 0; j < 6; j++) {
-        BLOCK_MESH_AMBIENT[i][j] = new Uint8Array(4)
+        BlockMeshAmbient[i][j] = new Uint8Array(4)
     }
 }
-const BLOCK_COLOR_DIM = BlockSize + 1
-const BLOCK_COLOR_SLICE = BLOCK_COLOR_DIM * BLOCK_COLOR_DIM
-const BLOCK_MESH_COLOR = new Array(BLOCK_COLOR_DIM * BLOCK_COLOR_SLICE)
-for (let i = 0; i < BLOCK_MESH_COLOR.length; i++) {
-    BLOCK_MESH_COLOR[i] = new Uint8Array(3)
+const BlockColorDim = BlockSize + 1
+const BlockColorSlice = BlockColorDim * BlockColorDim
+const BlockMeshColor = new Array(BlockColorDim * BlockColorSlice)
+for (let i = 0; i < BlockMeshColor.length; i++) {
+    BlockMeshColor[i] = new Uint8Array(3)
 }
-const SLICE_X = [2, 1, 0, 2, 1, 0]
-const SLICE_Y = [0, 2, 1, 0, 2, 1]
-const SLICE_Z = [1, 0, 2, 1, 0, 2]
-const SLICE_TOWARDS = [1, 1, 1, -1, -1, -1]
-const SLICE = new Array(3)
-const SLICE_TEMP = new Array(3)
+const SliceX = [2, 1, 0, 2, 1, 0]
+const SliceY = [0, 2, 1, 0, 2, 1]
+const SliceZ = [1, 0, 2, 1, 0, 2]
+const SliceTowards = [1, 1, 1, -1, -1, -1]
+const Slice = new Array(3)
+const SliceTemp = new Array(3)
 
 class Block {
     constructor(px, py, pz) {
@@ -47,11 +47,35 @@ class Block {
         for (let t = 0; t < BlockAll; t++)
             this.tiles[t] = new Tile()
     }
+    Save() {
+        let data = "{t["
+        if (this.NotEmpty()) {
+            for (let i = 0; i < BlockAll; i++) {
+                data += this.tiles[i].type
+                data += ","
+            }
+        }
+        data += "],c["
+        for (let i = 0; i < this.lightCount; i++) {
+            data += this.lights[i].Save()
+            data += ","
+        }
+        data += "]}"
+        return data
+    }
+    NotEmpty() {
+        for (let i = 0; i < BlockAll; i++) {
+            if (this.tiles[i].type !== TileNone) {
+                return true
+            }
+        }
+        return false
+    }
     GetTilePointerUnsafe(x, y, z) {
-        return this.tiles[x + y * BlockSize + z * BLOCK_SLICE]
+        return this.tiles[x + y * BlockSize + z * BlockSlice]
     }
     GetTileTypeUnsafe(x, y, z) {
-        return this.tiles[x + y * BlockSize + z * BLOCK_SLICE].type
+        return this.tiles[x + y * BlockSize + z * BlockSlice].type
     }
     AddThing(thing) {
         this.things[this.thingCount] = thing
@@ -131,8 +155,8 @@ class Block {
         for (let bz = 0; bz < BlockSize; bz++) {
             for (let by = 0; by < BlockSize; by++) {
                 for (let bx = 0; bx < BlockSize; bx++) {
-                    let index = bx + by * BlockSize + bz * BLOCK_SLICE
-                    if (this.tiles[index].type === TILE_NONE)
+                    let index = bx + by * BlockSize + bz * BlockSlice
+                    if (this.tiles[index].type === TileNone)
                         continue
 
                     let ao_mmz = TileClosed[world.GetTileType(this.x, this.y, this.z, bx - 1, by - 1, bz)]
@@ -156,43 +180,43 @@ class Block {
                     let ao_ppp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by + 1, bz + 1)]
                     let ao_pmp = TileClosed[world.GetTileType(this.x, this.y, this.z, bx + 1, by - 1, bz + 1)]
 
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveX][0] = Tile.Ambient(ao_pmz, ao_pzm, ao_pmm)
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveX][1] = Tile.Ambient(ao_ppz, ao_pzm, ao_ppm)
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveX][2] = Tile.Ambient(ao_ppz, ao_pzp, ao_ppp)
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveX][3] = Tile.Ambient(ao_pmz, ao_pzp, ao_pmp)
+                    BlockMeshAmbient[index][WorldPositiveX][0] = Tile.Ambient(ao_pmz, ao_pzm, ao_pmm)
+                    BlockMeshAmbient[index][WorldPositiveX][1] = Tile.Ambient(ao_ppz, ao_pzm, ao_ppm)
+                    BlockMeshAmbient[index][WorldPositiveX][2] = Tile.Ambient(ao_ppz, ao_pzp, ao_ppp)
+                    BlockMeshAmbient[index][WorldPositiveX][3] = Tile.Ambient(ao_pmz, ao_pzp, ao_pmp)
 
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeX][0] = Tile.Ambient(ao_mmz, ao_mzm, ao_mmm)
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeX][1] = Tile.Ambient(ao_mmz, ao_mzp, ao_mmp)
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeX][2] = Tile.Ambient(ao_mpz, ao_mzp, ao_mpp)
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeX][3] = Tile.Ambient(ao_mpz, ao_mzm, ao_mpm)
+                    BlockMeshAmbient[index][WorldNegativeX][0] = Tile.Ambient(ao_mmz, ao_mzm, ao_mmm)
+                    BlockMeshAmbient[index][WorldNegativeX][1] = Tile.Ambient(ao_mmz, ao_mzp, ao_mmp)
+                    BlockMeshAmbient[index][WorldNegativeX][2] = Tile.Ambient(ao_mpz, ao_mzp, ao_mpp)
+                    BlockMeshAmbient[index][WorldNegativeX][3] = Tile.Ambient(ao_mpz, ao_mzm, ao_mpm)
 
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveY][0] = Tile.Ambient(ao_mpz, ao_zpm, ao_mpm)
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveY][1] = Tile.Ambient(ao_mpz, ao_zpp, ao_mpp)
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveY][2] = Tile.Ambient(ao_ppz, ao_zpp, ao_ppp)
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveY][3] = Tile.Ambient(ao_ppz, ao_zpm, ao_ppm)
+                    BlockMeshAmbient[index][WorldPositiveY][0] = Tile.Ambient(ao_mpz, ao_zpm, ao_mpm)
+                    BlockMeshAmbient[index][WorldPositiveY][1] = Tile.Ambient(ao_mpz, ao_zpp, ao_mpp)
+                    BlockMeshAmbient[index][WorldPositiveY][2] = Tile.Ambient(ao_ppz, ao_zpp, ao_ppp)
+                    BlockMeshAmbient[index][WorldPositiveY][3] = Tile.Ambient(ao_ppz, ao_zpm, ao_ppm)
 
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeY][0] = Tile.Ambient(ao_mmz, ao_zmm, ao_mmm)
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeY][1] = Tile.Ambient(ao_pmz, ao_zmm, ao_pmm)
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeY][2] = Tile.Ambient(ao_pmz, ao_zmp, ao_pmp)
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeY][3] = Tile.Ambient(ao_mmz, ao_zmp, ao_mmp)
+                    BlockMeshAmbient[index][WorldNegativeY][0] = Tile.Ambient(ao_mmz, ao_zmm, ao_mmm)
+                    BlockMeshAmbient[index][WorldNegativeY][1] = Tile.Ambient(ao_pmz, ao_zmm, ao_pmm)
+                    BlockMeshAmbient[index][WorldNegativeY][2] = Tile.Ambient(ao_pmz, ao_zmp, ao_pmp)
+                    BlockMeshAmbient[index][WorldNegativeY][3] = Tile.Ambient(ao_mmz, ao_zmp, ao_mmp)
 
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveZ][0] = Tile.Ambient(ao_pzp, ao_zmp, ao_pmp)
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveZ][1] = Tile.Ambient(ao_pzp, ao_zpp, ao_ppp)
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveZ][2] = Tile.Ambient(ao_mzp, ao_zpp, ao_mpp)
-                    BLOCK_MESH_AMBIENT[index][WorldPositiveZ][3] = Tile.Ambient(ao_mzp, ao_zmp, ao_mmp)
+                    BlockMeshAmbient[index][WorldPositiveZ][0] = Tile.Ambient(ao_pzp, ao_zmp, ao_pmp)
+                    BlockMeshAmbient[index][WorldPositiveZ][1] = Tile.Ambient(ao_pzp, ao_zpp, ao_ppp)
+                    BlockMeshAmbient[index][WorldPositiveZ][2] = Tile.Ambient(ao_mzp, ao_zpp, ao_mpp)
+                    BlockMeshAmbient[index][WorldPositiveZ][3] = Tile.Ambient(ao_mzp, ao_zmp, ao_mmp)
 
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeZ][0] = Tile.Ambient(ao_mzm, ao_zmm, ao_mmm)
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeZ][1] = Tile.Ambient(ao_mzm, ao_zpm, ao_mpm)
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeZ][2] = Tile.Ambient(ao_pzm, ao_zpm, ao_ppm)
-                    BLOCK_MESH_AMBIENT[index][WorldNegativeZ][3] = Tile.Ambient(ao_pzm, ao_zmm, ao_pmm)
+                    BlockMeshAmbient[index][WorldNegativeZ][0] = Tile.Ambient(ao_mzm, ao_zmm, ao_mmm)
+                    BlockMeshAmbient[index][WorldNegativeZ][1] = Tile.Ambient(ao_mzm, ao_zpm, ao_mpm)
+                    BlockMeshAmbient[index][WorldNegativeZ][2] = Tile.Ambient(ao_pzm, ao_zpm, ao_ppm)
+                    BlockMeshAmbient[index][WorldNegativeZ][3] = Tile.Ambient(ao_pzm, ao_zmm, ao_pmm)
                 }
             }
         }
     }
     ColorMesh(world) {
-        for (let bz = 0; bz < BLOCK_COLOR_DIM; bz++) {
-            for (let by = 0; by < BLOCK_COLOR_DIM; by++) {
-                for (let bx = 0; bx < BLOCK_COLOR_DIM; bx++) {
+        for (let bz = 0; bz < BlockColorDim; bz++) {
+            for (let by = 0; by < BlockColorDim; by++) {
+                for (let bx = 0; bx < BlockColorDim; bx++) {
                     let color = [0, 0, 0, 0]
 
                     let block_zzz = world.GetTilePointer(this.x, this.y, this.z, bx, by, bz)
@@ -245,15 +269,15 @@ class Block {
                         this.DetermineLight(block_mmm, color)
                     }
 
-                    let index = bx + by * BLOCK_COLOR_DIM + bz * BLOCK_COLOR_SLICE
+                    let index = bx + by * BlockColorDim + bz * BlockColorSlice
                     if (color[3] > 0) {
-                        BLOCK_MESH_COLOR[index][0] = color[0] / color[3]
-                        BLOCK_MESH_COLOR[index][1] = color[1] / color[3]
-                        BLOCK_MESH_COLOR[index][2] = color[2] / color[3]
+                        BlockMeshColor[index][0] = color[0] / color[3]
+                        BlockMeshColor[index][1] = color[1] / color[3]
+                        BlockMeshColor[index][2] = color[2] / color[3]
                     } else {
-                        BLOCK_MESH_COLOR[index][0] = 255
-                        BLOCK_MESH_COLOR[index][1] = 255
-                        BLOCK_MESH_COLOR[index][2] = 255
+                        BlockMeshColor[index][0] = 255
+                        BlockMeshColor[index][1] = 255
+                        BlockMeshColor[index][2] = 255
                     }
                 }
             }
@@ -273,73 +297,73 @@ class Block {
         switch (side) {
             case WorldPositiveX:
                 return [
-                    BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE]
+                    BlockMeshColor[xs + 1 + ys * BlockColorDim + zs * BlockColorSlice],
+                    BlockMeshColor[xs + 1 + (ys + 1) * BlockColorDim + zs * BlockColorSlice],
+                    BlockMeshColor[xs + 1 + (ys + 1) * BlockColorDim + (zs + 1) * BlockColorSlice],
+                    BlockMeshColor[xs + 1 + ys * BlockColorDim + (zs + 1) * BlockColorSlice]
                 ]
             case WorldNegativeX:
                 return [
-                    BLOCK_MESH_COLOR[xs + ys * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + (ys + 1) * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE]
+                    BlockMeshColor[xs + ys * BlockColorDim + zs * BlockColorSlice],
+                    BlockMeshColor[xs + ys * BlockColorDim + (zs + 1) * BlockColorSlice],
+                    BlockMeshColor[xs + (ys + 1) * BlockColorDim + (zs + 1) * BlockColorSlice],
+                    BlockMeshColor[xs + (ys + 1) * BlockColorDim + zs * BlockColorSlice]
                 ]
             case WorldPositiveY:
                 return [
-                    BLOCK_MESH_COLOR[xs + (ys + 1) * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE]
+                    BlockMeshColor[xs + (ys + 1) * BlockColorDim + zs * BlockColorSlice],
+                    BlockMeshColor[xs + (ys + 1) * BlockColorDim + (zs + 1) * BlockColorSlice],
+                    BlockMeshColor[xs + 1 + (ys + 1) * BlockColorDim + (zs + 1) * BlockColorSlice],
+                    BlockMeshColor[xs + 1 + (ys + 1) * BlockColorDim + zs * BlockColorSlice]
                 ]
             case WorldNegativeY:
                 return [
-                    BLOCK_MESH_COLOR[xs + ys * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE]
+                    BlockMeshColor[xs + ys * BlockColorDim + zs * BlockColorSlice],
+                    BlockMeshColor[xs + 1 + ys * BlockColorDim + zs * BlockColorSlice],
+                    BlockMeshColor[xs + 1 + ys * BlockColorDim + (zs + 1) * BlockColorSlice],
+                    BlockMeshColor[xs + ys * BlockColorDim + (zs + 1) * BlockColorSlice]
                 ]
             case WorldPositiveZ:
                 return [
-                    BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + (ys + 1) * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + ys * BLOCK_COLOR_DIM + (zs + 1) * BLOCK_COLOR_SLICE]
+                    BlockMeshColor[xs + 1 + ys * BlockColorDim + (zs + 1) * BlockColorSlice],
+                    BlockMeshColor[xs + 1 + (ys + 1) * BlockColorDim + (zs + 1) * BlockColorSlice],
+                    BlockMeshColor[xs + (ys + 1) * BlockColorDim + (zs + 1) * BlockColorSlice],
+                    BlockMeshColor[xs + ys * BlockColorDim + (zs + 1) * BlockColorSlice]
                 ]
             default:
                 return [
-                    BLOCK_MESH_COLOR[xs + ys * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + (ys + 1) * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + 1 + (ys + 1) * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE],
-                    BLOCK_MESH_COLOR[xs + 1 + ys * BLOCK_COLOR_DIM + zs * BLOCK_COLOR_SLICE]
+                    BlockMeshColor[xs + ys * BlockColorDim + zs * BlockColorSlice],
+                    BlockMeshColor[xs + (ys + 1) * BlockColorDim + zs * BlockColorSlice],
+                    BlockMeshColor[xs + 1 + (ys + 1) * BlockColorDim + zs * BlockColorSlice],
+                    BlockMeshColor[xs + 1 + ys * BlockColorDim + zs * BlockColorSlice]
                 ]
         }
     }
     BuildMesh(world) {
         this.AmbientMesh(world)
         this.ColorMesh(world)
-        BLOCK_MESH.Zero()
+        BlockMesh.Zero()
         for (let side = 0; side < 6; side++) {
-            let mesh_begin_index = BLOCK_MESH.index_pos
-            let ptr_x = SLICE_X[side]
-            let ptr_y = SLICE_Y[side]
-            let ptr_z = SLICE_Z[side]
-            let toward = SLICE_TOWARDS[side]
-            for (SLICE[2] = 0; SLICE[2] < BlockSize; SLICE[2]++) {
-                for (SLICE[1] = 0; SLICE[1] < BlockSize; SLICE[1]++) {
-                    for (SLICE[0] = 0; SLICE[0] < BlockSize; SLICE[0]++) {
-                        let type = this.GetTileTypeUnsafe(SLICE[ptr_x], SLICE[ptr_y], SLICE[ptr_z])
-                        if (type === TILE_NONE)
+            let mesh_begin_index = BlockMesh.index_pos
+            let pointerX = SliceX[side]
+            let pointerY = SliceY[side]
+            let pointerZ = SliceZ[side]
+            let toward = SliceTowards[side]
+            for (Slice[2] = 0; Slice[2] < BlockSize; Slice[2]++) {
+                for (Slice[1] = 0; Slice[1] < BlockSize; Slice[1]++) {
+                    for (Slice[0] = 0; Slice[0] < BlockSize; Slice[0]++) {
+                        let type = this.GetTileTypeUnsafe(Slice[pointerX], Slice[pointerY], Slice[pointerZ])
+                        if (type === TileNone)
                             continue
-                        SLICE_TEMP[0] = SLICE[0]
-                        SLICE_TEMP[1] = SLICE[1]
-                        SLICE_TEMP[2] = SLICE[2] + toward
-                        if (TileClosed[world.GetTileType(this.x, this.y, this.z, SLICE_TEMP[ptr_x], SLICE_TEMP[ptr_y], SLICE_TEMP[ptr_z])])
+                        SliceTemp[0] = Slice[0]
+                        SliceTemp[1] = Slice[1]
+                        SliceTemp[2] = Slice[2] + toward
+                        if (TileClosed[world.GetTileType(this.x, this.y, this.z, SliceTemp[pointerX], SliceTemp[pointerY], SliceTemp[pointerZ])])
                             continue
-                        let xs = SLICE[ptr_x]
-                        let ys = SLICE[ptr_y]
-                        let zs = SLICE[ptr_z]
-                        let index = xs + ys * BlockSize + zs * BLOCK_SLICE
+                        let xs = Slice[pointerX]
+                        let ys = Slice[pointerY]
+                        let zs = Slice[pointerZ]
+                        let index = xs + ys * BlockSize + zs * BlockSlice
 
                         let texture = TileTexture[type]
                         let bx = xs + BlockSize * this.x
@@ -347,21 +371,21 @@ class Block {
                         let bz = zs + BlockSize * this.z
 
                         let light = this.LightOfSide(xs, ys, zs, side)
-                        let ambient = BLOCK_MESH_AMBIENT[index][side]
+                        let ambient = BlockMeshAmbient[index][side]
 
                         let rgb_a = Light.Colorize(light[0], ambient[0])
                         let rgb_b = Light.Colorize(light[1], ambient[1])
                         let rgb_c = Light.Colorize(light[2], ambient[2])
                         let rgb_d = Light.Colorize(light[3], ambient[3])
 
-                        RenderTile.Side(BLOCK_MESH, side, bx, by, bz, texture, rgb_a, rgb_b, rgb_c, rgb_d)
+                        RenderTile.Side(BlockMesh, side, bx, by, bz, texture, rgb_a, rgb_b, rgb_c, rgb_d)
                     }
                 }
             }
             this.begin_side[side] = mesh_begin_index * 4
-            this.count_side[side] = BLOCK_MESH.index_pos - mesh_begin_index
+            this.count_side[side] = BlockMesh.index_pos - mesh_begin_index
         }
-        this.mesh = RenderBuffer.InitCopy(world.gl, BLOCK_MESH)
+        this.mesh = RenderBuffer.InitCopy(world.gl, BlockMesh)
     }
     RenderThings(spriteSet, spriteBuffer, camX, camZ, camAngle) {
         for (let i = 0; i < this.thingCount; i++) {

@@ -225,7 +225,7 @@ func (me *Npc) TryMove(x, z float32) bool {
 					if me.Thing == thing {
 						continue
 					}
-					if _, ok := searched[thing]; !ok {
+					if _, has := searched[thing]; !has {
 						searched[thing] = true
 						if me.TryOverlap(x, z, thing) {
 							return false

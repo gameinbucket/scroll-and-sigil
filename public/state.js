@@ -192,7 +192,3 @@ class WorldState {
         RenderSystem.BindAndDraw(gl, screen)
     }
 }
-
-class EditorState {
-    // TODO
-}

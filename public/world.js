@@ -18,6 +18,9 @@ class World {
         this.width
         this.height
         this.length
+        this.tileWidth
+        this.tileHeight
+        this.tileLength
         this.slice
         this.all
         this.blocks
@@ -53,10 +56,10 @@ class World {
         this.particles = []
         this.netLookup = new Map()
     }
-    Load(raw) {
+    Load(binary) {
         this.Reset()
 
-        let dat = new DataView(raw)
+        let dat = new DataView(binary)
         let dex = 0
 
         this.PID = dat.getUint16(dex, true)
@@ -70,6 +73,10 @@ class World {
         dex += 2
         this.slice = this.width * this.height
         this.all = this.slice * this.length
+
+        this.tileWidth = this.width * BlockSize
+        this.tileHeight = this.height * BlockSize
+        this.tileLength = this.length * BlockSize
 
         let bx = 0
         let by = 0
@@ -100,85 +107,6 @@ class World {
                 }
             }
 
-            let thingCount = dat.getUint8(dex, true)
-            dex += 1
-            for (let t = 0; t < thingCount; t++) {
-                let uid = dat.getUint16(dex, true)
-                dex += 2
-                let nid = dat.getUint16(dex, true)
-                dex += 2
-                let x = dat.getFloat32(dex, true)
-                dex += 4
-                let y = dat.getFloat32(dex, true)
-                dex += 4
-                let z = dat.getFloat32(dex, true)
-                dex += 4
-                switch (uid) {
-                    case HumanUID:
-                        {
-                            let angle = dat.getFloat32(dex, true)
-                            dex += 4
-                            let health = dat.getUint16(dex, true)
-                            dex += 2
-                            let status = dat.getUint8(dex, true)
-                            dex += 1
-                            if (nid === this.PID) new You(this, nid, x, y, z, angle, health, status)
-                            else new Human(this, nid, x, y, z, angle, health, status)
-                        }
-                        break
-                    case BaronUID:
-                        {
-                            let direction = dat.getUint8(dex, true)
-                            dex += 1
-                            let health = dat.getUint16(dex, true)
-                            dex += 2
-                            let status = dat.getUint8(dex, true)
-                            dex += 1
-                            new Baron(this, nid, x, y, z, direction, health, status)
-                        }
-                        break
-                    case TreeUID:
-                        new Tree(this, nid, x, y, z)
-                        break
-                }
-            }
-
-            let itemCount = dat.getUint8(dex, true)
-            for (let t = 0; t < itemCount; t++) {
-                console.log("new item")
-            }
-            dex += 1
-
-            let missileCount = dat.getUint8(dex, true)
-            dex += 1
-            for (let t = 0; t < missileCount; t++) {
-                let uid = dat.getUint16(dex, true)
-                dex += 2
-                switch (uid) {
-                    case PlasmaUID:
-                        {
-                            let nid = dat.getUint16(dex, true)
-                            dex += 2
-                            let x = dat.getFloat32(dex, true)
-                            dex += 4
-                            let y = dat.getFloat32(dex, true)
-                            dex += 4
-                            let z = dat.getFloat32(dex, true)
-                            dex += 4
-                            let dx = dat.getFloat32(dex, true)
-                            dex += 4
-                            let dy = dat.getFloat32(dex, true)
-                            dex += 4
-                            let dz = dat.getFloat32(dex, true)
-                            dex += 4
-                            let damage = dat.getUint16(dex, true)
-                            dex += 2
-                            new Plasma(this, nid, damage, x, y, z, dx, dy, dz)
-                        }
-                        break
-                }
-            }
-
             let lightCount = dat.getUint8(dex, true)
             dex += 1
             for (let t = 0; t < lightCount; t++) {
@@ -191,6 +119,85 @@ class World {
                 let rgb = dat.getInt32(dex, true)
                 dex += 4
                 block.AddLight(new Light(x, y, z, rgb))
+            }
+        }
+
+        let thingCount = dat.getUint16(dex, true)
+        dex += 2
+        for (let t = 0; t < thingCount; t++) {
+            let uid = dat.getUint16(dex, true)
+            dex += 2
+            let nid = dat.getUint16(dex, true)
+            dex += 2
+            let x = dat.getFloat32(dex, true)
+            dex += 4
+            let y = dat.getFloat32(dex, true)
+            dex += 4
+            let z = dat.getFloat32(dex, true)
+            dex += 4
+            switch (uid) {
+                case HumanUID:
+                    {
+                        let angle = dat.getFloat32(dex, true)
+                        dex += 4
+                        let health = dat.getUint16(dex, true)
+                        dex += 2
+                        let status = dat.getUint8(dex, true)
+                        dex += 1
+                        if (nid === this.PID) new You(this, nid, x, y, z, angle, health, status)
+                        else new Human(this, nid, x, y, z, angle, health, status)
+                    }
+                    break
+                case BaronUID:
+                    {
+                        let direction = dat.getUint8(dex, true)
+                        dex += 1
+                        let health = dat.getUint16(dex, true)
+                        dex += 2
+                        let status = dat.getUint8(dex, true)
+                        dex += 1
+                        new Baron(this, nid, x, y, z, direction, health, status)
+                    }
+                    break
+                case TreeUID:
+                    new Tree(this, nid, x, y, z)
+                    break
+            }
+        }
+
+        let itemCount = dat.getUint16(dex, true)
+        dex += 2
+        for (let t = 0; t < itemCount; t++) {
+            console.log("new item")
+        }
+
+        let missileCount = dat.getUint16(dex, true)
+        dex += 2
+        for (let t = 0; t < missileCount; t++) {
+            let uid = dat.getUint16(dex, true)
+            dex += 2
+            switch (uid) {
+                case PlasmaUID:
+                    {
+                        let nid = dat.getUint16(dex, true)
+                        dex += 2
+                        let x = dat.getFloat32(dex, true)
+                        dex += 4
+                        let y = dat.getFloat32(dex, true)
+                        dex += 4
+                        let z = dat.getFloat32(dex, true)
+                        dex += 4
+                        let dx = dat.getFloat32(dex, true)
+                        dex += 4
+                        let dy = dat.getFloat32(dex, true)
+                        dex += 4
+                        let dz = dat.getFloat32(dex, true)
+                        dex += 4
+                        let damage = dat.getUint16(dex, true)
+                        dex += 2
+                        new Plasma(this, nid, damage, x, y, z, dx, dy, dz)
+                    }
+                    break
             }
         }
 
@@ -217,68 +224,68 @@ class World {
         let ty = gy - by * BlockSize
         let tz = gz - bz * BlockSize
         let block = this.blocks[bx + by * this.width + bz * this.slice]
-        return block.tiles[tx + ty * BlockSize + tz * BLOCK_SLICE].type
+        return block.tiles[tx + ty * BlockSize + tz * BlockSlice].type
     }
-    GetTilePointer(cx, cy, cz, bx, by, bz) {
-        while (bx < 0) {
-            bx += BlockSize
+    GetTilePointer(cx, cy, cz, tx, ty, tz) {
+        while (tx < 0) {
+            tx += BlockSize
             cx--
         }
-        while (bx >= BlockSize) {
-            bx -= BlockSize
+        while (tx >= BlockSize) {
+            tx -= BlockSize
             cx++
         }
-        while (by < 0) {
-            by += BlockSize
+        while (ty < 0) {
+            ty += BlockSize
             cy--
         }
-        while (by >= BlockSize) {
-            by -= BlockSize
+        while (ty >= BlockSize) {
+            ty -= BlockSize
             cy++
         }
-        while (bz < 0) {
-            bz += BlockSize
+        while (tz < 0) {
+            tz += BlockSize
             cz--
         }
-        while (bz >= BlockSize) {
-            bz -= BlockSize
+        while (tz >= BlockSize) {
+            tz -= BlockSize
             cz++
         }
         let block = this.GetBlock(cx, cy, cz)
         if (block === null)
             return null
-        return block.GetTilePointerUnsafe(bx, by, bz)
+        return block.GetTilePointerUnsafe(tx, ty, tz)
     }
-    GetTileType(cx, cy, cz, bx, by, bz) {
-        while (bx < 0) {
-            bx += BlockSize
+    GetTileType(cx, cy, cz, tx, ty, tz) {
+        while (tx < 0) {
+            tx += BlockSize
             cx--
         }
-        while (bx >= BlockSize) {
-            bx -= BlockSize
+        while (tx >= BlockSize) {
+            tx -= BlockSize
             cx++
         }
-        while (by < 0) {
-            by += BlockSize
+        while (ty < 0) {
+            ty += BlockSize
             cy--
         }
-        while (by >= BlockSize) {
-            by -= BlockSize
+        while (ty >= BlockSize) {
+            ty -= BlockSize
             cy++
         }
-        while (bz < 0) {
-            bz += BlockSize
+        while (tz < 0) {
+            tz += BlockSize
             cz--
         }
-        while (bz >= BlockSize) {
-            bz -= BlockSize
+        while (tz >= BlockSize) {
+            tz -= BlockSize
             cz++
         }
         let block = this.GetBlock(cx, cy, cz)
         if (block === null) {
-            return TILE_NONE
+            return TileNone
         }
-        return block.GetTileTypeUnsafe(bx, by, bz)
+        return block.GetTileTypeUnsafe(tx, ty, tz)
     }
     GetBlock(x, y, z) {
         if (x < 0 || x >= this.width)
@@ -431,8 +438,8 @@ class World {
         let spriteSet = this.spriteSet
         let spriteBuffer = this.spriteBuffer
 
-        this.occluder.prepare_frustum(g)
-        this.occluder.occlude(this, x, y, z)
+        this.occluder.PrepareFrustum(g)
+        this.occluder.Occlude(this, x, y, z)
 
         spriteSet.clear()
         for (let key in spriteBuffer)
@@ -442,7 +449,7 @@ class World {
         g.update_mvp(gl)
         g.set_texture(gl, "tiles")
 
-        for (let i = 0; i < OCCLUSION_VIEW_NUM; i++) {
+        for (let i = 0; i < OcclusionViewNum; i++) {
             let block = this.viewable[i]
 
             block.RenderThings(spriteSet, spriteBuffer, camX, camZ, camAngle)

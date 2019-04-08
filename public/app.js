@@ -47,11 +47,11 @@ class App {
         this.camera = null
         this.state = new WorldState(this)
 
-        document.onkeyup = Input.KeyUp
-        document.onkeydown = Input.KeyDown
-        document.onmouseup = Input.MouseUp
-        document.onmousedown = Input.MouseDown
-        document.onmousemove = Input.MouseMove
+        document.onkeyup = Input.SetKeyUp
+        document.onkeydown = Input.SetKeyDown
+        document.onmouseup = Input.SetMouseUp
+        document.onmousedown = Input.SetMouseDown
+        document.onmousemove = Input.SetMouseMove
 
         // let self = this
 

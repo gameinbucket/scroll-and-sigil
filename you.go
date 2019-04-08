@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math"
-	"strconv"
-	"strings"
 )
 
 // Animation constants
@@ -52,7 +50,6 @@ func NewYou(world *World, person *Person, x, y, z float32) *You {
 	you.Thing.Update = you.Update
 	you.Thing.Damage = you.Damage
 	you.Thing.Save = you.Save
-	you.Thing.BinarySave = you.BinarySave
 	you.Thing.Snap = you.Snap
 	you.X = x
 	you.Y = y
@@ -71,26 +68,7 @@ func NewYou(world *World, person *Person, x, y, z float32) *You {
 }
 
 // Save func
-func (me *You) Save(snap *strings.Builder) {
-	snap.WriteString("{u:")
-	snap.WriteString(strconv.Itoa(int(me.UID)))
-	snap.WriteString(",n:")
-	snap.WriteString(strconv.Itoa(int(me.NID)))
-	snap.WriteString(",x:")
-	snap.WriteString(strconv.FormatFloat(float64(me.X), 'f', -1, 32))
-	snap.WriteString(",y:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Y), 'f', -1, 32))
-	snap.WriteString(",z:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Z), 'f', -1, 32))
-	snap.WriteString(",a:")
-	snap.WriteString(strconv.FormatFloat(float64(me.Angle), 'f', -1, 32))
-	snap.WriteString(",h:")
-	snap.WriteString(strconv.Itoa(me.Health))
-	snap.WriteString("}")
-}
-
-// BinarySave func
-func (me *You) BinarySave(raw *bytes.Buffer) {
+func (me *You) Save(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, me.UID)
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, float32(me.X))

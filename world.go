@@ -3,9 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"math"
-	"strconv"
-	"strings"
+	"fmt"
 	"time"
 )
 
@@ -47,7 +45,7 @@ type World struct {
 	Missiles                        []*Missile
 	ThreadIndex                     int
 	ThreadID                        string
-	SpawnYouX, SpawnYouY, SpawnYouZ float32 // TODO temp
+	SpawnYouX, SpawnYouY, SpawnYouZ float32
 	broadcastCount                  uint8
 	broadcast                       *bytes.Buffer
 }
@@ -56,6 +54,9 @@ type World struct {
 func NewWorld() *World {
 	world := &World{}
 	world.broadcast = new(bytes.Buffer)
+	world.SpawnYouX = 12
+	world.SpawnYouY = 12
+	world.SpawnYouZ = 12
 	return world
 }
 
@@ -63,52 +64,36 @@ func NewWorld() *World {
 func (me *World) Load(data []byte) {
 	content := ParserRead(data)
 
+	width := ParseInt(content["w"].(string))
+	height := ParseInt(content["h"].(string))
+	length := ParseInt(content["l"].(string))
+
 	blocks := content["b"].(*Array).data
-	left := math.MaxInt32
-	right := math.MinInt32
-	top := math.MinInt32
-	bottom := math.MaxInt32
-	front := math.MinInt32
-	back := math.MaxInt32
+	num := len(blocks)
 
-	for b := 0; b < len(blocks); b++ {
-		block := blocks[b].(map[string]interface{})
-		bx := ParseInt(block["x"].(string))
-		by := ParseInt(block["y"].(string))
-		bz := ParseInt(block["z"].(string))
+	things := content["t"].(*Array).data
+	items := content["i"].(*Array).data
 
-		if bx < left {
-			left = bx
-		}
-		if bx > right {
-			right = bx
-		}
-		if by > top {
-			top = by
-		}
-		if by < bottom {
-			bottom = by
-		}
-		if bz > front {
-			front = bz
-		}
-		if bz < back {
-			back = bz
-		}
-	}
-
-	me.Width = right - left + 1
-	me.Height = top - bottom + 1
-	me.Length = front - back + 1
-	me.Slice = me.Width * me.Height
-	me.All = me.Slice * me.Length
+	me.Width = width
+	me.Height = height
+	me.Length = length
+	me.Slice = width * height
+	me.All = me.Slice * length
 	me.Blocks = make([]*Block, me.All)
 
-	for b := 0; b < len(blocks); b++ {
+	me.ThingCount = 0
+	me.ItemCount = 0
+	me.MissileCount = 0
+
+	me.Things = make([]*Thing, 5)
+	me.Items = make([]*Item, 5)
+	me.Missiles = make([]*Missile, 5)
+
+	bx := 0
+	by := 0
+	bz := 0
+	for b := 0; b < num; b++ {
 		bdata := blocks[b].(map[string]interface{})
-		bx := ParseInt(bdata["x"].(string)) - left
-		by := ParseInt(bdata["y"].(string)) - bottom
-		bz := ParseInt(bdata["z"].(string)) - back
 		tiles := bdata["t"].(*Array).data
 		lights := bdata["c"].(*Array).data
 
@@ -129,52 +114,71 @@ func (me *World) Load(data []byte) {
 		}
 
 		me.Blocks[bx+by*me.Width+bz*me.Slice] = block
-	}
 
-	for x := 0; x < me.Width; x++ {
-		for y := 0; y < me.Height; y++ {
-			for z := 0; z < me.Length; z++ {
-				i := x + y*me.Width + z*me.Slice
-				if me.Blocks[i] == nil {
-					me.Blocks[i] = NewBlock(x, y, z)
-				}
+		bx++
+		if bx == width {
+			bx = 0
+			by++
+			if by == height {
+				by = 0
+				bz++
 			}
 		}
 	}
 
-	me.ThingCount = 0
-	me.ItemCount = 0
-	me.MissileCount = 0
+	for t := 0; t < len(things); t++ {
+		thing := things[t].(map[string]interface{})
+		uid := ParseInt(thing["u"].(string))
+		x := ParseFloat(thing["x"].(string))
+		y := ParseFloat(thing["y"].(string))
+		z := ParseFloat(thing["z"].(string))
+		LoadNewThing(me, uint16(uid), x, y, z)
+	}
 
-	me.Things = make([]*Thing, 5)
-	me.Items = make([]*Item, 5)
-	me.Missiles = make([]*Missile, 5)
-
-	for b := 0; b < len(blocks); b++ {
-		bdata := blocks[b].(map[string]interface{})
-		bx := ParseInt(bdata["x"].(string)) - left
-		by := ParseInt(bdata["y"].(string)) - bottom
-		bz := ParseInt(bdata["z"].(string)) - back
-		things := bdata["e"].(*Array).data
-
-		px := float32(bx * BlockSize)
-		py := float32(by * BlockSize)
-		pz := float32(bz * BlockSize)
-
-		for t := 0; t < len(things); t++ {
-			thing := things[t].(map[string]interface{})
-			uid := thing["u"].(string)
-			x := ParseFloat(thing["x"].(string))
-			y := ParseFloat(thing["y"].(string))
-			z := ParseFloat(thing["z"].(string))
-			LoadNewThing(me, uid, float32(x)+px, float32(y)+py, float32(z)+pz)
-		}
+	for t := 0; t < len(items); t++ {
+		item := items[t].(map[string]interface{})
+		uid := item["u"].(string)
+		fmt.Println("load item", uid)
 	}
 }
 
 // NewPlayer func
 func (me *World) NewPlayer(person *Person) *You {
 	return NewYou(me, person, me.SpawnYouX, me.SpawnYouY, me.SpawnYouZ)
+}
+
+// Save func
+func (me *World) Save(person *Person) []byte {
+	raw := new(bytes.Buffer)
+
+	binary.Write(raw, binary.LittleEndian, person.Character.NID)
+	binary.Write(raw, binary.LittleEndian, uint16(me.Width))
+	binary.Write(raw, binary.LittleEndian, uint16(me.Height))
+	binary.Write(raw, binary.LittleEndian, uint16(me.Length))
+
+	for i := 0; i < me.All; i++ {
+		me.Blocks[i].Save(raw)
+	}
+
+	numThings := me.ThingCount
+	binary.Write(raw, binary.LittleEndian, uint16(numThings))
+	for i := 0; i < numThings; i++ {
+		me.Things[i].Save(raw)
+	}
+
+	numItems := me.ItemCount
+	binary.Write(raw, binary.LittleEndian, uint16(numItems))
+	for i := 0; i < numItems; i++ {
+		me.Items[i].Save(raw)
+	}
+
+	numMissiles := me.MissileCount
+	binary.Write(raw, binary.LittleEndian, uint16(numMissiles))
+	for i := 0; i < numMissiles; i++ {
+		me.Missiles[i].Snap(raw)
+	}
+
+	return raw.Bytes()
 }
 
 // BuildSnapshots func
@@ -185,11 +189,15 @@ func (me *World) BuildSnapshots(people []*Person) {
 	time := time.Now().UnixNano()/1000000 - 1552330000000
 
 	body := new(bytes.Buffer)
-	numThings := me.ThingCount
+	// spriteSet := make(map[*Thing]bool)
 	updatedThings := 0
+	numThings := me.ThingCount
 	for i := 0; i < numThings; i++ {
 		thing := me.Things[i]
+		// if _, has := spriteSet[thing]; !has {
+		// 	spriteSet[thing] = true
 		updatedThings += thing.Snap(body)
+		// }
 	}
 
 	raw := new(bytes.Buffer)
@@ -211,35 +219,6 @@ func (me *World) BuildSnapshots(people []*Person) {
 		person.binarySnap.Reset()
 		person.binarySnap.Write(dat)
 	}
-}
-
-// Save func
-func (me *World) Save(name string, person *Person) string {
-	var data strings.Builder
-	data.WriteString("n:")
-	data.WriteString(name)
-	data.WriteString(",p:")
-	data.WriteString(strconv.Itoa(int(person.Character.NID)))
-	data.WriteString(",b[")
-	for i := 0; i < me.All; i++ {
-		me.Blocks[i].Save(&data)
-		data.WriteString(",")
-	}
-	data.WriteString("]")
-	return data.String()
-}
-
-// BinarySave func
-func (me *World) BinarySave(person *Person) []byte {
-	raw := new(bytes.Buffer)
-	binary.Write(raw, binary.LittleEndian, person.Character.NID)
-	binary.Write(raw, binary.LittleEndian, uint16(me.Width))
-	binary.Write(raw, binary.LittleEndian, uint16(me.Height))
-	binary.Write(raw, binary.LittleEndian, uint16(me.Length))
-	for i := 0; i < me.All; i++ {
-		me.Blocks[i].BinarySave(raw)
-	}
-	return raw.Bytes()
 }
 
 // FindBlock func

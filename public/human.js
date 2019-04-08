@@ -34,6 +34,16 @@ class Human extends Thing {
         this.BlockBorders()
         this.AddToBlocks()
     }
+    Save() {
+        let data = "{u:" + this.UID
+        data += ",x:" + this.X
+        data += ",y:" + this.Y
+        data += ",z:" + this.Z
+        data += ",a:" + this.Angle
+        data += ",h:" + this.Health
+        data += "}"
+        return data
+    }
     NetUpdateState(status) {
         if (this.Status === status)
             return
