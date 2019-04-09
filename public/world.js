@@ -44,8 +44,8 @@ class World {
         this.blocks = []
         this.viewable = []
         this.spriteSet = new Set()
-        this.spriteBuffer = {}
-        this.spriteCount = {}
+        this.spriteBuffer = new Map()
+        this.spriteCount = new Map()
         this.thingCount = 0
         this.itemCount = 0
         this.missileCount = 0
@@ -301,14 +301,16 @@ class World {
         this.thingCount++
         this.netLookup.set(thing.NID, thing)
 
-        let count = this.spriteCount[thing.SID]
+        let count = this.spriteCount.get(thing.SID)
         if (count) {
-            this.spriteCount[thing.SID] = count + 1
-            if ((count + 2) * 16 > this.spriteBuffer[thing.SID].vertices.length)
-                this.spriteBuffer[thing.SID] = RenderBuffer.Expand(this.gl, this.spriteBuffer[thing.SID])
+            this.spriteCount.set(thing.SID, count + 1)
+            let buffer = this.spriteBuffer.get(thing.SID)
+            if ((count + 2) * 16 > buffer.vertices.length) {
+                this.spriteBuffer.set(thing.SID, RenderBuffer.Expand(this.gl, buffer))
+            }
         } else {
-            this.spriteCount[thing.SID] = 1
-            this.spriteBuffer[thing.SID] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
+            this.spriteCount.set(thing.SID, 1)
+            this.spriteBuffer.set(thing.SID, RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60))
         }
     }
     AddItem(item) {
@@ -316,14 +318,16 @@ class World {
         this.itemCount++
         this.netLookup.set(item.NID, item)
 
-        let count = this.spriteCount[item.SID]
+        let count = this.spriteCount.get(item.SID)
         if (count) {
-            this.spriteCount[item.SID] = count + 1
-            if ((count + 2) * 16 > this.spriteBuffer[item.SID].vertices.length)
-                this.spriteBuffer[item.SID] = RenderBuffer.Expand(this.gl, this.spriteBuffer[item.SID])
+            this.spriteCount.set(item.SID, count + 1)
+            let buffer = this.spriteBuffer.get(item.SID)
+            if ((count + 2) * 16 > buffer.vertices.length) {
+                this.spriteBuffer.set(item.SID, RenderBuffer.Expand(this.gl, buffer))
+            }
         } else {
-            this.spriteCount[item.SID] = 1
-            this.spriteBuffer[item.SID] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
+            this.spriteCount.set(item.SID, 1)
+            this.spriteBuffer.set(item.SID, RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60))
         }
     }
     AddMissile(missile) {
@@ -331,29 +335,32 @@ class World {
         this.missileCount++
         this.netLookup.set(missile.NID, missile)
 
-        let count = this.spriteCount[missile.SID]
+        let count = this.spriteCount.get(missile.SID)
         if (count) {
-            this.spriteCount[missile.SID] = count + 1
-            if ((count + 2) * 16 > this.spriteBuffer[missile.SID].vertices.length)
-                this.spriteBuffer[missile.SID] = RenderBuffer.Expand(this.gl, this.spriteBuffer[missile.SID])
+            this.spriteCount.set(missile.SID, count + 1)
+            let buffer = this.spriteBuffer.get(missile.SID)
+            if ((count + 2) * 16 > buffer.vertices.length) {
+                this.spriteBuffer.set(missile.SID, RenderBuffer.Expand(this.gl, buffer))
+            }
         } else {
-            this.spriteCount[missile.SID] = 1
-            this.spriteBuffer[missile.SID] = RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60)
+            this.spriteCount.set(missile.SID, 1)
+            this.spriteBuffer.set(missile.SID, RenderBuffer.Init(this.gl, 3, 0, 2, 40, 60))
         }
     }
     AddParticle(particle) {
         this.particles[this.particleCount] = particle
         this.particleCount++
 
-        let count = this.spriteCount[particle.SID]
+        let count = this.spriteCount.get(particle.SID)
         if (count) {
-            this.spriteCount[particle.SID] = count + 1
-            if ((count + 2) * 16 > this.spriteBuffer[particle.SID].vertices.length) {
-                this.spriteBuffer[particle.SID] = RenderBuffer.Expand(this.gl, this.spriteBuffer[particle.SID])
+            this.spriteCount.set(particle.SID, count + 1)
+            let buffer = this.spriteBuffer.get(particle.SID)
+            if ((count + 2) * 16 > buffer.vertices.length) {
+                this.spriteBuffer.set(particle.SID, RenderBuffer.Expand(this.gl, buffer))
             }
         } else {
-            this.spriteCount[particle.SID] = 1
-            this.spriteBuffer[particle.SID] = RenderBuffer.Init(this.gl, 3, 0, 2, 120, 180)
+            this.spriteCount.set(particle.SID, 1)
+            this.spriteBuffer.set(particle.SID, RenderBuffer.Init(this.gl, 3, 0, 2, 120, 180))
         }
     }
     RemoveThing(thing) {
@@ -363,7 +370,7 @@ class World {
                 this.things[i] = this.things[len - 1]
                 this.things[len - 1] = null
                 this.thingCount--
-                this.spriteCount[thing.SID]--
+                this.spriteCount.set(thing.SID, this.spriteCount.get(thing.SID) - 1)
                 this.netLookup.delete(thing.NID)
                 break
             }
@@ -376,7 +383,7 @@ class World {
                 this.items[i] = this.items[len - 1]
                 this.items[len - 1] = null
                 this.itemCount--
-                this.spriteCount[item.SID]--
+                this.spriteCount.set(item.SID, this.spriteCount.get(item.SID) - 1)
                 this.netLookup.delete(item.NID)
                 break
             }
@@ -389,7 +396,7 @@ class World {
                 this.missiles[i] = this.missiles[len - 1]
                 this.missiles[len - 1] = null
                 this.missileCount--
-                this.spriteCount[missile.SID]--
+                this.spriteCount.set(missile.SID, this.spriteCount.get(missile.SID) - 1)
                 this.netLookup.delete(missile.NID)
                 break
             }
@@ -402,7 +409,7 @@ class World {
                 this.particles[i] = this.particles[len - 1]
                 this.particles[len - 1] = null
                 this.particleCount--
-                this.spriteCount[particle.SID]--
+                this.spriteCount.set(particle.SID, this.spriteCount.get(particle.SID) - 1)
                 break
             }
         }
@@ -442,12 +449,13 @@ class World {
         this.occluder.Occlude(this, x, y, z)
 
         spriteSet.clear()
-        for (let key in spriteBuffer)
-            spriteBuffer[key].Zero()
 
-        g.set_program(gl, "texcol3d")
-        g.update_mvp(gl)
-        g.set_texture(gl, "tiles")
+        for (let buffer of spriteBuffer.values())
+            buffer.Zero()
+
+        g.SetProgram(gl, "texcol3d")
+        g.UpdateMvp(gl)
+        g.SetTexture(gl, "tiles")
 
         for (let i = 0; i < OcclusionViewNum; i++) {
             let block = this.viewable[i]
@@ -455,42 +463,44 @@ class World {
             block.RenderThings(spriteSet, spriteBuffer, camX, camZ, camAngle)
 
             let mesh = block.mesh
-            if (mesh.vertex_pos === 0)
+            if (mesh.vertexPos === 0)
                 continue
 
             RenderSystem.BindVao(gl, mesh)
 
             if (x == block.x) {
-                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveX], block.count_side[WorldPositiveX])
-                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeX], block.count_side[WorldNegativeX])
-            } else if (x > block.x)
-                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveX], block.count_side[WorldPositiveX])
-            else
-                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeX], block.count_side[WorldNegativeX])
+                RenderSystem.DrawRange(gl, block.beginSide[WorldPositiveX], block.countSide[WorldPositiveX])
+                RenderSystem.DrawRange(gl, block.beginSide[WorldNegativeX], block.countSide[WorldNegativeX])
+            } else if (x > block.x) {
+                RenderSystem.DrawRange(gl, block.beginSide[WorldPositiveX], block.countSide[WorldPositiveX])
+            } else {
+                RenderSystem.DrawRange(gl, block.beginSide[WorldNegativeX], block.countSide[WorldNegativeX])
+            }
 
             if (y == block.y) {
-                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveY], block.count_side[WorldPositiveY])
-                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeY], block.count_side[WorldNegativeY])
-            } else if (y > block.y)
-                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveY], block.count_side[WorldPositiveY])
-            else
-                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeY], block.count_side[WorldNegativeY])
+                RenderSystem.DrawRange(gl, block.beginSide[WorldPositiveY], block.countSide[WorldPositiveY])
+                RenderSystem.DrawRange(gl, block.beginSide[WorldNegativeY], block.countSide[WorldNegativeY])
+            } else if (y > block.y) {
+                RenderSystem.DrawRange(gl, block.beginSide[WorldPositiveY], block.countSide[WorldPositiveY])
+            } else {
+                RenderSystem.DrawRange(gl, block.beginSide[WorldNegativeY], block.countSide[WorldNegativeY])
+            }
 
             if (z == block.z) {
-                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveZ], block.count_side[WorldPositiveZ])
-                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeZ], block.count_side[WorldNegativeZ])
-            } else if (z > block.z)
-                RenderSystem.DrawRange(gl, block.begin_side[WorldPositiveZ], block.count_side[WorldPositiveZ])
-            else
-                RenderSystem.DrawRange(gl, block.begin_side[WorldNegativeZ], block.count_side[WorldNegativeZ])
+                RenderSystem.DrawRange(gl, block.beginSide[WorldPositiveZ], block.countSide[WorldPositiveZ])
+                RenderSystem.DrawRange(gl, block.beginSide[WorldNegativeZ], block.countSide[WorldNegativeZ])
+            } else if (z > block.z) {
+                RenderSystem.DrawRange(gl, block.beginSide[WorldPositiveZ], block.countSide[WorldPositiveZ])
+            } else {
+                RenderSystem.DrawRange(gl, block.beginSide[WorldNegativeZ], block.countSide[WorldNegativeZ])
+            }
         }
 
-        g.set_program(gl, "texture3d")
-        g.update_mvp(gl)
-        for (let key in spriteBuffer) {
-            let buffer = spriteBuffer[key]
-            if (buffer.vertex_pos > 0) {
-                g.set_texture(gl, key)
+        g.SetProgram(gl, "texture3d")
+        g.UpdateMvp(gl)
+        for (let [name, buffer] of spriteBuffer) {
+            if (buffer.vertexPos > 0) {
+                g.SetTexture(gl, name)
                 RenderSystem.UpdateAndDraw(gl, buffer)
             }
         }

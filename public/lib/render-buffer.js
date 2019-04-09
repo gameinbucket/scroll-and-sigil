@@ -6,7 +6,7 @@ class RenderBuffer {
         this.vao
         this.vbo
         this.ebo
-        this.vertex_pos
+        this.vertexPos
         this.index_pos
         this.index_offset
         this.vertices
@@ -17,7 +17,7 @@ class RenderBuffer {
         buffer.position = position
         buffer.color = color
         buffer.texture = texture
-        buffer.vertex_pos = 0
+        buffer.vertexPos = 0
         buffer.index_pos = 0
         buffer.index_offset = 0
         buffer.vertices = new Float32Array(vertex_limit * (position + color + texture))
@@ -27,7 +27,7 @@ class RenderBuffer {
     }
     static InitCopy(gl, source) {
         let buffer = new RenderBuffer();
-        buffer.vertices = new Float32Array(source.vertex_pos)
+        buffer.vertices = new Float32Array(source.vertexPos)
         buffer.indices = new Uint32Array(source.index_pos)
         RenderBuffer.Copy(source, buffer)
         RenderSystem.MakeVao(gl, buffer, source.position, source.color, source.texture)
@@ -35,10 +35,10 @@ class RenderBuffer {
         return buffer
     }
     static Copy(from, to) {
-        for (let i = 0; i < from.vertex_pos; i++) to.vertices[i] = from.vertices[i]
+        for (let i = 0; i < from.vertexPos; i++) to.vertices[i] = from.vertices[i]
         for (let i = 0; i < from.index_pos; i++) to.indices[i] = from.indices[i]
 
-        to.vertex_pos = from.vertex_pos
+        to.vertexPos = from.vertexPos
         to.index_pos = from.index_pos
         to.index_offset = from.index_offset
     }
@@ -49,7 +49,7 @@ class RenderBuffer {
         buffer.vertices = new Float32Array(buffer.vertices.length * 2)
         buffer.indices = new Uint32Array(buffer.indices.length * 2)
 
-        for (let i = 0; i < buffer.vertex_pos; i++) buffer.vertices[i] = vertices[i]
+        for (let i = 0; i < buffer.vertexPos; i++) buffer.vertices[i] = vertices[i]
         for (let i = 0; i < buffer.index_pos; i++) buffer.indices[i] = indices[i]
 
         RenderSystem.UpdateVao(gl, buffer)
@@ -57,7 +57,7 @@ class RenderBuffer {
         return buffer
     }
     Zero() {
-        this.vertex_pos = 0
+        this.vertexPos = 0
         this.index_pos = 0
         this.index_offset = 0
     }

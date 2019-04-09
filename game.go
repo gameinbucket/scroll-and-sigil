@@ -25,7 +25,6 @@ var (
 )
 
 func game(level string) func(w http.ResponseWriter, r *http.Request) {
-
 	server = &Server{}
 	server.mux = &sync.Mutex{}
 	server.people = make([]*Person, 0)
@@ -41,18 +40,24 @@ func game(level string) func(w http.ResponseWriter, r *http.Request) {
 	}
 	server.world.Load(contents)
 
-	ticker := time.NewTicker(WorldTickRate * time.Millisecond)
 	go func() {
-		for range ticker.C {
+		const rate = time.Duration(WorldTickRate) * time.Millisecond
+		ticker := time.Now().Add(rate)
+		for true {
 			server.mux.Lock()
 			num := len(server.people)
 			if num > 0 {
 				server.world.Update()
 				server.world.BuildSnapshots(server.people)
-				for i := 0; i < num; i++ {
-					person := server.people[i]
-					go person.WriteBinaryToClient(person.binarySnap.Bytes())
-				}
+			}
+			server.mux.Unlock()
+			time.Sleep(ticker.Sub(time.Now()))
+			ticker = ticker.Add(rate)
+			server.mux.Lock()
+			num = len(server.people)
+			for i := 0; i < num; i++ {
+				person := server.people[i]
+				go person.WriteBinaryToClient(person.binarySnap.Bytes())
 			}
 			server.mux.Unlock()
 		}

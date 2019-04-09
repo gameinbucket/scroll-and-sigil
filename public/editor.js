@@ -24,19 +24,15 @@ class EditApp {
         gl.disable(gl.BLEND)
         gl.disable(gl.DEPTH_TEST)
 
-        let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
-        let generics = RenderBuffer.Init(gl, 2, 3, 0, 1600, 2400)
-        let generics2 = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
-
         this.on = true
         this.canvas = canvas
         this.gl = gl
         this.g = g
-        this.screen = screen
+        this.screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
+        this.drawImages = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
+        this.singleBlock = RenderBuffer.Init(gl, 3, 3, 2, 24, 36)
         this.world = new WorldEdit(g, gl)
         this.frame = null
-        this.generics = generics
-        this.generics2 = generics2
         this.camera = null
         this.state = new EditState(this)
 

@@ -331,7 +331,7 @@ class Thing {
 
         let sprite = this.Animation[this.AnimationFrame][direction]
 
-        if (mirror) Render3.MirrorSprite(spriteBuffer[this.SID], this.X, this.Y, this.Z, sin, cos, sprite)
-        else Render3.Sprite(spriteBuffer[this.SID], this.X, this.Y, this.Z, sin, cos, sprite)
+        if (mirror) Render3.MirrorSprite(spriteBuffer.get(this.SID), this.X, this.Y, this.Z, sin, cos, sprite)
+        else Render3.Sprite(spriteBuffer.get(this.SID), this.X, this.Y, this.Z, sin, cos, sprite)
     }
 }

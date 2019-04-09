@@ -2,10 +2,8 @@
 
 ## todo
 
-> rename to match golang
-> bundler should minify/compress and bundle together multiple JS files
 > production should cache files on server
-> bundler should obfuscate JS code
-> app.html should not need to list out every required JS file manually 
-> ajax request scripts only as needed
 > allow config files for creating things/scenery/items/missiles (instead of hard coded)
+> server should perform analysis of map to determine what blocks are visible from a given block, and cull network traffic per person
+  the same logic should be applicable for view culling for client rendering
+  cast rays from edges of cube/blocks and determine if "solid" block prevents view

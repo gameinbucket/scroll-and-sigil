@@ -6,6 +6,7 @@ const AMBIENT_LOW = 100
 const AMBIENT_HALF = 175
 const AMBIENT_FULL = 255
 
+const TileLookup = new Map()
 const TileTexture = []
 const TileClosed = []
 

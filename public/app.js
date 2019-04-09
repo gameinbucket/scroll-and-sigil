@@ -32,8 +32,7 @@ class App {
         gl.disable(gl.DEPTH_TEST)
 
         let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
-        let generics = RenderBuffer.Init(gl, 2, 3, 0, 1600, 2400)
-        let generics2 = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
+        let drawImages = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
 
         this.on = true
         this.canvas = canvas
@@ -42,8 +41,7 @@ class App {
         this.screen = screen
         this.world = new World(g, gl)
         this.frame = null
-        this.generics = generics
-        this.generics2 = generics2
+        this.drawImages = drawImages
         this.camera = null
         this.state = new WorldState(this)
 

@@ -11,6 +11,8 @@ class WorldState {
             let raw = SocketQueue[SocketQueue.length - 1]
             SocketQueue = []
 
+            console.log(raw)
+
             let dat = new DataView(raw)
             let dex = 0
 
@@ -38,6 +40,7 @@ class WorldState {
                             dex += 4
                             let y = dat.getFloat32(dex, true)
                             dex += 4
+                            console.log(uid, nid, x, y)
                             let z = dat.getFloat32(dex, true)
                             dex += 4
                             if (uid === PlasmaUID) {
@@ -140,6 +143,7 @@ class WorldState {
             }
             SocketSendOperations++
         }
+        // TODO send only every 50 ms
         if (SocketSendOperations > 0) {
             let buffer = SocketSend.buffer.slice(0, SocketSendIndex)
             let view = new DataView(buffer)
@@ -171,7 +175,7 @@ class WorldState {
         gl.enable(gl.DEPTH_TEST)
         gl.enable(gl.CULL_FACE)
 
-        g.set_perspective(drawPerspective, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry)
+        g.SetPerspective(drawPerspective, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry)
         Matrix.Inverse(g.iv, g.v)
 
         let camBlockX = Math.floor(cam.x * InverseBlockSize)
@@ -185,10 +189,10 @@ class WorldState {
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)
-        g.set_program(gl, "texture")
-        g.set_orthographic(canvasOrtho, 0, 0)
-        g.update_mvp(gl)
-        g.set_texture_direct(gl, frame.textures[0])
+        g.SetProgram(gl, "texture")
+        g.SetOrthographic(canvasOrtho, 0, 0)
+        g.UpdateMvp(gl)
+        g.SetTextureDirect(gl, frame.textures[0])
         RenderSystem.BindAndDraw(gl, screen)
     }
 }

@@ -78,7 +78,7 @@ class Particle {
         let length = Math.sqrt(sin * sin + cos * cos)
         sin /= length
         cos /= length
-        Render3.Sprite(spriteBuffer[this.SID], this.X, this.Y, this.Z, sin, cos, this.Sprite)
+        Render3.Sprite(spriteBuffer.get(this.SID), this.X, this.Y, this.Z, sin, cos, this.Sprite)
     }
 }
 

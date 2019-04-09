@@ -31,8 +31,8 @@ class Block {
         this.z = pz
         this.mesh
         this.visibility = new Uint8Array(36)
-        this.begin_side = new Array(6)
-        this.count_side = new Array(6)
+        this.beginSide = new Array(6)
+        this.countSide = new Array(6)
         this.thingCount = 0
         this.itemCount = 0
         this.missileCount = 0
@@ -382,8 +382,8 @@ class Block {
                     }
                 }
             }
-            this.begin_side[side] = mesh_begin_index * 4
-            this.count_side[side] = BlockMesh.index_pos - mesh_begin_index
+            this.beginSide[side] = mesh_begin_index * 4
+            this.countSide[side] = BlockMesh.index_pos - mesh_begin_index
         }
         this.mesh = RenderBuffer.InitCopy(world.gl, BlockMesh)
     }

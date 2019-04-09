@@ -11,6 +11,15 @@ class EditState {
 
         cam.update()
 
+
+        if (Input.KeyPress("1")) {
+            this.editTileType = TileLookup.get("grass")
+        } else if (Input.KeyPress("2")) {
+            this.editTileType = TileLookup.get("planks")
+        } else if (Input.KeyPress("3")) {
+            this.editTileType = TileLookup.get("stone")
+        }
+
         if (Input.KeyPress("i")) {
             this.editMode = "add"
         }
@@ -30,52 +39,36 @@ class EditState {
 
         Cast.World(world, cam.X, cam.Y, cam.Z, toX, toY, toZ)
 
-        if (CastTileType !== null && Input.KeyPress(" ")) {
+        if (CastTileType !== null) {
             if (this.editMode === "add") {
-                let x = CastX
-                let y = CastY
-                let z = CastZ
                 switch (CastSide) {
                     case WorldNegativeX:
-                        x--
-                        if (x < 0) CastTileType = null
+                        CastX--
+                        if (CastX < 0) CastTileType = null
                         break
                     case WorldPositiveX:
-                        x++
-                        if (x >= world.tileWidth) CastTileType = null
+                        CastX++
+                        if (CastX >= world.tileWidth) CastTileType = null
                         break
                     case WorldNegativeY:
-                        y--
-                        if (y < 0) CastTileType = null
+                        CastY--
+                        if (CastY < 0) CastTileType = null
                         break
                     case WorldPositiveY:
-                        y++
-                        if (y >= world.tileHeigh) CastTileType = null
+                        CastY++
+                        if (CastY >= world.tileHeigh) CastTileType = null
                         break
                     case WorldNegativeZ:
-                        z--
-                        if (z < 0) CastTileType = null
+                        CastZ--
+                        if (CastZ < 0) CastTileType = null
                         break
                     case WorldPositiveZ:
-                        z++
-                        if (z >= world.tileLength) CastTileType = null
+                        CastZ++
+                        if (CastZ >= world.tileLength) CastTileType = null
                         break
                 }
-                if (CastTileType !== null) {
-                    let bx = Math.floor(x * InverseBlockSize)
-                    let by = Math.floor(y * InverseBlockSize)
-                    let bz = Math.floor(z * InverseBlockSize)
-                    let tx = x - bx * BlockSize
-                    let ty = y - by * BlockSize
-                    let tz = z - bz * BlockSize
-                    let block = world.blocks[bx + by * world.width + bz * world.slice]
-                    let tile = block.tiles[tx + ty * BlockSize + tz * BlockSlice]
-                    if (tile.type !== this.editTileType) {
-                        tile.type = this.editTileType
-                        block.BuildMesh(world)
-                    }
-                }
-            } else {
+            }
+            if (CastTileType !== null && Input.KeyPress(" ")) {
                 let bx = Math.floor(CastX * InverseBlockSize)
                 let by = Math.floor(CastY * InverseBlockSize)
                 let bz = Math.floor(CastZ * InverseBlockSize)
@@ -90,6 +83,11 @@ class EditState {
                         block.BuildMesh(world)
                     }
                 } else if (this.editMode === "replace") {
+                    if (tile.type !== this.editTileType) {
+                        tile.type = this.editTileType
+                        block.BuildMesh(world)
+                    }
+                } else if (this.editMode === "add") {
                     if (tile.type !== this.editTileType) {
                         tile.type = this.editTileType
                         block.BuildMesh(world)
@@ -114,9 +112,11 @@ class EditState {
         let canvas = this.app.canvas
         let canvasOrtho = this.app.canvasOrtho
         let drawPerspective = this.app.drawPerspective
+        let drawOrtho = this.app.drawOrtho
         let screen = this.app.screen
         let world = this.app.world
         let cam = this.app.camera
+        let drawImages = this.app.drawImages
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
@@ -126,8 +126,20 @@ class EditState {
         gl.enable(gl.DEPTH_TEST)
         gl.enable(gl.CULL_FACE)
 
-        g.set_perspective(drawPerspective, -cam.X, -cam.Y, -cam.Z, cam.RX, cam.RY)
+        g.SetPerspective(drawPerspective, -cam.X, -cam.Y, -cam.Z, cam.RX, cam.RY)
         Matrix.Inverse(g.iv, g.v)
+
+        if (CastTileType !== null) {
+            let singleBlock = this.app.singleBlock
+            g.SetProgram(gl, "texcol3d")
+            g.UpdateMvp(gl)
+            g.SetTexture(gl, "tiles")
+            singleBlock.Zero()
+            let rgb = [1, 1, 1]
+            for (let side = 0; side < 6; side++)
+                RenderTile.Side(singleBlock, side, CastX, CastY, CastZ, TileTexture[this.editTileType], rgb, rgb, rgb, rgb)
+            RenderSystem.UpdateAndDraw(gl, singleBlock)
+        }
 
         let camBlockX = Math.floor(cam.X * InverseBlockSize)
         let camBlockY = Math.floor(cam.Y * InverseBlockSize)
@@ -135,19 +147,25 @@ class EditState {
 
         world.render(g, camBlockX, camBlockY, camBlockZ, cam.X, cam.Z, cam.RY)
 
-        if (CastTileType !== null) {
-            // TODO render outline
-        }
-
         gl.disable(gl.DEPTH_TEST)
         gl.disable(gl.CULL_FACE)
 
+        g.SetProgram(gl, "texture")
+        g.SetOrthographic(drawOrtho, 0, 0)
+        g.UpdateMvp(gl)
+        g.SetTexture(gl, "tiles")
+        drawImages.Zero()
+        let tileTexture = TileTexture[this.editTileType]
+        Render.Image(drawImages, 10, 10, 32, 32, tileTexture[0], tileTexture[1], tileTexture[2], tileTexture[3])
+        Render.Image(drawImages, Math.floor(frame.width * 0.5 - 5), Math.floor(frame.height * 0.5 - 5), 10, 10, tileTexture[0], tileTexture[1], tileTexture[2], tileTexture[3])
+        RenderSystem.UpdateAndDraw(gl, drawImages)
+
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)
-        g.set_program(gl, "texture")
-        g.set_orthographic(canvasOrtho, 0, 0)
-        g.update_mvp(gl)
-        g.set_texture_direct(gl, frame.textures[0])
+        g.SetProgram(gl, "texture")
+        g.SetOrthographic(canvasOrtho, 0, 0)
+        g.UpdateMvp(gl)
+        g.SetTextureDirect(gl, frame.textures[0])
         RenderSystem.BindAndDraw(gl, screen)
     }
 }

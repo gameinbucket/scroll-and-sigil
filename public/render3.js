@@ -3,29 +3,29 @@ class Render3 {
         let sine = sprite.half_width * sin;
         let cosine = sprite.half_width * cos;
 
-        buffer.vertices[buffer.vertex_pos++] = x - cosine
-        buffer.vertices[buffer.vertex_pos++] = y
-        buffer.vertices[buffer.vertex_pos++] = z + sine
-        buffer.vertices[buffer.vertex_pos++] = sprite.left
-        buffer.vertices[buffer.vertex_pos++] = sprite.bottom
+        buffer.vertices[buffer.vertexPos++] = x - cosine
+        buffer.vertices[buffer.vertexPos++] = y
+        buffer.vertices[buffer.vertexPos++] = z + sine
+        buffer.vertices[buffer.vertexPos++] = sprite.left
+        buffer.vertices[buffer.vertexPos++] = sprite.bottom
 
-        buffer.vertices[buffer.vertex_pos++] = x + cosine
-        buffer.vertices[buffer.vertex_pos++] = y
-        buffer.vertices[buffer.vertex_pos++] = z - sine
-        buffer.vertices[buffer.vertex_pos++] = sprite.right
-        buffer.vertices[buffer.vertex_pos++] = sprite.bottom
+        buffer.vertices[buffer.vertexPos++] = x + cosine
+        buffer.vertices[buffer.vertexPos++] = y
+        buffer.vertices[buffer.vertexPos++] = z - sine
+        buffer.vertices[buffer.vertexPos++] = sprite.right
+        buffer.vertices[buffer.vertexPos++] = sprite.bottom
 
-        buffer.vertices[buffer.vertex_pos++] = x + cosine
-        buffer.vertices[buffer.vertex_pos++] = y + sprite.height
-        buffer.vertices[buffer.vertex_pos++] = z - sine
-        buffer.vertices[buffer.vertex_pos++] = sprite.right
-        buffer.vertices[buffer.vertex_pos++] = sprite.top
+        buffer.vertices[buffer.vertexPos++] = x + cosine
+        buffer.vertices[buffer.vertexPos++] = y + sprite.height
+        buffer.vertices[buffer.vertexPos++] = z - sine
+        buffer.vertices[buffer.vertexPos++] = sprite.right
+        buffer.vertices[buffer.vertexPos++] = sprite.top
 
-        buffer.vertices[buffer.vertex_pos++] = x - cosine
-        buffer.vertices[buffer.vertex_pos++] = y + sprite.height
-        buffer.vertices[buffer.vertex_pos++] = z + sine
-        buffer.vertices[buffer.vertex_pos++] = sprite.left
-        buffer.vertices[buffer.vertex_pos++] = sprite.top
+        buffer.vertices[buffer.vertexPos++] = x - cosine
+        buffer.vertices[buffer.vertexPos++] = y + sprite.height
+        buffer.vertices[buffer.vertexPos++] = z + sine
+        buffer.vertices[buffer.vertexPos++] = sprite.left
+        buffer.vertices[buffer.vertexPos++] = sprite.top
 
         Render.Index4(buffer)
     }
@@ -33,29 +33,29 @@ class Render3 {
         let sine = sprite.half_width * sin;
         let cosine = sprite.half_width * cos;
 
-        buffer.vertices[buffer.vertex_pos++] = x - cosine
-        buffer.vertices[buffer.vertex_pos++] = y
-        buffer.vertices[buffer.vertex_pos++] = z + sine
-        buffer.vertices[buffer.vertex_pos++] = sprite.right
-        buffer.vertices[buffer.vertex_pos++] = sprite.bottom
+        buffer.vertices[buffer.vertexPos++] = x - cosine
+        buffer.vertices[buffer.vertexPos++] = y
+        buffer.vertices[buffer.vertexPos++] = z + sine
+        buffer.vertices[buffer.vertexPos++] = sprite.right
+        buffer.vertices[buffer.vertexPos++] = sprite.bottom
 
-        buffer.vertices[buffer.vertex_pos++] = x + cosine
-        buffer.vertices[buffer.vertex_pos++] = y
-        buffer.vertices[buffer.vertex_pos++] = z - sine
-        buffer.vertices[buffer.vertex_pos++] = sprite.left
-        buffer.vertices[buffer.vertex_pos++] = sprite.bottom
+        buffer.vertices[buffer.vertexPos++] = x + cosine
+        buffer.vertices[buffer.vertexPos++] = y
+        buffer.vertices[buffer.vertexPos++] = z - sine
+        buffer.vertices[buffer.vertexPos++] = sprite.left
+        buffer.vertices[buffer.vertexPos++] = sprite.bottom
 
-        buffer.vertices[buffer.vertex_pos++] = x + cosine
-        buffer.vertices[buffer.vertex_pos++] = y + sprite.height
-        buffer.vertices[buffer.vertex_pos++] = z - sine
-        buffer.vertices[buffer.vertex_pos++] = sprite.left
-        buffer.vertices[buffer.vertex_pos++] = sprite.top
+        buffer.vertices[buffer.vertexPos++] = x + cosine
+        buffer.vertices[buffer.vertexPos++] = y + sprite.height
+        buffer.vertices[buffer.vertexPos++] = z - sine
+        buffer.vertices[buffer.vertexPos++] = sprite.left
+        buffer.vertices[buffer.vertexPos++] = sprite.top
 
-        buffer.vertices[buffer.vertex_pos++] = x - cosine
-        buffer.vertices[buffer.vertex_pos++] = y + sprite.height
-        buffer.vertices[buffer.vertex_pos++] = z + sine
-        buffer.vertices[buffer.vertex_pos++] = sprite.right
-        buffer.vertices[buffer.vertex_pos++] = sprite.top
+        buffer.vertices[buffer.vertexPos++] = x - cosine
+        buffer.vertices[buffer.vertexPos++] = y + sprite.height
+        buffer.vertices[buffer.vertexPos++] = z + sine
+        buffer.vertices[buffer.vertexPos++] = sprite.right
+        buffer.vertices[buffer.vertexPos++] = sprite.top
 
         Render.Index4(buffer)
     }
@@ -76,29 +76,29 @@ class Render3 {
         let rmu_y = right1 * sprite.width - up1 * sprite.height
         let rmu_z = right2 * sprite.width - up2 * sprite.height
 
-        buffer.vertices[buffer.vertex_pos++] = x - rmu_x
-        buffer.vertices[buffer.vertex_pos++] = y - rmu_y
-        buffer.vertices[buffer.vertex_pos++] = z - rmu_z
-        buffer.vertices[buffer.vertex_pos++] = sprite.left
-        buffer.vertices[buffer.vertex_pos++] = sprite.top
+        buffer.vertices[buffer.vertexPos++] = x - rmu_x
+        buffer.vertices[buffer.vertexPos++] = y - rmu_y
+        buffer.vertices[buffer.vertexPos++] = z - rmu_z
+        buffer.vertices[buffer.vertexPos++] = sprite.left
+        buffer.vertices[buffer.vertexPos++] = sprite.top
 
-        buffer.vertices[buffer.vertex_pos++] = x - rpu_x
-        buffer.vertices[buffer.vertex_pos++] = y - rpu_y
-        buffer.vertices[buffer.vertex_pos++] = z - rpu_z
-        buffer.vertices[buffer.vertex_pos++] = sprite.left
-        buffer.vertices[buffer.vertex_pos++] = sprite.bottom
+        buffer.vertices[buffer.vertexPos++] = x - rpu_x
+        buffer.vertices[buffer.vertexPos++] = y - rpu_y
+        buffer.vertices[buffer.vertexPos++] = z - rpu_z
+        buffer.vertices[buffer.vertexPos++] = sprite.left
+        buffer.vertices[buffer.vertexPos++] = sprite.bottom
 
-        buffer.vertices[buffer.vertex_pos++] = x + rmu_x
-        buffer.vertices[buffer.vertex_pos++] = y + rmu_y
-        buffer.vertices[buffer.vertex_pos++] = z + rmu_z
-        buffer.vertices[buffer.vertex_pos++] = sprite.right
-        buffer.vertices[buffer.vertex_pos++] = sprite.bottom
+        buffer.vertices[buffer.vertexPos++] = x + rmu_x
+        buffer.vertices[buffer.vertexPos++] = y + rmu_y
+        buffer.vertices[buffer.vertexPos++] = z + rmu_z
+        buffer.vertices[buffer.vertexPos++] = sprite.right
+        buffer.vertices[buffer.vertexPos++] = sprite.bottom
 
-        buffer.vertices[buffer.vertex_pos++] = x + rpu_x
-        buffer.vertices[buffer.vertex_pos++] = y + rpu_y
-        buffer.vertices[buffer.vertex_pos++] = z + rpu_z
-        buffer.vertices[buffer.vertex_pos++] = sprite.right
-        buffer.vertices[buffer.vertex_pos++] = sprite.top
+        buffer.vertices[buffer.vertexPos++] = x + rpu_x
+        buffer.vertices[buffer.vertexPos++] = y + rpu_y
+        buffer.vertices[buffer.vertexPos++] = z + rpu_z
+        buffer.vertices[buffer.vertexPos++] = sprite.right
+        buffer.vertices[buffer.vertexPos++] = sprite.top
 
         Render.Index4(buffer)
     }

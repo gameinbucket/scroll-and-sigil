@@ -13,17 +13,17 @@ class RenderSystem {
         this.shaders = {}
         this.textures = {}
     }
-    set_texture(gl, name) {
+    SetTexture(gl, name) {
         gl.activeTexture(gl.TEXTURE0)
         gl.bindTexture(gl.TEXTURE_2D, this.textures[name])
         gl.uniform1i(this.texture_location[this.program_name], 0)
     }
-    set_texture_direct(gl, texture) {
+    SetTextureDirect(gl, texture) {
         gl.activeTexture(gl.TEXTURE0)
         gl.bindTexture(gl.TEXTURE_2D, texture)
         gl.uniform1i(this.texture_location[this.program_name], 0)
     }
-    set_program(gl, name) {
+    SetProgram(gl, name) {
         this.program = this.shaders[name]
         this.program_name = name
         gl.useProgram(this.program)
@@ -53,7 +53,7 @@ class RenderSystem {
         gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_INT, start)
     }
     static UpdateAndDraw(gl, buffer) {
-        if (buffer.vertex_pos == 0)
+        if (buffer.vertexPos == 0)
             return
         gl.bindVertexArray(buffer.vao)
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.vbo)
@@ -62,19 +62,19 @@ class RenderSystem {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, buffer.indices, gl.DYNAMIC_DRAW)
         gl.drawElements(gl.TRIANGLES, buffer.index_pos, gl.UNSIGNED_INT, 0)
     }
-    set_orthographic(orthographic, x, y) {
+    SetOrthographic(orthographic, x, y) {
         Matrix.Identity(this.mv)
         Matrix.Translate(this.mv, x, y, -1)
         Matrix.Multiply(this.mvp, orthographic, this.mv)
     }
-    set_perspective(perspective, x, y, z, rx, ry) {
+    SetPerspective(perspective, x, y, z, rx, ry) {
         Matrix.Identity(this.v)
         Matrix.RotateX(this.v, rx)
         Matrix.RotateY(this.v, ry)
         Matrix.TranslateFromView(this.mv, this.v, x, y, z)
         Matrix.Multiply(this.mvp, perspective, this.mv)
     }
-    update_mvp(gl) {
+    UpdateMvp(gl) {
         gl.uniformMatrix4fv(this.mvp_location[this.program_name], false, this.mvp)
     }
     static MakeVao(gl, buffer, position, color, texture) {
