@@ -47,6 +47,7 @@ const HumanUID = 0
 const BaronUID = 1
 const TreeUID = 2
 const PlasmaUID = 3
+const MedkitUID = 4
 
 class Thing {
     constructor() {

@@ -1,11 +1,10 @@
-class Tree extends Thing {
+class Scenery extends Thing {
     constructor(world, nid, x, y, z) {
         super()
         this.World = world
         this.UID = TreeUID
         this.SID = "scenery"
         this.NID = nid
-        this.Sprite = SpriteData[this.SID]["dead-tree"]
         this.X = x
         this.Y = y
         this.Z = z
@@ -36,5 +35,12 @@ class Tree extends Thing {
         sin /= length
         cos /= length
         Render3.Sprite(spriteBuffer.get(this.SID), this.X, this.Y, this.Z, sin, cos, this.Sprite)
+    }
+}
+
+class Tree extends Scenery {
+    constructor(world, nid, x, y, z) {
+        super(world, nid, x, y, z)
+        this.Sprite = SpriteData[this.SID]["dead-tree"]
     }
 }

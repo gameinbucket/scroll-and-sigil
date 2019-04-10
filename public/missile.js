@@ -2,7 +2,7 @@ class Missile {
     constructor() {
         this.World = null
         this.UID = 0
-        this.SID = ""
+        this.SID = "missiles"
         this.NID = 0
         this.Sprite = null
         this.X = 0
@@ -89,7 +89,6 @@ class Plasma extends Missile {
         if (this.AddToBlocks())
             return this
         this.UID = PlasmaUID
-        this.SID = "missiles"
         this.NID = nid
         this.Sprite = SpriteData[this.SID]["baron-missile-front-1"]
         this.DeltaX = dx * InverseNetRate

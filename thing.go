@@ -20,6 +20,7 @@ const (
 	BaronUID  = uint16(1)
 	TreeUID   = uint16(2)
 	PlasmaUID = uint16(3)
+	MedkitUID = uint16(4)
 )
 
 // Group constants
@@ -58,7 +59,8 @@ type Thing struct {
 	Update                 func() bool
 	Damage                 func(int)
 	Save                   func(raw *bytes.Buffer)
-	Snap                   func(raw *bytes.Buffer) int
+	Snap                   func(raw *bytes.Buffer)
+	Binary                 []byte
 }
 
 // NextNID func
@@ -68,14 +70,13 @@ func NextNID() uint16 {
 }
 
 // LoadNewThing func
-func LoadNewThing(world *World, uid uint16, x, y, z float32) *Thing {
+func LoadNewThing(world *World, uid uint16, x, y, z float32) {
 	switch uid {
 	case BaronUID:
-		return NewBaron(world, x, y, z).Thing
+		NewBaron(world, x, y, z)
 	case TreeUID:
-		return NewTree(world, x, y, z)
+		NewTree(world, x, y, z)
 	}
-	return nil
 }
 
 // NopUpdate func
@@ -84,8 +85,8 @@ func (me *Thing) NopUpdate() bool {
 }
 
 // NopSnap func
-func (me *Thing) NopSnap(raw *bytes.Buffer) int {
-	return 0
+func (me *Thing) NopSnap(raw *bytes.Buffer) {
+	me.Binary = nil
 }
 
 // NopDamage func

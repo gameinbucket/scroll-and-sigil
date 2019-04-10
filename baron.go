@@ -79,7 +79,7 @@ func (me *Baron) Save(raw *bytes.Buffer) {
 }
 
 // Snap func
-func (me *Baron) Snap(raw *bytes.Buffer) int {
+func (me *Baron) Snap(raw *bytes.Buffer) {
 	delta := uint8(0)
 	if me.DeltaMoveXZ {
 		delta |= 0x1
@@ -97,8 +97,10 @@ func (me *Baron) Snap(raw *bytes.Buffer) int {
 		delta |= 0x10
 	}
 	if delta == 0 {
-		return 0
+		me.Binary = nil
+		return
 	}
+	raw.Reset()
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, delta)
 	if me.DeltaMoveXZ {
@@ -122,7 +124,9 @@ func (me *Baron) Snap(raw *bytes.Buffer) int {
 		binary.Write(raw, binary.LittleEndian, uint8(me.MoveDirection))
 		me.DeltaMoveDirection = false
 	}
-	return 1
+	binary := raw.Bytes()
+	me.Binary = make([]byte, len(binary))
+	copy(me.Binary, binary)
 }
 
 // Damage func

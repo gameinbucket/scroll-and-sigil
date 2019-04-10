@@ -4,16 +4,11 @@ class WorldState {
         this.snapshotTime = new Date().getTime()
         this.previousUpdate = new Date().getTime()
     }
-    update() {
+    serverUpdates() {
         let world = this.app.world
 
-        if (SocketQueue.length > 0) {
-            let raw = SocketQueue[SocketQueue.length - 1]
-            SocketQueue = []
-
-            console.log(raw)
-
-            let dat = new DataView(raw)
+        for (let i = 0; i < SocketQueue.length; i++) {
+            let dat = new DataView(SocketQueue[i])
             let dex = 0
 
             let serverTime = dat.getUint32(dex, true)
@@ -40,7 +35,6 @@ class WorldState {
                             dex += 4
                             let y = dat.getFloat32(dex, true)
                             dex += 4
-                            console.log(uid, nid, x, y)
                             let z = dat.getFloat32(dex, true)
                             dex += 4
                             if (uid === PlasmaUID) {
@@ -131,6 +125,14 @@ class WorldState {
                 }
             }
         }
+    }
+    update() {
+        let world = this.app.world
+
+        if (SocketQueue.length > 0) {
+            this.serverUpdates()
+            SocketQueue = []
+        }
 
         world.update()
 
@@ -143,7 +145,6 @@ class WorldState {
             }
             SocketSendOperations++
         }
-        // TODO send only every 50 ms
         if (SocketSendOperations > 0) {
             let buffer = SocketSend.buffer.slice(0, SocketSendIndex)
             let view = new DataView(buffer)
@@ -186,6 +187,8 @@ class WorldState {
 
         gl.disable(gl.DEPTH_TEST)
         gl.disable(gl.CULL_FACE)
+
+        // TODO sky texture
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)

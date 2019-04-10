@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -15,8 +13,7 @@ type Person struct {
 	InputQueue [][]byte
 	InputCount int
 	Character  *You
-	snap       *strings.Builder
-	binarySnap *bytes.Buffer
+	snap       []byte
 }
 
 // NewPerson func
@@ -25,8 +22,6 @@ func NewPerson(connection *websocket.Conn, world *World) *Person {
 	person.UUID = UUID()
 	person.InputQueue = make([][]byte, 3)
 	person.Character = world.NewPlayer(person)
-	person.snap = &strings.Builder{}
-	person.binarySnap = new(bytes.Buffer)
 	return person
 }
 

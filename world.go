@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"time"
 )
 
@@ -53,7 +52,7 @@ type World struct {
 // NewWorld func
 func NewWorld() *World {
 	world := &World{}
-	world.broadcast = new(bytes.Buffer)
+	world.broadcast = &bytes.Buffer{}
 	world.SpawnYouX = 12
 	world.SpawnYouY = 12
 	world.SpawnYouZ = 12
@@ -137,8 +136,11 @@ func (me *World) Load(data []byte) {
 
 	for t := 0; t < len(items); t++ {
 		item := items[t].(map[string]interface{})
-		uid := item["u"].(string)
-		fmt.Println("load item", uid)
+		uid := ParseInt(item["u"].(string))
+		x := ParseFloat(item["x"].(string))
+		y := ParseFloat(item["y"].(string))
+		z := ParseFloat(item["z"].(string))
+		LoadNewItem(me, uint16(uid), x, y, z)
 	}
 }
 
@@ -149,7 +151,7 @@ func (me *World) NewPlayer(person *Person) *You {
 
 // Save func
 func (me *World) Save(person *Person) []byte {
-	raw := new(bytes.Buffer)
+	raw := &bytes.Buffer{}
 
 	binary.Write(raw, binary.LittleEndian, person.Character.NID)
 	binary.Write(raw, binary.LittleEndian, uint16(me.Width))
@@ -183,41 +185,58 @@ func (me *World) Save(person *Person) []byte {
 
 // BuildSnapshots func
 func (me *World) BuildSnapshots(people []*Person) {
-	// TODO build separate snapshot list for every player and avoid broadcasting what isn't needed
-	// hold a map of what things are up-to-date for player, and resend full thing if there is a gap
 	num := len(people)
 	time := time.Now().UnixNano()/1000000 - 1552330000000
-
-	body := new(bytes.Buffer)
-	// spriteSet := make(map[*Thing]bool)
-	updatedThings := 0
 	numThings := me.ThingCount
-	for i := 0; i < numThings; i++ {
-		thing := me.Things[i]
-		// if _, has := spriteSet[thing]; !has {
-		// 	spriteSet[thing] = true
-		updatedThings += thing.Snap(body)
-		// }
-	}
 
-	raw := new(bytes.Buffer)
-	binary.Write(raw, binary.LittleEndian, uint32(time))
+	body := &bytes.Buffer{}
+	raw := &bytes.Buffer{}
 
-	binary.Write(raw, binary.LittleEndian, me.broadcastCount)
-	if me.broadcastCount > 0 {
-		raw.Write(me.broadcast.Bytes())
+	var broadcast []byte
+	broadcasting := me.broadcastCount
+	if broadcasting > 0 {
+		binary := me.broadcast.Bytes()
+		broadcast = make([]byte, len(binary))
+		copy(broadcast, binary)
 		me.broadcast.Reset()
 		me.broadcastCount = 0
 	}
 
-	binary.Write(raw, binary.LittleEndian, uint16(updatedThings))
-	raw.Write(body.Bytes())
+	for i := 0; i < numThings; i++ {
+		me.Things[i].Snap(body)
+	}
 
-	dat := raw.Bytes()
+	body.Reset()
+	spriteSet := make(map[*Thing]bool)
+	updatedThings := 0
+	for i := 0; i < numThings; i++ {
+		thing := me.Things[i]
+		if _, has := spriteSet[thing]; !has {
+			spriteSet[thing] = true
+			if thing.Binary != nil {
+				body.Write(thing.Binary)
+				updatedThings++
+			}
+		}
+	}
+
 	for i := 0; i < num; i++ {
 		person := people[i]
-		person.binarySnap.Reset()
-		person.binarySnap.Write(dat)
+
+		raw.Reset()
+		binary.Write(raw, binary.LittleEndian, uint32(time))
+
+		binary.Write(raw, binary.LittleEndian, broadcasting)
+		if broadcasting > 0 {
+			raw.Write(broadcast)
+		}
+
+		binary.Write(raw, binary.LittleEndian, uint16(updatedThings))
+		raw.Write(body.Bytes())
+
+		binary := raw.Bytes()
+		person.snap = make([]byte, len(binary))
+		copy(person.snap, binary)
 	}
 }
 

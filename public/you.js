@@ -1,6 +1,7 @@
 const InputOpNewMove = 0
 const InputOpContinueMove = 1
 const InputOpMissile = 2
+const InputOpSearch = 3
 
 class You extends Human {
     constructor(world, nid, x, y, z, angle, health, status) {
@@ -30,6 +31,10 @@ class You extends Human {
     Walk() {
         let direction = null
         let goal = null
+
+        if (Input.KeyPress("p")) {
+            SocketSendSet.set(InputOpSearch, true)
+        }
 
         if (Input.KeyDown(" ")) {
             SocketSendSet.set(InputOpMissile, true)

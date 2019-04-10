@@ -168,7 +168,21 @@ class World {
         let itemCount = dat.getUint16(dex, true)
         dex += 2
         for (let t = 0; t < itemCount; t++) {
-            console.log("new item")
+            let uid = dat.getUint16(dex, true)
+            dex += 2
+            let nid = dat.getUint16(dex, true)
+            dex += 2
+            let x = dat.getFloat32(dex, true)
+            dex += 4
+            let y = dat.getFloat32(dex, true)
+            dex += 4
+            let z = dat.getFloat32(dex, true)
+            dex += 4
+            switch (uid) {
+                case MedkitUID:
+                    new Medkit(this, nid, x, y, z)
+                    break
+            }
         }
 
         let missileCount = dat.getUint16(dex, true)

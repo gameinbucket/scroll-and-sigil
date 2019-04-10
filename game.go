@@ -57,7 +57,10 @@ func game(level string) func(w http.ResponseWriter, r *http.Request) {
 			num = len(server.people)
 			for i := 0; i < num; i++ {
 				person := server.people[i]
-				go person.WriteBinaryToClient(person.binarySnap.Bytes())
+				if person.snap != nil {
+					go person.WriteBinaryToClient(person.snap)
+					person.snap = nil
+				}
 			}
 			server.mux.Unlock()
 		}

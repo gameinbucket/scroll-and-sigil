@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"math"
 )
 
@@ -28,6 +29,7 @@ const (
 	InputOpNewMove      = uint8(0)
 	InputOpContinueMove = uint8(1)
 	InputOpMissile      = uint8(2)
+	InputOpSearch       = uint8(3)
 )
 
 // You struct
@@ -80,7 +82,7 @@ func (me *You) Save(raw *bytes.Buffer) {
 }
 
 // Snap func
-func (me *You) Snap(raw *bytes.Buffer) int {
+func (me *You) Snap(raw *bytes.Buffer) {
 	delta := uint8(0)
 	if me.DeltaMoveXZ {
 		delta |= 0x1
@@ -98,8 +100,10 @@ func (me *You) Snap(raw *bytes.Buffer) int {
 		delta |= 0x10
 	}
 	if delta == 0 {
-		return 0
+		me.Binary = nil
+		return
 	}
+	raw.Reset()
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, delta)
 	if me.DeltaMoveXZ {
@@ -123,7 +127,14 @@ func (me *You) Snap(raw *bytes.Buffer) int {
 		binary.Write(raw, binary.LittleEndian, float32(me.Angle))
 		me.DeltaAngle = false
 	}
-	return 1
+	binary := raw.Bytes()
+	me.Binary = make([]byte, len(binary))
+	copy(me.Binary, binary)
+}
+
+// Search func
+func (me *You) Search() {
+	fmt.Println("search...")
 }
 
 // Damage func
@@ -194,11 +205,14 @@ gotoRead:
 			if err != nil {
 				break gotoRead
 			}
-			if opUint8 == InputOpMissile {
+			switch opUint8 {
+			case InputOpSearch:
+				me.Search()
+			case InputOpMissile:
 				attack = true
-			} else if opUint8 == InputOpContinueMove {
+			case InputOpContinueMove:
 				move = true
-			} else if opUint8 == InputOpNewMove {
+			case InputOpNewMove:
 				var opFloat32 float32
 				err = binary.Read(reader, binary.LittleEndian, &opFloat32)
 				if err != nil {
