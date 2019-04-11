@@ -24,8 +24,13 @@ class Wad {
         for (let index = 0; index < shaders.length; index++)
             promises.push(g.makeProgram(gl, shaders[index]))
 
-        for (let index = 0; index < textures.length; index++)
-            promises.push(g.makeImage(gl, textures[index], gl.CLAMP_TO_EDGE))
+        for (let index = 0; index < textures.length; index++) {
+            if (textures[index] === "sky") {
+                console.log("todo", textures[index])
+                promises.push(g.makeImage(gl, textures[index], gl.REPEAT))
+            } else
+                promises.push(g.makeImage(gl, textures[index], gl.CLAMP_TO_EDGE))
+        }
 
         await Promise.all(promises)
 

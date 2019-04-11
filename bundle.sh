@@ -4,5 +4,5 @@ rm bundle.app
 echo "build"
 go build -o bundle.app
 echo "run"
-./bundle.app "./"
+./bundle.app "../"
 cd ..

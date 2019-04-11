@@ -182,13 +182,16 @@ class WorldState {
         g.SetTexture(gl, "sky")
         drawImages.Zero()
 
-        // let turn = 1280.0
-        // let derp = cam.ry / Tau * turn;
-        // while (derp < 0) derp += turn;
-        // while (derp >= turn) derp -= turn
-        // dc[csprite0].quad(Draw.image2(-derp * nscale, (180 - 256) * nscale, turn * 2 * nscale, 256 * nscale, 1, 0, 0, 2, 1))
-
-        Render.Image(drawImages, 0, 0, frame.width, frame.height, 0, 0, 1, 1)
+        let turnX = frame.width * 2
+        let skyX = cam.ry / Tau * turnX;
+        if (skyX >= turnX) skyX -= turnX
+        let skyYOffset = cam.rx / Tau * frame.height;
+        let skTrueHeight = g.textures["sky"].image.height
+        let skyHeight = skTrueHeight * 2
+        let skyTop = frame.height - skyHeight
+        let skyY = skyTop * 0.5 + skyYOffset
+        if (skyY > skyTop) skyY = skyTop
+        Render.Image(drawImages, -skyX, skyY, turnX * 2, skyHeight, 0, 0, 2, 1)
         RenderSystem.UpdateAndDraw(gl, drawImages)
 
         gl.enable(gl.DEPTH_TEST)
