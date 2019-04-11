@@ -113,10 +113,10 @@ class EditState {
         let canvasOrtho = this.app.canvasOrtho
         let drawPerspective = this.app.drawPerspective
         let drawOrtho = this.app.drawOrtho
+        let drawImages = this.app.drawImages
         let screen = this.app.screen
         let world = this.app.world
         let cam = this.app.camera
-        let drawImages = this.app.drawImages
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)

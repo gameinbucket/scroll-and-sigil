@@ -162,6 +162,8 @@ class WorldState {
         let canvas = this.app.canvas
         let canvasOrtho = this.app.canvasOrtho
         let drawPerspective = this.app.drawPerspective
+        let drawOrtho = this.app.drawOrtho
+        let drawImages = this.app.drawImages
         let screen = this.app.screen
         let world = this.app.world
         let cam = this.app.camera
@@ -173,6 +175,22 @@ class WorldState {
 
         gl.clear(gl.COLOR_BUFFER_BIT)
         gl.clear(gl.DEPTH_BUFFER_BIT)
+
+        g.SetProgram(gl, "texture")
+        g.SetOrthographic(drawOrtho, 0, 0)
+        g.UpdateMvp(gl)
+        g.SetTexture(gl, "sky")
+        drawImages.Zero()
+
+        // let turn = 1280.0
+        // let derp = cam.ry / Tau * turn;
+        // while (derp < 0) derp += turn;
+        // while (derp >= turn) derp -= turn
+        // dc[csprite0].quad(Draw.image2(-derp * nscale, (180 - 256) * nscale, turn * 2 * nscale, 256 * nscale, 1, 0, 0, 2, 1))
+
+        Render.Image(drawImages, 0, 0, frame.width, frame.height, 0, 0, 1, 1)
+        RenderSystem.UpdateAndDraw(gl, drawImages)
+
         gl.enable(gl.DEPTH_TEST)
         gl.enable(gl.CULL_FACE)
 
@@ -185,13 +203,12 @@ class WorldState {
 
         world.render(g, camBlockX, camBlockY, camBlockZ, cam.x, cam.z, cam.ry)
 
-        gl.disable(gl.DEPTH_TEST)
         gl.disable(gl.CULL_FACE)
-
-        // TODO sky texture
+        gl.disable(gl.DEPTH_TEST)
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)
+
         g.SetProgram(gl, "texture")
         g.SetOrthographic(canvasOrtho, 0, 0)
         g.UpdateMvp(gl)

@@ -228,8 +228,7 @@ class Occluder {
     Occlude(world, lx, ly, lz) {
         OcclusionViewNum = 0
 
-        let index = lx + ly * world.width + lz * world.slice
-        if (index < 0 || index >= world.all) {
+        if (lx < 0 || lx >= world.width || ly < 0 || ly >= world.height || lz < 0 || lz >= world.length) {
             while (OcclusionViewNum < world.all) {
                 world.viewable[OcclusionViewNum] = world.blocks[OcclusionViewNum]
                 OcclusionViewNum++
@@ -239,7 +238,7 @@ class Occluder {
 
         OcclusionQueuePos = 0
         OcclusionQueueNum = 1
-        OcclusionQueue[0] = world.blocks[index]
+        OcclusionQueue[0] = world.blocks[lx + ly * world.width + lz * world.slice]
         OcclusionQueueFrom[0] = -1
 
         for (let i = 0; i < world.all; i++)

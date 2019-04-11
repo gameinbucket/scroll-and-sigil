@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"math"
 )
 
@@ -134,7 +133,20 @@ func (me *You) Snap(raw *bytes.Buffer) {
 
 // Search func
 func (me *You) Search() {
-	fmt.Println("search...")
+	gy := me.MinBY
+	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
+		for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
+			block := me.World.GetBlock(gx, gy, gz)
+			for i := 0; i < block.ItemCount; i++ {
+				item := block.Items[i]
+				if item.Overlap(me.Thing) {
+					item.Cleanup()
+					return
+				}
+			}
+		}
+	}
+
 }
 
 // Damage func

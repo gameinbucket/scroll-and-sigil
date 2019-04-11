@@ -150,7 +150,7 @@ class RenderSystem {
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE)
             console.error("framebuffer error")
     }
-    async make_program(gl, name) {
+    async makeProgram(gl, name) {
         let file = await Net.Request("shaders/" + name)
         let parts = file.split("===========================================================")
         let vertex = parts[0]
@@ -160,7 +160,7 @@ class RenderSystem {
         this.mvp_location[name] = gl.getUniformLocation(program, "u_mvp")
         this.texture_location[name] = gl.getUniformLocation(program, "u_texture0")
     }
-    async make_image(gl, name, wrap) {
+    async makeImage(gl, name, wrap) {
         let texture = gl.createTexture()
         texture.image = new Image()
         texture.image.src = "images/" + name + ".png"

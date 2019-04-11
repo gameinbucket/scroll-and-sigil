@@ -22,10 +22,10 @@ class Wad {
         let promises = []
 
         for (let index = 0; index < shaders.length; index++)
-            promises.push(g.make_program(gl, shaders[index]))
+            promises.push(g.makeProgram(gl, shaders[index]))
 
         for (let index = 0; index < textures.length; index++)
-            promises.push(g.make_image(gl, textures[index], gl.CLAMP_TO_EDGE))
+            promises.push(g.makeImage(gl, textures[index], gl.CLAMP_TO_EDGE))
 
         await Promise.all(promises)
 

@@ -53,6 +53,26 @@ func (me *Item) RemoveFromBlocks() {
 	}
 }
 
+// Overlap func
+func (me *Item) Overlap(b *Thing) bool {
+	square := me.Radius + b.Radius
+	return Abs(me.X-b.X) <= square && Abs(me.Z-b.Z) <= square
+}
+
+// Cleanup func
+func (me *Item) Cleanup() {
+	me.RemoveFromBlocks()
+	me.World.RemoveItem(me)
+	me.BroadcastDelete()
+}
+
+// BroadcastDelete func
+func (me *Item) BroadcastDelete() {
+	me.World.broadcastCount++
+	binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastDelete)
+	binary.Write(me.World.broadcast, binary.LittleEndian, me.NID)
+}
+
 // Save func
 func (me *Item) Save(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, me.UID)

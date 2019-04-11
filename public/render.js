@@ -1,3 +1,10 @@
+const Font = "0123456789abcdefghijklmnopqrstuvwxyz%"
+const FontWidth = 9
+const FontHeight = 9
+const FontGrid = Math.floor(64.0 / FontWidth)
+const FontColumn = FontWidth / 64.0
+const FontRow = FontHeight / 64.0
+
 class Render {
     static Lumin(rgb) {
         return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
@@ -108,5 +115,27 @@ class Render {
             radian += slice
         }
         buffer.indices[buffer.index_pos - 1] = firstIndex + 1
+    }
+    static Print(buffer, text, x, y, scale) {
+        let xx = x
+        let yy = y
+        for (let i = 0; i < text.length; i++) {
+            let c = text.charAt(i)
+            if (c === " ") {
+                xx += FontWidth * scale
+                continue
+            } else if (c === "\n") {
+                xx = x
+                yy += FontHeight * scale
+                continue
+            }
+            let loc = Font.indexOf(c)
+            let tx1 = Math.floor(loc % FontGrid) * FontColumn
+            let ty1 = Math.floor(loc / FontGrid) * FontRow
+            let tx2 = tx1 + FontColumn
+            let ty2 = ty1 + FontRow
+            Render.Image(buffer, xx, yy, FontWidth * scale, FontHeight * scale, tx1, ty1, tx2, ty2)
+            xx += FontWidth * scale
+        }
     }
 }
