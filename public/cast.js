@@ -1,10 +1,35 @@
 let CastX = 0
 let CastY = 0
 let CastZ = 0
+let CastDX = 0
+let CastDY = 0
+let CastDZ = 0
 let CastSide = 0
 let CastTileType = null
 
 class Cast {
+    static IntGrid(fromX, fromY, toX, toY, visit) {
+        let dx = Math.abs(x1 - x0)
+        let dy = Math.abs(y1 - y0)
+        let x = fromX
+        let y = fromY
+        let n = 1 + dx + dy
+        let incrementX = (toX > fromX) ? 1 : -1
+        let incrementY = (toY > fromY) ? 1 : -1
+        let error = dx - dy
+        dx *= 2
+        dy *= 2
+        for (; n > 0; --n) {
+            visit(x, y)
+            if (error > 0) {
+                x += incrementX
+                error -= dy
+            } else {
+                y += incrementY
+                error += dx
+            }
+        }
+    }
     static Block(block, fromX, fromY, fromZ, toX, toY, toZ) {
         let x = Math.floor(fromX)
         let y = Math.floor(fromY)
@@ -52,32 +77,37 @@ class Cast {
             nextZ = (fromZ - z) * deltaZ
         }
         while (true) {
-            if (TileClosed[block.GetTileTypeUnsafe(x, y, z)])
+            if (TileClosed[block.GetTileTypeUnsafe(x, y, z)]) {
                 return false
-            else if (x === Math.floor(toX) && y === Math.floor(toY) && z === Math.floor(toZ))
+            } else if (x === Math.floor(toX) && y === Math.floor(toY) && z === Math.floor(toZ)) {
                 return true
+            }
             if (nextX < nextY) {
                 if (nextX < nextZ) {
                     x += incrementX
-                    if (x < 0 || x >= BlockSize)
+                    if (x < 0 || x >= BlockSize) {
                         return false
+                    }
                     nextX += deltaX
                 } else {
                     z += incrementZ
-                    if (z < 0 || z >= BlockSize)
+                    if (z < 0 || z >= BlockSize) {
                         return false
+                    }
                     nextZ += deltaZ
                 }
             } else {
                 if (nextY < nextZ) {
                     y += incrementY
-                    if (y < 0 || y >= BlockSize)
+                    if (y < 0 || y >= BlockSize) {
                         return false
+                    }
                     nextY += deltaY
                 } else {
                     z += incrementZ
-                    if (z < 0 || z >= BlockSize)
+                    if (z < 0 || z >= BlockSize) {
                         return false
+                    }
                     nextZ += deltaZ
                 }
             }
@@ -132,6 +162,9 @@ class Cast {
         let goalX = Math.floor(toX)
         let goalY = Math.floor(toY)
         let goalZ = Math.floor(toZ)
+        CastDX = deltaX
+        CastDY = deltaY
+        CastDZ = deltaZ
         while (true) {
             if (x === goalX && y === goalY && z === goalZ) {
                 CastTileType = null

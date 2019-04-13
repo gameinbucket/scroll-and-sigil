@@ -116,7 +116,7 @@ class Render {
         }
         buffer.indices[buffer.index_pos - 1] = firstIndex + 1
     }
-    static Print(buffer, text, x, y, scale) {
+    static Print(buffer, x, y, text, scale) {
         let xx = x
         let yy = y
         for (let i = 0; i < text.length; i++) {

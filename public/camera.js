@@ -1,15 +1,15 @@
 class Camera {
-    constructor(thing, radius, rx, ry) {
+    constructor(world, thing, radius) {
         this.thing = thing
         this.radius = radius
         this.x = 0
         this.y = 0
         this.z = 0
-        this.rx = rx
-        this.ry = ry
-        this.update()
+        this.rx = 0
+        this.ry = 0
+        this.update(world)
     }
-    update() {
+    update(world) {
         if (Input.KeyDown("ArrowLeft")) {
             this.ry -= 0.05
             if (this.ry < 0)
@@ -35,8 +35,44 @@ class Camera {
 
         let thing = this.thing
 
-        this.x = thing.X - this.radius * cosX * sinY
-        this.y = thing.Y + this.radius * sinX + thing.Height
-        this.z = thing.Z + this.radius * cosX * cosY
+        let dx = -cosX * sinY
+        let dy = sinX
+        let dz = cosX * cosY
+
+        let x = thing.X + this.radius * dx
+        let y = thing.Y + this.radius * dy + thing.Height
+        let z = thing.Z + this.radius * dz
+
+        Cast.World(world, thing.X, thing.Y + thing.Height, thing.Z, x, y, z)
+
+        if (CastTileType === null) {
+            this.x = x
+            this.y = y
+            this.z = z
+        } else {
+            this.x = CastX
+            this.y = CastY
+            this.z = CastZ
+            switch (CastSide) {
+                case WorldNegativeX:
+                    this.x--
+                    break
+                case WorldPositiveX:
+                    this.x++
+                    break
+                case WorldNegativeY:
+                    this.y--
+                    break
+                case WorldPositiveY:
+                    this.y++
+                    break
+                case WorldNegativeZ:
+                    this.z--
+                    break
+                case WorldPositiveZ:
+                    this.z++
+                    break
+            }
+        }
     }
 }

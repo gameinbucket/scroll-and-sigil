@@ -55,8 +55,6 @@ class WorldState {
                                 let status = dat.getUint8(dex, true)
                                 dex += 1
                                 new Human(world, nid, x, y, z, angle, health, status)
-                            } else {
-                                throw new Error("missing new uid " + uid)
                             }
                         }
                         break
@@ -66,7 +64,6 @@ class WorldState {
                             dex += 2
                             let entity = world.netLookup.get(nid)
                             if (entity) entity.Cleanup()
-                            else throw new Error("missing nid " + nid + " to delete")
                         }
                         break
                 }
@@ -168,7 +165,7 @@ class WorldState {
         let world = this.app.world
         let cam = this.app.camera
 
-        cam.update()
+        cam.update(world)
 
         RenderSystem.SetFrameBuffer(gl, frame.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
@@ -208,6 +205,14 @@ class WorldState {
 
         gl.disable(gl.CULL_FACE)
         gl.disable(gl.DEPTH_TEST)
+
+        g.SetProgram(gl, "texture")
+        g.SetOrthographic(drawOrtho, 0, 0)
+        g.UpdateMvp(gl)
+        g.SetTexture(gl, "font")
+        drawImages.Zero()
+        Render.Print(drawImages, 10, 10, "poop", 2)
+        RenderSystem.UpdateAndDraw(gl, drawImages)
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)
