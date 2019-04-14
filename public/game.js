@@ -1,3 +1,9 @@
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service.js").then(() => {}).catch((error) => {
+        console.log("failed to register service worker", error)
+    })
+}
+
 class Game {
     constructor() {}
     async init(app) {

@@ -75,7 +75,7 @@ func main() {
 		}
 		httpserver.TLSConfig = &tls.Config{GetCertificate: cert.GetCertificate}
 
-		fmt.Println("listening on port " + port + "(https)")
+		fmt.Println("listening on port " + port + " (https)")
 		go func() {
 			err := httpserver.ListenAndServeTLS("", "")
 			if err != nil {

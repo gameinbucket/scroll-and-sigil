@@ -106,7 +106,8 @@ func serve(w http.ResponseWriter, r *http.Request) {
 }
 
 func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Request) {
-	if request.Header.Get("Origin") != "http://"+request.Host {
+	origin := request.Header.Get("Origin")
+	if origin != "http://"+request.Host && origin != "https://"+request.Host {
 		http.Error(writer, "origin not allowed", 403)
 		return
 	}

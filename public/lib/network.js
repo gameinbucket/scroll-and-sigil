@@ -38,7 +38,13 @@ class Net {
     }
     static Socket(url) {
         return new Promise(function (resolve, reject) {
-            let socket = new WebSocket(url)
+            let socket
+            if (location.protocol === "https:") {
+                console.log("websocket secured with https")
+                socket = new WebSocket("wss://" + url)
+            } else {
+                socket = new WebSocket("ws://" + url)
+            }
             socket.onopen = function () {
                 resolve(socket)
             }
