@@ -105,7 +105,13 @@ class App {
         let data = await Net.Request("wad")
         await Wad.Load(g, gl, data)
 
-        SocketConnection = await Net.Socket(window.location.host + "/websocket")
+        // TEMP
+        if (data) {
+            console.log("cancel...")
+            return
+        }
+
+        SocketConnection = await Net.Socket("websocket")
         SocketConnection.binaryType = "arraybuffer"
 
         SocketConnection.onclose = function () {
@@ -131,6 +137,11 @@ class App {
     async run() {
         await this.init()
         let self = this
+        // TEMP
+        if (self) {
+            console.log("done...")
+            return
+        }
         window.onresize = function () {
             self.resize()
         }

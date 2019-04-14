@@ -1,42 +1,30 @@
 class Net {
-    static Request(file) {
-        return new Promise(function (resolve, reject) {
-            var request = new XMLHttpRequest()
-            request.open("GET", file)
-            request.onreadystatechange = function () {
-                if (request.readyState === XMLHttpRequest.DONE)
-                    resolve(request.responseText)
-            }
-            request.onerror = reject
-            request.send()
-        })
+    static async Request(url) {
+        return fetch(location.origin + "/" + url)
+            .then(data => {
+                return data.text()
+            })
+            .catch(err => console.error(err))
     }
-    static RequestBinary(file) {
-        return new Promise(function (resolve, reject) {
-            var request = new XMLHttpRequest()
-            request.open("GET", file)
-            request.onreadystatechange = function () {
-                if (request.readyState === XMLHttpRequest.DONE)
-                    resolve(request.response)
-            }
-            request.onerror = reject
-            request.responseType = "arraybuffer"
-            request.send()
-        })
+    static async RequestBinary(url) {
+        return fetch(location.origin + "/" + url)
+            .then(data => {
+                return data.blob()
+            })
+            .catch(err => console.error(err))
     }
-    static Send(url, data) {
-        return new Promise(function (resolve, reject) {
-            const request = new XMLHttpRequest()
-            request.open("POST", url)
-            request.onreadystatechange = function () {
-                if (request.readyState === XMLHttpRequest.DONE)
-                    resolve(request.responseText)
-            }
-            request.onerror = reject
-            request.send(data)
-        })
+    static async Send(url, data) {
+        return fetch(location.origin + "/" + url, {
+                method: "POST",
+                body: data
+            })
+            .then(data => {
+                return data.text()
+            })
+            .catch(err => console.error(err))
     }
-    static Socket(url) {
+    static async Socket(url) {
+        url = location.origin + "/" + url
         return new Promise(function (resolve, reject) {
             let socket
             if (location.protocol === "https:") {
