@@ -21,6 +21,7 @@ const (
 const (
 	BroadcastNew    = uint8(0)
 	BroadcastDelete = uint8(1)
+	BroadcastChat   = uint8(2)
 )
 
 // World variables

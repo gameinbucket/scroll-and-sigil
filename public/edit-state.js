@@ -131,7 +131,7 @@ class EditState {
 
         if (CastTileType !== null) {
             let singleBlock = this.app.singleBlock
-            g.SetProgram(gl, "texcol3d")
+            g.SetProgram(gl, "texture-color3d")
             g.UpdateMvp(gl)
             g.SetTexture(gl, "tiles")
             singleBlock.Zero()
@@ -150,7 +150,7 @@ class EditState {
         gl.disable(gl.DEPTH_TEST)
         gl.disable(gl.CULL_FACE)
 
-        g.SetProgram(gl, "texture")
+        g.SetProgram(gl, "copy")
         g.SetOrthographic(drawOrtho, 0, 0)
         g.UpdateMvp(gl)
         g.SetTexture(gl, "tiles")
@@ -162,7 +162,7 @@ class EditState {
 
         RenderSystem.SetFrameBuffer(gl, null)
         RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)
-        g.SetProgram(gl, "texture")
+        g.SetProgram(gl, "copy")
         g.SetOrthographic(canvasOrtho, 0, 0)
         g.UpdateMvp(gl)
         g.SetTextureDirect(gl, frame.textures[0])

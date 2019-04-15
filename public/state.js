@@ -3,11 +3,12 @@ class WorldState {
         this.app = app
         this.snapshotTime = new Date().getTime()
         this.previousUpdate = new Date().getTime()
+        this.chatbox = ["poop"]
     }
     serverUpdates() {
         let world = this.app.world
 
-        for (let i = 0; i < SocketQueue.length; i++) {
+        for (let i = 0; i < SocketQueue.length; i += 1) {
             let dat = new DataView(SocketQueue[i])
             let dex = 0
 
@@ -19,7 +20,7 @@ class WorldState {
 
             let broadcastCount = dat.getUint8(dex, true)
             dex += 1
-            for (let b = 0; b < broadcastCount; b++) {
+            for (let b = 0; b < broadcastCount; b += 1) {
                 let broadcastType = dat.getUint8(dex, true)
                 dex += 1
                 switch (broadcastType) {
@@ -66,12 +67,24 @@ class WorldState {
                             if (entity) entity.Cleanup()
                         }
                         break
+                    case BroadcastChat:
+                        {
+                            let num = dat.getUint8(dex, true)
+                            dex += 1
+                            let chat = ""
+                            for (let ch = 0; ch < num; ch += 1) {
+                                chat += String.fromCharCode(dat.getUint8(dex, true))
+                                dex += 1
+                            }
+                            this.chatbox.push(chat)
+                        }
+                        break
                 }
             }
 
             let thingCount = dat.getUint16(dex, true)
             dex += 2
-            for (let t = 0; t < thingCount; t++) {
+            for (let t = 0; t < thingCount; t += 1) {
                 let nid = dat.getUint16(dex, true)
                 dex += 2
                 let delta = dat.getUint8(dex, true)
@@ -135,12 +148,20 @@ class WorldState {
 
         for (var [op, value] of SocketSendSet) {
             SocketSend.setUint8(SocketSendIndex, op, true)
-            SocketSendIndex++
+            SocketSendIndex += 1
             if (op === InputOpNewMove) {
                 SocketSend.setFloat32(SocketSendIndex, value, true)
                 SocketSendIndex += 4
+            } else if (op === InputOpChat) {
+                let chat = Math.min(value.length, 255)
+                SocketSend.setUint8(SocketSendIndex, chat, true)
+                SocketSendIndex += 1
+                for (let ch = 0; ch < chat; ch += 1) {
+                    SocketSend.setUint8(SocketSendIndex, value.charCodeAt(ch), true)
+                    SocketSendIndex += 1
+                }
             }
-            SocketSendOperations++
+            SocketSendOperations += 1
         }
         if (SocketSendOperations > 0) {
             let buffer = SocketSend.buffer.slice(0, SocketSendIndex)
@@ -173,7 +194,7 @@ class WorldState {
         gl.clear(gl.COLOR_BUFFER_BIT)
         gl.clear(gl.DEPTH_BUFFER_BIT)
 
-        g.SetProgram(gl, "texture")
+        g.SetProgram(gl, "copy")
         g.SetOrthographic(drawOrtho, 0, 0)
         g.UpdateMvp(gl)
         g.SetTexture(gl, "sky")
@@ -206,21 +227,50 @@ class WorldState {
         gl.disable(gl.CULL_FACE)
         gl.disable(gl.DEPTH_TEST)
 
-        g.SetProgram(gl, "texture")
-        g.SetOrthographic(drawOrtho, 0, 0)
-        g.UpdateMvp(gl)
-        g.SetTexture(gl, "font")
-        drawImages.Zero()
-        Render.Print(drawImages, 10, 10, "poop", 2)
-        RenderSystem.UpdateAndDraw(gl, drawImages)
+        let motionBlur = true
 
-        RenderSystem.SetFrameBuffer(gl, null)
-        RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)
+        if (motionBlur) {
+            let frame2 = this.app.frame2
+            let frameScreen = this.app.frameScreen
+            // let gbuffer = this.app.gbuffer
+            RenderSystem.SetFrameBuffer(gl, frame2.fbo)
+            RenderSystem.SetView(gl, 0, 0, frame2.width, frame2.height)
+            // g.SetProgram(gl, "motion")
+            g.SetProgram(gl, "screen")
+            g.SetOrthographic(drawOrtho, 0, 0)
+            g.UpdateMvp(gl)
+            g.SetTextureDirect(gl, frame.textures[0])
+            // g.SetSecondTextureDirect(gl, gbuffer.depthTexture)
+            RenderSystem.BindAndDraw(gl, frameScreen)
 
-        g.SetProgram(gl, "texture")
-        g.SetOrthographic(canvasOrtho, 0, 0)
-        g.UpdateMvp(gl)
-        g.SetTextureDirect(gl, frame.textures[0])
-        RenderSystem.BindAndDraw(gl, screen)
+            RenderSystem.SetFrameBuffer(gl, null)
+            RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)
+            g.SetProgram(gl, "screen")
+            g.SetOrthographic(canvasOrtho, 0, 0)
+            g.UpdateMvp(gl)
+            g.SetTextureDirect(gl, frame2.textures[0])
+            RenderSystem.BindAndDraw(gl, screen)
+        } else {
+            g.SetProgram(gl, "texture2d")
+            g.SetOrthographic(drawOrtho, 0, 0)
+            g.UpdateMvp(gl)
+            g.SetTexture(gl, "font")
+            drawImages.Zero()
+            let chatbox = this.chatbox
+            let y = 10
+            for (let ch = 0; ch < chatbox.length; ch++) {
+                Render.Print(drawImages, 10, y, chatbox[ch], 2)
+                y += FontHeight * 2
+            }
+            RenderSystem.UpdateAndDraw(gl, drawImages)
+
+            RenderSystem.SetFrameBuffer(gl, null)
+            RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)
+            g.SetProgram(gl, "screen")
+            g.SetOrthographic(canvasOrtho, 0, 0)
+            g.UpdateMvp(gl)
+            g.SetTextureDirect(gl, frame.textures[0])
+            RenderSystem.BindAndDraw(gl, screen)
+        }
     }
 }

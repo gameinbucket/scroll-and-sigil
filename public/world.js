@@ -10,6 +10,7 @@ const WorldNegativeZ = 5
 
 const BroadcastNew = 0
 const BroadcastDelete = 1
+const BroadcastChat = 2
 
 class World {
     constructor(g, gl) {
@@ -467,7 +468,7 @@ class World {
         for (let buffer of spriteBuffer.values())
             buffer.Zero()
 
-        g.SetProgram(gl, "texcol3d")
+        g.SetProgram(gl, "texture-color3d")
         g.UpdateMvp(gl)
         g.SetTexture(gl, "tiles")
 

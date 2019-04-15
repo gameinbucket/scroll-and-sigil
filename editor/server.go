@@ -32,6 +32,7 @@ var extensions = map[string]string{
 	".mp3":  "audio/mpeg",
 	".json": "application/json",
 	".ttf":  "application/font-ttf",
+	".wasm": "application/wasm",
 }
 
 func main() {

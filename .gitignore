@@ -1,1 +1,3 @@
 *.app
+*.wasm
+certs/*

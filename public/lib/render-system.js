@@ -23,6 +23,11 @@ class RenderSystem {
         gl.bindTexture(gl.TEXTURE_2D, texture)
         gl.uniform1i(this.texture_location[this.program_name], 0)
     }
+    SetSecondTextureDirect(gl, texture) {
+        gl.activeTexture(gl.TEXTURE1)
+        gl.bindTexture(gl.TEXTURE_2D, texture)
+        gl.uniform1i(this.texture_location[this.program_name], 0)
+    }
     SetProgram(gl, name) {
         this.program = this.shaders[name]
         this.program_name = name
@@ -111,7 +116,7 @@ class RenderSystem {
             gl.texImage2D(gl.TEXTURE_2D, 0, frame.internalFormat[i], frame.width, frame.height, 0, frame.format[i], frame.type[i], null)
         }
         if (frame.depth) {
-            gl.bindTexture(gl.TEXTURE_2D, frame.depth_texture)
+            gl.bindTexture(gl.TEXTURE_2D, frame.depthTexture)
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH24_STENCIL8, frame.width, frame.height, 0, gl.DEPTH_STENCIL, gl.UNSIGNED_INT_24_8, null)
         }
     }
@@ -129,26 +134,29 @@ class RenderSystem {
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
             }
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, frame.textures[i], 0)
-            frame.draw_buffers[i] = gl.COLOR_ATTACHMENT0 + i
+            frame.drawBuffers[i] = gl.COLOR_ATTACHMENT0 + i
         }
-        gl.drawBuffers(frame.draw_buffers)
+        gl.drawBuffers(frame.drawBuffers)
         if (frame.depth) {
-            frame.depth_texture = gl.createTexture()
-            gl.bindTexture(gl.TEXTURE_2D, frame.depth_texture)
+            frame.depthTexture = gl.createTexture()
+            gl.bindTexture(gl.TEXTURE_2D, frame.depthTexture)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, frame.depth_texture, 0)
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, frame.depthTexture, 0)
         }
         RenderSystem.UpdateFrameBuffer(gl, frame)
+
+        let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER)
+        if (status !== gl.FRAMEBUFFER_COMPLETE) {
+            console.error("framebuffer error:", status)
+        }
     }
     static MakeFrameBuffer(gl, frame) {
         frame.fbo = gl.createFramebuffer()
         gl.bindFramebuffer(gl.FRAMEBUFFER, frame.fbo)
         RenderSystem.TextureFrameBuffer(gl, frame)
-        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE)
-            console.error("framebuffer error")
     }
     async makeProgram(gl, name) {
         let file = await Net.Request("shaders/" + name)

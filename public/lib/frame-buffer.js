@@ -8,13 +8,13 @@ class FrameBuffer {
         this.height
         this.linear
         this.depth
-        this.depth_texture
+        this.depthTexture
         this.textures = []
-        this.draw_buffers = []
+        this.drawBuffers = []
     }
     set(width, height, internalFormat, format, type, linear, depth) {
         if (format.length !== internalFormat.length || format.length !== type.length) {
-            console.error("framebuffer invalid")
+            throw new Error("framebuffer invalid")
         }
         this.internalFormat = internalFormat
         this.format = format

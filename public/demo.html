@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>scroll and sigil (wasm)</title>
+</head>
+
+<body>
+    <script src="wasm.js"></script>
+
+    <script>
+        if (!WebAssembly.instantiateStreaming) {
+            WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                const source = await (await resp).arrayBuffer()
+                return await WebAssembly.instantiate(source, importObject)
+            }
+        }
+
+        const go = new Go()
+
+        let mod, inst
+
+        WebAssembly.instantiateStreaming(fetch("ss.wasm"), go.importObject).then(
+            result => {
+                mod = result.module
+                inst = result.instance
+                document.getElementById("runButton").disabled = false
+            }
+        )
+
+        async function run() {
+            await go.run(inst)
+            inst = await WebAssembly.instantiate(mod, go.importObject)
+        }
+    </script>
+
+    <button onClick="run()" id="runButton" disabled>Run</button>
+</body>
+
+</html>

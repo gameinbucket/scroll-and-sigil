@@ -32,7 +32,12 @@ var extensions = map[string]string{
 	".mp3":  "audio/mpeg",
 	".json": "application/json",
 	".ttf":  "application/font-ttf",
+	".wasm": "application/wasm",
 }
+
+var (
+	secure = false
+)
 
 func main() {
 	stop := make(chan os.Signal)
@@ -59,23 +64,22 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	if num > 3 && os.Args[3] == "production" {
-		hostPolicy := func(ctx context.Context, host string) error {
-			allowedHost := "scrollandsigil.eastus.cloudapp.azure.com"
-			if host == allowedHost {
-				return nil
-			}
-			return fmt.Errorf("only %s host is allowed", allowedHost)
-		}
-
+	if num > 3 && os.Args[3] == "-secure" {
+		secure = true
 		cert := &autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
-			HostPolicy: hostPolicy,
-			Cache:      autocert.DirCache("."),
+			HostPolicy: autocert.HostWhitelist("scrollandsigil.eastus.cloudapp.azure.com"),
+			Cache:      autocert.DirCache("certs"),
 		}
 		httpserver.TLSConfig = &tls.Config{GetCertificate: cert.GetCertificate}
 
 		fmt.Println("listening on port " + port + " (https)")
+		go func() {
+			err := http.ListenAndServe(":http", cert.HTTPHandler(nil))
+			if err != nil {
+				fmt.Println(err)
+			}
+		}()
 		go func() {
 			err := httpserver.ListenAndServeTLS("", "")
 			if err != nil {

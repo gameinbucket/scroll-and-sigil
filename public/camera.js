@@ -43,9 +43,9 @@ class Camera {
         let y = thing.Y + this.radius * dy + thing.Height
         let z = thing.Z + this.radius * dz
 
-        Cast.World(world, thing.X, thing.Y + thing.Height, thing.Z, x, y, z)
+        Cast.Exact(world, thing.X, thing.Y + thing.Height, thing.Z, x, y, z)
 
-        if (CastTileType === null) {
+        if (CastX === null) {
             this.x = x
             this.y = y
             this.z = z
@@ -53,26 +53,6 @@ class Camera {
             this.x = CastX
             this.y = CastY
             this.z = CastZ
-            switch (CastSide) {
-                case WorldNegativeX:
-                    this.x--
-                    break
-                case WorldPositiveX:
-                    this.x++
-                    break
-                case WorldNegativeY:
-                    this.y--
-                    break
-                case WorldPositiveY:
-                    this.y++
-                    break
-                case WorldNegativeZ:
-                    this.z--
-                    break
-                case WorldPositiveZ:
-                    this.z++
-                    break
-            }
         }
     }
 }

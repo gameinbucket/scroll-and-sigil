@@ -19,7 +19,7 @@ class Baron extends Thing {
         this.SID = "baron"
         this.NID = nid
         this.Update = this.BaronUpdate
-        this.Animation = BaronAnimationWalk
+        this.Animation = this.GetAnimation(status)
         this.X = x
         this.Y = y
         this.Z = z
@@ -45,6 +45,18 @@ class Baron extends Thing {
         data += ",h:" + this.Health
         data += "}"
         return data
+    }
+    GetAnimation(status) {
+        switch (status) {
+            case BaronDead:
+                return BaronAnimationDeath
+            case BaronMelee:
+                return BaronAnimationMelee
+            case BaronMissile:
+                return BaronAnimationMissile
+            default:
+                return BaronAnimationWalk
+        }
     }
     NetUpdateState(status) {
         if (this.Status === status)

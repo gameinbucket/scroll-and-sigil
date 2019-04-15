@@ -2,6 +2,7 @@ const InputOpNewMove = 0
 const InputOpContinueMove = 1
 const InputOpMissile = 2
 const InputOpSearch = 3
+const InputOpChat = 4
 
 class You extends Human {
     constructor(world, nid, x, y, z, angle, health, status) {
@@ -34,6 +35,9 @@ class You extends Human {
 
         if (Input.KeyPress("p")) {
             SocketSendSet.set(InputOpSearch, true)
+
+            // TODO TEMP
+            SocketSendSet.set(InputOpChat, "test chat")
         }
 
         if (Input.KeyDown(" ")) {

@@ -1,31 +1,28 @@
 let CastX = 0
 let CastY = 0
 let CastZ = 0
-let CastDX = 0
-let CastDY = 0
-let CastDZ = 0
 let CastSide = 0
 let CastTileType = null
 
 class Cast {
     static IntGrid(fromX, fromY, toX, toY, visit) {
-        let dx = Math.abs(x1 - x0)
-        let dy = Math.abs(y1 - y0)
+        let dx = Math.abs(toX - fromX)
+        let dy = Math.abs(toY - fromY)
         let x = fromX
         let y = fromY
         let n = 1 + dx + dy
-        let incrementX = (toX > fromX) ? 1 : -1
-        let incrementY = (toY > fromY) ? 1 : -1
+        let stepX = (toX > fromX) ? 1 : -1
+        let stepY = (toY > fromY) ? 1 : -1
         let error = dx - dy
         dx *= 2
         dy *= 2
         for (; n > 0; --n) {
             visit(x, y)
             if (error > 0) {
-                x += incrementX
+                x += stepX
                 error -= dy
             } else {
-                y += incrementY
+                y += stepY
                 error += dx
             }
         }
@@ -35,44 +32,44 @@ class Cast {
         let y = Math.floor(fromY)
         let z = Math.floor(fromZ)
         let deltaX, deltaY, deltaZ
-        let incrementX, incrementY, incrementZ
+        let stepX, stepY, stepZ
         let nextX, nextY, nextZ
         let dx = toX - fromX
         if (dx === 0) {
-            incrementX = 0
+            stepX = 0
             nextX = Number.MAX_VALUE
         } else if (dx > 0) {
-            incrementX = 1
+            stepX = 1
             deltaX = 1.0 / dx
-            nextX = (x + 1.0 - fromX) * deltaX
+            nextX = (1.0 + x - fromX) * deltaX
         } else {
-            incrementX = -1
+            stepX = -1
             deltaX = 1.0 / -dx
             nextX = (fromX - x) * deltaX
         }
         let dy = toY - fromY
         if (dy === 0) {
-            incrementY = 0
+            stepY = 0
             nextY = Number.MAX_VALUE
         } else if (dy > 0) {
-            incrementY = 1
+            stepY = 1
             deltaY = 1.0 / dy
-            nextY = (y + 1 - fromY) * deltaY
+            nextY = (1.0 + y - fromY) * deltaY
         } else {
-            incrementY = -1
+            stepY = -1
             deltaY = 1.0 / -dy
             nextY = (fromY - y) * deltaY
         }
         let dz = toZ - fromZ
         if (dz === 0) {
-            incrementZ = 0
+            stepZ = 0
             nextZ = Number.MAX_VALUE
         } else if (dz > 0) {
-            incrementZ = 1
+            stepZ = 1
             deltaZ = 1.0 / dz
-            nextZ = (z + 1.0 - fromZ) * deltaZ
+            nextZ = (1.0 + z - fromZ) * deltaZ
         } else {
-            incrementZ = -1
+            stepZ = -1
             deltaZ = 1.0 / -dz
             nextZ = (fromZ - z) * deltaZ
         }
@@ -84,13 +81,13 @@ class Cast {
             }
             if (nextX < nextY) {
                 if (nextX < nextZ) {
-                    x += incrementX
+                    x += stepX
                     if (x < 0 || x >= BlockSize) {
                         return false
                     }
                     nextX += deltaX
                 } else {
-                    z += incrementZ
+                    z += stepZ
                     if (z < 0 || z >= BlockSize) {
                         return false
                     }
@@ -98,13 +95,13 @@ class Cast {
                 }
             } else {
                 if (nextY < nextZ) {
-                    y += incrementY
+                    y += stepY
                     if (y < 0 || y >= BlockSize) {
                         return false
                     }
                     nextY += deltaY
                 } else {
-                    z += incrementZ
+                    z += stepZ
                     if (z < 0 || z >= BlockSize) {
                         return false
                     }
@@ -118,53 +115,53 @@ class Cast {
         let y = Math.floor(fromY)
         let z = Math.floor(fromZ)
         let deltaX, deltaY, deltaZ
-        let incrementX, incrementY, incrementZ
+        let stepX, stepY, stepZ
         let nextX, nextY, nextZ
         let dx = toX - fromX
         if (dx === 0) {
-            incrementX = 0
+            stepX = 0
+            deltaX = 0
             nextX = Number.MAX_VALUE
         } else if (dx > 0) {
-            incrementX = 1
+            stepX = 1
             deltaX = 1.0 / dx
-            nextX = (x + 1.0 - fromX) * deltaX
+            nextX = (1.0 + x - fromX) * deltaX
         } else {
-            incrementX = -1
+            stepX = -1
             deltaX = 1.0 / -dx
             nextX = (fromX - x) * deltaX
         }
         let dy = toY - fromY
         if (dy === 0) {
-            incrementY = 0
+            stepY = 0
+            deltaY = 0
             nextY = Number.MAX_VALUE
         } else if (dy > 0) {
-            incrementY = 1
+            stepY = 1
             deltaY = 1.0 / dy
-            nextY = (y + 1 - fromY) * deltaY
+            nextY = (1.0 + y - fromY) * deltaY
         } else {
-            incrementY = -1
+            stepY = -1
             deltaY = 1.0 / -dy
             nextY = (fromY - y) * deltaY
         }
         let dz = toZ - fromZ
         if (dz === 0) {
-            incrementZ = 0
+            stepZ = 0
+            deltaZ = 0
             nextZ = Number.MAX_VALUE
         } else if (dz > 0) {
-            incrementZ = 1
+            stepZ = 1
             deltaZ = 1.0 / dz
-            nextZ = (z + 1.0 - fromZ) * deltaZ
+            nextZ = (1.0 + z - fromZ) * deltaZ
         } else {
-            incrementZ = -1
+            stepZ = -1
             deltaZ = 1.0 / -dz
             nextZ = (fromZ - z) * deltaZ
         }
         let goalX = Math.floor(toX)
         let goalY = Math.floor(toY)
         let goalZ = Math.floor(toZ)
-        CastDX = deltaX
-        CastDY = deltaY
-        CastDZ = deltaZ
         while (true) {
             if (x === goalX && y === goalY && z === goalZ) {
                 CastTileType = null
@@ -172,7 +169,7 @@ class Cast {
             }
             if (nextX < nextY) {
                 if (nextX < nextZ) {
-                    x += incrementX
+                    x += stepX
                     if (x < 0 || x >= world.tileWidth) {
                         CastTileType = null
                         return
@@ -188,13 +185,13 @@ class Cast {
                         CastX = x
                         CastY = y
                         CastZ = z
-                        CastSide = incrementX < 0 ? WorldPositiveX : WorldNegativeX
+                        CastSide = stepX < 0 ? WorldPositiveX : WorldNegativeX
                         CastTileType = tileType
                         return
                     }
                     nextX += deltaX
                 } else {
-                    z += incrementZ
+                    z += stepZ
                     if (z < 0 || z >= world.tileLength) {
                         CastTileType = null
                         return
@@ -210,7 +207,7 @@ class Cast {
                         CastX = x
                         CastY = y
                         CastZ = z
-                        CastSide = incrementZ < 0 ? WorldPositiveZ : WorldNegativeZ
+                        CastSide = stepZ < 0 ? WorldPositiveZ : WorldNegativeZ
                         CastTileType = tileType
                         return
                     }
@@ -218,7 +215,7 @@ class Cast {
                 }
             } else {
                 if (nextY < nextZ) {
-                    y += incrementY
+                    y += stepY
                     if (y < 0 || y >= world.tileHeight) {
                         CastTileType = null
                         return
@@ -234,13 +231,13 @@ class Cast {
                         CastX = x
                         CastY = y
                         CastZ = z
-                        CastSide = incrementY < 0 ? WorldPositiveY : WorldNegativeY
+                        CastSide = stepY < 0 ? WorldPositiveY : WorldNegativeY
                         CastTileType = tileType
                         return
                     }
                     nextY += deltaY
                 } else {
-                    z += incrementZ
+                    z += stepZ
                     if (z < 0 || z >= world.tileLength) {
                         CastTileType = null
                         return
@@ -256,8 +253,208 @@ class Cast {
                         CastX = x
                         CastY = y
                         CastZ = z
-                        CastSide = incrementZ < 0 ? WorldPositiveZ : WorldNegativeZ
+                        CastSide = stepZ < 0 ? WorldPositiveZ : WorldNegativeZ
                         CastTileType = tileType
+                        return
+                    }
+                    nextZ += deltaZ
+                }
+            }
+        }
+    }
+    static Exact(world, fromX, fromY, fromZ, toX, toY, toZ) {
+        let x = Math.floor(fromX)
+        let y = Math.floor(fromY)
+        let z = Math.floor(fromZ)
+        let deltaX, deltaY, deltaZ
+        let stepX, stepY, stepZ
+        let nextX, nextY, nextZ
+        let dx = toX - fromX
+        if (dx === 0) {
+            stepX = 0
+            deltaX = 0
+            nextX = Number.MAX_VALUE
+        } else if (dx > 0) {
+            stepX = 1
+            deltaX = 1.0 / dx
+            nextX = (1.0 + x - fromX) * deltaX
+        } else {
+            stepX = -1
+            deltaX = 1.0 / -dx
+            nextX = (fromX - x) * deltaX
+        }
+        let dy = toY - fromY
+        if (dy === 0) {
+            stepY = 0
+            deltaY = 0
+            nextY = Number.MAX_VALUE
+        } else if (dy > 0) {
+            stepY = 1
+            deltaY = 1.0 / dy
+            nextY = (1.0 + y - fromY) * deltaY
+        } else {
+            stepY = -1
+            deltaY = 1.0 / -dy
+            nextY = (fromY - y) * deltaY
+        }
+        let dz = toZ - fromZ
+        if (dz === 0) {
+            stepZ = 0
+            deltaZ = 0
+            nextZ = Number.MAX_VALUE
+        } else if (dz > 0) {
+            stepZ = 1
+            deltaZ = 1.0 / dz
+            nextZ = (1.0 + z - fromZ) * deltaZ
+        } else {
+            stepZ = -1
+            deltaZ = 1.0 / -dz
+            nextZ = (fromZ - z) * deltaZ
+        }
+        let goalX = Math.floor(toX)
+        let goalY = Math.floor(toY)
+        let goalZ = Math.floor(toZ)
+        // console.log("---------------------------")
+        // console.log("x data", fromX, x, deltaX, nextX, toX)
+        // console.log("y data", fromY, y, deltaY, nextY, toY)
+        // console.log("z data", fromZ, z, deltaZ, nextZ, toZ)
+        while (true) {
+            if (x === goalX && y === goalY && z === goalZ) {
+                CastX = null
+                return
+            }
+            if (nextX < nextY) {
+                if (nextX < nextZ) {
+                    x += stepX
+                    if (x < 0 || x >= world.tileWidth) {
+                        CastX = null
+                        return
+                    }
+                    let bx = Math.floor(x * InverseBlockSize)
+                    let by = Math.floor(y * InverseBlockSize)
+                    let bz = Math.floor(z * InverseBlockSize)
+                    let tx = x - bx * BlockSize
+                    let ty = y - by * BlockSize
+                    let tz = z - bz * BlockSize
+                    let tileType = world.GetTileType(bx, by, bz, tx, ty, tz)
+                    if (TileClosed[tileType]) {
+                        if (stepX < 0) x += 1
+
+                        let vecX = toX - fromX
+                        let vecY = toY - fromY
+                        let vecZ = toZ - fromZ
+                        let magnitude = Math.sqrt(vecX * vecX + vecY * vecY + vecZ * vecZ)
+                        vecX /= magnitude
+                        vecY /= magnitude
+                        vecZ /= magnitude
+
+                        // console.log("xyz", x, y, z)
+                        // console.log("vec", vecX, vecY, vecZ, "magnitude", magnitude)
+                        let distX = (x - fromX + (1.0 - stepX) * 0.5) / vecX
+                        let distY = (y - fromY + (1.0 - stepY) * 0.5) / vecY
+                        let distZ = (z - fromZ + (1.0 - stepZ) * 0.5) / vecZ
+                        // console.log("distance", distX, distY, distZ)
+
+                        // given known X position and vector
+                        // get Y and Z position
+
+                        if (nextY === Number.MAX_VALUE) {
+                            y = toY
+                        } else {
+                            // y = fromY + distY * vecY
+                            y += Math.floor(distY) - distY
+                        }
+
+                        if (nextZ === Number.MAX_VALUE) {
+                            z = toZ
+                        } else {
+                            // z = fromZ + distZ * vecZ
+                            z += Math.floor(distZ) - distZ
+                            //z += Math.floor(nextZ) - nextZ
+                        }
+
+                        // let cast = new Line(fromX, fromZ, toX, toZ)
+                        // let wall = new Line(x, z, x, z + 1)
+                        // let point = cast.Intersect(wall)
+                        // if (point !== null) {
+                        //     console.log("intersect", point[0], point[1])
+                        //     z = point[1]
+
+                        //     let vecX = x - fromX
+                        //     let vecY = y - fromY
+                        //     let vecZ = z - fromZ
+                        //     let distance = Math.sqrt(vecX * vecX + vecY * vecY + vecZ * vecZ)
+                        //     console.log("true distance", distance)
+                        // }
+
+                        if (stepX < 0) x += 0.01
+                        else x -= 0.01
+
+                        CastX = x
+                        CastY = y
+                        CastZ = z
+                        return
+                    }
+                    nextX += deltaX
+                } else {
+                    z += stepZ
+                    if (z < 0 || z >= world.tileLength) {
+                        CastX = null
+                        return
+                    }
+                    let bx = Math.floor(x * InverseBlockSize)
+                    let by = Math.floor(y * InverseBlockSize)
+                    let bz = Math.floor(z * InverseBlockSize)
+                    let tx = x - bx * BlockSize
+                    let ty = y - by * BlockSize
+                    let tz = z - bz * BlockSize
+                    let tileType = world.GetTileType(bx, by, bz, tx, ty, tz)
+                    if (TileClosed[tileType]) {
+                        CastX = x
+                        CastY = y
+                        CastZ = z
+                        return
+                    }
+                    nextZ += deltaZ
+                }
+            } else {
+                if (nextY < nextZ) {
+                    y += stepY
+                    if (y < 0 || y >= world.tileHeight) {
+                        CastX = null
+                        return
+                    }
+                    let bx = Math.floor(x * InverseBlockSize)
+                    let by = Math.floor(y * InverseBlockSize)
+                    let bz = Math.floor(z * InverseBlockSize)
+                    let tx = x - bx * BlockSize
+                    let ty = y - by * BlockSize
+                    let tz = z - bz * BlockSize
+                    let tileType = world.GetTileType(bx, by, bz, tx, ty, tz)
+                    if (TileClosed[tileType]) {
+                        CastX = x
+                        CastY = y
+                        CastZ = z
+                        return
+                    }
+                    nextY += deltaY
+                } else {
+                    z += stepZ
+                    if (z < 0 || z >= world.tileLength) {
+                        CastX = null
+                        return
+                    }
+                    let bx = Math.floor(x * InverseBlockSize)
+                    let by = Math.floor(y * InverseBlockSize)
+                    let bz = Math.floor(z * InverseBlockSize)
+                    let tx = x - bx * BlockSize
+                    let ty = y - by * BlockSize
+                    let tz = z - bz * BlockSize
+                    let tileType = world.GetTileType(bx, by, bz, tx, ty, tz)
+                    if (TileClosed[tileType]) {
+                        CastX = x
+                        CastY = y
+                        CastZ = z
                         return
                     }
                     nextZ += deltaZ

@@ -31,17 +31,17 @@ class App {
         gl.disable(gl.BLEND)
         gl.disable(gl.DEPTH_TEST)
 
-        let screen = RenderBuffer.Init(gl, 2, 0, 2, 4, 6)
-        let drawImages = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
-
         this.on = true
         this.canvas = canvas
         this.gl = gl
         this.g = g
-        this.screen = screen
+        this.screen = RenderBuffer.Init(gl, 2, 0, 0, 4, 6)
+        this.frameScreen = RenderBuffer.Init(gl, 2, 0, 0, 4, 6)
+        this.drawImages = RenderBuffer.Init(gl, 2, 0, 2, 400, 600)
         this.world = new World(g, gl)
         this.frame = null
-        this.drawImages = drawImages
+        this.frame2 = null
+        this.gbuffer = null
         this.camera = null
         this.state = new WorldState(this)
 
@@ -64,7 +64,6 @@ class App {
     resize() {
         let gl = this.gl
         let canvas = this.canvas
-        let screen = this.screen
 
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
@@ -73,9 +72,9 @@ class App {
         let drawOrtho = []
         let drawPerspective = []
 
-        let scale = 1.0
-        let drawWidth = canvas.width * scale
-        let drawHeight = canvas.height * scale
+        let drawFraction = 2.0
+        let drawWidth = Math.floor(canvas.width / drawFraction)
+        let drawHeight = Math.floor(canvas.height / drawFraction)
         let ratio = drawWidth / drawHeight
         let fov = 2 * Math.atan(Math.tan(60 * (Math.PI / 180) / 2) / ratio) * (180 / Math.PI)
 
@@ -85,13 +84,23 @@ class App {
 
         if (this.frame === null) {
             this.frame = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "depth")
+            this.frame2 = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "depth")
+            // this.frame2 = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB16F], [gl.RGB], [gl.HALF_FLOAT], "nearest", "depth")
+            // this.gbuffer = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB32UI, gl.RG16F], [gl.RGB_INTEGER, gl.RG], [gl.UNSIGNED_INT, gl.HALF_FLOAT], "nearest", "depth")
         } else {
             this.frame.Resize(gl, drawWidth, drawHeight)
+            this.frame2.Resize(gl, drawWidth, drawHeight)
+            // this.frame2.Resize(gl, drawWidth, drawHeight)
+            // this.gbuffer.Resize(gl, drawWidth, drawHeight)
         }
 
-        screen.Zero()
-        Render.Image(screen, 0, 0, canvas.width, canvas.height, 0.0, 1.0, 1.0, 0.0)
-        RenderSystem.UpdateVao(gl, screen)
+        this.screen.Zero()
+        Render.Screen(this.screen, 0, 0, canvas.width, canvas.height)
+        RenderSystem.UpdateVao(gl, this.screen)
+
+        this.frameScreen.Zero()
+        Render.Screen(this.frameScreen, 0, 0, drawWidth, drawHeight)
+        RenderSystem.UpdateVao(gl, this.frameScreen)
 
         this.canvasOrtho = canvasOrtho
         this.drawOrtho = drawOrtho
@@ -104,12 +113,6 @@ class App {
 
         let data = await Net.Request("wad")
         await Wad.Load(g, gl, data)
-
-        // TEMP
-        if (data) {
-            console.log("cancel...")
-            return
-        }
 
         SocketConnection = await Net.Socket("websocket")
         SocketConnection.binaryType = "arraybuffer"
@@ -137,11 +140,6 @@ class App {
     async run() {
         await this.init()
         let self = this
-        // TEMP
-        if (self) {
-            console.log("done...")
-            return
-        }
         window.onresize = function () {
             self.resize()
         }

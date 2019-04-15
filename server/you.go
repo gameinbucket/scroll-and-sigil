@@ -29,6 +29,7 @@ const (
 	InputOpContinueMove = uint8(1)
 	InputOpMissile      = uint8(2)
 	InputOpSearch       = uint8(3)
+	InputOpChat         = uint8(4)
 )
 
 // You struct
@@ -233,6 +234,26 @@ gotoRead:
 				me.Angle = opFloat32
 				me.DeltaAngle = true
 				move = true
+			case InputOpChat:
+				err = binary.Read(reader, binary.LittleEndian, &opUint8)
+				if err != nil {
+					break gotoRead
+				}
+				num := opUint8
+				chat := make([]uint8, num)
+				for ch := uint8(0); ch < num; ch++ {
+					err = binary.Read(reader, binary.LittleEndian, &opUint8)
+					if err != nil {
+						break gotoRead
+					}
+					chat[ch] = opUint8
+				}
+				me.World.broadcastCount++
+				binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastChat)
+				binary.Write(me.World.broadcast, binary.LittleEndian, num)
+				for ch := uint8(0); ch < num; ch++ {
+					binary.Write(me.World.broadcast, binary.LittleEndian, chat[ch])
+				}
 			}
 		}
 	}

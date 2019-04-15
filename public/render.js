@@ -36,6 +36,21 @@ class Render {
         buffer.indices[buffer.index_pos++] = buffer.index_offset + 1
         buffer.index_offset += 4
     }
+    static Screen(buffer, x, y, width, height) {
+        buffer.vertices[buffer.vertexPos++] = x
+        buffer.vertices[buffer.vertexPos++] = y
+
+        buffer.vertices[buffer.vertexPos++] = x + width
+        buffer.vertices[buffer.vertexPos++] = y
+
+        buffer.vertices[buffer.vertexPos++] = x + width
+        buffer.vertices[buffer.vertexPos++] = y + height
+
+        buffer.vertices[buffer.vertexPos++] = x
+        buffer.vertices[buffer.vertexPos++] = y + height
+
+        Render.Index4(buffer)
+    }
     static Image(buffer, x, y, width, height, left, top, right, bottom) {
         buffer.vertices[buffer.vertexPos++] = x
         buffer.vertices[buffer.vertexPos++] = y
