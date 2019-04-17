@@ -3,35 +3,55 @@ class RenderSystem {
         this.v = []
         this.mv = []
         this.mvp = []
-        this.ip = []
-        this.iv = []
 
-        this.program
-        this.program_name
-        this.mvp_location = {}
-        this.texture_location = {}
-        this.shaders = {}
-        this.textures = {}
+        this.programId
+        this.programName
+        this.mvpIds = new Map()
+        this.uniforms = new Map()
+        this.textureIds = new Map()
+        this.shaders = new Map()
+        this.textures = new Map()
     }
     SetTexture(gl, name) {
         gl.activeTexture(gl.TEXTURE0)
-        gl.bindTexture(gl.TEXTURE_2D, this.textures[name])
-        gl.uniform1i(this.texture_location[this.program_name], 0)
+        gl.bindTexture(gl.TEXTURE_2D, this.textures.get(name))
+        gl.uniform1i(this.textureIds.get(this.programName), 0)
     }
-    SetTextureDirect(gl, texture) {
+    SetTextureDirect(gl, textureId) {
         gl.activeTexture(gl.TEXTURE0)
-        gl.bindTexture(gl.TEXTURE_2D, texture)
-        gl.uniform1i(this.texture_location[this.program_name], 0)
+        gl.bindTexture(gl.TEXTURE_2D, textureId)
+        gl.uniform1i(this.textureIds.get(this.programName), 0)
     }
-    SetSecondTextureDirect(gl, texture) {
-        gl.activeTexture(gl.TEXTURE1)
-        gl.bindTexture(gl.TEXTURE_2D, texture)
-        gl.uniform1i(this.texture_location[this.program_name], 0)
+    SetIndexTextureDirect(gl, unit, name, textureId) {
+        gl.activeTexture(gl.TEXTURE0 + unit)
+        gl.bindTexture(gl.TEXTURE_2D, textureId)
+        let loc = this.uniforms.get(this.programName).get(name)
+        if (!loc) {
+            loc = gl.getUniformLocation(this.programId, name)
+            this.uniforms.get(this.programName).set(name, loc)
+        }
+        gl.uniform1i(loc, unit)
     }
     SetProgram(gl, name) {
-        this.program = this.shaders[name]
-        this.program_name = name
-        gl.useProgram(this.program)
+        this.programId = this.shaders.get(name)
+        this.programName = name
+        gl.useProgram(this.programId)
+    }
+    SetUniformVec2(gl, name, x, y) {
+        let loc = this.uniforms.get(this.programName).get(name)
+        if (!loc) {
+            loc = gl.getUniformLocation(this.programId, name)
+            this.uniforms.get(this.programName).set(name, loc)
+        }
+        gl.uniform2f(loc, x, y)
+    }
+    SetUniformMatrix4(gl, name, matrix) {
+        let loc = this.uniforms.get(this.programName).get(name)
+        if (!loc) {
+            loc = gl.getUniformLocation(this.programId, name)
+            this.uniforms.get(this.programName).set(name, loc)
+        }
+        gl.uniformMatrix4fv(loc, false, matrix)
     }
     static SetFrameBuffer(gl, fbo) {
         gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
@@ -80,7 +100,7 @@ class RenderSystem {
         Matrix.Multiply(this.mvp, perspective, this.mv)
     }
     UpdateMvp(gl) {
-        gl.uniformMatrix4fv(this.mvp_location[this.program_name], false, this.mvp)
+        gl.uniformMatrix4fv(this.mvpIds.get(this.programName), false, this.mvp)
     }
     static MakeVao(gl, buffer, position, color, texture) {
         buffer.vao = gl.createVertexArray()
@@ -159,14 +179,15 @@ class RenderSystem {
         RenderSystem.TextureFrameBuffer(gl, frame)
     }
     async makeProgram(gl, name) {
-        let file = await Net.Request("shaders/" + name)
+        let file = await Net.Request("shaders/" + name + ".c")
         let parts = file.split("===========================================================")
         let vertex = parts[0]
         let fragment = parts[1].trim()
         let program = RenderSystem.CompileProgram(gl, vertex, fragment)
-        this.shaders[name] = program
-        this.mvp_location[name] = gl.getUniformLocation(program, "u_mvp")
-        this.texture_location[name] = gl.getUniformLocation(program, "u_texture0")
+        this.shaders.set(name, program)
+        this.uniforms.set(name, new Map())
+        this.mvpIds.set(name, gl.getUniformLocation(program, "u_mvp"))
+        this.textureIds.set(name, gl.getUniformLocation(program, "u_texture0"))
     }
     async makeImage(gl, name, wrap) {
         let texture = gl.createTexture()
@@ -185,7 +206,7 @@ class RenderSystem {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap)
         gl.bindTexture(gl.TEXTURE_2D, null)
 
-        this.textures[name] = texture
+        this.textures.set(name, texture)
     }
     static CompileProgram(gl, v, f) {
         let vert = RenderSystem.CompileShader(gl, v, gl.VERTEX_SHADER)

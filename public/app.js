@@ -41,7 +41,7 @@ class App {
         this.world = new World(g, gl)
         this.frame = null
         this.frame2 = null
-        this.gbuffer = null
+        this.frameGeo = null
         this.camera = null
         this.state = new WorldState(this)
 
@@ -68,11 +68,15 @@ class App {
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
 
-        let canvasOrtho = []
-        let drawOrtho = []
-        let drawPerspective = []
+        let canvasOrtho = new Array(16)
+        let drawOrtho = new Array(16)
+        let drawPerspective = new Array(16)
+        let drawInversePerspective = new Array(16)
+        let drawInverseMv = new Array(16)
+        let drawPreviousMvp = new Array(16)
+        let drawCurrentToPreviousMvp = new Array(16)
 
-        let drawFraction = 2.0
+        let drawFraction = 1.0
         let drawWidth = Math.floor(canvas.width / drawFraction)
         let drawHeight = Math.floor(canvas.height / drawFraction)
         let ratio = drawWidth / drawHeight
@@ -81,17 +85,16 @@ class App {
         Matrix.Orthographic(canvasOrtho, 0.0, canvas.width, 0.0, canvas.height, 0.0, 1.0)
         Matrix.Orthographic(drawOrtho, 0.0, drawWidth, 0.0, drawHeight, 0.0, 1.0)
         Matrix.Perspective(drawPerspective, fov, 0.01, 100.0, ratio)
+        Matrix.Inverse(drawInversePerspective, drawPerspective)
 
         if (this.frame === null) {
             this.frame = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "depth")
+            this.frameGeo = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "depth")
             this.frame2 = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB], [gl.RGB], [gl.UNSIGNED_BYTE], "nearest", "depth")
-            // this.frame2 = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB16F], [gl.RGB], [gl.HALF_FLOAT], "nearest", "depth")
-            // this.gbuffer = FrameBuffer.Make(gl, drawWidth, drawHeight, [gl.RGB32UI, gl.RG16F], [gl.RGB_INTEGER, gl.RG], [gl.UNSIGNED_INT, gl.HALF_FLOAT], "nearest", "depth")
         } else {
             this.frame.Resize(gl, drawWidth, drawHeight)
+            this.frameGeo.Resize(gl, drawWidth, drawHeight)
             this.frame2.Resize(gl, drawWidth, drawHeight)
-            // this.frame2.Resize(gl, drawWidth, drawHeight)
-            // this.gbuffer.Resize(gl, drawWidth, drawHeight)
         }
 
         this.screen.Zero()
@@ -105,6 +108,10 @@ class App {
         this.canvasOrtho = canvasOrtho
         this.drawOrtho = drawOrtho
         this.drawPerspective = drawPerspective
+        this.drawInversePerspective = drawInversePerspective
+        this.drawInverseMv = drawInverseMv
+        this.drawPreviousMvp = drawPreviousMvp
+        this.drawCurrentToPreviousMvp = drawCurrentToPreviousMvp
     }
     async init() {
         let self = this

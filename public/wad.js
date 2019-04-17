@@ -42,7 +42,7 @@ class Wad {
         for (let name in sprites) {
             let sprite = sprites[name]
 
-            let texture = g.textures[name]
+            let texture = g.textures.get(name)
             let width = 1.0 / texture.image.width
             let height = 1.0 / texture.image.height
 
@@ -79,7 +79,7 @@ class Wad {
         TileTexture.push(null)
         TileClosed.push(false)
         let tileSprites = sprites["tiles"]
-        let texture = g.textures["tiles"]
+        let texture = g.textures.get("tiles")
         let width = 1.0 / texture.image.width
         let height = 1.0 / texture.image.height
         for (let tileName in tileSprites) {

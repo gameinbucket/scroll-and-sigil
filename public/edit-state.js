@@ -127,7 +127,6 @@ class EditState {
         gl.enable(gl.CULL_FACE)
 
         g.SetPerspective(drawPerspective, -cam.X, -cam.Y, -cam.Z, cam.RX, cam.RY)
-        Matrix.Inverse(g.iv, g.v)
 
         if (CastTileType !== null) {
             let singleBlock = this.app.singleBlock

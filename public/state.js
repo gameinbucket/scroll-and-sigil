@@ -176,6 +176,7 @@ class WorldState {
     render() {
         let g = this.app.g
         let gl = this.app.gl
+        let frameGeo = this.app.frameGeo
         let frame = this.app.frame
         let canvas = this.app.canvas
         let canvasOrtho = this.app.canvasOrtho
@@ -188,7 +189,7 @@ class WorldState {
 
         cam.update(world)
 
-        RenderSystem.SetFrameBuffer(gl, frame.fbo)
+        RenderSystem.SetFrameBuffer(gl, frameGeo.fbo)
         RenderSystem.SetView(gl, 0, 0, frame.width, frame.height)
 
         gl.clear(gl.COLOR_BUFFER_BIT)
@@ -204,7 +205,7 @@ class WorldState {
         let skyX = cam.ry / Tau * turnX;
         if (skyX >= turnX) skyX -= turnX
         let skyYOffset = cam.rx / Tau * frame.height;
-        let skTrueHeight = g.textures["sky"].image.height
+        let skTrueHeight = g.textures.get("sky").image.height
         let skyHeight = skTrueHeight * 2
         let skyTop = frame.height - skyHeight
         let skyY = skyTop * 0.5 + skyYOffset
@@ -216,7 +217,6 @@ class WorldState {
         gl.enable(gl.CULL_FACE)
 
         g.SetPerspective(drawPerspective, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry)
-        Matrix.Inverse(g.iv, g.v)
 
         let camBlockX = Math.floor(cam.x * InverseBlockSize)
         let camBlockY = Math.floor(cam.y * InverseBlockSize)
@@ -227,20 +227,34 @@ class WorldState {
         gl.disable(gl.CULL_FACE)
         gl.disable(gl.DEPTH_TEST)
 
-        let motionBlur = true
+        const noShade = 0
+        const motionBlur = 1
+        const antiAlias = 2
+        let shading = noShade
 
-        if (motionBlur) {
+        if (shading === motionBlur) {
             let frame2 = this.app.frame2
             let frameScreen = this.app.frameScreen
-            // let gbuffer = this.app.gbuffer
+
+            let drawInversePerspective = this.app.drawInversePerspective
+            let drawInverseMv = this.app.drawInverseMv
+            let drawPreviousMvp = this.app.drawPreviousMvp
+            let drawCurrentToPreviousMvp = this.app.drawCurrentToPreviousMvp
+            Matrix.Inverse(drawInverseMv, g.mv)
+            Matrix.Multiply(drawCurrentToPreviousMvp, drawPreviousMvp, drawInverseMv)
+            for (let i = 0; i < 16; i++) {
+                drawPreviousMvp[i] = g.mvp[i]
+            }
+
             RenderSystem.SetFrameBuffer(gl, frame2.fbo)
             RenderSystem.SetView(gl, 0, 0, frame2.width, frame2.height)
-            // g.SetProgram(gl, "motion")
-            g.SetProgram(gl, "screen")
+            g.SetProgram(gl, "motion")
+            g.SetUniformMatrix4(gl, "inverse_projection", drawInversePerspective);
+            g.SetUniformMatrix4(gl, "current_to_previous_matrix", drawCurrentToPreviousMvp);
             g.SetOrthographic(drawOrtho, 0, 0)
             g.UpdateMvp(gl)
-            g.SetTextureDirect(gl, frame.textures[0])
-            // g.SetSecondTextureDirect(gl, gbuffer.depthTexture)
+            g.SetTextureDirect(gl, frameGeo.textures[0])
+            g.SetIndexTextureDirect(gl, 1, "u_texture1", frameGeo.depthTexture)
             RenderSystem.BindAndDraw(gl, frameScreen)
 
             RenderSystem.SetFrameBuffer(gl, null)
@@ -249,6 +263,15 @@ class WorldState {
             g.SetOrthographic(canvasOrtho, 0, 0)
             g.UpdateMvp(gl)
             g.SetTextureDirect(gl, frame2.textures[0])
+            RenderSystem.BindAndDraw(gl, screen)
+        } else if (shading === antiAlias) {
+            RenderSystem.SetFrameBuffer(gl, null)
+            RenderSystem.SetView(gl, 0, 0, canvas.width, canvas.height)
+            g.SetProgram(gl, "fxaa")
+            g.SetUniformVec2(gl, "texel", 1.0 / canvas.width, 1.0 / canvas.height)
+            g.SetOrthographic(canvasOrtho, 0, 0)
+            g.UpdateMvp(gl)
+            g.SetTextureDirect(gl, frameGeo.textures[0])
             RenderSystem.BindAndDraw(gl, screen)
         } else {
             g.SetProgram(gl, "texture2d")
@@ -269,7 +292,7 @@ class WorldState {
             g.SetProgram(gl, "screen")
             g.SetOrthographic(canvasOrtho, 0, 0)
             g.UpdateMvp(gl)
-            g.SetTextureDirect(gl, frame.textures[0])
+            g.SetTextureDirect(gl, frameGeo.textures[0])
             RenderSystem.BindAndDraw(gl, screen)
         }
     }

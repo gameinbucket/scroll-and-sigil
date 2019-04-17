@@ -31,4 +31,5 @@ void main() {
   }
   sum /= float(num_samples);
   color = vec4(sum, 1.0);
+  // TODO convert unsigned int to float for frameGeo
 }

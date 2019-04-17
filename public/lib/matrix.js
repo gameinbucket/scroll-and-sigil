@@ -1,5 +1,6 @@
-MATRIX_TEMP = []
-MATRIX_COPIED = []
+MatrixTemp = new Array(16)
+MatrixCopied = new Array(16)
+
 class Matrix {
     static Identity(matrix) {
         matrix[0] = 1.0
@@ -100,88 +101,88 @@ class Matrix {
         let cos = Math.cos(r)
         let sin = Math.sin(r)
 
-        MATRIX_TEMP[0] = 1.0
-        MATRIX_TEMP[1] = 0.0
-        MATRIX_TEMP[2] = 0.0
-        MATRIX_TEMP[3] = 0.0
+        MatrixTemp[0] = 1.0
+        MatrixTemp[1] = 0.0
+        MatrixTemp[2] = 0.0
+        MatrixTemp[3] = 0.0
 
-        MATRIX_TEMP[4] = 0.0
-        MATRIX_TEMP[5] = cos
-        MATRIX_TEMP[6] = sin
-        MATRIX_TEMP[7] = 0.0
+        MatrixTemp[4] = 0.0
+        MatrixTemp[5] = cos
+        MatrixTemp[6] = sin
+        MatrixTemp[7] = 0.0
 
-        MATRIX_TEMP[8] = 0.0
-        MATRIX_TEMP[9] = -sin
-        MATRIX_TEMP[10] = cos
-        MATRIX_TEMP[11] = 0.0
+        MatrixTemp[8] = 0.0
+        MatrixTemp[9] = -sin
+        MatrixTemp[10] = cos
+        MatrixTemp[11] = 0.0
 
-        MATRIX_TEMP[12] = 0.0
-        MATRIX_TEMP[13] = 0.0
-        MATRIX_TEMP[14] = 0.0
-        MATRIX_TEMP[15] = 1.0
+        MatrixTemp[12] = 0.0
+        MatrixTemp[13] = 0.0
+        MatrixTemp[14] = 0.0
+        MatrixTemp[15] = 1.0
 
         for (let i = 0; i < 16; i++)
-            MATRIX_COPIED[i] = matrix[i]
+            MatrixCopied[i] = matrix[i]
 
-        Matrix.Multiply(matrix, MATRIX_COPIED, MATRIX_TEMP)
+        Matrix.Multiply(matrix, MatrixCopied, MatrixTemp)
     }
     static RotateY(matrix, r) {
         let cos = Math.cos(r)
         let sin = Math.sin(r)
 
-        MATRIX_TEMP[0] = cos
-        MATRIX_TEMP[1] = 0.0
-        MATRIX_TEMP[2] = -sin
-        MATRIX_TEMP[3] = 0.0
+        MatrixTemp[0] = cos
+        MatrixTemp[1] = 0.0
+        MatrixTemp[2] = -sin
+        MatrixTemp[3] = 0.0
 
-        MATRIX_TEMP[4] = 0.0
-        MATRIX_TEMP[5] = 1.0
-        MATRIX_TEMP[6] = 0.0
-        MATRIX_TEMP[7] = 0.0
+        MatrixTemp[4] = 0.0
+        MatrixTemp[5] = 1.0
+        MatrixTemp[6] = 0.0
+        MatrixTemp[7] = 0.0
 
-        MATRIX_TEMP[8] = sin
-        MATRIX_TEMP[9] = 0.0
-        MATRIX_TEMP[10] = cos
-        MATRIX_TEMP[11] = 0.0
+        MatrixTemp[8] = sin
+        MatrixTemp[9] = 0.0
+        MatrixTemp[10] = cos
+        MatrixTemp[11] = 0.0
 
-        MATRIX_TEMP[12] = 0.0
-        MATRIX_TEMP[13] = 0.0
-        MATRIX_TEMP[14] = 0.0
-        MATRIX_TEMP[15] = 1.0
+        MatrixTemp[12] = 0.0
+        MatrixTemp[13] = 0.0
+        MatrixTemp[14] = 0.0
+        MatrixTemp[15] = 1.0
 
         for (let i = 0; i < 16; i++)
-            MATRIX_COPIED[i] = matrix[i]
+            MatrixCopied[i] = matrix[i]
 
-        Matrix.Multiply(matrix, MATRIX_COPIED, MATRIX_TEMP)
+        Matrix.Multiply(matrix, MatrixCopied, MatrixTemp)
     }
     static RotateZ(matrix, r) {
         let cos = Math.cos(r)
         let sin = Math.sin(r)
 
-        MATRIX_TEMP[0] = cos
-        MATRIX_TEMP[1] = sin
-        MATRIX_TEMP[2] = 0.0
-        MATRIX_TEMP[3] = 0.0
+        MatrixTemp[0] = cos
+        MatrixTemp[1] = sin
+        MatrixTemp[2] = 0.0
+        MatrixTemp[3] = 0.0
 
-        MATRIX_TEMP[4] = -sin
-        MATRIX_TEMP[5] = cos
-        MATRIX_TEMP[6] = 0.0
-        MATRIX_TEMP[7] = 0.0
+        MatrixTemp[4] = -sin
+        MatrixTemp[5] = cos
+        MatrixTemp[6] = 0.0
+        MatrixTemp[7] = 0.0
 
-        MATRIX_TEMP[8] = 0.0
-        MATRIX_TEMP[9] = 0.0
-        MATRIX_TEMP[10] = 1.0
-        MATRIX_TEMP[11] = 0.0
+        MatrixTemp[8] = 0.0
+        MatrixTemp[9] = 0.0
+        MatrixTemp[10] = 1.0
+        MatrixTemp[11] = 0.0
 
-        MATRIX_TEMP[12] = 0.0
-        MATRIX_TEMP[13] = 0.0
-        MATRIX_TEMP[14] = 0.0
-        MATRIX_TEMP[15] = 1.0
+        MatrixTemp[12] = 0.0
+        MatrixTemp[13] = 0.0
+        MatrixTemp[14] = 0.0
+        MatrixTemp[15] = 1.0
 
         for (let i = 0; i < 16; i++)
-            MATRIX_COPIED[i] = matrix[i]
+            MatrixCopied[i] = matrix[i]
 
-        Matrix.Multiply(matrix, MATRIX_COPIED, MATRIX_TEMP)
+        Matrix.Multiply(matrix, MatrixCopied, MatrixTemp)
     }
     static Multiply(matrix, b, c) {
         matrix[0] = b[0] * c[0] + b[4] * c[1] + b[8] * c[2] + b[12] * c[3]
@@ -206,73 +207,73 @@ class Matrix {
     }
     static Inverse(matrix, b) {
         for (let i = 0; i < 4; i++) {
-            MATRIX_COPIED[i + 0] = b[i * 4 + 0]
-            MATRIX_COPIED[i + 4] = b[i * 4 + 1]
-            MATRIX_COPIED[i + 8] = b[i * 4 + 2]
-            MATRIX_COPIED[i + 12] = b[i * 4 + 3]
+            MatrixCopied[i + 0] = b[i * 4 + 0]
+            MatrixCopied[i + 4] = b[i * 4 + 1]
+            MatrixCopied[i + 8] = b[i * 4 + 2]
+            MatrixCopied[i + 12] = b[i * 4 + 3]
         }
 
-        MATRIX_TEMP[0] = MATRIX_COPIED[10] * MATRIX_COPIED[15]
-        MATRIX_TEMP[1] = MATRIX_COPIED[11] * MATRIX_COPIED[14]
-        MATRIX_TEMP[2] = MATRIX_COPIED[9] * MATRIX_COPIED[15]
-        MATRIX_TEMP[3] = MATRIX_COPIED[11] * MATRIX_COPIED[13]
-        MATRIX_TEMP[4] = MATRIX_COPIED[9] * MATRIX_COPIED[14]
-        MATRIX_TEMP[5] = MATRIX_COPIED[10] * MATRIX_COPIED[13]
-        MATRIX_TEMP[6] = MATRIX_COPIED[8] * MATRIX_COPIED[15]
-        MATRIX_TEMP[7] = MATRIX_COPIED[11] * MATRIX_COPIED[12]
-        MATRIX_TEMP[8] = MATRIX_COPIED[8] * MATRIX_COPIED[14]
-        MATRIX_TEMP[9] = MATRIX_COPIED[10] * MATRIX_COPIED[12]
-        MATRIX_TEMP[10] = MATRIX_COPIED[8] * MATRIX_COPIED[13]
-        MATRIX_TEMP[11] = MATRIX_COPIED[9] * MATRIX_COPIED[12]
+        MatrixTemp[0] = MatrixCopied[10] * MatrixCopied[15]
+        MatrixTemp[1] = MatrixCopied[11] * MatrixCopied[14]
+        MatrixTemp[2] = MatrixCopied[9] * MatrixCopied[15]
+        MatrixTemp[3] = MatrixCopied[11] * MatrixCopied[13]
+        MatrixTemp[4] = MatrixCopied[9] * MatrixCopied[14]
+        MatrixTemp[5] = MatrixCopied[10] * MatrixCopied[13]
+        MatrixTemp[6] = MatrixCopied[8] * MatrixCopied[15]
+        MatrixTemp[7] = MatrixCopied[11] * MatrixCopied[12]
+        MatrixTemp[8] = MatrixCopied[8] * MatrixCopied[14]
+        MatrixTemp[9] = MatrixCopied[10] * MatrixCopied[12]
+        MatrixTemp[10] = MatrixCopied[8] * MatrixCopied[13]
+        MatrixTemp[11] = MatrixCopied[9] * MatrixCopied[12]
 
-        matrix[0] = MATRIX_TEMP[0] * MATRIX_COPIED[5] + MATRIX_TEMP[3] * MATRIX_COPIED[6] + MATRIX_TEMP[4] * MATRIX_COPIED[7]
-        matrix[0] -= MATRIX_TEMP[1] * MATRIX_COPIED[5] + MATRIX_TEMP[2] * MATRIX_COPIED[6] + MATRIX_TEMP[5] * MATRIX_COPIED[7]
-        matrix[1] = MATRIX_TEMP[1] * MATRIX_COPIED[4] + MATRIX_TEMP[6] * MATRIX_COPIED[6] + MATRIX_TEMP[9] * MATRIX_COPIED[7]
-        matrix[1] -= MATRIX_TEMP[0] * MATRIX_COPIED[4] + MATRIX_TEMP[7] * MATRIX_COPIED[6] + MATRIX_TEMP[8] * MATRIX_COPIED[7]
-        matrix[2] = MATRIX_TEMP[2] * MATRIX_COPIED[4] + MATRIX_TEMP[7] * MATRIX_COPIED[5] + MATRIX_TEMP[10] * MATRIX_COPIED[7]
-        matrix[2] -= MATRIX_TEMP[3] * MATRIX_COPIED[4] + MATRIX_TEMP[6] * MATRIX_COPIED[5] + MATRIX_TEMP[11] * MATRIX_COPIED[7]
-        matrix[3] = MATRIX_TEMP[5] * MATRIX_COPIED[4] + MATRIX_TEMP[8] * MATRIX_COPIED[5] + MATRIX_TEMP[11] * MATRIX_COPIED[6]
-        matrix[3] -= MATRIX_TEMP[4] * MATRIX_COPIED[4] + MATRIX_TEMP[9] * MATRIX_COPIED[5] + MATRIX_TEMP[10] * MATRIX_COPIED[6]
-        matrix[4] = MATRIX_TEMP[1] * MATRIX_COPIED[1] + MATRIX_TEMP[2] * MATRIX_COPIED[2] + MATRIX_TEMP[5] * MATRIX_COPIED[3]
-        matrix[4] -= MATRIX_TEMP[0] * MATRIX_COPIED[1] + MATRIX_TEMP[3] * MATRIX_COPIED[2] + MATRIX_TEMP[4] * MATRIX_COPIED[3]
-        matrix[5] = MATRIX_TEMP[0] * MATRIX_COPIED[0] + MATRIX_TEMP[7] * MATRIX_COPIED[2] + MATRIX_TEMP[8] * MATRIX_COPIED[3]
-        matrix[5] -= MATRIX_TEMP[1] * MATRIX_COPIED[0] + MATRIX_TEMP[6] * MATRIX_COPIED[2] + MATRIX_TEMP[9] * MATRIX_COPIED[3]
-        matrix[6] = MATRIX_TEMP[3] * MATRIX_COPIED[0] + MATRIX_TEMP[6] * MATRIX_COPIED[1] + MATRIX_TEMP[11] * MATRIX_COPIED[3]
-        matrix[6] -= MATRIX_TEMP[2] * MATRIX_COPIED[0] + MATRIX_TEMP[7] * MATRIX_COPIED[1] + MATRIX_TEMP[10] * MATRIX_COPIED[3]
-        matrix[7] = MATRIX_TEMP[4] * MATRIX_COPIED[0] + MATRIX_TEMP[9] * MATRIX_COPIED[1] + MATRIX_TEMP[10] * MATRIX_COPIED[2]
-        matrix[7] -= MATRIX_TEMP[5] * MATRIX_COPIED[0] + MATRIX_TEMP[8] * MATRIX_COPIED[1] + MATRIX_TEMP[11] * MATRIX_COPIED[2]
+        matrix[0] = MatrixTemp[0] * MatrixCopied[5] + MatrixTemp[3] * MatrixCopied[6] + MatrixTemp[4] * MatrixCopied[7]
+        matrix[0] -= MatrixTemp[1] * MatrixCopied[5] + MatrixTemp[2] * MatrixCopied[6] + MatrixTemp[5] * MatrixCopied[7]
+        matrix[1] = MatrixTemp[1] * MatrixCopied[4] + MatrixTemp[6] * MatrixCopied[6] + MatrixTemp[9] * MatrixCopied[7]
+        matrix[1] -= MatrixTemp[0] * MatrixCopied[4] + MatrixTemp[7] * MatrixCopied[6] + MatrixTemp[8] * MatrixCopied[7]
+        matrix[2] = MatrixTemp[2] * MatrixCopied[4] + MatrixTemp[7] * MatrixCopied[5] + MatrixTemp[10] * MatrixCopied[7]
+        matrix[2] -= MatrixTemp[3] * MatrixCopied[4] + MatrixTemp[6] * MatrixCopied[5] + MatrixTemp[11] * MatrixCopied[7]
+        matrix[3] = MatrixTemp[5] * MatrixCopied[4] + MatrixTemp[8] * MatrixCopied[5] + MatrixTemp[11] * MatrixCopied[6]
+        matrix[3] -= MatrixTemp[4] * MatrixCopied[4] + MatrixTemp[9] * MatrixCopied[5] + MatrixTemp[10] * MatrixCopied[6]
+        matrix[4] = MatrixTemp[1] * MatrixCopied[1] + MatrixTemp[2] * MatrixCopied[2] + MatrixTemp[5] * MatrixCopied[3]
+        matrix[4] -= MatrixTemp[0] * MatrixCopied[1] + MatrixTemp[3] * MatrixCopied[2] + MatrixTemp[4] * MatrixCopied[3]
+        matrix[5] = MatrixTemp[0] * MatrixCopied[0] + MatrixTemp[7] * MatrixCopied[2] + MatrixTemp[8] * MatrixCopied[3]
+        matrix[5] -= MatrixTemp[1] * MatrixCopied[0] + MatrixTemp[6] * MatrixCopied[2] + MatrixTemp[9] * MatrixCopied[3]
+        matrix[6] = MatrixTemp[3] * MatrixCopied[0] + MatrixTemp[6] * MatrixCopied[1] + MatrixTemp[11] * MatrixCopied[3]
+        matrix[6] -= MatrixTemp[2] * MatrixCopied[0] + MatrixTemp[7] * MatrixCopied[1] + MatrixTemp[10] * MatrixCopied[3]
+        matrix[7] = MatrixTemp[4] * MatrixCopied[0] + MatrixTemp[9] * MatrixCopied[1] + MatrixTemp[10] * MatrixCopied[2]
+        matrix[7] -= MatrixTemp[5] * MatrixCopied[0] + MatrixTemp[8] * MatrixCopied[1] + MatrixTemp[11] * MatrixCopied[2]
 
-        MATRIX_TEMP[0] = MATRIX_COPIED[2] * MATRIX_COPIED[7]
-        MATRIX_TEMP[1] = MATRIX_COPIED[3] * MATRIX_COPIED[6]
-        MATRIX_TEMP[2] = MATRIX_COPIED[1] * MATRIX_COPIED[7]
-        MATRIX_TEMP[3] = MATRIX_COPIED[3] * MATRIX_COPIED[5]
-        MATRIX_TEMP[4] = MATRIX_COPIED[1] * MATRIX_COPIED[6]
-        MATRIX_TEMP[5] = MATRIX_COPIED[2] * MATRIX_COPIED[5]
-        MATRIX_TEMP[6] = MATRIX_COPIED[0] * MATRIX_COPIED[7]
-        MATRIX_TEMP[7] = MATRIX_COPIED[3] * MATRIX_COPIED[4]
-        MATRIX_TEMP[8] = MATRIX_COPIED[0] * MATRIX_COPIED[6]
-        MATRIX_TEMP[9] = MATRIX_COPIED[2] * MATRIX_COPIED[4]
-        MATRIX_TEMP[10] = MATRIX_COPIED[0] * MATRIX_COPIED[5]
-        MATRIX_TEMP[11] = MATRIX_COPIED[1] * MATRIX_COPIED[4]
+        MatrixTemp[0] = MatrixCopied[2] * MatrixCopied[7]
+        MatrixTemp[1] = MatrixCopied[3] * MatrixCopied[6]
+        MatrixTemp[2] = MatrixCopied[1] * MatrixCopied[7]
+        MatrixTemp[3] = MatrixCopied[3] * MatrixCopied[5]
+        MatrixTemp[4] = MatrixCopied[1] * MatrixCopied[6]
+        MatrixTemp[5] = MatrixCopied[2] * MatrixCopied[5]
+        MatrixTemp[6] = MatrixCopied[0] * MatrixCopied[7]
+        MatrixTemp[7] = MatrixCopied[3] * MatrixCopied[4]
+        MatrixTemp[8] = MatrixCopied[0] * MatrixCopied[6]
+        MatrixTemp[9] = MatrixCopied[2] * MatrixCopied[4]
+        MatrixTemp[10] = MatrixCopied[0] * MatrixCopied[5]
+        MatrixTemp[11] = MatrixCopied[1] * MatrixCopied[4]
 
-        matrix[8] = MATRIX_TEMP[0] * MATRIX_COPIED[13] + MATRIX_TEMP[3] * MATRIX_COPIED[14] + MATRIX_TEMP[4] * MATRIX_COPIED[15]
-        matrix[8] -= MATRIX_TEMP[1] * MATRIX_COPIED[13] + MATRIX_TEMP[2] * MATRIX_COPIED[14] + MATRIX_TEMP[5] * MATRIX_COPIED[15]
-        matrix[9] = MATRIX_TEMP[1] * MATRIX_COPIED[12] + MATRIX_TEMP[6] * MATRIX_COPIED[14] + MATRIX_TEMP[9] * MATRIX_COPIED[15]
-        matrix[9] -= MATRIX_TEMP[0] * MATRIX_COPIED[12] + MATRIX_TEMP[7] * MATRIX_COPIED[14] + MATRIX_TEMP[8] * MATRIX_COPIED[15]
-        matrix[10] = MATRIX_TEMP[2] * MATRIX_COPIED[12] + MATRIX_TEMP[7] * MATRIX_COPIED[13] + MATRIX_TEMP[10] * MATRIX_COPIED[15]
-        matrix[10] -= MATRIX_TEMP[3] * MATRIX_COPIED[12] + MATRIX_TEMP[6] * MATRIX_COPIED[13] + MATRIX_TEMP[11] * MATRIX_COPIED[15]
-        matrix[11] = MATRIX_TEMP[5] * MATRIX_COPIED[12] + MATRIX_TEMP[8] * MATRIX_COPIED[13] + MATRIX_TEMP[11] * MATRIX_COPIED[14]
-        matrix[11] -= MATRIX_TEMP[4] * MATRIX_COPIED[12] + MATRIX_TEMP[9] * MATRIX_COPIED[13] + MATRIX_TEMP[10] * MATRIX_COPIED[14]
-        matrix[12] = MATRIX_TEMP[2] * MATRIX_COPIED[10] + MATRIX_TEMP[5] * MATRIX_COPIED[11] + MATRIX_TEMP[1] * MATRIX_COPIED[9]
-        matrix[12] -= MATRIX_TEMP[4] * MATRIX_COPIED[11] + MATRIX_TEMP[0] * MATRIX_COPIED[9] + MATRIX_TEMP[3] * MATRIX_COPIED[10]
-        matrix[13] = MATRIX_TEMP[8] * MATRIX_COPIED[11] + MATRIX_TEMP[0] * MATRIX_COPIED[8] + MATRIX_TEMP[7] * MATRIX_COPIED[10]
-        matrix[13] -= MATRIX_TEMP[6] * MATRIX_COPIED[10] + MATRIX_TEMP[9] * MATRIX_COPIED[11] + MATRIX_TEMP[1] * MATRIX_COPIED[8]
-        matrix[14] = MATRIX_TEMP[6] * MATRIX_COPIED[9] + MATRIX_TEMP[11] * MATRIX_COPIED[11] + MATRIX_TEMP[3] * MATRIX_COPIED[8]
-        matrix[14] -= MATRIX_TEMP[10] * MATRIX_COPIED[11] + MATRIX_TEMP[2] * MATRIX_COPIED[8] + MATRIX_TEMP[7] * MATRIX_COPIED[9]
-        matrix[15] = MATRIX_TEMP[10] * MATRIX_COPIED[10] + MATRIX_TEMP[4] * MATRIX_COPIED[8] + MATRIX_TEMP[9] * MATRIX_COPIED[9]
-        matrix[15] -= MATRIX_TEMP[8] * MATRIX_COPIED[9] + MATRIX_TEMP[11] * MATRIX_COPIED[10] + MATRIX_TEMP[5] * MATRIX_COPIED[8]
+        matrix[8] = MatrixTemp[0] * MatrixCopied[13] + MatrixTemp[3] * MatrixCopied[14] + MatrixTemp[4] * MatrixCopied[15]
+        matrix[8] -= MatrixTemp[1] * MatrixCopied[13] + MatrixTemp[2] * MatrixCopied[14] + MatrixTemp[5] * MatrixCopied[15]
+        matrix[9] = MatrixTemp[1] * MatrixCopied[12] + MatrixTemp[6] * MatrixCopied[14] + MatrixTemp[9] * MatrixCopied[15]
+        matrix[9] -= MatrixTemp[0] * MatrixCopied[12] + MatrixTemp[7] * MatrixCopied[14] + MatrixTemp[8] * MatrixCopied[15]
+        matrix[10] = MatrixTemp[2] * MatrixCopied[12] + MatrixTemp[7] * MatrixCopied[13] + MatrixTemp[10] * MatrixCopied[15]
+        matrix[10] -= MatrixTemp[3] * MatrixCopied[12] + MatrixTemp[6] * MatrixCopied[13] + MatrixTemp[11] * MatrixCopied[15]
+        matrix[11] = MatrixTemp[5] * MatrixCopied[12] + MatrixTemp[8] * MatrixCopied[13] + MatrixTemp[11] * MatrixCopied[14]
+        matrix[11] -= MatrixTemp[4] * MatrixCopied[12] + MatrixTemp[9] * MatrixCopied[13] + MatrixTemp[10] * MatrixCopied[14]
+        matrix[12] = MatrixTemp[2] * MatrixCopied[10] + MatrixTemp[5] * MatrixCopied[11] + MatrixTemp[1] * MatrixCopied[9]
+        matrix[12] -= MatrixTemp[4] * MatrixCopied[11] + MatrixTemp[0] * MatrixCopied[9] + MatrixTemp[3] * MatrixCopied[10]
+        matrix[13] = MatrixTemp[8] * MatrixCopied[11] + MatrixTemp[0] * MatrixCopied[8] + MatrixTemp[7] * MatrixCopied[10]
+        matrix[13] -= MatrixTemp[6] * MatrixCopied[10] + MatrixTemp[9] * MatrixCopied[11] + MatrixTemp[1] * MatrixCopied[8]
+        matrix[14] = MatrixTemp[6] * MatrixCopied[9] + MatrixTemp[11] * MatrixCopied[11] + MatrixTemp[3] * MatrixCopied[8]
+        matrix[14] -= MatrixTemp[10] * MatrixCopied[11] + MatrixTemp[2] * MatrixCopied[8] + MatrixTemp[7] * MatrixCopied[9]
+        matrix[15] = MatrixTemp[10] * MatrixCopied[10] + MatrixTemp[4] * MatrixCopied[8] + MatrixTemp[9] * MatrixCopied[9]
+        matrix[15] -= MatrixTemp[8] * MatrixCopied[9] + MatrixTemp[11] * MatrixCopied[10] + MatrixTemp[5] * MatrixCopied[8]
 
-        let det = 1.0 / (MATRIX_COPIED[0] * matrix[0] + MATRIX_COPIED[1] * matrix[1] + MATRIX_COPIED[2] * matrix[2] + MATRIX_COPIED[3] * matrix[3])
+        let det = 1.0 / (MatrixCopied[0] * matrix[0] + MatrixCopied[1] * matrix[1] + MatrixCopied[2] * matrix[2] + MatrixCopied[3] * matrix[3])
 
         for (let i = 0; i < 16; i++)
             matrix[i] *= det
