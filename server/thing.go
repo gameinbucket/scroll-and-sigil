@@ -282,11 +282,11 @@ func (me *Thing) TryOverlap(x, z float32, b *Thing) bool {
 // ApproximateDistance func
 func (me *Thing) ApproximateDistance(other *Thing) float32 {
 	dx := Abs(me.X - other.X)
-	dy := Abs(me.Z - other.Z)
-	if dx > dy {
-		return dx + dy - dy*0.5
+	dz := Abs(me.Z - other.Z)
+	if dx > dz {
+		return dx + dz - dz*0.5
 	}
-	return dx + dy - dx*0.5
+	return dx + dz - dx*0.5
 }
 
 // IntegrateXZ func

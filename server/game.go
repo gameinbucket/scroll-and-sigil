@@ -31,6 +31,7 @@ func game(level string) func(w http.ResponseWriter, r *http.Request) {
 
 	server.world = NewWorld()
 	file, err := os.Open(level)
+	defer file.Close()
 	if err != nil {
 		panic(err)
 	}
@@ -83,6 +84,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 	}
 
 	file, err := os.Open(path)
+	defer file.Close()
 	if err != nil {
 		path = home
 		file, err = os.Open(path)

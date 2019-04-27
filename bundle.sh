@@ -1,8 +1,9 @@
 cd bundle
-echo "clean"
-rm bundle.app
-echo "build"
+if [ -f bundle.app ]; then
+  rm bundle.app
+fi
 go build -o bundle.app
-echo "run"
-./bundle.app "../"
+if [ -f bundle.app ]; then
+  ./bundle.app "../"
+fi
 cd ..

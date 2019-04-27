@@ -1,9 +1,10 @@
-echo "clean"
-rm sse.app
-echo "build"
+if [ -f sse.app ]; then
+  rm sse.app
+fi
 cd editor
 go build -o sse.app
 cd ..
-mv editor/sse.app .
-echo "run"
-./sse.app $@
+if [ -f editor/sse.app ]; then
+  mv editor/sse.app .
+  ./sse.app $@
+fi
