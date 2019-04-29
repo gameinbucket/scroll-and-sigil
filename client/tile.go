@@ -1,23 +1,38 @@
 package main
 
-// Tile constants
+// Constants
 const (
-	TileNone       = 0
-	TileGrass      = 1
-	TilePlankFloor = 2
-	TilePlanks     = 3
-	TileStone      = 4
-	TileStoneFloor = 5
+	TileNone = 0
+
+	AmbientLow  = 100
+	AmbientHalf = 175
+	AmbientFull = 255
 )
 
-// Tile variables
+// Variables
 var (
-	TileClosed = []bool{
-		false,
-		true,
-		true,
-		true,
-		true,
-		true,
-	}
+	TileLookup  = map[string]int{}
+	TileTexture [][]float32
+	TileClosed  []bool
 )
+
+// TileAmbient func
+func TileAmbient(side1, side2, corner bool) int {
+	if side1 && side2 {
+		return AmbientLow
+	} else if side1 || side2 || corner {
+		return AmbientHalf
+	}
+	return AmbientFull
+}
+
+type tile struct {
+	typeOf int
+	red    int
+	green  int
+	blue   int
+}
+
+func tileInit() *tile {
+	return &tile{}
+}

@@ -9,7 +9,7 @@ class Net {
     static async RequestBinary(url) {
         return fetch(location.origin + "/" + url)
             .then(data => {
-                return data.blob()
+                return data.arrayBuffer()
             })
             .catch(err => console.error(err))
     }

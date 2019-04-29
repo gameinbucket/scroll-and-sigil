@@ -39,6 +39,7 @@ class Wad {
             let key = name.substring(0, name.lastIndexOf("."))
             Sounds[key] = new Audio("sounds/" + name)
         }
+
         for (let name in sprites) {
             let sprite = sprites[name]
 

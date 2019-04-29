@@ -1,6 +1,6 @@
 package main
 
-// Block constants
+// Constants
 const (
 	BlockSize        = 8
 	InverseBlockSize = 1.0 / BlockSize
@@ -8,30 +8,42 @@ const (
 	BlockAll         = BlockSlice * BlockSize
 )
 
-// Block struct
-type Block struct {
-	X, Y, Z      int
-	Tiles        [BlockAll]int
-	ThingCount   int
-	ItemCount    int
-	MissileCount int
-	Things       []*Thing
-	Items        []*Item
-	Missiles     []*Missile
-	Lights       []*Light
-	LightCount   int
+type block struct {
+	x             int
+	y             int
+	z             int
+	mesh          []byte
+	visibility    [36]uint8
+	beginSide     [6]int
+	countSide     [6]int
+	thingCount    int
+	itemCount     int
+	missileCount  int
+	particleCount int
+	lightCount    int
+	things        []*thing
+	items         []*item
+	missiles      []*missile
+	particles     []*particle
+	lights        []*light
+	tiles         [BlockAll]*tile
 }
 
-// NewBlock func
-func NewBlock(x, y, z int) *Block {
-	b := &Block{X: x, Y: y, Z: z}
+func blockInit(x, y, z int) *block {
+	b := &block{}
+	b.x = x
+	b.y = y
+	b.z = z
+	for t := 0; t < BlockAll; t++ {
+		b.tiles[t] = &tile{}
+	}
 	return b
 }
 
 // NotEmpty func
-func (me *Block) NotEmpty() uint8 {
+func (me *block) NotEmpty() uint8 {
 	for i := 0; i < BlockAll; i++ {
-		if me.Tiles[i] != TileNone {
+		if me.tiles[i].typeOf != TileNone {
 			return 1
 		}
 	}
@@ -39,38 +51,36 @@ func (me *Block) NotEmpty() uint8 {
 }
 
 // GetTileTypeUnsafe func
-func (me *Block) GetTileTypeUnsafe(x, y, z int) int {
-	return me.Tiles[x+y*BlockSize+z*BlockSlice]
+func (me *block) GetTileTypeUnsafe(x, y, z int) int {
+	return me.tiles[x+y*BlockSize+z*BlockSlice].typeOf
 }
 
 // AddThing func
-func (me *Block) AddThing(t *Thing) {
+func (me *block) AddThing(t *Thing) {
 }
 
 // RemoveThing func
-func (me *Block) RemoveThing(t *Thing) {
+func (me *block) RemoveThing(t *Thing) {
 }
 
 // AddItem func
-func (me *Block) AddItem(t *Item) {
+func (me *block) AddItem(t *Item) {
 }
 
 // RemoveItem func
-func (me *Block) RemoveItem(t *Item) {
+func (me *block) RemoveItem(t *Item) {
 }
 
 // AddMissile func
-func (me *Block) AddMissile(t *Missile) {
+func (me *block) AddMissile(t *Missile) {
 }
 
 // RemoveMissile func
-func (me *Block) RemoveMissile(t *Missile) {
+func (me *block) RemoveMissile(t *Missile) {
 }
 
-// AddLight func
-func (me *Block) AddLight(t *Light) {
+func (me *block) addLight(t *light) {
 }
 
-// RemoveLight func
-func (me *Block) RemoveLight(t *Light) {
+func (me *block) removeLight(t *light) {
 }

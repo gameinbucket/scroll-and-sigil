@@ -1,15 +1,19 @@
 package main
 
-// Light struct
-type Light struct {
-	X   int
-	Y   int
-	Z   int
-	RGB int
+// light struct
+type light struct {
+	x   int
+	y   int
+	z   int
+	rgb int32
 }
 
-// NewLight func
-func NewLight(x, y, z, rgb int) *Light {
-	light := &Light{X: x, Y: y, Z: z, RGB: rgb}
-	return light
+// lightInit func
+func lightInit(x, y, z uint8, rgb int32) *light {
+	l := &light{}
+	l.x = int(x)
+	l.y = int(y)
+	l.z = int(z)
+	l.rgb = rgb
+	return l
 }

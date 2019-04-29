@@ -2,7 +2,7 @@ package main
 
 // Item struct
 type Item struct {
-	World               *World
+	world               *world
 	UID                 uint16
 	NID                 uint16
 	X, Y, Z             float32
@@ -27,8 +27,7 @@ func (me *Item) AddToBlocks() {
 
 }
 
-// RemoveFromBlocks func
-func (me *Item) RemoveFromBlocks() {
+func (me *Item) removeFromBlocks() {
 
 }
 
@@ -40,12 +39,12 @@ func (me *Item) Overlap(b *Thing) bool {
 
 // Cleanup func
 func (me *Item) Cleanup() {
-	me.RemoveFromBlocks()
-	me.World.RemoveItem(me)
+	me.removeFromBlocks()
+	me.world.removeItem(me)
 }
 
 // LoadNewItem func
-func LoadNewItem(world *World, uid uint16, x, y, z float32) {
+func LoadNewItem(world *world, uid uint16, x, y, z float32) {
 	switch uid {
 	case MedkitUID:
 		NewMedkit(world, x, y, z)
@@ -53,9 +52,9 @@ func LoadNewItem(world *World, uid uint16, x, y, z float32) {
 }
 
 // NewMedkit func
-func NewMedkit(world *World, x, y, z float32) *Item {
+func NewMedkit(world *world, x, y, z float32) *Item {
 	me := &Item{}
-	me.World = world
+	me.world = world
 	me.X = x
 	me.Y = y
 	me.Z = z
@@ -65,6 +64,6 @@ func NewMedkit(world *World, x, y, z float32) *Item {
 	me.AddToBlocks()
 	me.UID = MedkitUID
 	me.NID = NextNID()
-	world.AddItem(me)
+	world.addItem(me)
 	return me
 }

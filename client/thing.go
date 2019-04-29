@@ -36,7 +36,7 @@ var (
 
 // Thing struct
 type Thing struct {
-	World                  *World
+	world                  *world
 	UID                    uint16
 	NID                    uint16
 	Animation              int
@@ -69,7 +69,7 @@ func NextNID() uint16 {
 }
 
 // LoadNewThing func
-func LoadNewThing(world *World, uid uint16, x, y, z float32) {
+func LoadNewThing(world *world, uid uint16, x, y, z float32) {
 
 }
 

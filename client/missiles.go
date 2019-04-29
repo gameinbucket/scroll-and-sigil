@@ -2,7 +2,7 @@ package main
 
 // Missile struct
 type Missile struct {
-	World                  *World
+	world                  *world
 	UID                    uint16
 	NID                    uint16
 	X, Y, Z                float32
@@ -62,9 +62,9 @@ func (me *Missile) Update() bool {
 }
 
 // NewPlasma func
-func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
+func NewPlasma(world *world, damage int, x, y, z, dx, dy, dz float32) {
 	me := &Missile{}
-	me.World = world
+	me.world = world
 	me.X = x
 	me.Y = y
 	me.Z = z
@@ -82,7 +82,7 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
 	me.DamageAmount = damage
 	me.Hit = me.PlasmaHit
 
-	world.AddMissile(me)
+	world.addMissile(me)
 }
 
 // PlasmaHit func

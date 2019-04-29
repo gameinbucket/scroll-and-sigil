@@ -12,6 +12,12 @@ class FrameBuffer {
         this.textures = []
         this.drawBuffers = []
     }
+    static Make(gl, width, height, internalFormat, format, type, linear, depth) {
+        let frame = new FrameBuffer()
+        frame.set(width, height, internalFormat, format, type, linear, depth)
+        RenderSystem.MakeFrameBuffer(gl, frame)
+        return frame
+    }
     set(width, height, internalFormat, format, type, linear, depth) {
         if (format.length !== internalFormat.length || format.length !== type.length) {
             throw new Error("framebuffer invalid")
@@ -29,11 +35,5 @@ class FrameBuffer {
         this.height = height
         RenderSystem.SetFrameBuffer(gl, this.fbo)
         RenderSystem.UpdateFrameBuffer(gl, this)
-    }
-    static Make(gl, width, height, internalFormat, format, type, linear, depth) {
-        let frame = new FrameBuffer()
-        frame.set(width, height, internalFormat, format, type, linear, depth)
-        RenderSystem.MakeFrameBuffer(gl, frame)
-        return frame
     }
 }

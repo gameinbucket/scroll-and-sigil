@@ -191,23 +191,23 @@ class World {
         for (let t = 0; t < missileCount; t++) {
             let uid = dat.getUint16(dex, true)
             dex += 2
+            let nid = dat.getUint16(dex, true)
+            dex += 2
+            let x = dat.getFloat32(dex, true)
+            dex += 4
+            let y = dat.getFloat32(dex, true)
+            dex += 4
+            let z = dat.getFloat32(dex, true)
+            dex += 4
+            let dx = dat.getFloat32(dex, true)
+            dex += 4
+            let dy = dat.getFloat32(dex, true)
+            dex += 4
+            let dz = dat.getFloat32(dex, true)
+            dex += 4
             switch (uid) {
                 case PlasmaUID:
                     {
-                        let nid = dat.getUint16(dex, true)
-                        dex += 2
-                        let x = dat.getFloat32(dex, true)
-                        dex += 4
-                        let y = dat.getFloat32(dex, true)
-                        dex += 4
-                        let z = dat.getFloat32(dex, true)
-                        dex += 4
-                        let dx = dat.getFloat32(dex, true)
-                        dex += 4
-                        let dy = dat.getFloat32(dex, true)
-                        dex += 4
-                        let dz = dat.getFloat32(dex, true)
-                        dex += 4
                         let damage = dat.getUint16(dex, true)
                         dex += 2
                         new Plasma(this, nid, damage, x, y, z, dx, dy, dz)
@@ -221,7 +221,7 @@ class World {
     Build() {
         for (let i = 0; i < this.all; i++) {
             let block = this.blocks[i]
-            for (let j = 0; j < block.lights.length; j++)
+            for (let j = 0; j < block.lightCount; j++)
                 Light.Add(this, block, block.lights[j])
             Occluder.SetBlockVisible(block)
         }

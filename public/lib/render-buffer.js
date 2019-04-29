@@ -26,7 +26,7 @@ class RenderBuffer {
         return buffer
     }
     static InitCopy(gl, source) {
-        let buffer = new RenderBuffer();
+        let buffer = new RenderBuffer()
         buffer.vertices = new Float32Array(source.vertexPos)
         buffer.indices = new Uint32Array(source.index_pos)
         RenderBuffer.Copy(source, buffer)

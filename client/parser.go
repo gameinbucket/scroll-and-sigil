@@ -6,7 +6,7 @@ import (
 )
 
 // ParserRead func
-func ParserRead(str []byte) map[string]interface{} {
+func ParserRead(str string) map[string]interface{} {
 	data := make(map[string]interface{})
 	stack := list.New()
 	stack.PushFront(data)
