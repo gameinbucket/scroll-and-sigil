@@ -6,8 +6,8 @@ import (
 )
 
 // NewTree func
-func NewTree(world *World, x, y, z float32) *Thing {
-	tree := &Thing{}
+func NewTree(world *World, x, y, z float32) *thing {
+	tree := &thing{}
 	tree.UID = TreeUID
 	tree.NID = NextNID()
 	tree.World = world
@@ -21,15 +21,15 @@ func NewTree(world *World, x, y, z float32) *Thing {
 	tree.Radius = 0.4
 	tree.Height = 1.0
 	tree.Health = 1
-	world.AddThing(tree)
-	tree.BlockBorders()
-	tree.AddToBlocks()
+	world.addThing(tree)
+	tree.blockBorders()
+	tree.addToBlocks()
 	return tree
 	// TODO make scenery its own entity
 }
 
 // ScenerySave func
-func (me *Thing) ScenerySave(raw *bytes.Buffer) {
+func (me *thing) ScenerySave(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, me.UID)
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, float32(me.X))

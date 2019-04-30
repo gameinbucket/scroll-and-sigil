@@ -1,0 +1,13 @@
+import
+  graphics
+  render
+  js       std/syscall/js
+  ws       github.com/gorilla/websocket
+
+output
+  out/
+
+binding golang
+  js.value js.Value
+  js.function js.Func
+  sync.wait sync.WaitGroup

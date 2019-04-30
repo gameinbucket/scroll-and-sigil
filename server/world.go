@@ -36,13 +36,13 @@ type World struct {
 	Length                          int
 	Slice                           int
 	All                             int
-	Blocks                          []*Block
-	ThingCount                      int
-	ItemCount                       int
-	MissileCount                    int
-	Things                          []*Thing
-	Items                           []*Item
-	Missiles                        []*Missile
+	Blocks                          []*block
+	thingCount                      int
+	itemCount                       int
+	missileCount                    int
+	things                          []*thing
+	items                           []*item
+	missiles                        []*missile
 	ThreadIndex                     int
 	ThreadID                        string
 	SpawnYouX, SpawnYouY, SpawnYouZ float32
@@ -79,15 +79,15 @@ func (me *World) Load(data []byte) {
 	me.Length = length
 	me.Slice = width * height
 	me.All = me.Slice * length
-	me.Blocks = make([]*Block, me.All)
+	me.Blocks = make([]*block, me.All)
 
-	me.ThingCount = 0
-	me.ItemCount = 0
-	me.MissileCount = 0
+	me.thingCount = 0
+	me.itemCount = 0
+	me.missileCount = 0
 
-	me.Things = make([]*Thing, 5)
-	me.Items = make([]*Item, 5)
-	me.Missiles = make([]*Missile, 5)
+	me.things = make([]*thing, 5)
+	me.items = make([]*item, 5)
+	me.missiles = make([]*missile, 5)
 
 	bx := 0
 	by := 0
@@ -110,7 +110,7 @@ func (me *World) Load(data []byte) {
 			y := ParseInt(light["y"].(string))
 			z := ParseInt(light["z"].(string))
 			rgb := ParseInt(light["v"].(string))
-			block.AddLight(NewLight(x, y, z, rgb))
+			block.addLight(NewLight(x, y, z, rgb))
 		}
 
 		me.Blocks[bx+by*me.Width+bz*me.Slice] = block
@@ -132,7 +132,7 @@ func (me *World) Load(data []byte) {
 		x := ParseFloat(thing["x"].(string))
 		y := ParseFloat(thing["y"].(string))
 		z := ParseFloat(thing["z"].(string))
-		LoadNewThing(me, uint16(uid), x, y, z)
+		LoadNewthing(me, uint16(uid), x, y, z)
 	}
 
 	for t := 0; t < len(items); t++ {
@@ -163,22 +163,22 @@ func (me *World) Save(person *Person) []byte {
 		me.Blocks[i].Save(raw)
 	}
 
-	numThings := me.ThingCount
-	binary.Write(raw, binary.LittleEndian, uint16(numThings))
-	for i := 0; i < numThings; i++ {
-		me.Things[i].Save(raw)
+	numthings := me.thingCount
+	binary.Write(raw, binary.LittleEndian, uint16(numthings))
+	for i := 0; i < numthings; i++ {
+		me.things[i].Save(raw)
 	}
 
-	numItems := me.ItemCount
+	numItems := me.itemCount
 	binary.Write(raw, binary.LittleEndian, uint16(numItems))
 	for i := 0; i < numItems; i++ {
-		me.Items[i].Save(raw)
+		me.items[i].Save(raw)
 	}
 
-	numMissiles := me.MissileCount
+	numMissiles := me.missileCount
 	binary.Write(raw, binary.LittleEndian, uint16(numMissiles))
 	for i := 0; i < numMissiles; i++ {
-		me.Missiles[i].Snap(raw)
+		me.missiles[i].Snap(raw)
 	}
 
 	return raw.Bytes()
@@ -188,7 +188,7 @@ func (me *World) Save(person *Person) []byte {
 func (me *World) BuildSnapshots(people []*Person) {
 	num := len(people)
 	time := time.Now().UnixNano()/1000000 - 1552330000000
-	numThings := me.ThingCount
+	numthings := me.thingCount
 
 	body := &bytes.Buffer{}
 	raw := &bytes.Buffer{}
@@ -203,20 +203,20 @@ func (me *World) BuildSnapshots(people []*Person) {
 		me.broadcastCount = 0
 	}
 
-	for i := 0; i < numThings; i++ {
-		me.Things[i].Snap(body)
+	for i := 0; i < numthings; i++ {
+		me.things[i].Snap(body)
 	}
 
 	body.Reset()
-	spriteSet := make(map[*Thing]bool)
-	updatedThings := 0
-	for i := 0; i < numThings; i++ {
-		thing := me.Things[i]
+	spriteSet := make(map[*thing]bool)
+	updatedthings := 0
+	for i := 0; i < numthings; i++ {
+		thing := me.things[i]
 		if _, has := spriteSet[thing]; !has {
 			spriteSet[thing] = true
 			if thing.Binary != nil {
 				body.Write(thing.Binary)
-				updatedThings++
+				updatedthings++
 			}
 		}
 	}
@@ -232,7 +232,7 @@ func (me *World) BuildSnapshots(people []*Person) {
 			raw.Write(broadcast)
 		}
 
-		binary.Write(raw, binary.LittleEndian, uint16(updatedThings))
+		binary.Write(raw, binary.LittleEndian, uint16(updatedthings))
 		raw.Write(body.Bytes())
 
 		binary := raw.Bytes()
@@ -282,15 +282,15 @@ func (me *World) GetTileType(bx, by, bz, tx, ty, tz int) int {
 		tz -= BlockSize
 		bz++
 	}
-	block := me.GetBlock(bx, by, bz)
+	block := me.getBlock(bx, by, bz)
 	if block == nil {
 		return TileNone
 	}
 	return block.GetTileTypeUnsafe(tx, ty, tz)
 }
 
-// GetBlock func
-func (me *World) GetBlock(x, y, z int) *Block {
+// getBlock func
+func (me *World) getBlock(x, y, z int) *block {
 	if x < 0 || x >= me.Width {
 		return nil
 	}
@@ -303,59 +303,59 @@ func (me *World) GetBlock(x, y, z int) *Block {
 	return me.Blocks[x+y*me.Width+z*me.Slice]
 }
 
-// AddThing func
-func (me *World) AddThing(t *Thing) {
-	if me.ThingCount == len(me.Things) {
-		array := make([]*Thing, me.ThingCount+5)
-		copy(array, me.Things)
-		me.Things = array
+// addThing func
+func (me *World) addThing(t *thing) {
+	if me.thingCount == len(me.things) {
+		array := make([]*thing, me.thingCount+5)
+		copy(array, me.things)
+		me.things = array
 	}
-	me.Things[me.ThingCount] = t
-	me.ThingCount++
+	me.things[me.thingCount] = t
+	me.thingCount++
 }
 
-// RemoveThing func
-func (me *World) RemoveThing(t *Thing) {
-	for i := 0; i < me.ThingCount; i++ {
-		if me.Things[i] == t {
-			me.Things[i] = me.Things[me.ThingCount-1]
-			me.ThingCount--
+// removeThing func
+func (me *World) removeThing(t *thing) {
+	for i := 0; i < me.thingCount; i++ {
+		if me.things[i] == t {
+			me.things[i] = me.things[me.thingCount-1]
+			me.thingCount--
 			return
 		}
 	}
 }
 
-// AddItem func
-func (me *World) AddItem(t *Item) {
-	if me.ItemCount == len(me.Items) {
-		array := make([]*Item, me.ItemCount+5)
-		copy(array, me.Items)
-		me.Items = array
+// addItem func
+func (me *World) addItem(t *item) {
+	if me.itemCount == len(me.items) {
+		array := make([]*item, me.itemCount+5)
+		copy(array, me.items)
+		me.items = array
 	}
-	me.Items[me.ItemCount] = t
-	me.ItemCount++
+	me.items[me.itemCount] = t
+	me.itemCount++
 }
 
-// RemoveItem func
-func (me *World) RemoveItem(t *Item) {
-	for i := 0; i < me.ItemCount; i++ {
-		if me.Items[i] == t {
-			me.Items[i] = me.Items[me.ItemCount-1]
-			me.ItemCount--
+// removeItem func
+func (me *World) removeItem(t *item) {
+	for i := 0; i < me.itemCount; i++ {
+		if me.items[i] == t {
+			me.items[i] = me.items[me.itemCount-1]
+			me.itemCount--
 			return
 		}
 	}
 }
 
-// AddMissile func
-func (me *World) AddMissile(t *Missile) {
-	if me.MissileCount == len(me.Missiles) {
-		array := make([]*Missile, me.MissileCount+5)
-		copy(array, me.Missiles)
-		me.Missiles = array
+// addMissile func
+func (me *World) addMissile(t *missile) {
+	if me.missileCount == len(me.missiles) {
+		array := make([]*missile, me.missileCount+5)
+		copy(array, me.missiles)
+		me.missiles = array
 	}
-	me.Missiles[me.MissileCount] = t
-	me.MissileCount++
+	me.missiles[me.missileCount] = t
+	me.missileCount++
 }
 
 // Update func
@@ -365,24 +365,24 @@ func (me *World) Update() {
 	if me.ThreadIndex == len(WorldThreads) {
 		me.ThreadIndex = 0
 	}
-	num := me.ThingCount
+	num := me.thingCount
 	for i := 0; i < num; i++ {
-		thing := me.Things[i]
+		thing := me.things[i]
 		if thing.Update() {
-			me.Things[i] = me.Things[num-1]
-			me.Things[num-1] = nil
-			me.ThingCount--
+			me.things[i] = me.things[num-1]
+			me.things[num-1] = nil
+			me.thingCount--
 			num--
 			i--
 		}
 	}
-	num = me.MissileCount
+	num = me.missileCount
 	for i := 0; i < num; i++ {
-		missile := me.Missiles[i]
+		missile := me.missiles[i]
 		if missile.Update() {
-			me.Missiles[i] = me.Missiles[num-1]
-			me.Missiles[num-1] = nil
-			me.MissileCount--
+			me.missiles[i] = me.missiles[num-1]
+			me.missiles[num-1] = nil
+			me.missileCount--
 			num--
 			i--
 		}

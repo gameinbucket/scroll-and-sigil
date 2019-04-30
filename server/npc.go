@@ -43,8 +43,8 @@ var (
 
 // Npc struct
 type Npc struct {
-	*Thing
-	Target             *Thing
+	*thing
+	Target             *thing
 	MoveCount          int
 	MoveDirection      int
 	DeltaMoveDirection bool
@@ -190,7 +190,7 @@ func (me *Npc) TryMove(x, z float32) bool {
 			bz := minBZ
 			tz := minTZ
 			for gz := minGZ; gz <= maxGZ; gz++ {
-				block := world.GetBlock(bx, by, bz)
+				block := world.getBlock(bx, by, bz)
 				tile := block.GetTileTypeUnsafe(tx, ty, tz)
 				if TileClosed[tile] {
 					return false
@@ -214,15 +214,15 @@ func (me *Npc) TryMove(x, z float32) bool {
 		}
 	}
 
-	searched := make(map[*Thing]bool)
+	searched := make(map[*thing]bool)
 
 	for bx := minBX; bx <= maxBX; bx++ {
 		for by := minBY; by <= maxBY; by++ {
 			for bz := minBZ; bz <= maxBZ; bz++ {
-				block := world.GetBlock(bx, by, bz)
-				for t := 0; t < block.ThingCount; t++ {
-					thing := block.Things[t]
-					if me.Thing == thing {
+				block := world.getBlock(bx, by, bz)
+				for t := 0; t < block.thingCount; t++ {
+					thing := block.things[t]
+					if me.thing == thing {
 						continue
 					}
 					if _, has := searched[thing]; !has {
@@ -247,14 +247,14 @@ func (me *Npc) Move() bool {
 	tryX := me.X + NpcMoveX[me.MoveDirection]*me.Speed
 	tryZ := me.Z + NpcMoveZ[me.MoveDirection]*me.Speed
 	if me.TryMove(tryX, tryZ) {
-		me.RemoveFromBlocks()
+		me.removeFromBlocks()
 		me.OldX = me.X
 		me.OldZ = me.Z
 		me.X = tryX
 		me.Z = tryZ
 		me.DeltaMoveXZ = true
-		me.BlockBorders()
-		me.AddToBlocks()
+		me.blockBorders()
+		me.addToBlocks()
 		return true
 	}
 	return false

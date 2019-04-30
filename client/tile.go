@@ -28,9 +28,9 @@ func TileAmbient(side1, side2, corner bool) int {
 
 type tile struct {
 	typeOf int
-	red    int
-	green  int
-	blue   int
+	red    uint8
+	green  uint8
+	blue   uint8
 }
 
 func tileInit() *tile {

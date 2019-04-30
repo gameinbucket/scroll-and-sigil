@@ -1,97 +1,116 @@
 package main
 
-// Missile struct
-type Missile struct {
-	world                  *world
-	UID                    uint16
-	NID                    uint16
-	X, Y, Z                float32
-	DeltaX, DeltaY, DeltaZ float32
-	MinBX, MinBY, MinBZ    int
-	MaxBX, MaxBY, MaxBZ    int
-	Radius                 float32
-	Height                 float32
-	DamageAmount           int
-	Hit                    func(thing *Thing)
+import (
+	"math"
+
+	"./graphics"
+	"./render"
+)
+
+type missile struct {
+	world   *world
+	UID     uint16
+	SID     string
+	NID     uint16
+	sprite  *render.Sprite
+	x       float32
+	y       float32
+	z       float32
+	deltaX  float32
+	deltaY  float32
+	deltaZ  float32
+	minBX   int
+	minBY   int
+	minBZ   int
+	maxBX   int
+	maxBY   int
+	maxBZ   int
+	radius  float32
+	height  float32
+	cleanup func()
 }
 
-// BlockBorders func
-func (me *Missile) BlockBorders() {
-	me.MinBX = int((me.X - me.Radius) * InverseBlockSize)
-	me.MinBY = int(me.Y * InverseBlockSize)
-	me.MinBZ = int((me.Z - me.Radius) * InverseBlockSize)
-	me.MaxBX = int((me.X + me.Radius) * InverseBlockSize)
-	me.MaxBY = int((me.Y + me.Height) * InverseBlockSize)
-	me.MaxBZ = int((me.Z + me.Radius) * InverseBlockSize)
+func (me *missile) blockBorders() {
+	me.minBX = int((me.x - me.radius) * InverseBlockSize)
+	me.minBY = int(me.y * InverseBlockSize)
+	me.minBZ = int((me.z - me.radius) * InverseBlockSize)
+	me.maxBX = int((me.x + me.radius) * InverseBlockSize)
+	me.maxBY = int((me.y + me.height) * InverseBlockSize)
+	me.maxBZ = int((me.z + me.radius) * InverseBlockSize)
 }
 
-// AddToBlocks func
-func (me *Missile) AddToBlocks() bool {
+func (me *missile) addToBlocks() bool {
+	for gx := me.minBX; gx <= me.maxBX; gx++ {
+		for gy := me.minBY; gy <= me.maxBY; gy++ {
+			for gz := me.minBZ; gz <= me.maxBZ; gz++ {
+				block := me.world.getBlock(gx, gy, gz)
+				if block == nil {
+					me.removeFromBlocks()
+					return true
+				}
+				block.addMissile(me)
+			}
+		}
+	}
 	return false
 }
 
-// RemoveFromBlocks func
-func (me *Missile) RemoveFromBlocks() {
-}
-
-// Overlap func
-func (me *Missile) Overlap(b *Thing) bool {
-	square := me.Radius + b.Radius
-	return Abs(me.X-b.X) <= square && Abs(me.Z-b.Z) <= square
-}
-
-// Collision func
-func (me *Missile) Collision() bool {
-	return false
-}
-
-// Update func
-func (me *Missile) Update() bool {
-	if me.Collision() {
-		return true
+func (me *missile) removeFromBlocks() {
+	for gx := me.minBX; gx <= me.maxBX; gx++ {
+		for gy := me.minBY; gy <= me.maxBY; gy++ {
+			for gz := me.minBZ; gz <= me.maxBZ; gz++ {
+				block := me.world.getBlock(gx, gy, gz)
+				if block != nil {
+					block.removeMissile(me)
+				}
+			}
+		}
 	}
-	me.RemoveFromBlocks()
-	me.X += me.DeltaX
-	me.Y += me.DeltaY
-	me.Z += me.DeltaZ
-	me.BlockBorders()
-	if me.AddToBlocks() {
-		return true
-	}
-	return me.Collision()
 }
 
-// NewPlasma func
-func NewPlasma(world *world, damage int, x, y, z, dx, dy, dz float32) {
-	me := &Missile{}
+func (me *missile) update() bool {
+	me.removeFromBlocks()
+	me.x += me.deltaX
+	me.y += me.deltaY
+	me.z += me.deltaZ
+	me.blockBorders()
+	return me.addToBlocks()
+}
+
+func (me *missile) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ, camAngle float32) {
+	sin := float64(camX - me.x)
+	cos := float64(camZ - me.z)
+	length := math.Sqrt(sin*sin + cos*cos)
+	sin /= length
+	cos /= length
+	render.RendSprite(spriteBuffer[me.SID], me.x, me.y, me.z, float32(sin), float32(cos), me.sprite)
+}
+
+func plasmaInit(world *world, nid uint16, damage uint16, x, y, z, dx, dy, dz float32) {
+	me := &missile{}
 	me.world = world
-	me.X = x
-	me.Y = y
-	me.Z = z
-	me.Radius = 0.2
-	me.Height = 0.2
-	me.BlockBorders()
-	if me.AddToBlocks() {
+	me.x = x
+	me.y = y
+	me.z = z
+	me.blockBorders()
+	if me.addToBlocks() {
 		return
 	}
 	me.UID = PlasmaUID
-	me.NID = NextNID()
-	me.DeltaX = dx
-	me.DeltaY = dy
-	me.DeltaZ = dz
-	me.DamageAmount = damage
-	me.Hit = me.PlasmaHit
-
+	me.NID = nid
+	me.sprite = wadSpriteData[me.SID]["baron-missile-front-1"]
+	me.deltaX = dx * InverseNetRate
+	me.deltaY = dy * InverseNetRate
+	me.deltaZ = dz * InverseNetRate
+	me.radius = 0.2
+	me.height = 0.2
+	me.cleanup = me.cleanupPlasma
 	world.addMissile(me)
 }
 
-// PlasmaHit func
-func (me *Missile) PlasmaHit(thing *Thing) {
-	me.X -= me.DeltaX
-	me.Y -= me.DeltaY
-	me.Z -= me.DeltaZ
-	if thing != nil {
-		thing.Damage(me.DamageAmount)
-	}
-	me.RemoveFromBlocks()
+func (me *missile) cleanupPlasma() {
+	me.world.removeMissile(me)
+	me.removeFromBlocks()
+	wadSounds["plasma-impact"].Call("play")
+	plasmaExplosionInit(me.world, me.x, me.y, me.z)
 }

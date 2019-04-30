@@ -26,29 +26,31 @@ const (
 )
 
 type world struct {
-	g            *graphics.RenderSystem
-	gl           js.Value
-	width        int
-	height       int
-	length       int
-	tileWidth    int
-	tileHeight   int
-	tileLength   int
-	slice        int
-	all          int
-	blocks       []*block
-	viewable     []*block
-	spriteSet    map[*Thing]bool
-	spriteBuffer map[string]*graphics.RenderBuffer
-	spriteCount  int
-	ThingCount   int
-	ItemCount    int
-	MissileCount int
-	Things       []*Thing
-	Items        []*Item
-	Missiles     []*Missile
-	netLookup    map[uint16]*Thing
-	PID          uint16
+	g             *graphics.RenderSystem
+	gl            js.Value
+	width         int
+	height        int
+	length        int
+	tileWidth     int
+	tileHeight    int
+	tileLength    int
+	slice         int
+	all           int
+	blocks        []*block
+	viewable      []*block
+	spriteSet     map[*thing]bool
+	spriteBuffer  map[string]*graphics.RenderBuffer
+	spriteCount   map[string]int
+	thingCount    int
+	itemCount     int
+	missileCount  int
+	particleCount int
+	things        []*thing
+	items         []*item
+	missiles      []*missile
+	particles     []*particle
+	netLookup     map[uint16]*thing
+	PID           uint16
 }
 
 func worldInit(g *graphics.RenderSystem, gl js.Value) *world {
@@ -232,19 +234,191 @@ func (me *world) build() {
 	}
 }
 
-func (me *world) addThing(t *Thing) {
+func (me *world) getTileType(bx, by, bz, tx, ty, tz int) int {
+	for tx < 0 {
+		tx += BlockSize
+		bx--
+	}
+	for tx >= BlockSize {
+		tx -= BlockSize
+		bx++
+	}
+	for ty < 0 {
+		ty += BlockSize
+		by--
+	}
+	for ty >= BlockSize {
+		ty -= BlockSize
+		by++
+	}
+	for tz < 0 {
+		tz += BlockSize
+		bz--
+	}
+	for bz >= BlockSize {
+		tz -= BlockSize
+		bz++
+	}
+	block := me.getBlock(bx, by, bz)
+	if block == nil {
+		return TileNone
+	}
+	return block.getTileTypeUnsafe(tx, ty, tz)
 }
 
-func (me *world) removeThing(t *Thing) {
+func (me *world) getBlock(x, y, z int) *block {
+	if x < 0 || x >= me.width {
+		return nil
+	}
+	if y < 0 || y >= me.height {
+		return nil
+	}
+	if z < 0 || z >= me.length {
+		return nil
+	}
+	return me.blocks[x+y*me.width+z*me.slice]
 }
 
-func (me *world) addItem(t *Item) {
+func (me *world) addThing(t *thing) {
+	if me.thingCount == len(me.things) {
+		array := make([]*thing, me.thingCount+5)
+		copy(array, me.things)
+		me.things = array
+	}
+	me.things[me.thingCount] = t
+	me.thingCount++
+
+	me.netLookup[t.NID] = t
+
+	count, has := me.spriteCount[t.SID]
+	if has {
+		me.spriteCount[t.SID] = count + 1
+		b := me.spriteBuffer[t.SID]
+		if (count+2)*16 > len(b.Vertices) {
+			b.RenderBufferExpand(me.gl)
+		}
+	} else {
+		me.spriteCount[t.SID] = 1
+		me.spriteBuffer[t.SID] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
+	}
 }
 
-func (me *world) removeItem(t *Item) {
+func (me *world) addItem(t *item) {
+	if me.itemCount == len(me.items) {
+		array := make([]*item, me.itemCount+5)
+		copy(array, me.items)
+		me.items = array
+	}
+	me.items[me.itemCount] = t
+	me.itemCount++
+
+	me.netLookup[t.NID] = t
+
+	count, has := me.spriteCount[t.SID]
+	if has {
+		me.spriteCount[t.SID] = count + 1
+		b := me.spriteBuffer[t.SID]
+		if (count+2)*16 > len(b.Vertices) {
+			b.RenderBufferExpand(me.gl)
+		}
+	} else {
+		me.spriteCount[t.SID] = 1
+		me.spriteBuffer[t.SID] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
+	}
 }
 
-func (me *world) addMissile(t *Missile) {
+func (me *world) addMissile(t *missile) {
+	if me.missileCount == len(me.missiles) {
+		array := make([]*missile, me.missileCount+5)
+		copy(array, me.missiles)
+		me.missiles = array
+	}
+	me.missiles[me.missileCount] = t
+	me.missileCount++
+
+	me.netLookup[t.NID] = t
+
+	count, has := me.spriteCount[t.SID]
+	if has {
+		me.spriteCount[t.SID] = count + 1
+		b := me.spriteBuffer[t.SID]
+		if (count+2)*16 > len(b.Vertices) {
+			b.RenderBufferExpand(me.gl)
+		}
+	} else {
+		me.spriteCount[t.SID] = 1
+		me.spriteBuffer[t.SID] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
+	}
+}
+
+func (me *world) addParticle(t *particle) {
+	if me.particleCount == len(me.particles) {
+		array := make([]*particle, me.particleCount+5)
+		copy(array, me.particles)
+		me.particles = array
+	}
+	me.particles[me.particleCount] = t
+	me.particleCount++
+
+	count, has := me.spriteCount[t.SID]
+	if has {
+		me.spriteCount[t.SID] = count + 1
+		b := me.spriteBuffer[t.SID]
+		if (count+2)*16 > len(b.Vertices) {
+			b.RenderBufferExpand(me.gl)
+		}
+	} else {
+		me.spriteCount[t.SID] = 1
+		me.spriteBuffer[t.SID] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
+	}
+}
+
+func (me *world) removeThing(t *thing) {
+	size := me.thingCount
+	for i := 0; i < size; i++ {
+		if me.things[i] == t {
+			me.things[i] = me.things[size-1]
+			me.things[size-1] = nil
+			me.thingCount--
+			break
+		}
+	}
+}
+
+func (me *world) removeItem(t *item) {
+	size := me.itemCount
+	for i := 0; i < size; i++ {
+		if me.items[i] == t {
+			me.items[i] = me.items[size-1]
+			me.items[size-1] = nil
+			me.itemCount--
+			break
+		}
+	}
+}
+
+func (me *world) removeMissile(t *missile) {
+	size := me.missileCount
+	for i := 0; i < size; i++ {
+		if me.missiles[i] == t {
+			me.missiles[i] = me.missiles[size-1]
+			me.missiles[size-1] = nil
+			me.missileCount--
+			break
+		}
+	}
+}
+
+func (me *world) removeParticle(t *particle) {
+	size := me.particleCount
+	for i := 0; i < size; i++ {
+		if me.particles[i] == t {
+			me.particles[i] = me.particles[size-1]
+			me.particles[size-1] = nil
+			me.particleCount--
+			break
+		}
+	}
 }
 
 func (me *world) update() {

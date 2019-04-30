@@ -205,6 +205,7 @@ func appInit() *app {
 	}
 
 	graphics.SetupOpenGl(gl)
+	setupBlocks()
 
 	gl.Call("clearColor", 0, 0, 0, 1)
 	gl.Call("depthFunc", graphics.GLxLEqual)

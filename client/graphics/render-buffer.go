@@ -21,6 +21,18 @@ type RenderBuffer struct {
 	indicesJs   js.TypedArray
 }
 
+// RenderCopy struct
+type RenderCopy struct {
+	position    int
+	color       int
+	texture     int
+	VertexPos   int
+	IndexPos    int
+	IndexOffset uint32
+	Vertices    []float32
+	Indices     []uint32
+}
+
 // RenderBufferInit func
 func RenderBufferInit(gl js.Value, position, color, texture, vertexLimit, indexLimit int) *RenderBuffer {
 	b := &RenderBuffer{}
@@ -94,4 +106,25 @@ func (me *RenderBuffer) RenderBufferExpand(gl js.Value) {
 	}
 
 	RenderSystemUpdateVao(gl, me)
+}
+
+// RenderCopyInit func
+func RenderCopyInit(position, color, texture, vertexLimit, indexLimit int) *RenderCopy {
+	b := &RenderCopy{}
+	b.position = position
+	b.color = color
+	b.texture = texture
+	b.VertexPos = 0
+	b.IndexPos = 0
+	b.IndexOffset = 0
+	b.Vertices = make([]float32, vertexLimit*(position+color+texture))
+	b.Indices = make([]uint32, indexLimit)
+	return b
+}
+
+// Zero func
+func (me *RenderCopy) Zero() {
+	me.VertexPos = 0
+	me.IndexPos = 0
+	me.IndexOffset = 0
 }

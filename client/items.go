@@ -1,69 +1,89 @@
 package main
 
-// Item struct
-type Item struct {
-	world               *world
-	UID                 uint16
-	NID                 uint16
-	X, Y, Z             float32
-	MinBX, MinBY, MinBZ int
-	MaxBX, MaxBY, MaxBZ int
-	Radius              float32
-	Height              float32
+import (
+	"math"
+
+	"./graphics"
+	"./render"
+)
+
+type item struct {
+	world  *world
+	UID    uint16
+	SID    string
+	NID    uint16
+	sprite *render.Sprite
+	x      float32
+	y      float32
+	z      float32
+	minBX  int
+	minBY  int
+	minBZ  int
+	maxBX  int
+	maxBY  int
+	maxBZ  int
+	radius float32
+	height float32
 }
 
-// BlockBorders func
-func (me *Item) BlockBorders() {
-	me.MinBX = int((me.X - me.Radius) * InverseBlockSize)
-	me.MinBY = int(me.Y * InverseBlockSize)
-	me.MinBZ = int((me.Z - me.Radius) * InverseBlockSize)
-	me.MaxBX = int((me.X + me.Radius) * InverseBlockSize)
-	me.MaxBY = int((me.Y + me.Height) * InverseBlockSize)
-	me.MaxBZ = int((me.Z + me.Radius) * InverseBlockSize)
+func (me *item) blockBorders() {
+	me.minBX = int((me.x - me.radius) * InverseBlockSize)
+	me.minBY = int(me.y * InverseBlockSize)
+	me.minBZ = int((me.z - me.radius) * InverseBlockSize)
+	me.maxBX = int((me.x + me.radius) * InverseBlockSize)
+	me.maxBY = int((me.y + me.height) * InverseBlockSize)
+	me.maxBZ = int((me.z + me.radius) * InverseBlockSize)
 }
 
-// AddToBlocks func
-func (me *Item) AddToBlocks() {
-
-}
-
-func (me *Item) removeFromBlocks() {
-
-}
-
-// Overlap func
-func (me *Item) Overlap(b *Thing) bool {
-	square := me.Radius + b.Radius
-	return Abs(me.X-b.X) <= square && Abs(me.Z-b.Z) <= square
-}
-
-// Cleanup func
-func (me *Item) Cleanup() {
-	me.removeFromBlocks()
-	me.world.removeItem(me)
-}
-
-// LoadNewItem func
-func LoadNewItem(world *world, uid uint16, x, y, z float32) {
-	switch uid {
-	case MedkitUID:
-		NewMedkit(world, x, y, z)
+func (me *item) addToBlocks() {
+	for gx := me.minBX; gx <= me.maxBX; gx++ {
+		for gy := me.minBY; gy <= me.maxBY; gy++ {
+			for gz := me.minBZ; gz <= me.maxBZ; gz++ {
+				block := me.world.getBlock(gx, gy, gz)
+				block.addItem(me)
+			}
+		}
 	}
 }
 
-// NewMedkit func
-func NewMedkit(world *world, x, y, z float32) *Item {
-	me := &Item{}
+func (me *item) removeFromBlocks() {
+	for gx := me.minBX; gx <= me.maxBX; gx++ {
+		for gy := me.minBY; gy <= me.maxBY; gy++ {
+			for gz := me.minBZ; gz <= me.maxBZ; gz++ {
+				block := me.world.getBlock(gx, gy, gz)
+				block.removeItem(me)
+			}
+		}
+	}
+}
+
+func (me *item) cleanup() {
+	me.world.removeItem(me)
+	me.removeFromBlocks()
+}
+
+func (me *item) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ, camAngle float32) {
+	sin := float64(camX - me.x)
+	cos := float64(camZ - me.z)
+	length := math.Sqrt(sin*sin + cos*cos)
+	sin /= length
+	cos /= length
+	render.RendSprite(spriteBuffer[me.SID], me.x, me.y, me.z, float32(sin), float32(cos), me.sprite)
+}
+
+func medkitInit(world *world, nid uint16, x, y, z float32) *item {
+	me := &item{}
 	me.world = world
-	me.X = x
-	me.Y = y
-	me.Z = z
-	me.Radius = 0.3
-	me.Height = 0.3
-	me.BlockBorders()
-	me.AddToBlocks()
+	me.x = x
+	me.y = y
+	me.z = z
+	me.blockBorders()
+	me.addToBlocks()
 	me.UID = MedkitUID
-	me.NID = NextNID()
+	me.NID = nid
+	me.sprite = wadSpriteData[me.SID]["medkit"]
+	me.radius = 0.2
+	me.height = 0.2
 	world.addItem(me)
 	return me
 }

@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 )
 
-// Missile struct
-type Missile struct {
+// missile struct
+type missile struct {
 	World                  *World
 	UID                    uint16
 	NID                    uint16
@@ -17,11 +17,11 @@ type Missile struct {
 	Radius                 float32
 	Height                 float32
 	DamageAmount           int
-	Hit                    func(thing *Thing)
+	Hit                    func(thing *thing)
 }
 
-// BlockBorders func
-func (me *Missile) BlockBorders() {
+// blockBorders func
+func (me *missile) blockBorders() {
 	me.MinBX = int((me.X - me.Radius) * InverseBlockSize)
 	me.MinBY = int(me.Y * InverseBlockSize)
 	me.MinBZ = int((me.Z - me.Radius) * InverseBlockSize)
@@ -30,31 +30,31 @@ func (me *Missile) BlockBorders() {
 	me.MaxBZ = int((me.Z + me.Radius) * InverseBlockSize)
 }
 
-// AddToBlocks func
-func (me *Missile) AddToBlocks() bool {
+// addToBlocks func
+func (me *missile) addToBlocks() bool {
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				block := me.World.GetBlock(gx, gy, gz)
+				block := me.World.getBlock(gx, gy, gz)
 				if block == nil {
-					me.RemoveFromBlocks()
+					me.removeFromBlocks()
 					return true
 				}
-				block.AddMissile(me)
+				block.addMissile(me)
 			}
 		}
 	}
 	return false
 }
 
-// RemoveFromBlocks func
-func (me *Missile) RemoveFromBlocks() {
+// removeFromBlocks func
+func (me *missile) removeFromBlocks() {
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				block := me.World.GetBlock(gx, gy, gz)
+				block := me.World.getBlock(gx, gy, gz)
 				if block != nil {
-					block.RemoveMissile(me)
+					block.removeMissile(me)
 				}
 			}
 		}
@@ -62,20 +62,20 @@ func (me *Missile) RemoveFromBlocks() {
 }
 
 // Overlap func
-func (me *Missile) Overlap(b *Thing) bool {
+func (me *missile) Overlap(b *thing) bool {
 	square := me.Radius + b.Radius
 	return Abs(me.X-b.X) <= square && Abs(me.Z-b.Z) <= square
 }
 
 // Collision func
-func (me *Missile) Collision() bool {
-	searched := make(map[*Thing]bool)
+func (me *missile) Collision() bool {
+	searched := make(map[*thing]bool)
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				block := me.World.GetBlock(gx, gy, gz)
-				for t := 0; t < block.ThingCount; t++ {
-					thing := block.Things[t]
+				block := me.World.getBlock(gx, gy, gz)
+				for t := 0; t < block.thingCount; t++ {
+					thing := block.things[t]
 					if thing.Health > 0 {
 						if _, has := searched[thing]; !has {
 							searched[thing] = true
@@ -116,23 +116,23 @@ func (me *Missile) Collision() bool {
 }
 
 // Update func
-func (me *Missile) Update() bool {
+func (me *missile) Update() bool {
 	if me.Collision() {
 		return true
 	}
-	me.RemoveFromBlocks()
+	me.removeFromBlocks()
 	me.X += me.DeltaX
 	me.Y += me.DeltaY
 	me.Z += me.DeltaZ
-	me.BlockBorders()
-	if me.AddToBlocks() {
+	me.blockBorders()
+	if me.addToBlocks() {
 		return true
 	}
 	return me.Collision()
 }
 
 // Snap func
-func (me *Missile) Snap(raw *bytes.Buffer) {
+func (me *missile) Snap(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, me.UID)
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, float32(me.X))
@@ -145,14 +145,14 @@ func (me *Missile) Snap(raw *bytes.Buffer) {
 }
 
 // BroadcastNew func
-func (me *Missile) BroadcastNew() {
+func (me *missile) BroadcastNew() {
 	me.World.broadcastCount++
 	binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastNew)
 	me.Snap(me.World.broadcast)
 }
 
 // BroadcastDelete func
-func (me *Missile) BroadcastDelete() {
+func (me *missile) BroadcastDelete() {
 	me.World.broadcastCount++
 	binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastDelete)
 	binary.Write(me.World.broadcast, binary.LittleEndian, me.NID)
@@ -160,15 +160,15 @@ func (me *Missile) BroadcastDelete() {
 
 // NewPlasma func
 func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
-	me := &Missile{}
+	me := &missile{}
 	me.World = world
 	me.X = x
 	me.Y = y
 	me.Z = z
 	me.Radius = 0.2
 	me.Height = 0.2
-	me.BlockBorders()
-	if me.AddToBlocks() {
+	me.blockBorders()
+	if me.addToBlocks() {
 		return
 	}
 	me.UID = PlasmaUID
@@ -179,18 +179,18 @@ func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
 	me.DamageAmount = damage
 	me.Hit = me.PlasmaHit
 
-	world.AddMissile(me)
+	world.addMissile(me)
 	me.BroadcastNew()
 }
 
 // PlasmaHit func
-func (me *Missile) PlasmaHit(thing *Thing) {
+func (me *missile) PlasmaHit(thing *thing) {
 	me.X -= me.DeltaX
 	me.Y -= me.DeltaY
 	me.Z -= me.DeltaZ
 	if thing != nil {
 		thing.Damage(me.DamageAmount)
 	}
-	me.RemoveFromBlocks()
+	me.removeFromBlocks()
 	me.BroadcastDelete()
 }

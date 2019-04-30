@@ -52,8 +52,8 @@ func (me *Person) ConnectionLoop(server *Server) {
 
 	char := me.Character
 	char.Health = 0
-	char.World.RemoveThing(char.Thing)
-	char.RemoveFromBlocks()
+	char.World.removeThing(char.thing)
+	char.removeFromBlocks()
 
 	server.RemovePerson(me)
 }

@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 )
 
-// Block constants
+// block constants
 const (
 	BlockSize        = 8
 	InverseBlockSize = 1.0 / BlockSize
@@ -13,28 +13,27 @@ const (
 	BlockAll         = BlockSlice * BlockSize
 )
 
-// Block struct
-type Block struct {
+type block struct {
 	X, Y, Z      int
 	Tiles        [BlockAll]int
-	ThingCount   int
-	ItemCount    int
-	MissileCount int
-	Things       []*Thing
-	Items        []*Item
-	Missiles     []*Missile
-	Lights       []*Light
-	LightCount   int
+	thingCount   int
+	itemCount    int
+	missileCount int
+	things       []*thing
+	items        []*item
+	missiles     []*missile
+	lights       []*light
+	lightCount   int
 }
 
 // NewBlock func
-func NewBlock(x, y, z int) *Block {
-	b := &Block{X: x, Y: y, Z: z}
+func NewBlock(x, y, z int) *block {
+	b := &block{X: x, Y: y, Z: z}
 	return b
 }
 
 // Save func
-func (me *Block) Save(raw *bytes.Buffer) {
+func (me *block) Save(raw *bytes.Buffer) {
 	notEmpty := me.NotEmpty()
 	binary.Write(raw, binary.LittleEndian, notEmpty)
 	if notEmpty == 1 {
@@ -42,14 +41,14 @@ func (me *Block) Save(raw *bytes.Buffer) {
 			binary.Write(raw, binary.LittleEndian, uint8(me.Tiles[i]))
 		}
 	}
-	binary.Write(raw, binary.LittleEndian, uint8(me.LightCount))
-	for i := 0; i < me.LightCount; i++ {
-		me.Lights[i].Save(raw)
+	binary.Write(raw, binary.LittleEndian, uint8(me.lightCount))
+	for i := 0; i < me.lightCount; i++ {
+		me.lights[i].Save(raw)
 	}
 }
 
 // NotEmpty func
-func (me *Block) NotEmpty() uint8 {
+func (me *block) NotEmpty() uint8 {
 	for i := 0; i < BlockAll; i++ {
 		if me.Tiles[i] != TileNone {
 			return 1
@@ -59,102 +58,94 @@ func (me *Block) NotEmpty() uint8 {
 }
 
 // GetTileTypeUnsafe func
-func (me *Block) GetTileTypeUnsafe(x, y, z int) int {
+func (me *block) GetTileTypeUnsafe(x, y, z int) int {
 	return me.Tiles[x+y*BlockSize+z*BlockSlice]
 }
 
-// AddThing func
-func (me *Block) AddThing(t *Thing) {
-	if me.ThingCount == len(me.Things) {
-		array := make([]*Thing, me.ThingCount+5)
-		copy(array, me.Things)
-		me.Things = array
+func (me *block) addThing(t *thing) {
+	if me.thingCount == len(me.things) {
+		array := make([]*thing, me.thingCount+5)
+		copy(array, me.things)
+		me.things = array
 	}
-	me.Things[me.ThingCount] = t
-	me.ThingCount++
+	me.things[me.thingCount] = t
+	me.thingCount++
 }
 
-// RemoveThing func
-func (me *Block) RemoveThing(t *Thing) {
-	for i := 0; i < me.ThingCount; i++ {
-		if me.Things[i] == t {
-			for j := i; j < me.ThingCount-1; j++ {
-				me.Things[j] = me.Things[j+1]
-			}
-			me.ThingCount--
-			return
+func (me *block) addItem(t *item) {
+	if me.itemCount == len(me.items) {
+		array := make([]*item, me.itemCount+5)
+		copy(array, me.items)
+		me.items = array
+	}
+	me.items[me.itemCount] = t
+	me.itemCount++
+}
+
+func (me *block) addMissile(t *missile) {
+	if me.missileCount == len(me.missiles) {
+		array := make([]*missile, me.missileCount+5)
+		copy(array, me.missiles)
+		me.missiles = array
+	}
+	me.missiles[me.missileCount] = t
+	me.missileCount++
+}
+
+func (me *block) addLight(t *light) {
+	if me.lightCount == len(me.lights) {
+		array := make([]*light, me.lightCount+5)
+		copy(array, me.lights)
+		me.lights = array
+	}
+	me.lights[me.lightCount] = t
+	me.lightCount++
+}
+
+func (me *block) removeThing(t *thing) {
+	size := me.thingCount
+	for i := 0; i < size; i++ {
+		if me.things[i] == t {
+			me.things[i] = me.things[size-1]
+			me.things[size-1] = nil
+			me.thingCount--
+			break
 		}
 	}
 }
 
-// AddItem func
-func (me *Block) AddItem(t *Item) {
-	if me.ItemCount == len(me.Items) {
-		array := make([]*Item, me.ItemCount+5)
-		copy(array, me.Items)
-		me.Items = array
-	}
-	me.Items[me.ItemCount] = t
-	me.ItemCount++
-}
-
-// RemoveItem func
-func (me *Block) RemoveItem(t *Item) {
-	for i := 0; i < me.ItemCount; i++ {
-		if me.Items[i] == t {
-			for j := i; j < me.ItemCount-1; j++ {
-				me.Items[j] = me.Items[j+1]
-			}
-			me.ItemCount--
-			return
+func (me *block) removeItem(t *item) {
+	size := me.itemCount
+	for i := 0; i < size; i++ {
+		if me.items[i] == t {
+			me.items[i] = me.items[size-1]
+			me.items[size-1] = nil
+			me.itemCount--
+			break
 		}
 	}
 }
 
-// AddMissile func
-func (me *Block) AddMissile(t *Missile) {
-	if me.MissileCount == len(me.Missiles) {
-		array := make([]*Missile, me.MissileCount+5)
-		copy(array, me.Missiles)
-		me.Missiles = array
-	}
-	me.Missiles[me.MissileCount] = t
-	me.MissileCount++
-}
-
-// RemoveMissile func
-func (me *Block) RemoveMissile(t *Missile) {
-	for i := 0; i < me.MissileCount; i++ {
-		if me.Missiles[i] == t {
-			for j := i; j < me.MissileCount-1; j++ {
-				me.Missiles[j] = me.Missiles[j+1]
-			}
-			me.MissileCount--
-			return
+func (me *block) removeMissile(t *missile) {
+	size := me.missileCount
+	for i := 0; i < size; i++ {
+		if me.missiles[i] == t {
+			me.missiles[i] = me.missiles[size-1]
+			me.missiles[size-1] = nil
+			me.missileCount--
+			break
 		}
 	}
 }
 
-// AddLight func
-func (me *Block) AddLight(t *Light) {
-	if me.LightCount == len(me.Lights) {
-		array := make([]*Light, me.LightCount+5)
-		copy(array, me.Lights)
-		me.Lights = array
-	}
-	me.Lights[me.LightCount] = t
-	me.LightCount++
-}
-
-// RemoveLight func
-func (me *Block) RemoveLight(t *Light) {
-	for i := 0; i < me.LightCount; i++ {
-		if me.Lights[i] == t {
-			for j := i; j < me.LightCount-1; j++ {
-				me.Lights[j] = me.Lights[j+1]
-			}
-			me.LightCount--
-			return
+func (me *block) removeLight(t *light) {
+	size := me.lightCount
+	for i := 0; i < size; i++ {
+		if me.lights[i] == t {
+			me.lights[i] = me.lights[size-1]
+			me.lights[size-1] = nil
+			me.lightCount--
+			break
 		}
 	}
 }

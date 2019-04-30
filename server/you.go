@@ -34,7 +34,7 @@ const (
 
 // You struct
 type You struct {
-	*Thing
+	*thing
 	Status      int
 	DeltaAngle  bool
 	DeltaHealth bool
@@ -45,14 +45,14 @@ type You struct {
 // NewYou func
 func NewYou(world *World, person *Person, x, y, z float32) *You {
 	you := &You{}
-	you.Thing = &Thing{}
+	you.thing = &thing{}
 	you.UID = HumanUID
 	you.NID = NextNID()
 	you.World = world
-	you.Thing.Update = you.Update
-	you.Thing.Damage = you.Damage
-	you.Thing.Save = you.Save
-	you.Thing.Snap = you.Snap
+	you.thing.Update = you.Update
+	you.thing.Damage = you.Damage
+	you.thing.Save = you.Save
+	you.thing.Snap = you.Snap
 	you.X = x
 	you.Y = y
 	you.Z = z
@@ -63,9 +63,9 @@ func NewYou(world *World, person *Person, x, y, z float32) *You {
 	you.Group = HumanGroup
 	you.Status = HumanIdle
 	you.Person = person
-	world.AddThing(you.Thing)
-	you.BlockBorders()
-	you.AddToBlocks()
+	world.addThing(you.thing)
+	you.blockBorders()
+	you.addToBlocks()
 	return you
 }
 
@@ -137,10 +137,10 @@ func (me *You) Search() {
 	gy := me.MinBY
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-			block := me.World.GetBlock(gx, gy, gz)
-			for i := 0; i < block.ItemCount; i++ {
-				item := block.Items[i]
-				if item.Overlap(me.Thing) {
+			block := me.World.getBlock(gx, gy, gz)
+			for i := 0; i < block.itemCount; i++ {
+				item := block.items[i]
+				if item.Overlap(me.thing) {
 					item.Cleanup()
 					return
 				}
@@ -163,22 +163,22 @@ func (me *You) Damage(amount int) {
 		me.DeltaStatus = true
 		me.AnimationFrame = 0
 		me.Animation = HumanDeathAnimation
-		me.RemoveFromBlocks()
+		me.removeFromBlocks()
 	}
 }
 
 // Dead func
 func (me *You) Dead() {
 	if me.AnimationFrame == me.Animation-1 {
-		me.Thing.Update = me.NopUpdate
-		me.Thing.Snap = me.NopSnap
+		me.thing.Update = me.NopUpdate
+		me.thing.Snap = me.NopSnap
 	} else {
 		me.UpdateAnimation()
 	}
 }
 
-// Missile func
-func (me *You) Missile() {
+// missile func
+func (me *You) missile() {
 	anim := me.UpdateAnimation()
 	if anim == AnimationAlmostDone {
 		const speed = 0.5
@@ -284,7 +284,7 @@ func (me *You) Update() bool {
 	case HumanDead:
 		me.Dead()
 	case HumanMissile:
-		me.Missile()
+		me.missile()
 	default:
 		me.Walk()
 	}

@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-// Thing constants
+// thing constants
 const (
 	AnimationRate       = 5
 	Gravity             = 0.01
@@ -30,13 +30,13 @@ const (
 	DemonGroup = 2
 )
 
-// Thing variables
+// thing variables
 var (
-	ThingNetworkNum = uint16(0)
+	thingNetworkNum = uint16(0)
 )
 
-// Thing struct
-type Thing struct {
+// thing struct
+type thing struct {
 	World                  *World
 	UID                    uint16
 	NID                    uint16
@@ -65,12 +65,12 @@ type Thing struct {
 
 // NextNID func
 func NextNID() uint16 {
-	ThingNetworkNum++
-	return ThingNetworkNum
+	thingNetworkNum++
+	return thingNetworkNum
 }
 
-// LoadNewThing func
-func LoadNewThing(world *World, uid uint16, x, y, z float32) {
+// LoadNewthing func
+func LoadNewthing(world *World, uid uint16, x, y, z float32) {
 	switch uid {
 	case BaronUID:
 		NewBaron(world, x, y, z)
@@ -80,21 +80,21 @@ func LoadNewThing(world *World, uid uint16, x, y, z float32) {
 }
 
 // NopUpdate func
-func (me *Thing) NopUpdate() bool {
+func (me *thing) NopUpdate() bool {
 	return false
 }
 
 // NopSnap func
-func (me *Thing) NopSnap(raw *bytes.Buffer) {
+func (me *thing) NopSnap(raw *bytes.Buffer) {
 	me.Binary = nil
 }
 
 // NopDamage func
-func (me *Thing) NopDamage(amount int) {
+func (me *thing) NopDamage(amount int) {
 }
 
-// BlockBorders func
-func (me *Thing) BlockBorders() {
+// blockBorders func
+func (me *thing) blockBorders() {
 	me.MinBX = int((me.X - me.Radius) * InverseBlockSize)
 	me.MinBY = int(me.Y * InverseBlockSize)
 	me.MinBZ = int((me.Z - me.Radius) * InverseBlockSize)
@@ -103,30 +103,30 @@ func (me *Thing) BlockBorders() {
 	me.MaxBZ = int((me.Z + me.Radius) * InverseBlockSize)
 }
 
-// AddToBlocks func
-func (me *Thing) AddToBlocks() {
+// addToBlocks func
+func (me *thing) addToBlocks() {
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				me.World.GetBlock(gx, gy, gz).AddThing(me)
+				me.World.getBlock(gx, gy, gz).addThing(me)
 			}
 		}
 	}
 }
 
-// RemoveFromBlocks func
-func (me *Thing) RemoveFromBlocks() {
+// removeFromBlocks func
+func (me *thing) removeFromBlocks() {
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				me.World.GetBlock(gx, gy, gz).RemoveThing(me)
+				me.World.getBlock(gx, gy, gz).removeThing(me)
 			}
 		}
 	}
 }
 
 // UpdateAnimation func
-func (me *Thing) UpdateAnimation() int {
+func (me *thing) UpdateAnimation() int {
 	me.AnimationFrame++
 	if me.AnimationFrame == me.Animation-AnimationRate {
 		return AnimationAlmostDone
@@ -137,7 +137,7 @@ func (me *Thing) UpdateAnimation() int {
 }
 
 // TerrainCollisionXZ func
-func (me *Thing) TerrainCollisionXZ() {
+func (me *thing) TerrainCollisionXZ() {
 	minGX := int((me.X - me.Radius))
 	minGY := int(me.Y)
 	minGZ := int((me.Z - me.Radius))
@@ -164,7 +164,7 @@ func (me *Thing) TerrainCollisionXZ() {
 			bz := minBZ
 			tz := minTZ
 			for gz := minGZ; gz <= maxGZ; gz++ {
-				block := world.GetBlock(bx, by, bz)
+				block := world.getBlock(bx, by, bz)
 				tile := block.GetTileTypeUnsafe(tx, ty, tz)
 				if TileClosed[tile] {
 					xx := float32(gx)
@@ -219,7 +219,7 @@ func (me *Thing) TerrainCollisionXZ() {
 }
 
 // TerrainCollisionY func
-func (me *Thing) TerrainCollisionY() {
+func (me *thing) TerrainCollisionY() {
 	if me.DeltaY < 0 {
 		gx := int(me.X)
 		gy := int(me.Y)
@@ -241,7 +241,7 @@ func (me *Thing) TerrainCollisionY() {
 }
 
 // Resolve func
-func (me *Thing) Resolve(b *Thing) {
+func (me *thing) Resolve(b *thing) {
 	square := me.Radius + b.Radius
 	absx := Abs(me.X - b.X)
 	absz := Abs(me.Z - b.Z)
@@ -268,19 +268,19 @@ func (me *Thing) Resolve(b *Thing) {
 }
 
 // Overlap func
-func (me *Thing) Overlap(b *Thing) bool {
+func (me *thing) Overlap(b *thing) bool {
 	square := me.Radius + b.Radius
 	return Abs(me.X-b.X) <= square && Abs(me.Z-b.Z) <= square
 }
 
 // TryOverlap func
-func (me *Thing) TryOverlap(x, z float32, b *Thing) bool {
+func (me *thing) TryOverlap(x, z float32, b *thing) bool {
 	square := me.Radius + b.Radius
 	return Abs(x-b.X) <= square && Abs(z-b.Z) <= square
 }
 
 // ApproximateDistance func
-func (me *Thing) ApproximateDistance(other *Thing) float32 {
+func (me *thing) ApproximateDistance(other *thing) float32 {
 	dx := Abs(me.X - other.X)
 	dz := Abs(me.Z - other.Z)
 	if dx > dz {
@@ -290,7 +290,7 @@ func (me *Thing) ApproximateDistance(other *Thing) float32 {
 }
 
 // IntegrateXZ func
-func (me *Thing) IntegrateXZ() {
+func (me *thing) IntegrateXZ() {
 	me.OldX = me.X
 	me.OldZ = me.Z
 
@@ -298,18 +298,18 @@ func (me *Thing) IntegrateXZ() {
 	me.Z += me.DeltaZ
 	me.DeltaMoveXZ = true
 
-	collided := make([]*Thing, 0)
-	searched := make(map[*Thing]bool)
+	collided := make([]*thing, 0)
+	searched := make(map[*thing]bool)
 
-	me.RemoveFromBlocks()
-	me.BlockBorders()
+	me.removeFromBlocks()
+	me.blockBorders()
 
 	for gx := me.MinBX; gx <= me.MaxBX; gx++ {
 		for gy := me.MinBY; gy <= me.MaxBY; gy++ {
 			for gz := me.MinBZ; gz <= me.MaxBZ; gz++ {
-				block := me.World.GetBlock(gx, gy, gz)
-				for t := 0; t < block.ThingCount; t++ {
-					thing := block.Things[t]
+				block := me.World.getBlock(gx, gy, gz)
+				for t := 0; t < block.thingCount; t++ {
+					thing := block.things[t]
 					if _, has := searched[thing]; !has {
 						searched[thing] = true
 						if me.Overlap(thing) {
@@ -340,23 +340,23 @@ func (me *Thing) IntegrateXZ() {
 
 	me.TerrainCollisionXZ()
 
-	me.BlockBorders()
-	me.AddToBlocks()
+	me.blockBorders()
+	me.addToBlocks()
 
 	me.DeltaX = 0.0
 	me.DeltaZ = 0.0
 }
 
 // IntegrateY func
-func (me *Thing) IntegrateY() {
+func (me *thing) IntegrateY() {
 	if !me.Ground {
 		me.DeltaY -= Gravity
 		me.Y += me.DeltaY
 		me.DeltaMoveY = true
 		me.TerrainCollisionY()
 
-		me.RemoveFromBlocks()
-		me.BlockBorders()
-		me.AddToBlocks()
+		me.removeFromBlocks()
+		me.blockBorders()
+		me.addToBlocks()
 	}
 }

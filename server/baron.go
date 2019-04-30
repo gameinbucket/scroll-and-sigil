@@ -39,14 +39,14 @@ type Baron struct {
 func NewBaron(world *World, x, y, z float32) *Baron {
 	baron := &Baron{}
 	baron.Npc = &Npc{}
-	baron.Thing = &Thing{}
+	baron.thing = &thing{}
 	baron.UID = BaronUID
 	baron.NID = NextNID()
 	baron.World = world
-	baron.Thing.Update = baron.Update
-	baron.Thing.Damage = baron.Damage
-	baron.Thing.Save = baron.Save
-	baron.Thing.Snap = baron.Snap
+	baron.thing.Update = baron.Update
+	baron.thing.Damage = baron.Damage
+	baron.thing.Save = baron.Save
+	baron.thing.Snap = baron.Snap
 	baron.X = x
 	baron.Y = y
 	baron.Z = z
@@ -60,9 +60,9 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 	baron.Status = BaronLook
 	baron.MeleeRange = 2.0
 	baron.MissileRange = 10.0
-	world.AddThing(baron.Thing)
-	baron.BlockBorders()
-	baron.AddToBlocks()
+	world.addThing(baron.thing)
+	baron.blockBorders()
+	baron.addToBlocks()
 	return baron
 }
 
@@ -142,15 +142,15 @@ func (me *Baron) Damage(amount int) {
 		me.DeltaStatus = true
 		me.AnimationFrame = 0
 		me.Animation = BaronDeathAnimation
-		me.RemoveFromBlocks()
+		me.removeFromBlocks()
 	}
 }
 
 // Dead func
 func (me *Baron) Dead() {
 	if me.AnimationFrame == me.Animation-1 {
-		me.Thing.Update = me.NopUpdate
-		me.Thing.Snap = me.NopSnap
+		me.thing.Update = me.NopUpdate
+		me.thing.Snap = me.NopSnap
 	} else {
 		me.UpdateAnimation()
 	}
@@ -158,8 +158,8 @@ func (me *Baron) Dead() {
 
 // Look func
 func (me *Baron) Look() {
-	for i := 0; i < me.World.ThingCount; i++ {
-		thing := me.World.Things[i]
+	for i := 0; i < me.World.thingCount; i++ {
+		thing := me.World.things[i]
 		if thing.Group == HumanGroup && thing.Health > 0 {
 			me.Target = thing
 			me.Status = BaronChase
@@ -188,8 +188,8 @@ func (me *Baron) Melee() {
 	}
 }
 
-// Missile func
-func (me *Baron) Missile() {
+// missile func
+func (me *Baron) missile() {
 	anim := me.UpdateAnimation()
 	if anim == AnimationAlmostDone {
 		me.Reaction = 40 + NextRandP()%220
@@ -255,7 +255,7 @@ func (me *Baron) Update() bool {
 	case BaronMelee:
 		me.Melee()
 	case BaronMissile:
-		me.Missile()
+		me.missile()
 	case BaronChase:
 		me.Chase()
 	}

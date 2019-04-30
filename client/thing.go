@@ -1,20 +1,36 @@
 package main
 
 import (
-	"bytes"
+	"./graphics"
 )
 
-// Thing constants
+// Constants
 const (
-	AnimationRate       = 5
-	Gravity             = 0.01
+	Gravity = 0.01
+
+	AnimationRate = 16
+
 	AnimationNotDone    = 0
 	AnimationAlmostDone = 1
 	AnimationDone       = 2
-)
 
-// UID constants
-const (
+	AnimationFront     = 0
+	AnimationFrontSide = 1
+	AnimationSide      = 2
+	AnimationBackSide  = 3
+	AnimationBack      = 4
+
+	DirectionNorth     = 0
+	DirectionNorthEast = 1
+	DirectionEast      = 2
+	DirectionSouthEast = 3
+	DirectionSouth     = 4
+	DirectionSouthWest = 5
+	DirectionWest      = 6
+	DirectionNorthWest = 7
+	DirectionCount     = 8
+	DirectionNone      = 8
+
 	HumanUID  = uint16(0)
 	BaronUID  = uint16(1)
 	TreeUID   = uint16(2)
@@ -22,175 +38,57 @@ const (
 	MedkitUID = uint16(4)
 )
 
-// Group constants
-const (
-	NoGroup    = 0
-	HumanGroup = 1
-	DemonGroup = 2
-)
-
-// Thing variables
+// Variables
 var (
-	ThingNetworkNum = uint16(0)
+	DirectionToAngle = []float32{
+		0.0 * DegToRad,
+		45.0 * DegToRad,
+		90.0 * DegToRad,
+		135.0 * DegToRad,
+		180.0 * DegToRad,
+		225.0 * DegToRad,
+		270.0 * DegToRad,
+		315.0 * DegToRad,
+	}
 )
 
-// Thing struct
-type Thing struct {
-	world                  *world
-	UID                    uint16
-	NID                    uint16
-	Animation              int
-	AnimationFrame         int
-	X, Y, Z                float32
-	Angle                  float32
-	DeltaX, DeltaY, DeltaZ float32
-	OldX, OldZ             float32
-	MinBX, MinBY, MinBZ    int
-	MaxBX, MaxBY, MaxBZ    int
-	Ground                 bool
-	Radius                 float32
-	Height                 float32
-	Speed                  float32
-	Health                 int
-	Group                  int
-	DeltaMoveXZ            bool
-	DeltaMoveY             bool
-	Update                 func() bool
-	Damage                 func(int)
-	Save                   func(raw *bytes.Buffer)
-	Snap                   func(raw *bytes.Buffer)
-	Binary                 []byte
+type thing struct {
+	world          *world
+	UID            uint16
+	SID            string
+	NID            uint16
+	animation      []int
+	animationMod   int
+	animationFrame int
+	x              float32
+	y              float32
+	z              float32
+	angle          float32
+	deltaX         float32
+	deltaY         float32
+	deltaZ         float32
+	oldX           float32
+	oldY           float32
+	oldZ           float32
+	netX           float32
+	netY           float32
+	netZ           float32
+	deltaNetX      float32
+	deltaNetY      float32
+	deltaNetZ      float32
+	minBX          int
+	minBY          int
+	minBZ          int
+	maxBX          int
+	maxBY          int
+	maxBZ          int
+	ground         bool
+	radius         float32
+	height         float32
+	speed          float32
+	health         int
 }
 
-// NextNID func
-func NextNID() uint16 {
-	ThingNetworkNum++
-	return ThingNetworkNum
-}
+func (me *thing) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ, camAngle float32) {
 
-// LoadNewThing func
-func LoadNewThing(world *world, uid uint16, x, y, z float32) {
-
-}
-
-// NopUpdate func
-func (me *Thing) NopUpdate() bool {
-	return false
-}
-
-// NopSnap func
-func (me *Thing) NopSnap(raw *bytes.Buffer) {
-	me.Binary = nil
-}
-
-// NopDamage func
-func (me *Thing) NopDamage(amount int) {
-}
-
-// BlockBorders func
-func (me *Thing) BlockBorders() {
-	me.MinBX = int((me.X - me.Radius) * InverseBlockSize)
-	me.MinBY = int(me.Y * InverseBlockSize)
-	me.MinBZ = int((me.Z - me.Radius) * InverseBlockSize)
-	me.MaxBX = int((me.X + me.Radius) * InverseBlockSize)
-	me.MaxBY = int((me.Y + me.Height) * InverseBlockSize)
-	me.MaxBZ = int((me.Z + me.Radius) * InverseBlockSize)
-}
-
-// AddToBlocks func
-func (me *Thing) AddToBlocks() {
-
-}
-
-// RemoveFromBlocks func
-func (me *Thing) RemoveFromBlocks() {
-}
-
-// UpdateAnimation func
-func (me *Thing) UpdateAnimation() int {
-	me.AnimationFrame++
-	if me.AnimationFrame == me.Animation-AnimationRate {
-		return AnimationAlmostDone
-	} else if me.AnimationFrame == me.Animation {
-		return AnimationDone
-	}
-	return AnimationNotDone
-}
-
-// TerrainCollisionXZ func
-func (me *Thing) TerrainCollisionXZ() {
-
-}
-
-// TerrainCollisionY func
-func (me *Thing) TerrainCollisionY() {
-
-}
-
-// Resolve func
-func (me *Thing) Resolve(b *Thing) {
-	square := me.Radius + b.Radius
-	absx := Abs(me.X - b.X)
-	absz := Abs(me.Z - b.Z)
-	if absx > square || absz > square {
-		return
-	}
-	x := me.OldX - b.X
-	z := me.OldZ - b.Z
-	if Abs(x) > Abs(z) {
-		if x < 0 {
-			me.X = b.X - square
-		} else {
-			me.X = b.X + square
-		}
-		me.DeltaX = 0.0
-	} else {
-		if z < 0 {
-			me.Z = b.Z - square
-		} else {
-			me.Z = b.Z + square
-		}
-		me.DeltaZ = 0.0
-	}
-}
-
-// Overlap func
-func (me *Thing) Overlap(b *Thing) bool {
-	square := me.Radius + b.Radius
-	return Abs(me.X-b.X) <= square && Abs(me.Z-b.Z) <= square
-}
-
-// TryOverlap func
-func (me *Thing) TryOverlap(x, z float32, b *Thing) bool {
-	square := me.Radius + b.Radius
-	return Abs(x-b.X) <= square && Abs(z-b.Z) <= square
-}
-
-// ApproximateDistance func
-func (me *Thing) ApproximateDistance(other *Thing) float32 {
-	dx := Abs(me.X - other.X)
-	dy := Abs(me.Z - other.Z)
-	if dx > dy {
-		return dx + dy - dy*0.5
-	}
-	return dx + dy - dx*0.5
-}
-
-// IntegrateXZ func
-func (me *Thing) IntegrateXZ() {
-
-}
-
-// IntegrateY func
-func (me *Thing) IntegrateY() {
-	if !me.Ground {
-		me.DeltaY -= Gravity
-		me.Y += me.DeltaY
-		me.DeltaMoveY = true
-		me.TerrainCollisionY()
-
-		me.RemoveFromBlocks()
-		me.BlockBorders()
-		me.AddToBlocks()
-	}
 }

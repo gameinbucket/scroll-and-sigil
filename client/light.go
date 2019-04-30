@@ -17,3 +17,11 @@ func lightInit(x, y, z uint8, rgb int32) *light {
 	l.rgb = rgb
 	return l
 }
+
+func (me *light) save() string {
+	return ""
+}
+
+func computeLight(w *world, b *block, l *light) {
+
+}

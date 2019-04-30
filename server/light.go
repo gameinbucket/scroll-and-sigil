@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 )
 
-// Light struct
-type Light struct {
+// light struct
+type light struct {
 	X   int
 	Y   int
 	Z   int
@@ -14,13 +14,13 @@ type Light struct {
 }
 
 // NewLight func
-func NewLight(x, y, z, rgb int) *Light {
-	light := &Light{X: x, Y: y, Z: z, RGB: rgb}
+func NewLight(x, y, z, rgb int) *light {
+	light := &light{X: x, Y: y, Z: z, RGB: rgb}
 	return light
 }
 
 // Save func
-func (me *Light) Save(raw *bytes.Buffer) {
+func (me *light) Save(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, uint8(me.X))
 	binary.Write(raw, binary.LittleEndian, uint8(me.Y))
 	binary.Write(raw, binary.LittleEndian, uint8(me.Z))

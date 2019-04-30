@@ -3,7 +3,7 @@ package main
 import "math"
 
 type camera struct {
-	thing  *Thing
+	thing  *thing
 	radius float32
 	x      float32
 	y      float32
@@ -12,7 +12,7 @@ type camera struct {
 	ry     float32
 }
 
-func cameraInit(world *world, thing *Thing, radius float32) *camera {
+func cameraInit(world *world, thing *thing, radius float32) *camera {
 	c := &camera{}
 	c.thing = thing
 	c.radius = radius
@@ -59,9 +59,9 @@ func (me *camera) update(world *world) {
 	dy := float32(sinX)
 	dz := float32(cosX * cosY)
 
-	x := thing.X + me.radius*dx
-	y := thing.Y + me.radius*dy + thing.Height
-	z := thing.Z + me.radius*dz
+	x := thing.x + me.radius*dx
+	y := thing.y + me.radius*dy + thing.height
+	z := thing.z + me.radius*dz
 
 	// Cast.Exact(world, thing.X, thing.Y + thing.Height, thing.Z, x, y, z)
 
