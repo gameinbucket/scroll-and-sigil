@@ -16,7 +16,7 @@ type missile struct {
 	MaxBX, MaxBY, MaxBZ    int
 	Radius                 float32
 	Height                 float32
-	DamageAmount           int
+	DamageAmount           uint16
 	Hit                    func(thing *thing)
 }
 
@@ -159,7 +159,7 @@ func (me *missile) BroadcastDelete() {
 }
 
 // NewPlasma func
-func NewPlasma(world *World, damage int, x, y, z, dx, dy, dz float32) {
+func NewPlasma(world *World, damage uint16, x, y, z, dx, dy, dz float32) {
 	me := &missile{}
 	me.World = world
 	me.X = x

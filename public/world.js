@@ -45,7 +45,6 @@ class World {
         this.blocks = []
         this.viewable = []
         this.spriteSet = new Set()
-        this.spriteBuffer = new Map()
         this.spriteCount = new Map()
         this.thingCount = 0
         this.itemCount = 0

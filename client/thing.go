@@ -2,6 +2,7 @@ package main
 
 import (
 	"./graphics"
+	"./render"
 )
 
 // Constants
@@ -54,10 +55,10 @@ var (
 
 type thing struct {
 	world          *world
-	UID            uint16
-	SID            string
-	NID            uint16
-	animation      []int
+	uid            uint16
+	sid            string
+	nid            uint16
+	animation      [][]*render.Sprite
 	animationMod   int
 	animationFrame int
 	x              float32
@@ -86,7 +87,45 @@ type thing struct {
 	radius         float32
 	height         float32
 	speed          float32
-	health         int
+	health         uint16
+	update         func() bool
+	damage         func(uint16)
+}
+
+func (me *thing) blockBorders() {
+	me.minBX = int((me.x - me.radius) * InverseBlockSize)
+	me.minBY = int(me.y * InverseBlockSize)
+	me.minBZ = int((me.z - me.radius) * InverseBlockSize)
+	me.maxBX = int((me.x + me.radius) * InverseBlockSize)
+	me.maxBY = int((me.y + me.height) * InverseBlockSize)
+	me.maxBZ = int((me.z + me.radius) * InverseBlockSize)
+}
+
+func (me *thing) addToBlocks() {
+	for gx := me.minBX; gx <= me.maxBX; gx++ {
+		for gy := me.minBY; gy <= me.maxBY; gy++ {
+			for gz := me.minBZ; gz <= me.maxBZ; gz++ {
+				block := me.world.getBlock(gx, gy, gz)
+				block.addThing(me)
+			}
+		}
+	}
+}
+
+func (me *thing) removeFromBlocks() {
+	for gx := me.minBX; gx <= me.maxBX; gx++ {
+		for gy := me.minBY; gy <= me.maxBY; gy++ {
+			for gz := me.minBZ; gz <= me.maxBZ; gz++ {
+				block := me.world.getBlock(gx, gy, gz)
+				block.removeThing(me)
+			}
+		}
+	}
+}
+
+func (me *thing) cleanup() {
+	me.world.removeThing(me)
+	me.removeFromBlocks()
 }
 
 func (me *thing) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ, camAngle float32) {

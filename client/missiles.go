@@ -9,9 +9,9 @@ import (
 
 type missile struct {
 	world   *world
-	UID     uint16
-	SID     string
-	NID     uint16
+	uid     uint16
+	sid     string
+	nid     uint16
 	sprite  *render.Sprite
 	x       float32
 	y       float32
@@ -83,7 +83,7 @@ func (me *missile) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, 
 	length := math.Sqrt(sin*sin + cos*cos)
 	sin /= length
 	cos /= length
-	render.RendSprite(spriteBuffer[me.SID], me.x, me.y, me.z, float32(sin), float32(cos), me.sprite)
+	render.RendSprite(spriteBuffer[me.sid], me.x, me.y, me.z, float32(sin), float32(cos), me.sprite)
 }
 
 func plasmaInit(world *world, nid uint16, damage uint16, x, y, z, dx, dy, dz float32) {
@@ -96,9 +96,9 @@ func plasmaInit(world *world, nid uint16, damage uint16, x, y, z, dx, dy, dz flo
 	if me.addToBlocks() {
 		return
 	}
-	me.UID = PlasmaUID
-	me.NID = nid
-	me.sprite = wadSpriteData[me.SID]["baron-missile-front-1"]
+	me.uid = PlasmaUID
+	me.nid = nid
+	me.sprite = wadSpriteData[me.sid]["baron-missile-front-1"]
 	me.deltaX = dx * InverseNetRate
 	me.deltaY = dy * InverseNetRate
 	me.deltaZ = dz * InverseNetRate

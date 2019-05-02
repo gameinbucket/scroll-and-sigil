@@ -9,9 +9,9 @@ import (
 
 type item struct {
 	world  *world
-	UID    uint16
-	SID    string
-	NID    uint16
+	uid    uint16
+	sid    string
+	nid    uint16
 	sprite *render.Sprite
 	x      float32
 	y      float32
@@ -68,7 +68,7 @@ func (me *item) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, cam
 	length := math.Sqrt(sin*sin + cos*cos)
 	sin /= length
 	cos /= length
-	render.RendSprite(spriteBuffer[me.SID], me.x, me.y, me.z, float32(sin), float32(cos), me.sprite)
+	render.RendSprite(spriteBuffer[me.sid], me.x, me.y, me.z, float32(sin), float32(cos), me.sprite)
 }
 
 func medkitInit(world *world, nid uint16, x, y, z float32) *item {
@@ -79,9 +79,9 @@ func medkitInit(world *world, nid uint16, x, y, z float32) *item {
 	me.z = z
 	me.blockBorders()
 	me.addToBlocks()
-	me.UID = MedkitUID
-	me.NID = nid
-	me.sprite = wadSpriteData[me.SID]["medkit"]
+	me.uid = MedkitUID
+	me.nid = nid
+	me.sprite = wadSpriteData[me.sid]["medkit"]
 	me.radius = 0.2
 	me.height = 0.2
 	world.addItem(me)

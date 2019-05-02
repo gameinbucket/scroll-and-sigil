@@ -277,7 +277,7 @@ func (me *block) buildMesh(w *world) {
 
 }
 
-func (me *block) renderThings(spriteSet map[*thing]bool, spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ, camAngle float32) {
+func (me *block) renderThings(spriteSet map[interface{}]bool, spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ, camAngle float32) {
 	for i := 0; i < me.thingCount; i++ {
 		thing := me.things[i]
 		if _, ok := spriteSet[thing]; ok {

@@ -33,6 +33,8 @@ type app struct {
 	state                    *worldState
 	world                    *world
 	player                   *you
+	socket                   js.Value
+	socketQueue              [][]byte
 	canvasOrtho              [16]float32
 	drawOrtho                [16]float32
 	drawPerspective          [16]float32
@@ -125,6 +127,9 @@ func (me *app) init() {
 	wadRead(g, gl, net.Get("wad"))
 
 	socket := net.Socket("websocket")
+	me.socket = socket
+	me.socketQueue = make([][]byte, 0)
+
 	socket.Set("binaryType", "arraybuffer")
 	socket.Set("onclose", js.FuncOf(func(self js.Value, args []js.Value) interface{} {
 		console("socket closed!")
@@ -151,16 +156,22 @@ func (me *app) init() {
 	join.Wait()
 	getworld.Release()
 
+	world.load(raw)
+
 	socket.Set("onmessage", js.FuncOf(func(self js.Value, args []js.Value) interface{} {
-		console("socket message!")
+		data := args[0].Get("data")
+		uint8data := js.Global().Get("Uint8Array").New(data)
+		binary := make([]byte, uint8data.Get("byteLength").Int())
+		typeArray := js.TypedArrayOf(binary)
+		typeArray.Call("set", uint8data)
+		typeArray.Release()
+		me.socketQueue = append(me.socketQueue, binary)
 		return nil
 	}))
 
-	world.load(raw)
-
-	player := world.netLookup[world.PID]
-	me.camera = cameraInit(world, player, 10.0)
-	// player.camera = me.camera
+	player := world.netLookup[world.pid].(*you)
+	me.camera = cameraInit(world, player.thing, 10.0)
+	player.camera = me.camera
 }
 
 func (me *app) run() {

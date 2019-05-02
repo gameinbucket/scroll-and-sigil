@@ -52,12 +52,12 @@ type thing struct {
 	Radius                 float32
 	Height                 float32
 	Speed                  float32
-	Health                 int
+	Health                 uint16
 	Group                  int
 	DeltaMoveXZ            bool
 	DeltaMoveY             bool
 	Update                 func() bool
-	Damage                 func(int)
+	Damage                 func(uint16)
 	Save                   func(raw *bytes.Buffer)
 	Snap                   func(raw *bytes.Buffer)
 	Binary                 []byte
@@ -90,7 +90,7 @@ func (me *thing) NopSnap(raw *bytes.Buffer) {
 }
 
 // NopDamage func
-func (me *thing) NopDamage(amount int) {
+func (me *thing) NopDamage(amount uint16) {
 }
 
 // blockBorders func

@@ -13,7 +13,7 @@ var (
 
 type particle struct {
 	world  *world
-	SID    string
+	sid    string
 	sprite *render.Sprite
 	x      float32
 	y      float32
@@ -29,6 +29,7 @@ type particle struct {
 	maxBZ  int
 	radius float32
 	height float32
+	update func() bool
 }
 
 func (me *particle) blockBorders() {
@@ -46,6 +47,17 @@ func (me *particle) addToBlocks() {
 			for gz := me.minBZ; gz <= me.maxBZ; gz++ {
 				block := me.world.getBlock(gx, gy, gz)
 				block.addParticle(me)
+			}
+		}
+	}
+}
+
+func (me *particle) removeFromBlocks() {
+	for gx := me.minBX; gx <= me.maxBX; gx++ {
+		for gy := me.minBY; gy <= me.maxBY; gy++ {
+			for gz := me.minBZ; gz <= me.maxBZ; gz++ {
+				block := me.world.getBlock(gx, gy, gz)
+				block.removeParticle(me)
 			}
 		}
 	}
@@ -77,28 +89,21 @@ func (me *particle) collision() bool {
 	return false
 }
 
-func (me *particle) removeFromBlocks() {
-	for gx := me.minBX; gx <= me.maxBX; gx++ {
-		for gy := me.minBY; gy <= me.maxBY; gy++ {
-			for gz := me.minBZ; gz <= me.maxBZ; gz++ {
-				block := me.world.getBlock(gx, gy, gz)
-				block.removeParticle(me)
-			}
-		}
-	}
-}
-
-func (me *particle) update() {
-}
-
 func (me *particle) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ float32) {
 	sin := float64(camX - me.x)
 	cos := float64(camZ - me.z)
 	length := math.Sqrt(sin*sin + cos*cos)
 	sin /= length
 	cos /= length
-	render.RendSprite(spriteBuffer[me.SID], me.x, me.y, me.z, float32(sin), float32(cos), me.sprite)
+	render.RendSprite(spriteBuffer[me.sid], me.x, me.y, me.z, float32(sin), float32(cos), me.sprite)
 }
 
 func plasmaExplosionInit(w *world, x, y, z float32) {
+}
+
+func (me *particle) plasmaUpdate() bool {
+	// if me.updateAnimation() == AnimationDone {
+	// 	return true
+	// }
+	return false
 }

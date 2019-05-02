@@ -4,7 +4,7 @@ package main
 var (
 	RandomIndexP = 0
 	RandomIndexR = 0
-	RandomTable  = []int{
+	RandomTable  = []uint8{
 		0, 8, 109, 220, 222, 241, 149, 107, 75, 248, 254, 140, 16, 66,
 		74, 21, 211, 47, 80, 242, 154, 27, 205, 128, 161, 89, 77, 36,
 		95, 110, 85, 48, 212, 140, 211, 249, 22, 79, 200, 50, 28, 188,
@@ -44,13 +44,13 @@ func Abs(x float32) float32 {
 }
 
 // NextRandP func
-func NextRandP() int {
+func NextRandP() uint8 {
 	RandomIndexP = (RandomIndexP + 1) & 0xff
 	return RandomTable[RandomIndexP]
 }
 
 // NextRandR func
-func NextRandR() int {
+func NextRandR() uint8 {
 	RandomIndexR = (RandomIndexR + 1) & 0xff
 	return RandomTable[RandomIndexR]
 }

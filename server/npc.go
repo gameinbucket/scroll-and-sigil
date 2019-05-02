@@ -45,7 +45,7 @@ var (
 type Npc struct {
 	*thing
 	Target             *thing
-	MoveCount          int
+	MoveCount          uint8
 	MoveDirection      int
 	DeltaMoveDirection bool
 }

@@ -35,9 +35,7 @@ class You extends Human {
 
         if (Input.KeyPress("p")) {
             SocketSendSet.set(InputOpSearch, true)
-
-            // TODO TEMP
-            SocketSendSet.set(InputOpChat, "test chat")
+            SocketSendSet.set(InputOpChat, "todo test chat")
         }
 
         if (Input.KeyDown(" ")) {

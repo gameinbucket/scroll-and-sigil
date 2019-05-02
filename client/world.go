@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"syscall/js"
 
 	"./graphics"
@@ -49,19 +50,32 @@ type world struct {
 	items         []*item
 	missiles      []*missile
 	particles     []*particle
-	netLookup     map[uint16]*thing
-	PID           uint16
+	netLookup     map[uint16]interface{}
+	pid           uint16
 }
 
 func worldInit(g *graphics.RenderSystem, gl js.Value) *world {
-	w := &world{}
-	w.g = g
-	w.gl = gl
-	return w
+	world := &world{}
+	world.g = g
+	world.gl = gl
+	world.spriteBuffer = make(map[string]*graphics.RenderBuffer)
+	return world
 }
 
 func (me *world) reset() {
 	me.blocks = make([]*block, me.all)
+	me.viewable = make([]*block, 0)
+	me.spriteSet = make(map[*thing]bool)
+	me.spriteCount = make(map[string]int)
+	me.thingCount = 0
+	me.itemCount = 0
+	me.missileCount = 0
+	me.particleCount = 0
+	me.things = make([]*thing, 0)
+	me.items = make([]*item, 0)
+	me.missiles = make([]*missile, 0)
+	me.particles = make([]*particle, 0)
+	me.netLookup = make(map[uint16]interface{})
 }
 
 func (me *world) load(raw []byte) {
@@ -73,7 +87,7 @@ func (me *world) load(raw []byte) {
 	// TODO binary.Read sucks, implement custom solution for client and server
 	// https://github.com/golang/go/blob/master/src/encoding/binary/binary.go
 
-	binary.Read(dat, binary.LittleEndian, &me.PID)
+	binary.Read(dat, binary.LittleEndian, &me.pid)
 
 	binary.Read(dat, binary.LittleEndian, &uint16ref)
 	me.width = int(uint16ref)
@@ -90,6 +104,8 @@ func (me *world) load(raw []byte) {
 	me.tileLength = me.length * BlockSize
 
 	me.reset()
+
+	fmt.Println("pid =", me.pid)
 
 	bx := 0
 	by := 0
@@ -136,6 +152,7 @@ func (me *world) load(raw []byte) {
 
 	var thingCount uint16
 	binary.Read(dat, binary.LittleEndian, &thingCount)
+	fmt.Println("thingCount =", thingCount)
 	for t := uint16(0); t < thingCount; t++ {
 		var uid uint16
 		var nid uint16
@@ -147,6 +164,7 @@ func (me *world) load(raw []byte) {
 		binary.Read(dat, binary.LittleEndian, &x)
 		binary.Read(dat, binary.LittleEndian, &y)
 		binary.Read(dat, binary.LittleEndian, &z)
+		fmt.Println(uid, nid, x, y, z)
 		switch uid {
 		case HumanUID:
 			var angle float32
@@ -155,7 +173,7 @@ func (me *world) load(raw []byte) {
 			binary.Read(dat, binary.LittleEndian, &angle)
 			binary.Read(dat, binary.LittleEndian, &health)
 			binary.Read(dat, binary.LittleEndian, &status)
-			if nid == me.PID {
+			if nid == me.pid {
 				youInit(me, nid, x, y, z, angle, health, status)
 			} else {
 				humanInit(me, nid, x, y, z, angle, health, status)
@@ -288,18 +306,18 @@ func (me *world) addThing(t *thing) {
 	me.things[me.thingCount] = t
 	me.thingCount++
 
-	me.netLookup[t.NID] = t
+	me.netLookup[t.nid] = t
 
-	count, has := me.spriteCount[t.SID]
+	count, has := me.spriteCount[t.sid]
 	if has {
-		me.spriteCount[t.SID] = count + 1
-		b := me.spriteBuffer[t.SID]
+		me.spriteCount[t.sid] = count + 1
+		b := me.spriteBuffer[t.sid]
 		if (count+2)*16 > len(b.Vertices) {
 			b.RenderBufferExpand(me.gl)
 		}
 	} else {
-		me.spriteCount[t.SID] = 1
-		me.spriteBuffer[t.SID] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
+		me.spriteCount[t.sid] = 1
+		me.spriteBuffer[t.sid] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
 	}
 }
 
@@ -312,18 +330,18 @@ func (me *world) addItem(t *item) {
 	me.items[me.itemCount] = t
 	me.itemCount++
 
-	me.netLookup[t.NID] = t
+	me.netLookup[t.nid] = t
 
-	count, has := me.spriteCount[t.SID]
+	count, has := me.spriteCount[t.sid]
 	if has {
-		me.spriteCount[t.SID] = count + 1
-		b := me.spriteBuffer[t.SID]
+		me.spriteCount[t.sid] = count + 1
+		b := me.spriteBuffer[t.sid]
 		if (count+2)*16 > len(b.Vertices) {
 			b.RenderBufferExpand(me.gl)
 		}
 	} else {
-		me.spriteCount[t.SID] = 1
-		me.spriteBuffer[t.SID] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
+		me.spriteCount[t.sid] = 1
+		me.spriteBuffer[t.sid] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
 	}
 }
 
@@ -336,18 +354,18 @@ func (me *world) addMissile(t *missile) {
 	me.missiles[me.missileCount] = t
 	me.missileCount++
 
-	me.netLookup[t.NID] = t
+	me.netLookup[t.nid] = t
 
-	count, has := me.spriteCount[t.SID]
+	count, has := me.spriteCount[t.sid]
 	if has {
-		me.spriteCount[t.SID] = count + 1
-		b := me.spriteBuffer[t.SID]
+		me.spriteCount[t.sid] = count + 1
+		b := me.spriteBuffer[t.sid]
 		if (count+2)*16 > len(b.Vertices) {
 			b.RenderBufferExpand(me.gl)
 		}
 	} else {
-		me.spriteCount[t.SID] = 1
-		me.spriteBuffer[t.SID] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
+		me.spriteCount[t.sid] = 1
+		me.spriteBuffer[t.sid] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
 	}
 }
 
@@ -360,16 +378,16 @@ func (me *world) addParticle(t *particle) {
 	me.particles[me.particleCount] = t
 	me.particleCount++
 
-	count, has := me.spriteCount[t.SID]
+	count, has := me.spriteCount[t.sid]
 	if has {
-		me.spriteCount[t.SID] = count + 1
-		b := me.spriteBuffer[t.SID]
+		me.spriteCount[t.sid] = count + 1
+		b := me.spriteBuffer[t.sid]
 		if (count+2)*16 > len(b.Vertices) {
 			b.RenderBufferExpand(me.gl)
 		}
 	} else {
-		me.spriteCount[t.SID] = 1
-		me.spriteBuffer[t.SID] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
+		me.spriteCount[t.sid] = 1
+		me.spriteBuffer[t.sid] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
 	}
 }
 
@@ -422,4 +440,32 @@ func (me *world) removeParticle(t *particle) {
 }
 
 func (me *world) update() {
+	size := me.thingCount
+	for i := 0; i < size; i++ {
+		me.things[i].update()
+	}
+	size = me.missileCount
+	for i := 0; i < size; i++ {
+		if me.missiles[i].update() {
+			me.missiles[i] = me.missiles[size-1]
+			me.missiles[size-1] = nil
+			me.missileCount--
+			size--
+			i--
+		}
+	}
+	size = me.particleCount
+	for i := 0; i < size; i++ {
+		if me.particles[i].update() {
+			me.particles[i] = me.particles[size-1]
+			me.particles[size-1] = nil
+			me.particleCount--
+			size--
+			i--
+		}
+	}
+}
+
+func (me *world) render(g *graphics.RenderSystem, camX, camZ, camAngle float32) {
+
 }

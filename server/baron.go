@@ -16,19 +16,19 @@ const (
 
 // Baron constants
 const (
-	BaronSleep   = 0
-	BaronDead    = 1
-	BaronLook    = 2
-	BaronChase   = 3
-	BaronMelee   = 4
-	BaronMissile = 5
+	BaronSleep   = uint8(0)
+	BaronDead    = uint8(1)
+	BaronLook    = uint8(2)
+	BaronChase   = uint8(3)
+	BaronMelee   = uint8(4)
+	BaronMissile = uint8(5)
 )
 
 // Baron struct
 type Baron struct {
 	*Npc
-	Status       int
-	Reaction     int
+	Status       uint8
+	Reaction     uint8
 	MeleeRange   float32
 	MissileRange float32
 	DeltaHealth  bool
@@ -130,7 +130,7 @@ func (me *Baron) Snap(raw *bytes.Buffer) {
 }
 
 // Damage func
-func (me *Baron) Damage(amount int) {
+func (me *Baron) Damage(amount uint16) {
 	if me.Status == BaronDead {
 		return
 	}
@@ -178,7 +178,7 @@ func (me *Baron) Melee() {
 	if anim == AnimationAlmostDone {
 		me.Reaction = 40 + NextRandP()%220
 		if me.ApproximateDistance(me.Target) <= me.MeleeRange {
-			me.Target.Damage(1 + NextRandP()%3)
+			me.Target.Damage(uint16(1 + NextRandP()%3))
 		}
 	} else if anim == AnimationDone {
 		me.Status = BaronChase
@@ -202,7 +202,7 @@ func (me *Baron) missile() {
 		x := me.X + dx*me.Radius*3.0
 		y := me.Y + me.Height*0.75
 		z := me.Z + dz*me.Radius*3.0
-		NewPlasma(me.World, 1+NextRandP()%3, x, y, z, dx*speed, dy, dz*speed)
+		NewPlasma(me.World, uint16(1+NextRandP()%3), x, y, z, dx*speed, dy, dz*speed)
 	} else if anim == AnimationDone {
 		me.Status = BaronChase
 		me.DeltaStatus = true

@@ -16,11 +16,11 @@ const (
 
 // Human constants
 const (
-	HumanDead    = 0
-	HumanIdle    = 1
-	HumanWalk    = 2
-	HumanMelee   = 3
-	HumanMissile = 4
+	HumanDead    = uint8(0)
+	HumanIdle    = uint8(1)
+	HumanWalk    = uint8(2)
+	HumanMelee   = uint8(3)
+	HumanMissile = uint8(4)
 )
 
 // Input constants
@@ -35,7 +35,7 @@ const (
 // You struct
 type You struct {
 	*thing
-	Status      int
+	Status      uint8
 	DeltaAngle  bool
 	DeltaHealth bool
 	DeltaStatus bool
@@ -73,12 +73,12 @@ func NewYou(world *World, person *Person, x, y, z float32) *You {
 func (me *You) Save(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, me.UID)
 	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, float32(me.X))
-	binary.Write(raw, binary.LittleEndian, float32(me.Y))
-	binary.Write(raw, binary.LittleEndian, float32(me.Z))
-	binary.Write(raw, binary.LittleEndian, float32(me.Angle))
-	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
-	binary.Write(raw, binary.LittleEndian, uint8(me.Status))
+	binary.Write(raw, binary.LittleEndian, me.X)
+	binary.Write(raw, binary.LittleEndian, me.Y)
+	binary.Write(raw, binary.LittleEndian, me.Z)
+	binary.Write(raw, binary.LittleEndian, me.Angle)
+	binary.Write(raw, binary.LittleEndian, me.Health)
+	binary.Write(raw, binary.LittleEndian, me.Status)
 }
 
 // Snap func
@@ -151,7 +151,7 @@ func (me *You) Search() {
 }
 
 // Damage func
-func (me *You) Damage(amount int) {
+func (me *You) Damage(amount uint16) {
 	if me.Status == HumanDead {
 		return
 	}
@@ -188,7 +188,7 @@ func (me *You) missile() {
 		x := me.X + dx*me.Radius*3.0
 		y := me.Y + me.Height*0.75
 		z := me.Z + dz*me.Radius*3.0
-		NewPlasma(me.World, 1+NextRandP()%3, x, y, z, dx*speed, 0.0, dz*speed)
+		NewPlasma(me.World, uint16(1+NextRandP()%3), x, y, z, dx*speed, 0.0, dz*speed)
 	} else if anim == AnimationDone {
 		me.Status = HumanIdle
 		me.DeltaStatus = true
