@@ -146,6 +146,7 @@ class WorldState {
 
         world.update()
 
+        let socketSendOperations = 0
         for (var [op, value] of SocketSendSet) {
             SocketSend.setUint8(SocketSendIndex, op, true)
             SocketSendIndex += 1
@@ -161,15 +162,14 @@ class WorldState {
                     SocketSendIndex += 1
                 }
             }
-            SocketSendOperations += 1
+            socketSendOperations += 1
         }
-        if (SocketSendOperations > 0) {
+        if (socketSendOperations > 0) {
             let buffer = SocketSend.buffer.slice(0, SocketSendIndex)
             let view = new DataView(buffer)
-            view.setUint8(0, SocketSendOperations, true)
+            view.setUint8(0, socketSendOperations, true)
             SocketConnection.send(buffer)
             SocketSendIndex = 1
-            SocketSendOperations = 0
             SocketSendSet.clear()
         }
     }

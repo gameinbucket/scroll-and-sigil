@@ -12,24 +12,27 @@ var (
 )
 
 type particle struct {
-	world  *world
-	sid    string
-	sprite *render.Sprite
-	x      float32
-	y      float32
-	z      float32
-	deltaX float32
-	deltaY float32
-	deltaZ float32
-	minBX  int
-	minBY  int
-	minBZ  int
-	maxBX  int
-	maxBY  int
-	maxBZ  int
-	radius float32
-	height float32
-	update func() bool
+	world          *world
+	sid            string
+	sprite         *render.Sprite
+	animation      []*render.Sprite
+	animationMod   int
+	animationFrame int
+	x              float32
+	y              float32
+	z              float32
+	deltaX         float32
+	deltaY         float32
+	deltaZ         float32
+	minBX          int
+	minBY          int
+	minBZ          int
+	maxBX          int
+	maxBY          int
+	maxBZ          int
+	radius         float32
+	height         float32
+	update         func() bool
 }
 
 func (me *particle) blockBorders() {
@@ -61,6 +64,21 @@ func (me *particle) removeFromBlocks() {
 			}
 		}
 	}
+}
+
+func (me *particle) updateAnimation() int {
+	me.animationFrame++
+	if me.animationMod == AnimationRate {
+		me.animationMod = 0
+		me.animationFrame++
+		size := len(me.animation)
+		if me.animationFrame == size-1 {
+			return AnimationAlmostDone
+		} else if me.animationFrame == size {
+			return AnimationDone
+		}
+	}
+	return AnimationNotDone
 }
 
 func (me *particle) collision() bool {
@@ -98,12 +116,66 @@ func (me *particle) render(spriteBuffer map[string]*graphics.RenderBuffer, camX,
 	render.RendSprite(spriteBuffer[me.sid], me.x, me.y, me.z, float32(sin), float32(cos), me.sprite)
 }
 
-func plasmaExplosionInit(w *world, x, y, z float32) {
+func plasmaExplosionInit(world *world, x, y, z float32) *particle {
+	p := &particle{}
+	p.world = world
+	p.x = x
+	p.y = y
+	p.z = z
+	p.sid = "particles"
+	p.animation = plasmaExplosionAnimation
+	p.sprite = p.animation[0]
+	p.radius = 0.2
+	p.height = 0.2
+	p.update = p.plasmaUpdate
+	world.addParticle(p)
+	p.blockBorders()
+	p.addToBlocks()
+	return p
 }
 
 func (me *particle) plasmaUpdate() bool {
-	// if me.updateAnimation() == AnimationDone {
-	// 	return true
-	// }
+	if me.updateAnimation() == AnimationDone {
+		me.removeFromBlocks()
+		return true
+	}
+	me.sprite = me.animation[me.animationFrame]
+	return false
+}
+
+func bloodInit(world *world, x, y, z, dx, dy, dz float32, spriteName string) *particle {
+	b := &particle{}
+	b.world = world
+	b.x = x
+	b.y = y
+	b.z = z
+	b.sid = "particles"
+	b.sprite = wadSpriteData[b.sid][spriteName]
+	b.deltaX = dx
+	b.deltaY = dy
+	b.deltaZ = dz
+	b.radius = 0.2
+	b.height = 0.2
+	b.update = b.bloodUpdate
+	world.addParticle(b)
+	b.blockBorders()
+	b.addToBlocks()
+	return b
+}
+
+func (me *particle) bloodUpdate() bool {
+	me.deltaX *= 0.95
+	me.deltaY -= 0.01
+	me.deltaZ *= 0.95
+	me.x += me.deltaX
+	me.y += me.deltaY
+	me.z += me.deltaZ
+	if me.collision() {
+		me.removeFromBlocks()
+		return true
+	}
+	me.removeFromBlocks()
+	me.blockBorders()
+	me.addToBlocks()
 	return false
 }

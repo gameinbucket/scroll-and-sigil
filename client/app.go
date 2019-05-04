@@ -35,6 +35,7 @@ type app struct {
 	player                   *you
 	socket                   js.Value
 	socketQueue              [][]byte
+	socketSend               map[uint8]interface{}
 	canvasOrtho              [16]float32
 	drawOrtho                [16]float32
 	drawPerspective          [16]float32
@@ -129,6 +130,7 @@ func (me *app) init() {
 	socket := net.Socket("websocket")
 	me.socket = socket
 	me.socketQueue = make([][]byte, 0)
+	me.socketSend = make(map[uint8]interface{})
 
 	socket.Set("binaryType", "arraybuffer")
 	socket.Set("onclose", js.FuncOf(func(self js.Value, args []js.Value) interface{} {
@@ -217,6 +219,7 @@ func appInit() *app {
 
 	graphics.SetupOpenGl(gl)
 	setupBlocks()
+	setupLighting()
 
 	gl.Call("clearColor", 0, 0, 0, 1)
 	gl.Call("depthFunc", graphics.GLxLEqual)

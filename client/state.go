@@ -3,10 +3,14 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"strings"
+	"syscall/js"
 	"time"
 
 	"./graphics"
+	"./matrix"
+	"./render"
 )
 
 type worldState struct {
@@ -101,9 +105,11 @@ func (me *worldState) serverUpdates() {
 
 		var thingCount uint16
 		binary.Read(dat, binary.LittleEndian, &thingCount)
+		fmt.Println("state: thing count", thingCount)
 		for t := uint16(0); t < thingCount; t++ {
 			var nid uint16
 			binary.Read(dat, binary.LittleEndian, &nid)
+			fmt.Println("state: nid", nid)
 			thing, ok := world.netLookup[nid]
 			if !ok {
 				panic("missing thing nid")
@@ -147,22 +153,174 @@ func (me *worldState) serverUpdates() {
 			}
 		}
 	}
-
-	// bytes := []byte{0}
-	// socket.Call("send", js.TypedArrayOf(bytes))
 }
 
 func (me *worldState) update() {
+	world := me.app.world
+	socketQueue := me.app.socketQueue
+	socketSend := me.app.socketSend
+
+	if len(socketQueue) > 0 {
+		me.serverUpdates()
+		me.app.socketQueue = make([][]byte, 0)
+	}
+
+	world.update()
+
+	socketSendOperations := uint8(0)
+	size := len(socketSend)
+	if size > 0 {
+		raw := &bytes.Buffer{}
+		for op, value := range socketSend {
+			binary.Write(raw, binary.LittleEndian, op)
+			switch op {
+			case inputOpNewMove:
+				binary.Write(raw, binary.LittleEndian, value.(float32))
+			case inputOpChat:
+				chat := value.([]uint8)
+				chatSize := uint8(len(chat))
+				if chatSize > 255 {
+					chatSize = 255
+				}
+				binary.Write(raw, binary.LittleEndian, chatSize)
+				for ch := uint8(0); ch < chatSize; ch++ {
+					binary.Write(raw, binary.LittleEndian, chat[ch])
+				}
+			}
+		}
+		binary.Write(raw, binary.LittleEndian, socketSendOperations)
+		me.app.socket.Call("send", js.TypedArrayOf(raw.Bytes()))
+
+		me.app.socketSend = make(map[uint8]interface{})
+	}
 }
 
 func (me *worldState) render() {
 	app := me.app
+	g := app.g
 	gl := app.gl
+	frameGeo := app.frameGeo
+	frame := app.frame
+	canvas := app.canvas
+	canvasOrtho := app.canvasOrtho
+	drawPerspective := app.drawPerspective
+	drawOrtho := app.drawOrtho
+	drawImages := app.drawImages
+	screen := app.screen
 	world := app.world
 	cam := app.camera
 
 	cam.update(world)
 
+	graphics.RenderSystemSetFrameBuffer(gl, frameGeo.Fbo)
+	graphics.RenderSystemSetView(gl, 0, 0, frame.Width, frame.Height)
+
 	gl.Call("clear", graphics.GLxColorBufferBit)
 	gl.Call("clear", graphics.GLxDepthBufferBit)
+
+	g.SetProgram(gl, "copy")
+	g.SetOrthographic(drawOrtho, 0, 0)
+	g.UpdateMvp(gl)
+	g.SetTexture(gl, "sky")
+	drawImages.Zero()
+
+	turnX := float32(frame.Width * 2)
+	skyX := cam.ry / Tau * turnX
+	if skyX >= turnX {
+		skyX -= turnX
+	}
+	frameHeight := float32(frame.Height)
+	skyYOffset := cam.rx / Tau * frameHeight
+	skTrueHeight := float32(g.Textures["sky"].Height)
+	skyHeight := skTrueHeight * 2
+	skyTop := frameHeight - skyHeight
+	skyY := float32(skyTop)*0.5 + skyYOffset
+	if skyY > skyTop {
+		skyY = skyTop
+	}
+	render.Image(drawImages, -skyX, skyY, turnX*2, skyHeight, 0, 0, 2, 1)
+	graphics.RenderSystemUpdateAndDraw(gl, drawImages)
+
+	gl.Call("enable", graphics.GLxDepthTest)
+	gl.Call("enable", graphics.GLxCullFace)
+
+	g.SetPerspective(drawPerspective, -cam.x, -cam.y, -cam.z, cam.rx, cam.ry)
+
+	camBlockX := int(cam.x * InverseBlockSize)
+	camBlockY := int(cam.y * InverseBlockSize)
+	camBlockZ := int(cam.z * InverseBlockSize)
+
+	world.render(g, camBlockX, camBlockY, camBlockZ, cam.x, cam.z, cam.ry)
+
+	gl.Call("disable", graphics.GLxCullFace)
+	gl.Call("disable", graphics.GLxDepthTest)
+
+	const noShade = 0
+	const motionBlur = 1
+	const antiAlias = 2
+	shading := noShade
+
+	if shading == motionBlur {
+		frame2 := app.frame2
+		frameScreen := app.frameScreen
+
+		drawInversePerspective := app.drawInversePerspective
+		drawInverseMv := app.drawInverseMv
+		drawPreviousMvp := app.drawPreviousMvp
+		drawCurrentToPreviousMvp := app.drawCurrentToPreviousMvp
+		matrix.Inverse(drawInverseMv, g.ModelView)
+		matrix.Multiply(drawCurrentToPreviousMvp, drawPreviousMvp, drawInverseMv)
+		for i := 0; i < 16; i++ {
+			drawPreviousMvp[i] = g.ModelViewProject[i]
+		}
+
+		graphics.RenderSystemSetFrameBuffer(gl, frame2.Fbo)
+		graphics.RenderSystemSetView(gl, 0, 0, frame2.Width, frame2.Height)
+		g.SetProgram(gl, "motion")
+		g.SetUniformMatrix4(gl, "inverse_projection", drawInversePerspective)
+		g.SetUniformMatrix4(gl, "current_to_previous_matrix", drawCurrentToPreviousMvp)
+		g.SetOrthographic(drawOrtho, 0, 0)
+		g.UpdateMvp(gl)
+		g.SetTextureDirect(gl, frameGeo.Textures[0])
+		g.SetIndexTextureDirect(gl, graphics.GLxTexture1, 1, "u_texture1", frameGeo.DepthTexture)
+		graphics.RenderSystemBindAndDraw(gl, frameScreen)
+
+		graphics.RenderSystemSetFrameBuffer(gl, js.Null())
+		graphics.RenderSystemSetView(gl, 0, 0, canvas.width, canvas.height)
+		g.SetProgram(gl, "screen")
+		g.SetOrthographic(canvasOrtho, 0, 0)
+		g.UpdateMvp(gl)
+		g.SetTextureDirect(gl, frame2.Textures[0])
+		graphics.RenderSystemBindAndDraw(gl, screen)
+	} else if shading == antiAlias {
+		graphics.RenderSystemSetFrameBuffer(gl, js.Null())
+		graphics.RenderSystemSetView(gl, 0, 0, canvas.width, canvas.height)
+		g.SetProgram(gl, "fxaa")
+		g.SetUniformVec2(gl, "texel", 1.0/float32(canvas.width), 1.0/float32(canvas.height))
+		g.SetOrthographic(canvasOrtho, 0, 0)
+		g.UpdateMvp(gl)
+		g.SetTextureDirect(gl, frameGeo.Textures[0])
+		graphics.RenderSystemBindAndDraw(gl, screen)
+	} else {
+		g.SetProgram(gl, "texture2d")
+		g.SetOrthographic(drawOrtho, 0, 0)
+		g.UpdateMvp(gl)
+		g.SetTexture(gl, "font")
+		drawImages.Zero()
+		chatbox := me.chatbox
+		y := float32(10)
+		for ch := 0; ch < len(chatbox); ch++ {
+			render.Print(drawImages, 10, y, chatbox[ch], 2)
+			y += render.FontHeight * 2
+		}
+		graphics.RenderSystemUpdateAndDraw(gl, drawImages)
+
+		graphics.RenderSystemSetFrameBuffer(gl, js.Null())
+		graphics.RenderSystemSetView(gl, 0, 0, canvas.width, canvas.height)
+		g.SetProgram(gl, "screen")
+		g.SetOrthographic(canvasOrtho, 0, 0)
+		g.UpdateMvp(gl)
+		g.SetTextureDirect(gl, frameGeo.Textures[0])
+		graphics.RenderSystemBindAndDraw(gl, screen)
+	}
 }

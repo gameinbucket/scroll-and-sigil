@@ -24,6 +24,7 @@ var (
 	GLxCullFace               js.Value
 	GLxBlend                  js.Value
 	GLxTexture0               js.Value
+	GLxTexture1               js.Value
 	GLxTexture2D              js.Value
 	GLxTextureWrapS           js.Value
 	GLxTextureWrapT           js.Value
@@ -69,6 +70,7 @@ func SetupOpenGl(gl js.Value) {
 	GLxCullFace = gl.Get("CULL_FACE")
 	GLxBlend = gl.Get("BLEND")
 	GLxTexture0 = gl.Get("TEXTURE0")
+	GLxTexture1 = gl.Get("TEXTURE1")
 	GLxTexture2D = gl.Get("TEXTURE_2D")
 	GLxTextureWrapS = gl.Get("TEXTURE_WRAP_S")
 	GLxTextureWrapT = gl.Get("TEXTURE_WRAP_T")

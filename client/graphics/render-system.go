@@ -19,16 +19,16 @@ type Texture struct {
 
 // RenderSystem struct
 type RenderSystem struct {
-	v           [16]float32
-	mv          [16]float32
-	mvp         [16]float32
-	programID   js.Value
-	programName string
-	mvpIds      map[string]js.Value
-	uniforms    map[string]map[string]js.Value
-	textureIds  map[string]js.Value
-	shaders     map[string]js.Value
-	Textures    map[string]*Texture
+	View             [16]float32
+	ModelView        [16]float32
+	ModelViewProject [16]float32
+	programID        js.Value
+	programName      string
+	mvpIds           map[string]js.Value
+	uniforms         map[string]map[string]js.Value
+	textureIds       map[string]js.Value
+	shaders          map[string]js.Value
+	Textures         map[string]*Texture
 }
 
 // RenderSystemInit func
@@ -50,14 +50,14 @@ func (me *RenderSystem) SetTexture(gl js.Value, name string) {
 }
 
 // SetTextureDirect func
-func (me *RenderSystem) SetTextureDirect(gl js.Value, textureID int) {
+func (me *RenderSystem) SetTextureDirect(gl js.Value, textureID js.Value) {
 	gl.Call("activeTexture", GLxTexture0)
 	gl.Call("bindTexture", GLxTexture2D, textureID)
 	gl.Call("uniform1i", me.textureIds[me.programName], 0)
 }
 
 // SetIndexTextureDirect func
-func (me *RenderSystem) SetIndexTextureDirect(gl js.Value, textureUnit js.Value, unit int, name string, textureID int) {
+func (me *RenderSystem) SetIndexTextureDirect(gl js.Value, textureUnit js.Value, unitIndex int, name string, textureID js.Value) {
 	gl.Call("activeTexture", textureUnit)
 	gl.Call("bindTexture", GLxTexture2D, textureID)
 	loc, ok := me.uniforms[me.programName][name]
@@ -65,7 +65,7 @@ func (me *RenderSystem) SetIndexTextureDirect(gl js.Value, textureUnit js.Value,
 		loc = gl.Call("getUniformLocation", me.programID, name)
 		me.uniforms[me.programName][name] = loc
 	}
-	gl.Call("uniform1i", loc, unit)
+	gl.Call("uniform1i", loc, unitIndex)
 }
 
 // SetProgram func
@@ -110,18 +110,18 @@ func (me *RenderSystem) MakeProgram(gl js.Value, name string) {
 
 // SetOrthographic func
 func (me *RenderSystem) SetOrthographic(orthographic [16]float32, x, y float32) {
-	matrix.Identity(me.mv)
-	matrix.Translate(me.mv, x, y, -1)
-	matrix.Multiply(me.mvp, orthographic, me.mv)
+	matrix.Identity(me.ModelView)
+	matrix.Translate(me.ModelView, x, y, -1)
+	matrix.Multiply(me.ModelViewProject, orthographic, me.ModelView)
 }
 
 // SetPerspective func
 func (me *RenderSystem) SetPerspective(perspective [16]float32, x, y, z, rx, ry float32) {
-	matrix.Identity(me.v)
-	matrix.RotateX(me.v, rx)
-	matrix.RotateY(me.v, ry)
-	matrix.TranslateFromView(me.mv, me.v, x, y, z)
-	matrix.Multiply(me.mvp, perspective, me.mv)
+	matrix.Identity(me.View)
+	matrix.RotateX(me.View, rx)
+	matrix.RotateY(me.View, ry)
+	matrix.TranslateFromView(me.ModelView, me.View, x, y, z)
+	matrix.Multiply(me.ModelViewProject, perspective, me.ModelView)
 }
 
 // MakeImage func
@@ -160,7 +160,7 @@ func (me *RenderSystem) MakeImage(gl js.Value, name string, wrap js.Value) {
 
 // UpdateMvp func
 func (me *RenderSystem) UpdateMvp(gl js.Value) {
-	gl.Call("uniformMatrix4fv", me.mvpIds[me.programName], false, me.mvp)
+	gl.Call("uniformMatrix4fv", me.mvpIds[me.programName], false, me.ModelViewProject)
 }
 
 // RenderSystemSetFrameBuffer func
@@ -246,11 +246,11 @@ func RenderSystemMakeVao(gl js.Value, buffer *RenderBuffer, position, color, tex
 func RenderSystemUpdateFrameBuffer(gl js.Value, frame *FrameBuffer) {
 	for i := 0; i < len(frame.format); i++ {
 		gl.Call("bindTexture", GLxTexture2D, frame.Textures[i])
-		gl.Call("texImage2D", GLxTexture2D, 0, frame.internalFormat[i], frame.width, frame.height, 0, frame.format[i], frame.typeOf[i], nil)
+		gl.Call("texImage2D", GLxTexture2D, 0, frame.internalFormat[i], frame.Width, frame.Height, 0, frame.format[i], frame.typeOf[i], nil)
 	}
 	if frame.depth {
-		gl.Call("bindTexture", GLxTexture2D, frame.depthTexture)
-		gl.Call("texImage2D", GLxTexture2D, 0, GLxDepth24Stencil8, frame.width, frame.height, 0, GLxDepthStencil, GLxUnsignedInt24x8, nil)
+		gl.Call("bindTexture", GLxTexture2D, frame.DepthTexture)
+		gl.Call("texImage2D", GLxTexture2D, 0, GLxDepth24Stencil8, frame.Width, frame.Height, 0, GLxDepthStencil, GLxUnsignedInt24x8, nil)
 	}
 }
 
@@ -275,13 +275,13 @@ func RenderSystemTextureFrameBuffer(gl js.Value, frame *FrameBuffer) {
 	}
 	gl.Call("drawBuffers", frame.drawBuffers)
 	if frame.depth {
-		frame.depthTexture = gl.Call("createTexture")
-		gl.Call("bindTexture", GLxTexture2D, frame.depthTexture)
+		frame.DepthTexture = gl.Call("createTexture")
+		gl.Call("bindTexture", GLxTexture2D, frame.DepthTexture)
 		gl.Call("texParameteri", GLxTexture2D, GLxTextureWrapS, GLxClampToEdge)
 		gl.Call("texParameteri", GLxTexture2D, GLxTextureWrapT, GLxClampToEdge)
 		gl.Call("texParameteri", GLxTexture2D, GLxTextureMinFilter, GLxNearest)
 		gl.Call("texParameteri", GLxTexture2D, GLxTextureMagFilter, GLxNearest)
-		gl.Call("framebufferTexture2D", GLxFrameBuffer, GLxDepthStencilAttachment, GLxTexture2D, frame.depthTexture, 0)
+		gl.Call("framebufferTexture2D", GLxFrameBuffer, GLxDepthStencilAttachment, GLxTexture2D, frame.DepthTexture, 0)
 	}
 	RenderSystemUpdateFrameBuffer(gl, frame)
 
@@ -293,8 +293,8 @@ func RenderSystemTextureFrameBuffer(gl js.Value, frame *FrameBuffer) {
 
 // RenderSystemMakeFrameBuffer func
 func RenderSystemMakeFrameBuffer(gl js.Value, frame *FrameBuffer) {
-	frame.fbo = gl.Call("createFramebuffer")
-	gl.Call("bindFramebuffer", GLxFrameBuffer, frame.fbo)
+	frame.Fbo = gl.Call("createFramebuffer")
+	gl.Call("bindFramebuffer", GLxFrameBuffer, frame.Fbo)
 	RenderSystemTextureFrameBuffer(gl, frame)
 }
 

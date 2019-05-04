@@ -21,18 +21,6 @@ type RenderBuffer struct {
 	indicesJs   js.TypedArray
 }
 
-// RenderCopy struct
-type RenderCopy struct {
-	position    int
-	color       int
-	texture     int
-	VertexPos   int
-	IndexPos    int
-	IndexOffset uint32
-	Vertices    []float32
-	Indices     []uint32
-}
-
 // RenderBufferInit func
 func RenderBufferInit(gl js.Value, position, color, texture, vertexLimit, indexLimit int) *RenderBuffer {
 	b := &RenderBuffer{}
@@ -50,8 +38,8 @@ func RenderBufferInit(gl js.Value, position, color, texture, vertexLimit, indexL
 	return b
 }
 
-// Copy func
-func (me *RenderBuffer) Copy(gl js.Value) *RenderBuffer {
+// InitCopy func
+func (me *RenderBuffer) InitCopy(gl js.Value) *RenderBuffer {
 	b := &RenderBuffer{}
 	b.Vertices = make([]float32, me.VertexPos)
 	b.Indices = make([]uint32, me.IndexPos)
@@ -109,8 +97,8 @@ func (me *RenderBuffer) RenderBufferExpand(gl js.Value) {
 }
 
 // RenderCopyInit func
-func RenderCopyInit(position, color, texture, vertexLimit, indexLimit int) *RenderCopy {
-	b := &RenderCopy{}
+func RenderCopyInit(position, color, texture, vertexLimit, indexLimit int) *RenderBuffer {
+	b := &RenderBuffer{}
 	b.position = position
 	b.color = color
 	b.texture = texture
@@ -120,11 +108,4 @@ func RenderCopyInit(position, color, texture, vertexLimit, indexLimit int) *Rend
 	b.Vertices = make([]float32, vertexLimit*(position+color+texture))
 	b.Indices = make([]uint32, indexLimit)
 	return b
-}
-
-// Zero func
-func (me *RenderCopy) Zero() {
-	me.VertexPos = 0
-	me.IndexPos = 0
-	me.IndexOffset = 0
 }

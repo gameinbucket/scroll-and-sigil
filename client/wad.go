@@ -110,10 +110,9 @@ func wadRead(g *graphics.RenderSystem, gl js.Value, data string) {
 	tileAtlasWidth := 1.0 / float32(tileTexture.Width)
 	tileAtlasHeight := 1.0 / float32(tileTexture.Height)
 	tileSize := len(tileSprites)
-	TileTexture = make([][]float32, tileSize+1)
+	TileTexture = make([][4]float32, tileSize+1)
 	TileClosed = make([]bool, tileSize+1)
 	TileLookup["none"] = 0
-	TileTexture[0] = nil
 	TileClosed[0] = false
 	num := 1
 	for name, value := range tileSprites {

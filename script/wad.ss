@@ -7,7 +7,7 @@ global
   wadDirectionPrefix = string[] "front-",
     "front-side-", "side-", "back-side-", "back-",
 
-func wadRead graphics.renderSystem g js.value gl string data
+func wadRead : graphics.renderSystem g js.value gl string data
   wad = parseRead data
   resources = wad["resources"]:map[string]object
   shaders = resources["shaders"]:map[string]object

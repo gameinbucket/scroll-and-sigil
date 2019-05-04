@@ -26,6 +26,7 @@ type human struct {
 func humanInit(world *world, nid uint16, x, y, z, angle float32, health uint16, status uint8) *human {
 	human := &human{}
 	human.thing = &thing{}
+	human.thing.update = human.updateFn
 	human.world = world
 	human.uid = HumanUID
 	human.sid = "baron"
@@ -44,7 +45,11 @@ func humanInit(world *world, nid uint16, x, y, z, angle float32, health uint16, 
 	human.health = health
 	human.status = status
 	world.addThing(human.thing)
+	world.netLookup[human.nid] = human
 	human.blockBorders()
 	human.addToBlocks()
 	return human
+}
+
+func (me *human) updateFn() {
 }

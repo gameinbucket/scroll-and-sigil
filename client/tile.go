@@ -4,20 +4,20 @@ package main
 const (
 	TileNone = 0
 
-	AmbientLow  = 100
-	AmbientHalf = 175
-	AmbientFull = 255
+	AmbientLow  = 100.0
+	AmbientHalf = 175.0
+	AmbientFull = 255.0
 )
 
 // Variables
 var (
 	TileLookup  = map[string]int{}
-	TileTexture [][]float32
+	TileTexture [][4]float32
 	TileClosed  []bool
 )
 
 // TileAmbient func
-func TileAmbient(side1, side2, corner bool) int {
+func TileAmbient(side1, side2, corner bool) float32 {
 	if side1 && side2 {
 		return AmbientLow
 	} else if side1 || side2 || corner {

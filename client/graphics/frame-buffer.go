@@ -6,15 +6,15 @@ import (
 
 // FrameBuffer struct
 type FrameBuffer struct {
-	fbo            js.Value
+	Fbo            js.Value
 	internalFormat []js.Value
 	format         []js.Value
 	typeOf         []js.Value
-	width          int
-	height         int
+	Width          int
+	Height         int
 	linear         bool
 	depth          bool
-	depthTexture   js.Value
+	DepthTexture   js.Value
 	Textures       []js.Value
 	drawBuffers    []interface{}
 }
@@ -28,8 +28,8 @@ func FrameBufferInit(width, height int, internalFormat, format, typeOf []js.Valu
 	f.internalFormat = internalFormat
 	f.format = format
 	f.typeOf = typeOf
-	f.width = width
-	f.height = height
+	f.Width = width
+	f.Height = height
 	f.linear = linear
 	f.depth = depth
 	f.Textures = make([]js.Value, len(format))
@@ -46,8 +46,8 @@ func FrameBufferMake(gl js.Value, width, height int, internalFormat, format, typ
 
 // Resize func
 func (me *FrameBuffer) Resize(gl js.Value, width, height int) {
-	me.width = width
-	me.height = height
-	RenderSystemSetFrameBuffer(gl, me.fbo)
+	me.Width = width
+	me.Height = height
+	RenderSystemSetFrameBuffer(gl, me.Fbo)
 	RenderSystemUpdateFrameBuffer(gl, me)
 }

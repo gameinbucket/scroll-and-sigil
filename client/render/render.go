@@ -17,17 +17,17 @@ const (
 )
 
 // Lumin func
-func Lumin(red, green, blue float32) float32 {
-	return 0.2126*red + 0.7152*green + 0.0722*blue
+func Lumin(rgb [3]float32) float32 {
+	return 0.2126*rgb[0] + 0.7152*rgb[1] + 0.0722*rgb[2]
 }
 
 // PackRgb func
-func PackRgb(red, green, blue int) int {
+func PackRgb(red, green, blue int32) int32 {
 	return (red << 16) | (green << 8) | blue
 }
 
 // UnpackRgb func
-func UnpackRgb(rgb int) (int, int, int) {
+func UnpackRgb(rgb int32) (int32, int32, int32) {
 	red := (rgb >> 16) & 255
 	green := (rgb >> 8) & 255
 	blue := rgb & 255

@@ -97,6 +97,7 @@ func plasmaInit(world *world, nid uint16, damage uint16, x, y, z, dx, dy, dz flo
 		return
 	}
 	me.uid = PlasmaUID
+	me.sid = "missiles"
 	me.nid = nid
 	me.sprite = wadSpriteData[me.sid]["baron-missile-front-1"]
 	me.deltaX = dx * InverseNetRate

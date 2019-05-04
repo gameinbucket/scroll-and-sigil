@@ -2,7 +2,6 @@ let SocketConnection = null
 let SocketQueue = []
 let SocketSend = new DataView(new ArrayBuffer(128))
 let SocketSendIndex = 1
-let SocketSendOperations = 0
 let SocketSendSet = new Map()
 
 class App {

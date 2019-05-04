@@ -27,7 +27,7 @@ class World {
         this.blocks
         this.viewable
         this.spriteSet
-        this.spriteBuffer
+        this.spriteBuffer = new Map()
         this.spriteCount
         this.thingCount
         this.itemCount

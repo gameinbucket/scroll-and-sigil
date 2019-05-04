@@ -1,6 +1,8 @@
 package main
 
 import (
+	"math"
+
 	"./graphics"
 	"./render"
 )
@@ -37,6 +39,15 @@ const (
 	TreeUID   = uint16(2)
 	PlasmaUID = uint16(3)
 	MedkitUID = uint16(4)
+
+	ThingAngleA = 337.5 * DegToRad
+	ThingAngleB = 292.5 * DegToRad
+	ThingAngleC = 247.5 * DegToRad
+	ThingAngleD = 202.5 * DegToRad
+	ThingAngleE = 157.5 * DegToRad
+	ThingAngleF = 112.5 * DegToRad
+	ThingAngleG = 67.5 * DegToRad
+	ThingAngleH = 22.5 * DegToRad
 )
 
 // Variables
@@ -88,7 +99,7 @@ type thing struct {
 	height         float32
 	speed          float32
 	health         uint16
-	update         func() bool
+	update         func()
 	damage         func(uint16)
 }
 
@@ -128,6 +139,128 @@ func (me *thing) cleanup() {
 	me.removeFromBlocks()
 }
 
-func (me *thing) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ, camAngle float32) {
+func (me *thing) updateAnimation() int {
+	me.animationFrame++
+	if me.animationMod == AnimationRate {
+		me.animationMod = 0
+		me.animationFrame++
+		size := len(me.animation)
+		if me.animationFrame == size-1 {
+			return AnimationAlmostDone
+		} else if me.animationFrame == size {
+			return AnimationDone
+		}
+	}
+	return AnimationNotDone
+}
 
+func (me *thing) updateNetworkDelta() {
+	updateBlocks := false
+
+	if me.deltaNetX > 0 {
+		me.x += me.deltaNetX
+		updateBlocks = true
+		if me.x >= me.netX {
+			me.x = me.netX
+			me.deltaNetX = 0
+		}
+	} else if me.deltaNetX < 0 {
+		me.x += me.deltaNetX
+		updateBlocks = true
+		if me.x <= me.netX {
+			me.x = me.netX
+			me.deltaNetX = 0
+		}
+	}
+
+	if me.deltaNetY > 0 {
+		me.y += me.deltaNetY
+		updateBlocks = true
+		if me.y >= me.netY {
+			me.y = me.netY
+			me.deltaNetY = 0
+		}
+	} else if me.deltaNetY < 0 {
+		me.y += me.deltaNetY
+		updateBlocks = true
+		if me.y <= me.netY {
+			me.y = me.netY
+			me.deltaNetY = 0
+		}
+	}
+
+	if me.deltaNetZ > 0 {
+		me.z += me.deltaNetZ
+		updateBlocks = true
+		if me.z >= me.netZ {
+			me.z = me.netZ
+			me.deltaNetZ = 0
+		}
+	} else if me.deltaNetZ < 0 {
+		me.z += me.deltaNetZ
+		updateBlocks = true
+		if me.z <= me.netZ {
+			me.z = me.netZ
+			me.deltaNetZ = 0
+		}
+	}
+
+	if updateBlocks {
+		me.removeFromBlocks()
+		me.blockBorders()
+		me.addToBlocks()
+	}
+}
+
+func (me *thing) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ, camAngle float32) {
+	sin := float64(camX - me.x)
+	cos := float64(camZ - me.z)
+	length := math.Sqrt(sin*sin + cos*cos)
+	sin /= length
+	cos /= length
+
+	angle := camAngle - me.angle
+	if angle < 0 {
+		angle += Tau
+	}
+
+	var direction int
+	var mirror bool
+
+	if angle > ThingAngleA {
+		direction = AnimationBack
+		mirror = false
+	} else if angle > ThingAngleB {
+		direction = AnimationBackSide
+		mirror = true
+	} else if angle > ThingAngleC {
+		direction = AnimationSide
+		mirror = true
+	} else if angle > ThingAngleD {
+		direction = AnimationFrontSide
+		mirror = true
+	} else if angle > ThingAngleE {
+		direction = AnimationFront
+		mirror = false
+	} else if angle > ThingAngleF {
+		direction = AnimationFrontSide
+		mirror = false
+	} else if angle > ThingAngleG {
+		direction = AnimationSide
+		mirror = false
+	} else if angle > ThingAngleH {
+		direction = AnimationBackSide
+		mirror = false
+	} else {
+		direction = AnimationBack
+		mirror = false
+	}
+
+	sprite := me.animation[me.animationFrame][direction]
+
+	if mirror {
+		render.RendSprite(spriteBuffer[me.sid], me.x, me.y, me.z, float32(sin), float32(cos), sprite)
+	} else {
+		render.RendMirrorSprite(spriteBuffer[me.sid], me.x, me.y, me.z, float32(sin), float32(cos), sprite)
+	}
 }

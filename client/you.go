@@ -1,5 +1,13 @@
 package main
 
+const (
+	inputOpNewMove      = uint8(0)
+	inputOpContinueMove = uint8(1)
+	inputOpMissile      = uint8(2)
+	inputOpSearch       = uint8(3)
+	inputOpChat         = uint8(4)
+)
+
 type you struct {
 	*thing
 	status uint8
@@ -9,6 +17,7 @@ type you struct {
 func youInit(world *world, nid uint16, x, y, z, angle float32, health uint16, status uint8) *you {
 	you := &you{}
 	you.thing = &thing{}
+	you.thing.update = you.updateFn
 	you.world = world
 	you.uid = HumanUID
 	you.sid = "baron"
@@ -27,7 +36,11 @@ func youInit(world *world, nid uint16, x, y, z, angle float32, health uint16, st
 	you.health = health
 	you.status = status
 	world.addThing(you.thing)
+	world.netLookup[you.nid] = you
 	you.blockBorders()
 	you.addToBlocks()
 	return you
+}
+
+func (me *you) updateFn() {
 }

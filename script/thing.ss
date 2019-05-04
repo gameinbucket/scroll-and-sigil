@@ -50,19 +50,19 @@ object thing
   group          int
   deltaMoveXZ    bool
   deltaMoveY     bool
-  update         func bool
-  damage         func int
-  save           func bytes.buffer
-  snap           func bytes.buffer
+  update         func:bool
+  damage         func:int
+  save           func:bytes.buffer
+  snap           func:bytes.buffer
   binary         byte[]
 
 
-func NextNid uint16
+func NextNid :: uint16
   ThingNetworkNum += 1
   return ThingNetworkNum
 
 
-func LoadNewThing world w uint16 uid float32 x float32 y float32 z
+func LoadNewThing : world w uint16 uid float32 x float32 y float32 z
   switch uid
   case BaronUID
       NewBaron w x y z
@@ -74,11 +74,11 @@ func thing.nopUpdate : bool
   return false
 
 
-func thing.nopSnap bytes.Buffer b
+func thing.nopSnap : bytes.Buffer b
   me.binary = nil
 
 
-func thing.nopDamage int amount
+func thing.nopDamage : int amount
   nop
 
 
@@ -114,17 +114,17 @@ func thing.updateAnimation : int
   return AnimationNotDone
 
 
-func thing.overlap thing b : bool
+func thing.overlap : thing b : bool
   square = me.radius + b.radius
   return (abs me.x - b.x) <= square and (abs me.z - b.z) <= square
 
 
-func thing.tryOverlap float32 x float32 z thing b : bool
+func thing.tryOverlap : float32 x float32 z thing b : bool
   square = me.radius + b.radius
   return (abs x - b.x) <= square and (abs z - b.z) <= square
 
 
-func thing.approximateDistance thing b : float32
+func thing.approximateDistance : thing b : float32
   dx = abs me.x - b.x
   dz = abs me.z - b.z
   if dx > dz

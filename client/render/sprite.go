@@ -19,8 +19,8 @@ type Sprite struct {
 }
 
 // SimpleSprite func
-func SimpleSprite(left, top, width, height, atlasWidth, atlasHeight float32) []float32 {
-	return []float32{
+func SimpleSprite(left, top, width, height, atlasWidth, atlasHeight float32) [4]float32 {
+	return [4]float32{
 		left * atlasWidth,
 		top * atlasHeight,
 		(left + width) * atlasWidth,

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"syscall/js"
 
 	"./graphics"
@@ -39,7 +38,6 @@ type world struct {
 	all           int
 	blocks        []*block
 	viewable      []*block
-	spriteSet     map[*thing]bool
 	spriteBuffer  map[string]*graphics.RenderBuffer
 	spriteCount   map[string]int
 	thingCount    int
@@ -65,7 +63,6 @@ func worldInit(g *graphics.RenderSystem, gl js.Value) *world {
 func (me *world) reset() {
 	me.blocks = make([]*block, me.all)
 	me.viewable = make([]*block, 0)
-	me.spriteSet = make(map[*thing]bool)
 	me.spriteCount = make(map[string]int)
 	me.thingCount = 0
 	me.itemCount = 0
@@ -104,8 +101,6 @@ func (me *world) load(raw []byte) {
 	me.tileLength = me.length * BlockSize
 
 	me.reset()
-
-	fmt.Println("pid =", me.pid)
 
 	bx := 0
 	by := 0
@@ -152,7 +147,6 @@ func (me *world) load(raw []byte) {
 
 	var thingCount uint16
 	binary.Read(dat, binary.LittleEndian, &thingCount)
-	fmt.Println("thingCount =", thingCount)
 	for t := uint16(0); t < thingCount; t++ {
 		var uid uint16
 		var nid uint16
@@ -164,7 +158,6 @@ func (me *world) load(raw []byte) {
 		binary.Read(dat, binary.LittleEndian, &x)
 		binary.Read(dat, binary.LittleEndian, &y)
 		binary.Read(dat, binary.LittleEndian, &z)
-		fmt.Println(uid, nid, x, y, z)
 		switch uid {
 		case HumanUID:
 			var angle float32
@@ -242,14 +235,46 @@ func (me *world) load(raw []byte) {
 
 func (me *world) build() {
 	for i := 0; i < me.all; i++ {
-		b := me.blocks[i]
-		for j := 0; j < b.lightCount; j++ {
-			computeLight(me, b, b.lights[j])
+		block := me.blocks[i]
+		for j := 0; j < block.lightCount; j++ {
+			block.lights[j].addToWorld(me, block)
 		}
 	}
 	for i := 0; i < me.all; i++ {
 		me.blocks[i].buildMesh(me)
 	}
+}
+
+func (me *world) getTilePointer(bx, by, bz, tx, ty, tz int) *tile {
+	for tx < 0 {
+		tx += BlockSize
+		bx--
+	}
+	for tx >= BlockSize {
+		tx -= BlockSize
+		bx++
+	}
+	for ty < 0 {
+		ty += BlockSize
+		by--
+	}
+	for ty >= BlockSize {
+		ty -= BlockSize
+		by++
+	}
+	for tz < 0 {
+		tz += BlockSize
+		bz--
+	}
+	for tz >= BlockSize {
+		tz -= BlockSize
+		bz++
+	}
+	block := me.getBlock(bx, by, bz)
+	if block == nil {
+		return nil
+	}
+	return block.tiles[tx+ty*BlockSize+tz*BlockSlice]
 }
 
 func (me *world) getTileType(bx, by, bz, tx, ty, tz int) int {
@@ -273,7 +298,7 @@ func (me *world) getTileType(bx, by, bz, tx, ty, tz int) int {
 		tz += BlockSize
 		bz--
 	}
-	for bz >= BlockSize {
+	for tz >= BlockSize {
 		tz -= BlockSize
 		bz++
 	}
@@ -281,7 +306,7 @@ func (me *world) getTileType(bx, by, bz, tx, ty, tz int) int {
 	if block == nil {
 		return TileNone
 	}
-	return block.getTileTypeUnsafe(tx, ty, tz)
+	return block.tiles[tx+ty*BlockSize+tz*BlockSlice].typeOf
 }
 
 func (me *world) getBlock(x, y, z int) *block {
@@ -305,8 +330,6 @@ func (me *world) addThing(t *thing) {
 	}
 	me.things[me.thingCount] = t
 	me.thingCount++
-
-	me.netLookup[t.nid] = t
 
 	count, has := me.spriteCount[t.sid]
 	if has {
@@ -466,6 +489,66 @@ func (me *world) update() {
 	}
 }
 
-func (me *world) render(g *graphics.RenderSystem, camX, camZ, camAngle float32) {
+func (me *world) render(g *graphics.RenderSystem, x, y, z int, camX, camZ, camAngle float32) {
+	gl := me.gl
+	spriteBuffer := me.spriteBuffer
 
+	spriteSet := make(map[interface{}]bool)
+
+	for _, buffer := range spriteBuffer {
+		buffer.Zero()
+	}
+
+	g.SetProgram(gl, "texture-color3d")
+	g.UpdateMvp(gl)
+	g.SetTexture(gl, "tiles")
+
+	OcclusionViewNum := 0
+
+	for i := 0; i < OcclusionViewNum; i++ {
+		block := me.viewable[i]
+		block.renderThings(spriteSet, spriteBuffer, camX, camZ, camAngle)
+		mesh := block.mesh
+		if mesh.VertexPos == 0 {
+			continue
+		}
+
+		graphics.RenderSystemBindVao(gl, mesh)
+
+		if x == block.x {
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldPositiveX], block.countSide[WorldPositiveX])
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldNegativeX], block.countSide[WorldNegativeX])
+		} else if x > block.x {
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldPositiveX], block.countSide[WorldPositiveX])
+		} else {
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldNegativeX], block.countSide[WorldNegativeX])
+		}
+
+		if y == block.y {
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldPositiveY], block.countSide[WorldPositiveY])
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldNegativeY], block.countSide[WorldNegativeY])
+		} else if y > block.y {
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldPositiveY], block.countSide[WorldPositiveY])
+		} else {
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldNegativeY], block.countSide[WorldNegativeY])
+		}
+
+		if z == block.z {
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldPositiveZ], block.countSide[WorldPositiveZ])
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldNegativeZ], block.countSide[WorldNegativeZ])
+		} else if z > block.z {
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldPositiveZ], block.countSide[WorldPositiveZ])
+		} else {
+			graphics.RenderSystemDrawRange(gl, block.beginSide[WorldNegativeZ], block.countSide[WorldNegativeZ])
+		}
+	}
+
+	g.SetProgram(gl, "texture3d")
+	g.UpdateMvp(gl)
+	for name, buffer := range spriteBuffer {
+		if buffer.VertexPos > 0 {
+			g.SetTexture(gl, name)
+			graphics.RenderSystemUpdateAndDraw(gl, buffer)
+		}
+	}
 }
