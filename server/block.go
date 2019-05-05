@@ -27,9 +27,10 @@ type block struct {
 }
 
 // NewBlock func
-func NewBlock(x, y, z int) *block {
-	b := &block{X: x, Y: y, Z: z}
-	return b
+func (me *block) blockInit(x, y, z int) {
+	me.X = x
+	me.Y = y
+	me.Z = z
 }
 
 // Save func

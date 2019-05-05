@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 	"strconv"
+	"syscall/js"
 )
 
 const (
@@ -18,8 +19,10 @@ const (
 
 type you struct {
 	*thing
-	status uint8
-	camera *camera
+	status     uint8
+	camera     *camera
+	socket     js.Value
+	socketSend map[uint8]interface{}
 }
 
 func youInit(world *world, nid uint16, x, y, z, angle float32, health uint16, status uint8) *you {
@@ -111,5 +114,39 @@ func (me *you) netUpdateHealth(health uint16) {
 	me.health = health
 }
 
+func (me *you) dead() {
+	if me.animationFrame == len(me.animation)-1 {
+		me.update = me.emptyUpdate
+	} else {
+		me.updateAnimation()
+	}
+}
+
+func (me *you) missile() {
+	if me.updateAnimation() == AnimationDone {
+		me.animationFrame = 0
+		me.animation = humanAnimationWalk
+	}
+}
+
+func (me *you) walk() {
+	if InputIsKeyPress("p") {
+		me.socketSend[inputOpSearch] = true
+		me.socketSend[inputOpChat] = "todo test chat"
+	}
+}
+
 func (me *you) updateFn() {
+	switch me.status {
+	case humanDead:
+		me.dead()
+	case humanMissile:
+		me.missile()
+	default:
+		me.walk()
+	}
+	me.updateNetworkDelta()
+}
+
+func (me *you) emptyUpdate() {
 }

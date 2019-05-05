@@ -36,13 +36,13 @@ type app struct {
 	socket                   js.Value
 	socketQueue              [][]byte
 	socketSend               map[uint8]interface{}
-	canvasOrtho              [16]float32
-	drawOrtho                [16]float32
-	drawPerspective          [16]float32
-	drawInversePerspective   [16]float32
-	drawInverseMv            [16]float32
-	drawPreviousMvp          [16]float32
-	drawCurrentToPreviousMvp [16]float32
+	canvasOrtho              []float32
+	drawOrtho                []float32
+	drawPerspective          []float32
+	drawInversePerspective   []float32
+	drawInverseMv            []float32
+	drawPreviousMvp          []float32
+	drawCurrentToPreviousMvp []float32
 }
 
 func canvasInit() *canvas {
@@ -89,6 +89,14 @@ func (me *app) resize() {
 	drawHeight := int(math.Floor(float64(canvas.height) / drawFraction))
 	ratio := float64(drawWidth) / float64(drawHeight)
 	fov := float32(2.0 * math.Atan(math.Tan(60.0*(math.Pi/180.0)/2.0)/ratio) * (180.0 / math.Pi))
+
+	me.canvasOrtho = make([]float32, 16)
+	me.drawOrtho = make([]float32, 16)
+	me.drawPerspective = make([]float32, 16)
+	me.drawInversePerspective = make([]float32, 16)
+	me.drawInverseMv = make([]float32, 16)
+	me.drawPreviousMvp = make([]float32, 16)
+	me.drawCurrentToPreviousMvp = make([]float32, 16)
 
 	matrix.Orthographic(me.canvasOrtho, 0.0, float32(width), 0.0, float32(height), 0.0, 1.0)
 	matrix.Orthographic(me.drawOrtho, 0.0, float32(drawWidth), 0.0, float32(drawHeight), 0.0, 1.0)
@@ -174,6 +182,8 @@ func (me *app) init() {
 	player := world.netLookup[world.pid].(*you)
 	me.camera = cameraInit(world, player.thing, 10.0)
 	player.camera = me.camera
+	player.socket = me.socket
+	player.socketSend = me.socketSend
 }
 
 func (me *app) run() {

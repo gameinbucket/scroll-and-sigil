@@ -97,7 +97,8 @@ func (me *World) Load(data []byte) {
 		tiles := bdata["t"].(*Array).data
 		lights := bdata["c"].(*Array).data
 
-		block := NewBlock(bx, by, bz)
+		block := &me.Blocks[bx+by*me.Width+bz*me.Slice]
+		block.blockInit(bx, by, bz)
 		if len(tiles) > 0 {
 			for t := 0; t < BlockAll; t++ {
 				block.Tiles[t] = ParseInt(tiles[t].(string))
@@ -112,8 +113,6 @@ func (me *World) Load(data []byte) {
 			rgb := ParseInt(light["v"].(string))
 			block.addLight(NewLight(x, y, z, rgb))
 		}
-
-		me.Blocks[bx+by*me.Width+bz*me.Slice] = block
 
 		bx++
 		if bx == width {
@@ -300,7 +299,7 @@ func (me *World) getBlock(x, y, z int) *block {
 	if z < 0 || z >= me.Length {
 		return nil
 	}
-	return me.Blocks[x+y*me.Width+z*me.Slice]
+	return &me.Blocks[x+y*me.Width+z*me.Slice]
 }
 
 // addThing func

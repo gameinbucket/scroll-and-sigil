@@ -87,6 +87,7 @@ func (me *worldState) serverUpdates() {
 				if thing, ok := world.netLookup[nid]; ok {
 					switch typed := thing.(type) {
 					case you:
+						typed.cleanup()
 					case human:
 						typed.cleanup()
 					}
@@ -117,7 +118,9 @@ func (me *worldState) serverUpdates() {
 			binary.Read(dat, binary.LittleEndian, &delta)
 			switch typed := thing.(type) {
 			case *you:
+				typed.netUpdate(dat, delta)
 			case *human:
+				typed.netUpdate(dat, delta)
 			case *baron:
 				typed.netUpdate(dat, delta)
 			default:

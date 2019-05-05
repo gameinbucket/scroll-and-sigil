@@ -19,9 +19,9 @@ type Texture struct {
 
 // RenderSystem struct
 type RenderSystem struct {
-	View                  [16]float32
-	ModelView             [16]float32
-	ModelViewProject      [16]float32
+	View                  []float32
+	ModelView             []float32
+	ModelViewProject      []float32
 	ModelViewProjectTyped js.TypedArray
 	programID             js.Value
 	programName           string
@@ -35,18 +35,15 @@ type RenderSystem struct {
 // RenderSystemInit func
 func RenderSystemInit() *RenderSystem {
 	g := &RenderSystem{}
-
-	g.View = [16]float32{}
-	g.ModelView = [16]float32{}
-	g.ModelViewProject = [16]float32{}
-	g.ModelViewProjectTyped = js.TypedArrayOf(g.ModelViewProject[0:len(g.ModelViewProject)])
-
+	g.View = make([]float32, 16)
+	g.ModelView = make([]float32, 16)
+	g.ModelViewProject = make([]float32, 16)
+	g.ModelViewProjectTyped = js.TypedArrayOf(g.ModelViewProject)
 	g.mvpIds = make(map[string]js.Value)
 	g.uniforms = make(map[string]map[string]js.Value)
 	g.textureIds = make(map[string]js.Value)
 	g.shaders = make(map[string]js.Value)
 	g.Textures = make(map[string]*Texture)
-
 	return g
 }
 
@@ -94,7 +91,7 @@ func (me *RenderSystem) SetUniformVec2(gl js.Value, name string, x, y float32) {
 }
 
 // SetUniformMatrix4 func
-func (me *RenderSystem) SetUniformMatrix4(gl js.Value, name string, matrix [16]float32) {
+func (me *RenderSystem) SetUniformMatrix4(gl js.Value, name string, matrix []float32) {
 	loc, ok := me.uniforms[me.programName][name]
 	if !ok {
 		loc = gl.Call("getUniformLocation", me.programID, name)
@@ -117,14 +114,14 @@ func (me *RenderSystem) MakeProgram(gl js.Value, name string) {
 }
 
 // SetOrthographic func
-func (me *RenderSystem) SetOrthographic(orthographic [16]float32, x, y float32) {
+func (me *RenderSystem) SetOrthographic(orthographic []float32, x, y float32) {
 	matrix.Identity(me.ModelView)
 	matrix.Translate(me.ModelView, x, y, -1)
 	matrix.Multiply(me.ModelViewProject, orthographic, me.ModelView)
 }
 
 // SetPerspective func
-func (me *RenderSystem) SetPerspective(perspective [16]float32, x, y, z, rx, ry float32) {
+func (me *RenderSystem) SetPerspective(perspective []float32, x, y, z, rx, ry float32) {
 	matrix.Identity(me.View)
 	matrix.RotateX(me.View, rx)
 	matrix.RotateY(me.View, ry)

@@ -3,12 +3,12 @@ package matrix
 import "math"
 
 var (
-	matrixTemp   = [16]float32{}
-	matrixCopied = [16]float32{}
+	matrixTemp   = make([]float32, 16)
+	matrixCopied = make([]float32, 16)
 )
 
 // Identity func
-func Identity(matrix [16]float32) {
+func Identity(matrix []float32) {
 	matrix[0] = 1.0
 	matrix[1] = 0.0
 	matrix[2] = 0.0
@@ -31,7 +31,7 @@ func Identity(matrix [16]float32) {
 }
 
 // Orthographic func
-func Orthographic(matrix [16]float32, left, top, right, bottom, near, far float32) {
+func Orthographic(matrix []float32, left, right, bottom, top, near, far float32) {
 	matrix[0] = 2.0 / (right - left)
 	matrix[1] = 0.0
 	matrix[2] = 0.0
@@ -54,8 +54,8 @@ func Orthographic(matrix [16]float32, left, top, right, bottom, near, far float3
 }
 
 // Perspective func
-func Perspective(matrix [16]float32, fov, near, far, aspect float32) {
-	top := near * fov
+func Perspective(matrix []float32, fov, near, far, aspect float32) {
+	top := near * float32(math.Tan(float64(fov)*math.Pi/360.0))
 	bottom := -top
 	left := bottom * aspect
 	right := top * aspect
@@ -64,7 +64,7 @@ func Perspective(matrix [16]float32, fov, near, far, aspect float32) {
 }
 
 // Frustum func
-func Frustum(matrix [16]float32, left, right, bottom, top, near, far float32) {
+func Frustum(matrix []float32, left, right, bottom, top, near, far float32) {
 	matrix[0] = (2.0 * near) / (right - left)
 	matrix[1] = 0.0
 	matrix[2] = 0.0
@@ -87,7 +87,7 @@ func Frustum(matrix [16]float32, left, right, bottom, top, near, far float32) {
 }
 
 // Translate func
-func Translate(matrix [16]float32, x, y, z float32) {
+func Translate(matrix []float32, x, y, z float32) {
 	matrix[12] = x*matrix[0] + y*matrix[4] + z*matrix[8] + matrix[12]
 	matrix[13] = x*matrix[1] + y*matrix[5] + z*matrix[9] + matrix[13]
 	matrix[14] = x*matrix[2] + y*matrix[6] + z*matrix[10] + matrix[14]
@@ -95,7 +95,7 @@ func Translate(matrix [16]float32, x, y, z float32) {
 }
 
 // TranslateFromView func
-func TranslateFromView(matrix, view [16]float32, x, y, z float32) {
+func TranslateFromView(matrix, view []float32, x, y, z float32) {
 	matrix[0] = view[0]
 	matrix[1] = view[1]
 	matrix[2] = view[2]
@@ -115,7 +115,7 @@ func TranslateFromView(matrix, view [16]float32, x, y, z float32) {
 }
 
 // RotateX func
-func RotateX(matrix [16]float32, radian float32) {
+func RotateX(matrix []float32, radian float32) {
 	sin := float32(math.Sin(float64(radian)))
 	cos := float32(math.Cos(float64(radian)))
 
@@ -147,7 +147,7 @@ func RotateX(matrix [16]float32, radian float32) {
 }
 
 // RotateY func
-func RotateY(matrix [16]float32, radian float32) {
+func RotateY(matrix []float32, radian float32) {
 	sin := float32(math.Sin(float64(radian)))
 	cos := float32(math.Cos(float64(radian)))
 
@@ -179,7 +179,7 @@ func RotateY(matrix [16]float32, radian float32) {
 }
 
 // RotateZ func
-func RotateZ(matrix [16]float32, radian float32) {
+func RotateZ(matrix []float32, radian float32) {
 	sin := float32(math.Sin(float64(radian)))
 	cos := float32(math.Cos(float64(radian)))
 
@@ -211,7 +211,7 @@ func RotateZ(matrix [16]float32, radian float32) {
 }
 
 // Multiply func
-func Multiply(matrix, b, c [16]float32) {
+func Multiply(matrix, b, c []float32) {
 	matrix[0] = b[0]*c[0] + b[4]*c[1] + b[8]*c[2] + b[12]*c[3]
 	matrix[1] = b[1]*c[0] + b[5]*c[1] + b[9]*c[2] + b[13]*c[3]
 	matrix[2] = b[2]*c[0] + b[6]*c[1] + b[10]*c[2] + b[14]*c[3]
@@ -234,7 +234,7 @@ func Multiply(matrix, b, c [16]float32) {
 }
 
 // Inverse func
-func Inverse(matrix, b [16]float32) {
+func Inverse(matrix, b []float32) {
 	for i := 0; i < 4; i++ {
 		matrixCopied[i+0] = b[i*4+0]
 		matrixCopied[i+4] = b[i*4+1]
@@ -310,7 +310,7 @@ func Inverse(matrix, b [16]float32) {
 }
 
 // MultiplyVector func
-func MultiplyVector(matrix [16]float32, x, y, z float32) (float32, float32, float32) {
+func MultiplyVector(matrix []float32, x, y, z float32) (float32, float32, float32) {
 	a := matrix[0]*x + matrix[4]*y + matrix[8]*z + matrix[12]
 	b := matrix[1]*x + matrix[5]*y + matrix[9]*z + matrix[13]
 	c := matrix[2]*x + matrix[6]*y + matrix[10]*z + matrix[14]

@@ -161,7 +161,7 @@ func (me *thing) cleanup() {
 }
 
 func (me *thing) updateAnimation() int {
-	me.animationFrame++
+	me.animationMod++
 	if me.animationMod == AnimationRate {
 		me.animationMod = 0
 		me.animationFrame++

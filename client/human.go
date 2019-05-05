@@ -121,5 +121,40 @@ func (me *human) netUpdateHealth(health uint16) {
 	me.health = health
 }
 
+func (me *human) dead() {
+	if me.animationFrame == len(me.animation)-1 {
+		me.update = me.emptyUpdate
+	} else {
+		me.updateAnimation()
+	}
+}
+
+func (me *human) missile() {
+	if me.updateAnimation() == AnimationDone {
+		me.animationFrame = 0
+		me.animation = humanAnimationWalk
+	}
+}
+
+func (me *human) walk() {
+	if me.updateAnimation() == AnimationDone {
+		me.animationFrame = 0
+	}
+}
+
 func (me *human) updateFn() {
+	switch me.status {
+	case humanDead:
+		me.dead()
+	case humanMissile:
+		me.missile()
+	case humanIdle:
+		break
+	default:
+		me.walk()
+	}
+	me.updateNetworkDelta()
+}
+
+func (me *human) emptyUpdate() {
 }

@@ -425,6 +425,16 @@ func (me *block) buildMesh(world *world) {
 					switch side {
 					case WorldPositiveX:
 						render.RendTilePosX(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+					case WorldNegativeX:
+						render.RendTileNegX(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+					case WorldPositiveY:
+						render.RendTilePosY(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+					case WorldNegativeY:
+						render.RendTileNegY(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+					case WorldPositiveZ:
+						render.RendTilePosZ(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+					case WorldNegativeZ:
+						render.RendTileNegZ(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
 					}
 				}
 			}

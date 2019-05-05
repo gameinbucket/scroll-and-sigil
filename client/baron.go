@@ -40,7 +40,7 @@ func baronInit(world *world, nid uint16, x, y, z float32, direction uint8, healt
 	baron.uid = BaronUID
 	baron.sid = "baron"
 	baron.nid = nid
-	baron.animation = baronAnimationWalk
+	baron.animateInit(status)
 	baron.x = x
 	baron.y = y
 	baron.z = z
@@ -62,16 +62,16 @@ func baronInit(world *world, nid uint16, x, y, z float32, direction uint8, healt
 	return baron
 }
 
-func (me *baron) getAnimation(status uint8) [][]*render.Sprite {
+func (me *baron) animateInit(status uint8) {
 	switch status {
 	case baronDead:
-		return baronAnimationDeath
+		me.animation = baronAnimationDeath
 	case baronMelee:
-		return baronAnimationMelee
+		me.animation = baronAnimationMelee
 	case baronMissile:
-		return baronAnimationMissile
+		me.animation = baronAnimationMissile
 	default:
-		return baronAnimationWalk
+		me.animation = baronAnimationWalk
 	}
 }
 
