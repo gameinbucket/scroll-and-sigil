@@ -107,24 +107,24 @@ func (me *You) Snap(raw *bytes.Buffer) {
 	binary.Write(raw, binary.LittleEndian, me.NID)
 	binary.Write(raw, binary.LittleEndian, delta)
 	if me.DeltaMoveXZ {
-		binary.Write(raw, binary.LittleEndian, float32(me.X))
-		binary.Write(raw, binary.LittleEndian, float32(me.Z))
+		binary.Write(raw, binary.LittleEndian, me.X)
+		binary.Write(raw, binary.LittleEndian, me.Z)
 		me.DeltaMoveXZ = false
 	}
 	if me.DeltaMoveY {
-		binary.Write(raw, binary.LittleEndian, float32(me.Y))
+		binary.Write(raw, binary.LittleEndian, me.Y)
 		me.DeltaMoveY = false
 	}
 	if me.DeltaHealth {
-		binary.Write(raw, binary.LittleEndian, uint16(me.Health))
+		binary.Write(raw, binary.LittleEndian, me.Health)
 		me.DeltaHealth = false
 	}
 	if me.DeltaStatus {
-		binary.Write(raw, binary.LittleEndian, uint8(me.Status))
+		binary.Write(raw, binary.LittleEndian, me.Status)
 		me.DeltaStatus = false
 	}
 	if me.DeltaAngle {
-		binary.Write(raw, binary.LittleEndian, float32(me.Angle))
+		binary.Write(raw, binary.LittleEndian, me.Angle)
 		me.DeltaAngle = false
 	}
 	binary := raw.Bytes()

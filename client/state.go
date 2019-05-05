@@ -31,7 +31,6 @@ func (me *worldState) serverUpdates() {
 	socketQueue := me.app.socketQueue
 
 	for i := 0; i < len(socketQueue); i++ {
-
 		dat := bytes.NewReader(socketQueue[i])
 
 		var uint32ref uint32
@@ -79,6 +78,8 @@ func (me *worldState) serverUpdates() {
 					binary.Read(dat, binary.LittleEndian, &health)
 					binary.Read(dat, binary.LittleEndian, &status)
 					humanInit(world, nid, x, y, z, angle, health, status)
+				default:
+					panic(fmt.Sprintf("unknown UID", uid))
 				}
 			case BroadcastDelete:
 				var nid uint16
@@ -105,51 +106,22 @@ func (me *worldState) serverUpdates() {
 
 		var thingCount uint16
 		binary.Read(dat, binary.LittleEndian, &thingCount)
-		fmt.Println("state: thing count", thingCount)
 		for t := uint16(0); t < thingCount; t++ {
 			var nid uint16
 			binary.Read(dat, binary.LittleEndian, &nid)
-			fmt.Println("state: nid", nid)
 			thing, ok := world.netLookup[nid]
 			if !ok {
 				panic("missing thing nid")
 			}
 			var delta uint8
 			binary.Read(dat, binary.LittleEndian, &delta)
-			if delta&0x1 == 1 {
-				var x float32
-				var z float32
-				binary.Read(dat, binary.LittleEndian, &x)
-				binary.Read(dat, binary.LittleEndian, &z)
-			}
-			if delta&0x2 == 1 {
-				var y float32
-				binary.Read(dat, binary.LittleEndian, &y)
-			}
-			if delta&0x4 == 1 {
-				var health uint16
-				binary.Read(dat, binary.LittleEndian, &health)
-			}
-			if delta&0x8 == 1 {
-				var status uint8
-				binary.Read(dat, binary.LittleEndian, &status)
-			}
 			switch typed := thing.(type) {
-			case you:
-			case human:
-				if delta&0x10 == 1 {
-					var angle float32
-					binary.Read(dat, binary.LittleEndian, &angle)
-					typed.angle = angle
-				}
-			case baron:
-				if delta&0x10 == 1 {
-					var direction uint8
-					binary.Read(dat, binary.LittleEndian, &direction)
-					if direction != DirectionNone {
-						typed.angle = DirectionToAngle[direction]
-					}
-				}
+			case *you:
+			case *human:
+			case *baron:
+				typed.netUpdate(dat, delta)
+			default:
+				panic(fmt.Sprintf("unknown type of thing", typed))
 			}
 		}
 	}
@@ -317,6 +289,7 @@ func (me *worldState) render() {
 
 		graphics.RenderSystemSetFrameBuffer(gl, js.Null())
 		graphics.RenderSystemSetView(gl, 0, 0, canvas.width, canvas.height)
+
 		g.SetProgram(gl, "screen")
 		g.SetOrthographic(canvasOrtho, 0, 0)
 		g.UpdateMvp(gl)

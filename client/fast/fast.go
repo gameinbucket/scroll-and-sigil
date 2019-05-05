@@ -2,30 +2,33 @@ package fast
 
 import "math"
 
+// Constants
 const (
-	pi      = float32(math.Pi)
-	tau     = float32(math.Pi * 2.0)
-	half_pi = float32(math.Pi / 2.0)
-	b       = 4.0 / pi
-	c       = -4.0 / (pi * pi)
-	p       = 0.225
+	Pi     = float32(math.Pi)
+	Tau    = float32(math.Pi * 2.0)
+	HalfPi = float32(math.Pi * 0.5)
 )
 
+// Sin func
 func Sin(x float32) float32 {
-	if x > pi {
-		x -= tau
-	} else if x < -pi {
-		x += tau
+	const (
+		b = 4.0 / Pi
+		c = -4.0 / (Pi * Pi)
+		p = 0.225
+	)
+	if x > Pi {
+		x -= Tau
+	} else if x < -Pi {
+		x += Tau
 	}
-	y := b*x + c*x
 	if x < 0 {
-		y *= -x
-	} else {
-		y *= x
+		return (b*x + c*x) * -x
 	}
-	return y
+	return (b*x + c*x) * x
+
 }
 
+// Cos func
 func Cos(x float32) float32 {
-	return Sin(x + half_pi)
+	return Sin(x + HalfPi)
 }

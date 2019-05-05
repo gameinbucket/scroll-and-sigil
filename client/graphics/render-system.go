@@ -19,33 +19,41 @@ type Texture struct {
 
 // RenderSystem struct
 type RenderSystem struct {
-	View             [16]float32
-	ModelView        [16]float32
-	ModelViewProject [16]float32
-	programID        js.Value
-	programName      string
-	mvpIds           map[string]js.Value
-	uniforms         map[string]map[string]js.Value
-	textureIds       map[string]js.Value
-	shaders          map[string]js.Value
-	Textures         map[string]*Texture
+	View                  [16]float32
+	ModelView             [16]float32
+	ModelViewProject      [16]float32
+	ModelViewProjectTyped js.TypedArray
+	programID             js.Value
+	programName           string
+	mvpIds                map[string]js.Value
+	uniforms              map[string]map[string]js.Value
+	textureIds            map[string]js.Value
+	shaders               map[string]js.Value
+	Textures              map[string]*Texture
 }
 
 // RenderSystemInit func
 func RenderSystemInit() *RenderSystem {
-	s := &RenderSystem{}
-	s.mvpIds = make(map[string]js.Value)
-	s.uniforms = make(map[string]map[string]js.Value)
-	s.textureIds = make(map[string]js.Value)
-	s.shaders = make(map[string]js.Value)
-	s.Textures = make(map[string]*Texture)
-	return s
+	g := &RenderSystem{}
+
+	g.View = [16]float32{}
+	g.ModelView = [16]float32{}
+	g.ModelViewProject = [16]float32{}
+	g.ModelViewProjectTyped = js.TypedArrayOf(g.ModelViewProject[0:len(g.ModelViewProject)])
+
+	g.mvpIds = make(map[string]js.Value)
+	g.uniforms = make(map[string]map[string]js.Value)
+	g.textureIds = make(map[string]js.Value)
+	g.shaders = make(map[string]js.Value)
+	g.Textures = make(map[string]*Texture)
+
+	return g
 }
 
 // SetTexture func
 func (me *RenderSystem) SetTexture(gl js.Value, name string) {
 	gl.Call("activeTexture", GLxTexture0)
-	gl.Call("bindTexture", GLxTexture2D, me.Textures[name])
+	gl.Call("bindTexture", GLxTexture2D, me.Textures[name].TextureID)
 	gl.Call("uniform1i", me.textureIds[me.programName], 0)
 }
 
@@ -160,7 +168,7 @@ func (me *RenderSystem) MakeImage(gl js.Value, name string, wrap js.Value) {
 
 // UpdateMvp func
 func (me *RenderSystem) UpdateMvp(gl js.Value) {
-	gl.Call("uniformMatrix4fv", me.mvpIds[me.programName], false, me.ModelViewProject)
+	gl.Call("uniformMatrix4fv", me.mvpIds[me.programName], false, me.ModelViewProjectTyped)
 }
 
 // RenderSystemSetFrameBuffer func

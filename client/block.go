@@ -32,7 +32,6 @@ var (
 
 func setupBlocks() {
 	blockMesh = graphics.RenderCopyInit(3, 3, 2, BlockAll*6*4, BlockAll*6*6)
-
 	for i := 0; i < len(blockMeshColor); i++ {
 		blockMeshColor[i] = [3]float32{}
 	}
@@ -43,7 +42,7 @@ type block struct {
 	y             int
 	z             int
 	mesh          *graphics.RenderBuffer
-	visibility    [36]uint8
+	visibility    [36]bool
 	beginSide     [6]int
 	countSide     [6]int
 	thingCount    int
@@ -56,18 +55,13 @@ type block struct {
 	missiles      []*missile
 	particles     []*particle
 	lights        []*light
-	tiles         [BlockAll]*tile
+	tiles         [BlockAll]tile
 }
 
-func blockInit(x, y, z int) *block {
-	b := &block{}
-	b.x = x
-	b.y = y
-	b.z = z
-	for t := 0; t < BlockAll; t++ {
-		b.tiles[t] = &tile{}
-	}
-	return b
+func (me *block) blockInit(x, y, z int) {
+	me.x = x
+	me.y = y
+	me.z = z
 }
 
 func (me *block) save() string {

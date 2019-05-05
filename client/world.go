@@ -36,8 +36,8 @@ type world struct {
 	tileLength    int
 	slice         int
 	all           int
-	blocks        []*block
-	viewable      []*block
+	blocks        []block
+	occluder      *occluder
 	spriteBuffer  map[string]*graphics.RenderBuffer
 	spriteCount   map[string]int
 	thingCount    int
@@ -61,8 +61,7 @@ func worldInit(g *graphics.RenderSystem, gl js.Value) *world {
 }
 
 func (me *world) reset() {
-	me.blocks = make([]*block, me.all)
-	me.viewable = make([]*block, 0)
+	me.blocks = make([]block, me.all)
 	me.spriteCount = make(map[string]int)
 	me.thingCount = 0
 	me.itemCount = 0
@@ -101,12 +100,13 @@ func (me *world) load(raw []byte) {
 	me.tileLength = me.length * BlockSize
 
 	me.reset()
+	me.occluder = occluderInit(me.all)
 
 	bx := 0
 	by := 0
 	bz := 0
 	for i := 0; i < me.all; i++ {
-		me.blocks[i] = blockInit(bx, by, bz)
+		me.blocks[i].blockInit(bx, by, bz)
 		bx++
 		if bx == me.width {
 			bx = 0
@@ -237,7 +237,7 @@ func (me *world) build() {
 	for i := 0; i < me.all; i++ {
 		block := me.blocks[i]
 		for j := 0; j < block.lightCount; j++ {
-			block.lights[j].addToWorld(me, block)
+			block.lights[j].addToWorld(me, &block)
 		}
 	}
 	for i := 0; i < me.all; i++ {
@@ -274,7 +274,7 @@ func (me *world) getTilePointer(bx, by, bz, tx, ty, tz int) *tile {
 	if block == nil {
 		return nil
 	}
-	return block.tiles[tx+ty*BlockSize+tz*BlockSlice]
+	return &block.tiles[tx+ty*BlockSize+tz*BlockSlice]
 }
 
 func (me *world) getTileType(bx, by, bz, tx, ty, tz int) int {
@@ -319,7 +319,7 @@ func (me *world) getBlock(x, y, z int) *block {
 	if z < 0 || z >= me.length {
 		return nil
 	}
-	return me.blocks[x+y*me.width+z*me.slice]
+	return &me.blocks[x+y*me.width+z*me.slice]
 }
 
 func (me *world) addThing(t *thing) {
@@ -492,8 +492,11 @@ func (me *world) update() {
 func (me *world) render(g *graphics.RenderSystem, x, y, z int, camX, camZ, camAngle float32) {
 	gl := me.gl
 	spriteBuffer := me.spriteBuffer
-
+	occluder := me.occluder
 	spriteSet := make(map[interface{}]bool)
+
+	occluder.prepareFrustum(g)
+	occluder.search(me, x, y, z)
 
 	for _, buffer := range spriteBuffer {
 		buffer.Zero()
@@ -503,10 +506,9 @@ func (me *world) render(g *graphics.RenderSystem, x, y, z int, camX, camZ, camAn
 	g.UpdateMvp(gl)
 	g.SetTexture(gl, "tiles")
 
-	OcclusionViewNum := 0
-
-	for i := 0; i < OcclusionViewNum; i++ {
-		block := me.viewable[i]
+	size := occluder.viewNum
+	for i := 0; i < size; i++ {
+		block := occluder.viewable[i]
 		block.renderThings(spriteSet, spriteBuffer, camX, camZ, camAngle)
 		mesh := block.mesh
 		if mesh.VertexPos == 0 {

@@ -2,21 +2,21 @@ package main
 
 // Npc constants
 const (
-	DirectionNorth     = 0
-	DirectionNorthEast = 1
-	DirectionEast      = 2
-	DirectionSouthEast = 3
-	DirectionSouth     = 4
-	DirectionSouthWest = 5
-	DirectionWest      = 6
-	DirectionNorthWest = 7
-	DirectionNone      = 8
-	DirectionCount     = 8
+	DirectionNorth     = uint8(0)
+	DirectionNorthEast = uint8(1)
+	DirectionEast      = uint8(2)
+	DirectionSouthEast = uint8(3)
+	DirectionSouth     = uint8(4)
+	DirectionSouthWest = uint8(5)
+	DirectionWest      = uint8(6)
+	DirectionNorthWest = uint8(7)
+	DirectionNone      = uint8(8)
+	DirectionCount     = uint8(8)
 )
 
 // Npc variables
 var (
-	OppositeDirection = []int{
+	OppositeDirection = []uint8{
 		DirectionSouth,
 		DirectionSouthWest,
 		DirectionWest,
@@ -27,7 +27,7 @@ var (
 		DirectionSouthEast,
 		DirectionNone,
 	}
-	DiagonalDirection = []int{
+	DiagonalDirection = []uint8{
 		DirectionNorthEast,
 		DirectionNorthWest,
 		DirectionSouthEast,
@@ -46,7 +46,7 @@ type Npc struct {
 	*thing
 	Target             *thing
 	MoveCount          uint8
-	MoveDirection      int
+	MoveDirection      uint8
 	DeltaMoveDirection bool
 }
 
@@ -59,7 +59,7 @@ func (me *Npc) NewChaseDirection() {
 	old := me.MoveDirection
 	opposite := OppositeDirection[old]
 
-	var directionX int
+	var directionX uint8
 	if dx > epsilon {
 		directionX = DirectionWest
 	} else if dx < -epsilon {
@@ -68,7 +68,7 @@ func (me *Npc) NewChaseDirection() {
 		directionX = DirectionNone
 	}
 
-	var directionZ int
+	var directionZ uint8
 	if dz > epsilon {
 		directionZ = DirectionNorth
 	} else if dz < -epsilon {
@@ -119,7 +119,7 @@ func (me *Npc) NewChaseDirection() {
 	}
 
 	if NextRandP()&1 > 0 {
-		for d := 0; d < DirectionCount; d++ {
+		for d := uint8(0); d < DirectionCount; d++ {
 			if d == opposite {
 				continue
 			}

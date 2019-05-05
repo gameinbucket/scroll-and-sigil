@@ -36,7 +36,7 @@ type World struct {
 	Length                          int
 	Slice                           int
 	All                             int
-	Blocks                          []*block
+	Blocks                          []block
 	thingCount                      int
 	itemCount                       int
 	missileCount                    int
@@ -79,7 +79,7 @@ func (me *World) Load(data []byte) {
 	me.Length = length
 	me.Slice = width * height
 	me.All = me.Slice * length
-	me.Blocks = make([]*block, me.All)
+	me.Blocks = make([]block, me.All)
 
 	me.thingCount = 0
 	me.itemCount = 0
@@ -187,7 +187,7 @@ func (me *World) Save(person *Person) []byte {
 // BuildSnapshots func
 func (me *World) BuildSnapshots(people []*Person) {
 	num := len(people)
-	time := time.Now().UnixNano()/1000000 - 1552330000000
+	time := uint32(time.Now().UnixNano()/1000000 - 1552330000000)
 	numthings := me.thingCount
 
 	body := &bytes.Buffer{}
@@ -209,14 +209,14 @@ func (me *World) BuildSnapshots(people []*Person) {
 
 	body.Reset()
 	spriteSet := make(map[*thing]bool)
-	updatedthings := 0
+	updatedThings := uint16(0)
 	for i := 0; i < numthings; i++ {
 		thing := me.things[i]
 		if _, has := spriteSet[thing]; !has {
 			spriteSet[thing] = true
 			if thing.Binary != nil {
 				body.Write(thing.Binary)
-				updatedthings++
+				updatedThings++
 			}
 		}
 	}
@@ -225,14 +225,14 @@ func (me *World) BuildSnapshots(people []*Person) {
 		person := people[i]
 
 		raw.Reset()
-		binary.Write(raw, binary.LittleEndian, uint32(time))
+		binary.Write(raw, binary.LittleEndian, time)
 
 		binary.Write(raw, binary.LittleEndian, broadcasting)
 		if broadcasting > 0 {
 			raw.Write(broadcast)
 		}
 
-		binary.Write(raw, binary.LittleEndian, uint16(updatedthings))
+		binary.Write(raw, binary.LittleEndian, updatedThings)
 		raw.Write(body.Bytes())
 
 		binary := raw.Bytes()
@@ -252,7 +252,7 @@ func (me *World) FindBlock(x, y, z float32) int {
 	tx := gx - bx*BlockSize
 	ty := gy - by*BlockSize
 	tz := gz - bz*BlockSize
-	block := me.Blocks[bx+by*me.Width+bz*me.Slice]
+	block := &me.Blocks[bx+by*me.Width+bz*me.Slice]
 	return block.Tiles[tx+ty*BlockSize+tz*BlockSlice]
 }
 

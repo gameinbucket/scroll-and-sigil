@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"math"
 	"math/rand"
 	"strconv"
@@ -70,6 +72,27 @@ func (me *baron) getAnimation(status uint8) [][]*render.Sprite {
 		return baronAnimationMissile
 	default:
 		return baronAnimationWalk
+	}
+}
+
+func (me *baron) netUpdate(dat *bytes.Reader, delta uint8) {
+	me.thingNetUpdate(dat, delta)
+	if delta&0x4 != 0 {
+		var health uint16
+		binary.Read(dat, binary.LittleEndian, &health)
+		me.netUpdateHealth(health)
+	}
+	if delta&0x8 != 0 {
+		var state uint8
+		binary.Read(dat, binary.LittleEndian, &state)
+		me.netUpdateState(state)
+	}
+	if delta&0x10 != 0 {
+		var direction uint8
+		binary.Read(dat, binary.LittleEndian, &direction)
+		if direction != DirectionNone {
+			me.angle = DirectionToAngle[direction]
+		}
 	}
 }
 

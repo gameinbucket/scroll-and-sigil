@@ -185,16 +185,16 @@ func (me *app) run() {
 		me.resize()
 		return nil
 	}))
-	dom.window.Set("onblur", js.FuncOf(func(self js.Value, args []js.Value) interface{} {
-		console("blur!")
-		me.on = false
-		return nil
-	}))
-	dom.window.Set("onfocus", js.FuncOf(func(self js.Value, args []js.Value) interface{} {
-		console("focus!")
-		me.on = true
-		return nil
-	}))
+	// dom.window.Set("onblur", js.FuncOf(func(self js.Value, args []js.Value) interface{} {
+	// 	console("blur!")
+	// 	me.on = false
+	// 	return nil
+	// }))
+	// dom.window.Set("onfocus", js.FuncOf(func(self js.Value, args []js.Value) interface{} {
+	// 	console("focus!")
+	// 	me.on = true
+	// 	return nil
+	// }))
 	dom.body.Call("appendChild", me.canvas.element)
 	me.resize()
 	me.loop()
@@ -232,6 +232,7 @@ func appInit() *app {
 	g := graphics.RenderSystemInit()
 
 	app := &app{}
+	app.on = true
 	app.canvas = canvas
 	app.g = g
 	app.gl = gl

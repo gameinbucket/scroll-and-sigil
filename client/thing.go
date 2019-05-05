@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"math"
 
 	"./graphics"
@@ -131,6 +133,25 @@ func (me *thing) removeFromBlocks() {
 				block.removeThing(me)
 			}
 		}
+	}
+}
+
+func (me *thing) thingNetUpdate(dat *bytes.Reader, delta uint8) {
+	if delta&0x1 != 0 {
+		var x float32
+		var z float32
+		binary.Read(dat, binary.LittleEndian, &x)
+		binary.Read(dat, binary.LittleEndian, &z)
+		me.netX = x
+		me.deltaNetX = (x - me.x) * InverseNetRate
+		me.netZ = z
+		me.deltaNetZ = (z - me.z) * InverseNetRate
+	}
+	if delta&0x2 != 0 {
+		var y float32
+		binary.Read(dat, binary.LittleEndian, &y)
+		me.netY = y
+		me.deltaNetY = (y - me.y) * InverseNetRate
 	}
 }
 

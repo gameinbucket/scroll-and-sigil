@@ -87,7 +87,7 @@ func lightVisit(world *world, bx, by, bz, tx, ty, tz int, red, green, blue uint8
 }
 
 func (me *light) addToWorld(world *world, block *block) {
-	origin := block.tiles[me.x+me.y*BlockSize+me.z*BlockSlice]
+	origin := &block.tiles[me.x+me.y*BlockSize+me.z*BlockSlice]
 	origin.red = me.red
 	origin.green = me.green
 	origin.blue = me.blue
