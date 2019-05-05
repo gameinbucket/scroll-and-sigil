@@ -133,7 +133,6 @@ func (me *worldState) serverUpdates() {
 func (me *worldState) update() {
 	world := me.app.world
 	socketQueue := me.app.socketQueue
-	socketSend := me.app.socketSend
 
 	if len(socketQueue) > 0 {
 		me.serverUpdates()
@@ -142,31 +141,37 @@ func (me *worldState) update() {
 
 	world.update()
 
+	socketSend := me.app.socketSend
 	socketSendOperations := uint8(0)
 	size := len(socketSend)
 	if size > 0 {
-		raw := &bytes.Buffer{}
+		full := &bytes.Buffer{}
+		body := &bytes.Buffer{}
 		for op, value := range socketSend {
-			binary.Write(raw, binary.LittleEndian, op)
+			binary.Write(body, binary.LittleEndian, op)
 			switch op {
 			case inputOpNewMove:
-				binary.Write(raw, binary.LittleEndian, value.(float32))
+				binary.Write(body, binary.LittleEndian, value.(float32))
 			case inputOpChat:
-				chat := value.([]uint8)
+				chat := value.(string)
 				chatSize := uint8(len(chat))
 				if chatSize > 255 {
 					chatSize = 255
 				}
-				binary.Write(raw, binary.LittleEndian, chatSize)
+				binary.Write(body, binary.LittleEndian, chatSize)
 				for ch := uint8(0); ch < chatSize; ch++ {
-					binary.Write(raw, binary.LittleEndian, chat[ch])
+					binary.Write(body, binary.LittleEndian, chat[ch])
 				}
 			}
+			socketSendOperations++
 		}
-		binary.Write(raw, binary.LittleEndian, socketSendOperations)
-		me.app.socket.Call("send", js.TypedArrayOf(raw.Bytes()))
+		binary.Write(full, binary.LittleEndian, socketSendOperations)
+		binary.Write(full, binary.LittleEndian, body.Bytes())
+		me.app.socket.Call("send", js.TypedArrayOf(full.Bytes()))
 
-		me.app.socketSend = make(map[uint8]interface{})
+		for key := range socketSend {
+			delete(socketSend, key)
+		}
 	}
 }
 

@@ -80,6 +80,7 @@ func medkitInit(world *world, nid uint16, x, y, z float32) *item {
 	me.blockBorders()
 	me.addToBlocks()
 	me.uid = MedkitUID
+	me.sid = "item"
 	me.nid = nid
 	me.sprite = wadSpriteData[me.sid]["medkit"]
 	me.radius = 0.2

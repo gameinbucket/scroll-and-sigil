@@ -119,14 +119,14 @@ func (me *world) load(raw []byte) {
 	}
 
 	for i := 0; i < me.all; i++ {
-		b := me.blocks[i]
+		block := &me.blocks[i]
 		binary.Read(dat, binary.LittleEndian, &uint8ref)
 		notEmpty := uint8ref != 0
 		if notEmpty {
 			for t := 0; t < BlockAll; t++ {
 				binary.Read(dat, binary.LittleEndian, &uint8ref)
 				tileType := int(uint8ref)
-				b.tiles[t].typeOf = tileType
+				block.tiles[t].typeOf = tileType
 			}
 		}
 
@@ -141,7 +141,7 @@ func (me *world) load(raw []byte) {
 			binary.Read(dat, binary.LittleEndian, &y)
 			binary.Read(dat, binary.LittleEndian, &z)
 			binary.Read(dat, binary.LittleEndian, &rgb)
-			b.addLight(lightInit(x, y, z, rgb))
+			block.addLight(lightInit(x, y, z, rgb))
 		}
 	}
 
@@ -235,9 +235,9 @@ func (me *world) load(raw []byte) {
 
 func (me *world) build() {
 	for i := 0; i < me.all; i++ {
-		block := me.blocks[i]
+		block := &me.blocks[i]
 		for j := 0; j < block.lightCount; j++ {
-			block.lights[j].addToWorld(me, &block)
+			block.lights[j].addToWorld(me, block)
 		}
 	}
 	for i := 0; i < me.all; i++ {

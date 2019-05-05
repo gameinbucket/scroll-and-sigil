@@ -280,8 +280,8 @@ func (me *thing) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, ca
 	sprite := me.animation[me.animationFrame][direction]
 
 	if mirror {
-		render.RendSprite(spriteBuffer[me.sid], me.x, me.y, me.z, float32(sin), float32(cos), sprite)
-	} else {
 		render.RendMirrorSprite(spriteBuffer[me.sid], me.x, me.y, me.z, float32(sin), float32(cos), sprite)
+	} else {
+		render.RendSprite(spriteBuffer[me.sid], me.x, me.y, me.z, float32(sin), float32(cos), sprite)
 	}
 }

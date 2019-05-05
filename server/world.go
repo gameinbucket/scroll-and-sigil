@@ -189,8 +189,8 @@ func (me *World) BuildSnapshots(people []*Person) {
 	time := uint32(time.Now().UnixNano()/1000000 - 1552330000000)
 	numthings := me.thingCount
 
+	full := &bytes.Buffer{}
 	body := &bytes.Buffer{}
-	raw := &bytes.Buffer{}
 
 	var broadcast []byte
 	broadcasting := me.broadcastCount
@@ -223,18 +223,18 @@ func (me *World) BuildSnapshots(people []*Person) {
 	for i := 0; i < num; i++ {
 		person := people[i]
 
-		raw.Reset()
-		binary.Write(raw, binary.LittleEndian, time)
+		full.Reset()
+		binary.Write(full, binary.LittleEndian, time)
 
-		binary.Write(raw, binary.LittleEndian, broadcasting)
+		binary.Write(full, binary.LittleEndian, broadcasting)
 		if broadcasting > 0 {
-			raw.Write(broadcast)
+			full.Write(broadcast)
 		}
 
-		binary.Write(raw, binary.LittleEndian, updatedThings)
-		raw.Write(body.Bytes())
+		binary.Write(full, binary.LittleEndian, updatedThings)
+		full.Write(body.Bytes())
 
-		binary := raw.Bytes()
+		binary := full.Bytes()
 		person.snap = make([]byte, len(binary))
 		copy(person.snap, binary)
 	}

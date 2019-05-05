@@ -77,21 +77,23 @@ class Wad {
             }
         }
 
-        TileTexture.push(null)
-        TileClosed.push(false)
         let tileSprites = sprites["tiles"]
         let texture = g.textures.get("tiles")
         let width = 1.0 / texture.image.width
         let height = 1.0 / texture.image.height
+        TileTexture[0] = null
+        TileClosed[0] = false
         for (let tileName in tileSprites) {
             let data = tileSprites[tileName]
             let x = parseInt(data[0])
             let y = parseInt(data[1])
             let w = parseInt(data[2])
             let h = parseInt(data[3])
-            TileLookup.set(tileName, TileTexture.length)
-            TileTexture.push(Sprite.Simple(x, y, w, h, width, height))
-            TileClosed.push(tiles[tileName]["closed"] === "true")
+            let tileData = tiles[tileName]
+            let tileUID = parseInt(tileData["uid"])
+            TileLookup.set(tileName, tileUID)
+            TileTexture[tileUID] = Sprite.Simple(x, y, w, h, width, height)
+            TileClosed[tileUID] = tileData["closed"] === "true"
         }
 
         Wad.SpriteBuilderDirectional("baron", BaronAnimationIdle, "idle")

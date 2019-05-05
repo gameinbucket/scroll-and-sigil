@@ -134,6 +134,98 @@ func (me *you) walk() {
 		me.socketSend[inputOpSearch] = true
 		me.socketSend[inputOpChat] = "todo test chat"
 	}
+
+	if InputIsKeyDown(" ") {
+		me.socketSend[inputOpMissile] = true
+		me.status = humanMissile
+		me.animationMod = 0
+		me.animationFrame = 0
+		me.animation = humanAnimationMissile
+		wadSounds["baron-missile"].Call("play")
+	}
+
+	const (
+		none          = 0
+		forward       = 1
+		backward      = 2
+		left          = 3
+		right         = 4
+		forwardLeft   = 5
+		forwardRight  = 6
+		backwardLeft  = 7
+		backwardRight = 8
+	)
+	direction := none
+	var goal float32
+
+	if InputIsKeyDown("w") {
+		direction = forward
+		goal = me.camera.ry
+	}
+
+	if InputIsKeyDown("s") {
+		if direction == none {
+			direction = backward
+			goal = me.camera.ry + Pi
+		} else {
+			direction = none
+		}
+	}
+
+	if InputIsKeyDown("a") {
+		if direction == none {
+			direction = left
+			goal = me.camera.ry - HalfPi
+		} else if direction == forward {
+			direction = forwardLeft
+			goal -= QuarterPi
+		} else if direction == backward {
+			direction = backwardLeft
+			goal += QuarterPi
+		}
+	}
+
+	if InputIsKeyDown("d") {
+		if direction == none {
+			direction = right
+			goal = me.camera.ry + HalfPi
+		} else if direction == left {
+			direction = none
+		} else if direction == forwardLeft {
+			goal = me.camera.ry
+		} else if direction == backwardLeft {
+			goal = me.camera.ry + Pi
+		} else if direction == forward {
+			goal += QuarterPi
+		} else if direction == backward {
+			goal -= QuarterPi
+		}
+	}
+
+	if direction == none {
+		me.animationMod = 0
+		me.animationFrame = 0
+		me.animation = humanAnimationIdle
+	} else {
+		if goal < 0 {
+			goal += Tau
+		} else if goal >= Tau {
+			goal -= Tau
+		}
+
+		if me.angle != goal {
+			me.angle = goal
+			me.socketSend[inputOpNewMove] = goal
+		} else {
+			me.socketSend[inputOpContinueMove] = true
+		}
+
+		if &me.animation[0] != &humanAnimationWalk[0] {
+			me.animation = humanAnimationWalk
+		} else if me.updateAnimation() == AnimationDone {
+			me.animationFrame = 0
+		}
+	}
 }
 
 func (me *you) updateFn() {

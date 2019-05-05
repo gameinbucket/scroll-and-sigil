@@ -10,16 +10,10 @@ const (
 )
 
 var (
-	lightQueue    = [lightQueueLimit][3]int{}
+	lightQueue    [lightQueueLimit][3]int
 	lightQueuePos int
 	lightQueueNum int
 )
-
-func setupLighting() {
-	for i := 0; i < lightQueueLimit; i++ {
-		lightQueue[i] = [3]int{}
-	}
-}
 
 type light struct {
 	x     int
@@ -46,7 +40,7 @@ func (me *light) save() string {
 	return ""
 }
 
-func lightPlane(rgb [4][3]float32, ambient [4]float32) {
+func lightPlane(rgb *[4][3]float32, ambient *[4]float32) {
 	rgb[0][0] *= ambient[0] / 65025.0
 	rgb[0][1] *= ambient[0] / 65025.0
 	rgb[0][2] *= ambient[0] / 65025.0

@@ -13,14 +13,12 @@ const (
 )
 
 var (
-	occlusionSliceA = [3]int32{}
-	occlusionSliceB = [3]int32{}
+	occlusionSliceA [3]int32
+	occlusionSliceB [3]int32
 )
 
 type occluder struct {
 	frustum   [6][4]float32
-	sliceA    [3]int32
-	sliceB    [3]int32
 	queue     []*block
 	gotoBlock []bool
 	queueFrom []int
@@ -32,10 +30,6 @@ type occluder struct {
 
 func occluderInit(size int) *occluder {
 	occluder := &occluder{}
-	occluder.frustum = [6][4]float32{}
-	for i := 0; i < 6; i++ {
-		occluder.frustum[i] = [4]float32{}
-	}
 	occluder.viewable = make([]*block, size)
 	occluder.queue = make([]*block, size)
 	occluder.gotoBlock = make([]bool, size)
@@ -82,6 +76,56 @@ func occluderSetBlockVisible(block *block) {
 				}
 			}
 		}
+	}
+}
+
+func (me *occluder) prepareFrustum(g *graphics.RenderSystem) {
+	// left
+	me.frustum[0][0] = g.ModelViewProject[3] + g.ModelViewProject[0]
+	me.frustum[0][1] = g.ModelViewProject[7] + g.ModelViewProject[4]
+	me.frustum[0][2] = g.ModelViewProject[11] + g.ModelViewProject[8]
+	me.frustum[0][3] = g.ModelViewProject[15] + g.ModelViewProject[12]
+
+	// right
+	me.frustum[1][0] = g.ModelViewProject[3] - g.ModelViewProject[0]
+	me.frustum[1][1] = g.ModelViewProject[7] - g.ModelViewProject[4]
+	me.frustum[1][2] = g.ModelViewProject[11] - g.ModelViewProject[8]
+	me.frustum[1][3] = g.ModelViewProject[15] - g.ModelViewProject[12]
+
+	// top
+	me.frustum[2][0] = g.ModelViewProject[3] - g.ModelViewProject[1]
+	me.frustum[2][1] = g.ModelViewProject[7] - g.ModelViewProject[5]
+	me.frustum[2][2] = g.ModelViewProject[11] - g.ModelViewProject[9]
+	me.frustum[2][3] = g.ModelViewProject[15] - g.ModelViewProject[13]
+
+	// bottom
+	me.frustum[3][0] = g.ModelViewProject[3] + g.ModelViewProject[1]
+	me.frustum[3][1] = g.ModelViewProject[7] + g.ModelViewProject[5]
+	me.frustum[3][2] = g.ModelViewProject[11] + g.ModelViewProject[9]
+	me.frustum[3][3] = g.ModelViewProject[15] + g.ModelViewProject[13]
+
+	// near
+	me.frustum[4][0] = g.ModelViewProject[3] + g.ModelViewProject[2]
+	me.frustum[4][1] = g.ModelViewProject[7] + g.ModelViewProject[6]
+	me.frustum[4][2] = g.ModelViewProject[11] + g.ModelViewProject[10]
+	me.frustum[4][3] = g.ModelViewProject[15] + g.ModelViewProject[14]
+
+	// far
+	me.frustum[5][0] = g.ModelViewProject[3] - g.ModelViewProject[2]
+	me.frustum[5][1] = g.ModelViewProject[7] - g.ModelViewProject[6]
+	me.frustum[5][2] = g.ModelViewProject[11] - g.ModelViewProject[10]
+	me.frustum[5][3] = g.ModelViewProject[15] - g.ModelViewProject[14]
+
+	me.normalizePlanes()
+}
+
+func (me *occluder) normalizePlanes() {
+	for i := 0; i < 6; i++ {
+		n := float32(math.Sqrt(float64(me.frustum[i][0]*me.frustum[i][0] + me.frustum[i][1]*me.frustum[i][1] + me.frustum[i][2]*me.frustum[i][2])))
+		me.frustum[i][0] /= n
+		me.frustum[i][1] /= n
+		me.frustum[i][2] /= n
+		me.frustum[i][3] /= n
 	}
 }
 
@@ -185,7 +229,7 @@ func (me *occluder) inBox(posX, posY, posZ, negX, negY, negZ float32) uint8 {
 	var nvx, nvy, nvz float32
 	result := fullOcclusion
 	for i := 0; i < 6; i++ {
-		plane := me.frustum[i]
+		plane := &me.frustum[i]
 		if plane[0] > 0 {
 			pvx = posX
 			nvx = negX
@@ -217,63 +261,12 @@ func (me *occluder) inBox(posX, posY, posZ, negX, negY, negZ float32) uint8 {
 	return result
 }
 
-func (me *occluder) prepareFrustum(g *graphics.RenderSystem) {
-	// left
-	me.frustum[0][0] = g.ModelViewProject[3] + g.ModelViewProject[0]
-	me.frustum[0][1] = g.ModelViewProject[7] + g.ModelViewProject[4]
-	me.frustum[0][2] = g.ModelViewProject[11] + g.ModelViewProject[8]
-	me.frustum[0][3] = g.ModelViewProject[15] + g.ModelViewProject[12]
-	me.normalizePlane(0)
-
-	// right
-	me.frustum[1][0] = g.ModelViewProject[3] - g.ModelViewProject[0]
-	me.frustum[1][1] = g.ModelViewProject[7] - g.ModelViewProject[4]
-	me.frustum[1][2] = g.ModelViewProject[11] - g.ModelViewProject[8]
-	me.frustum[1][3] = g.ModelViewProject[15] - g.ModelViewProject[12]
-	me.normalizePlane(1)
-
-	// top
-	me.frustum[2][0] = g.ModelViewProject[3] - g.ModelViewProject[1]
-	me.frustum[2][1] = g.ModelViewProject[7] - g.ModelViewProject[5]
-	me.frustum[2][2] = g.ModelViewProject[11] - g.ModelViewProject[9]
-	me.frustum[2][3] = g.ModelViewProject[15] - g.ModelViewProject[13]
-	me.normalizePlane(2)
-
-	// bottom
-	me.frustum[3][0] = g.ModelViewProject[3] + g.ModelViewProject[1]
-	me.frustum[3][1] = g.ModelViewProject[7] + g.ModelViewProject[5]
-	me.frustum[3][2] = g.ModelViewProject[11] + g.ModelViewProject[9]
-	me.frustum[3][3] = g.ModelViewProject[15] + g.ModelViewProject[13]
-	me.normalizePlane(3)
-
-	// near
-	me.frustum[4][0] = g.ModelViewProject[3] + g.ModelViewProject[2]
-	me.frustum[4][1] = g.ModelViewProject[7] + g.ModelViewProject[6]
-	me.frustum[4][2] = g.ModelViewProject[11] + g.ModelViewProject[10]
-	me.frustum[4][3] = g.ModelViewProject[15] + g.ModelViewProject[14]
-	me.normalizePlane(4)
-
-	// far
-	me.frustum[5][0] = g.ModelViewProject[3] - g.ModelViewProject[2]
-	me.frustum[5][1] = g.ModelViewProject[7] - g.ModelViewProject[6]
-	me.frustum[5][2] = g.ModelViewProject[11] - g.ModelViewProject[10]
-	me.frustum[5][3] = g.ModelViewProject[15] - g.ModelViewProject[14]
-	me.normalizePlane(5)
-}
-
-func (me *occluder) normalizePlane(i int) {
-	n := float32(math.Sqrt(float64(me.frustum[i][0]*me.frustum[i][0] + me.frustum[i][1]*me.frustum[i][1] + me.frustum[i][2]*me.frustum[i][2])))
-	me.frustum[i][0] /= n
-	me.frustum[i][1] /= n
-	me.frustum[i][2] /= n
-	me.frustum[i][3] /= n
-}
-
 func (me *occluder) search(world *world, lx, ly, lz int) {
 	me.viewNum = 0
+	all := world.all
 
 	if lx < 0 || lx >= world.width || ly < 0 || ly >= world.height || lz < 0 || lz >= world.length {
-		for me.viewNum < world.all {
+		for me.viewNum < all {
 			me.viewable[me.viewNum] = &world.blocks[me.viewNum]
 			me.viewNum++
 		}
@@ -285,7 +278,7 @@ func (me *occluder) search(world *world, lx, ly, lz int) {
 	me.queue[0] = &world.blocks[lx+ly*world.width+lz*world.slice]
 	me.queueFrom[0] = -1
 
-	for i := 0; i < world.all; i++ {
+	for i := 0; i < all; i++ {
 		me.gotoBlock[i] = true
 	}
 
@@ -297,7 +290,7 @@ func (me *occluder) search(world *world, lx, ly, lz int) {
 		me.viewNum++
 
 		me.queuePos++
-		if me.queuePos == world.all {
+		if me.queuePos == all {
 			me.queuePos = 0
 		}
 

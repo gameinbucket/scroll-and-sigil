@@ -142,7 +142,6 @@ func (me *app) init() {
 
 	socket.Set("binaryType", "arraybuffer")
 	socket.Set("onclose", js.FuncOf(func(self js.Value, args []js.Value) interface{} {
-		console("socket closed!")
 		me.on = false
 		panic("lost connection to server")
 		return nil
@@ -228,8 +227,6 @@ func appInit() *app {
 	}
 
 	graphics.SetupOpenGl(gl)
-	setupBlocks()
-	setupLighting()
 
 	gl.Call("clearColor", 0, 0, 0, 1)
 	gl.Call("depthFunc", graphics.GLxLEqual)

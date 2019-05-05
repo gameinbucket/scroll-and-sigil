@@ -32,7 +32,7 @@ var (
 	GLxRepeat                 js.Value
 	GLxLinear                 js.Value
 	GLxNearest                js.Value
-	GLxColorAttachment        = [3]js.Value{}
+	GLxColorAttachment        [3]js.Value
 	GLxTextureMinFilter       js.Value
 	GLxTextureMagFilter       js.Value
 	GLxDepthStencilAttachment js.Value

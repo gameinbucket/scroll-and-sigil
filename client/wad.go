@@ -114,7 +114,6 @@ func wadRead(g *graphics.RenderSystem, gl js.Value, data string) {
 	TileClosed = make([]bool, tileSize+1)
 	TileLookup["none"] = 0
 	TileClosed[0] = false
-	num := 1
 	for name, value := range tileSprites {
 		data := value.(*Array).data
 		x := float32(ParseInt(data[0].(string)))
@@ -122,10 +121,10 @@ func wadRead(g *graphics.RenderSystem, gl js.Value, data string) {
 		w := float32(ParseInt(data[2].(string)))
 		h := float32(ParseInt(data[3].(string)))
 		tileData := tiles[name].(map[string]interface{})
-		TileLookup[name] = num
-		TileTexture[num] = render.SimpleSprite(x, y, w, h, tileAtlasWidth, tileAtlasHeight)
-		TileClosed[num] = tileData["closed"].(string) == "true"
-		num++
+		tileUID := ParseInt(tileData["uid"].(string))
+		TileLookup[name] = tileUID
+		TileTexture[tileUID] = render.SimpleSprite(x, y, w, h, tileAtlasWidth, tileAtlasHeight)
+		TileClosed[tileUID] = tileData["closed"].(string) == "true"
 	}
 
 	baronAnimationIdle = spriteBuilderDirectional("baron", "idle")

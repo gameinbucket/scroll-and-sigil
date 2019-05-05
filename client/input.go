@@ -8,7 +8,7 @@ var (
 	inputKeys = map[string]bool{}
 )
 
-// InputIsKeyDown func`
+// InputIsKeyDown func
 func InputIsKeyDown(key string) bool {
 	return inputKeys[key]
 }
@@ -23,7 +23,7 @@ func InputIsKeyPress(key string) bool {
 // InputSetKeyUp func
 func InputSetKeyUp() js.Func {
 	return js.FuncOf(func(self js.Value, args []js.Value) interface{} {
-		inputKeys[args[0].String()] = true
+		inputKeys[args[0].Get("key").String()] = false
 		return nil
 	})
 }
@@ -31,7 +31,7 @@ func InputSetKeyUp() js.Func {
 // InputSetKeyDown func
 func InputSetKeyDown() js.Func {
 	return js.FuncOf(func(self js.Value, args []js.Value) interface{} {
-		inputKeys[args[0].String()] = true
+		inputKeys[args[0].Get("key").String()] = true
 		return nil
 	})
 }

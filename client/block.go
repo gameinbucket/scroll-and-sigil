@@ -17,25 +17,19 @@ const (
 )
 
 var (
-	blockMesh         *graphics.RenderBuffer
-	blockMeshAmbient  = [BlockAll][6][4]float32{}
-	blockMeshColor    = [BlockColorDim * BlockColorSlice][3]float32{}
-	blockMeshRgbPlane = [4][3]float32{}
+	blockMesh         = graphics.RenderCopyInit(3, 3, 2, BlockAll*6*4, BlockAll*6*6)
+	blockMeshAmbient  [BlockAll][6][4]float32
+	blockMeshColor    [BlockColorDim * BlockColorSlice][3]float32
+	blockMeshRgbPlane [4][3]float32
+	blockColorSum     [4]int
 
 	blockSliceX       = [6]int{2, 1, 0, 2, 1, 0}
 	blockSliceY       = [6]int{0, 2, 1, 0, 2, 1}
 	blockSliceZ       = [6]int{1, 0, 2, 1, 0, 2}
 	blockSliceTowards = [6]int{1, 1, 1, -1, -1, -1}
-	blockSlice        = [3]int{}
-	blockSliceTemp    = [3]int{}
+	blockSlice        [3]int
+	blockSliceTemp    [3]int
 )
-
-func setupBlocks() {
-	blockMesh = graphics.RenderCopyInit(3, 3, 2, BlockAll*6*4, BlockAll*6*6)
-	for i := 0; i < len(blockMeshColor); i++ {
-		blockMeshColor[i] = [3]float32{}
-	}
-}
 
 type block struct {
 	x             int
@@ -264,14 +258,13 @@ func (me *block) ambientMesh(world *world) {
 }
 
 func (me *block) colorMesh(world *world) {
-	color := [4]int{}
 	for tz := 0; tz < BlockColorDim; tz++ {
 		for ty := 0; ty < BlockColorDim; ty++ {
 			for tx := 0; tx < BlockColorDim; tx++ {
-				color[0] = 0
-				color[1] = 0
-				color[2] = 0
-				color[3] = 0
+				blockColorSum[0] = 0
+				blockColorSum[1] = 0
+				blockColorSum[2] = 0
+				blockColorSum[3] = 0
 				zzz := world.getTilePointer(me.x, me.y, me.z, tx, ty, tz)
 				mzz := world.getTilePointer(me.x, me.y, me.z, tx-1, ty, tz)
 				mzm := world.getTilePointer(me.x, me.y, me.z, tx-1, ty, tz-1)
@@ -282,52 +275,52 @@ func (me *block) colorMesh(world *world) {
 				zmm := world.getTilePointer(me.x, me.y, me.z, tx, ty-1, tz-1)
 
 				if zzz == nil || TileClosed[zzz.typeOf] {
-					me.determineLight(mzz, color)
-					me.determineLight(zmz, color)
-					me.determineLight(zzm, color)
+					me.determineLight(mzz)
+					me.determineLight(zmz)
+					me.determineLight(zzm)
 				}
 				if mzz == nil || TileClosed[mzz.typeOf] {
-					me.determineLight(zzz, color)
-					me.determineLight(zmz, color)
-					me.determineLight(zzm, color)
+					me.determineLight(zzz)
+					me.determineLight(zmz)
+					me.determineLight(zzm)
 				}
 				if mzm == nil || TileClosed[mzm.typeOf] {
-					me.determineLight(mzz, color)
-					me.determineLight(zzm, color)
-					me.determineLight(mmm, color)
+					me.determineLight(mzz)
+					me.determineLight(zzm)
+					me.determineLight(mmm)
 				}
 				if zzm == nil || TileClosed[zzm.typeOf] {
-					me.determineLight(zzz, color)
-					me.determineLight(mzm, color)
-					me.determineLight(zmm, color)
+					me.determineLight(zzz)
+					me.determineLight(mzm)
+					me.determineLight(zmm)
 				}
 				if zmz == nil || TileClosed[zmz.typeOf] {
-					me.determineLight(zzz, color)
-					me.determineLight(mmz, color)
-					me.determineLight(zmm, color)
+					me.determineLight(zzz)
+					me.determineLight(mmz)
+					me.determineLight(zmm)
 				}
 				if mmz == nil || TileClosed[mmz.typeOf] {
-					me.determineLight(mzz, color)
-					me.determineLight(mmm, color)
-					me.determineLight(zmz, color)
+					me.determineLight(mzz)
+					me.determineLight(mmm)
+					me.determineLight(zmz)
 				}
 				if mmm == nil || TileClosed[mmm.typeOf] {
-					me.determineLight(mzm, color)
-					me.determineLight(zmm, color)
-					me.determineLight(mmz, color)
+					me.determineLight(mzm)
+					me.determineLight(zmm)
+					me.determineLight(mmz)
 				}
 				if zmm == nil || TileClosed[zmm.typeOf] {
-					me.determineLight(zzm, color)
-					me.determineLight(zmz, color)
-					me.determineLight(mmm, color)
+					me.determineLight(zzm)
+					me.determineLight(zmz)
+					me.determineLight(mmm)
 				}
 
 				index := tx + ty*BlockColorDim + tz*BlockColorSlice
-				size := float32(color[3])
+				size := float32(blockColorSum[3])
 				if size > 0 {
-					blockMeshColor[index][0] = float32(color[0]) / size
-					blockMeshColor[index][1] = float32(color[1]) / size
-					blockMeshColor[index][2] = float32(color[2]) / size
+					blockMeshColor[index][0] = float32(blockColorSum[0]) / size
+					blockMeshColor[index][1] = float32(blockColorSum[1]) / size
+					blockMeshColor[index][2] = float32(blockColorSum[2]) / size
 				} else {
 					blockMeshColor[index][0] = 255.0
 					blockMeshColor[index][1] = 255.0
@@ -338,15 +331,15 @@ func (me *block) colorMesh(world *world) {
 	}
 }
 
-func (me *block) determineLight(t *tile, color [4]int) {
+func (me *block) determineLight(t *tile) {
 	if t == nil {
 		return
 	}
 	if !TileClosed[t.typeOf] {
-		color[0] += int(t.red)
-		color[1] += int(t.green)
-		color[2] += int(t.blue)
-		color[3]++
+		blockColorSum[0] += int(t.red)
+		blockColorSum[1] += int(t.green)
+		blockColorSum[2] += int(t.blue)
+		blockColorSum[3]++
 	}
 }
 
@@ -414,27 +407,27 @@ func (me *block) buildMesh(world *world) {
 					zs := blockSlice[pointerZ]
 					index := xs + ys*BlockSize + zs*BlockSlice
 
-					texture := TileTexture[typeOf]
+					texture := &TileTexture[typeOf]
 					gx := float32(xs + BlockSize*me.x)
 					gy := float32(ys + BlockSize*me.y)
 					gz := float32(zs + BlockSize*me.z)
 
 					me.lightOfSide(xs, ys, zs, side)
-					lightPlane(blockMeshRgbPlane, blockMeshAmbient[index][side])
+					lightPlane(&blockMeshRgbPlane, &blockMeshAmbient[index][side])
 
 					switch side {
 					case WorldPositiveX:
-						render.RendTilePosX(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+						render.RendTilePosX(blockMesh, gx, gy, gz, texture, &blockMeshRgbPlane)
 					case WorldNegativeX:
-						render.RendTileNegX(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+						render.RendTileNegX(blockMesh, gx, gy, gz, texture, &blockMeshRgbPlane)
 					case WorldPositiveY:
-						render.RendTilePosY(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+						render.RendTilePosY(blockMesh, gx, gy, gz, texture, &blockMeshRgbPlane)
 					case WorldNegativeY:
-						render.RendTileNegY(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+						render.RendTileNegY(blockMesh, gx, gy, gz, texture, &blockMeshRgbPlane)
 					case WorldPositiveZ:
-						render.RendTilePosZ(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+						render.RendTilePosZ(blockMesh, gx, gy, gz, texture, &blockMeshRgbPlane)
 					case WorldNegativeZ:
-						render.RendTileNegZ(blockMesh, gx, gy, gz, texture, blockMeshRgbPlane)
+						render.RendTileNegZ(blockMesh, gx, gy, gz, texture, &blockMeshRgbPlane)
 					}
 				}
 			}

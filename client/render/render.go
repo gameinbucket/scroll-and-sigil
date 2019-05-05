@@ -17,7 +17,7 @@ const (
 )
 
 // Lumin func
-func Lumin(rgb [3]float32) float32 {
+func Lumin(rgb *[3]float32) float32 {
 	return 0.2126*rgb[0] + 0.7152*rgb[1] + 0.0722*rgb[2]
 }
 

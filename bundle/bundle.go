@@ -62,8 +62,10 @@ func resourceBundle(pwd string) string {
 	data.WriteString("shaders[")
 	for _, info := range dir {
 		name := info.Name()
+		extension := filepath.Ext(name)
+		base := strings.TrimSuffix(name, extension)
 		fmt.Println(name)
-		data.WriteString(name)
+		data.WriteString(base)
 		data.WriteString(",")
 	}
 	data.WriteString("],")

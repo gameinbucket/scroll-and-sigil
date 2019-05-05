@@ -112,11 +112,11 @@ class You extends Human {
             // this.X += Math.sin(this.Angle) * this.Speed * InverseNetRate
             // this.Z -= Math.cos(this.Angle) * this.Speed * InverseNetRate
 
-            if (this.Animation === HumanAnimationIdle)
+            if (this.Animation !== HumanAnimationWalk) {
                 this.Animation = HumanAnimationWalk
-
-            if (this.UpdateAnimation() === AnimationDone)
+            } else if (this.UpdateAnimation() === AnimationDone) {
                 this.AnimationFrame = 0
+            }
         }
     }
     Update() {
