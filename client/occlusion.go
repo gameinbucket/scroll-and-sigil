@@ -37,7 +37,7 @@ func occluderInit(size int) *occluder {
 	return occluder
 }
 
-func occluderSetBlockVisible(block *block) {
+func (me *block) occlusion() {
 	for sideA := uint(0); sideA < 6; sideA++ {
 		ax := blockSliceX[sideA]
 		ay := blockSliceY[sideA]
@@ -67,8 +67,8 @@ func occluderSetBlockVisible(block *block) {
 							toX := float32(occlusionSliceB[bx]) + 0.5
 							toY := float32(occlusionSliceB[by]) + 0.5
 							toZ := float32(occlusionSliceB[bz]) + 0.5
-							if castBlock(block, fromX, fromY, fromZ, toX, toY, toZ) {
-								block.visibility[sideA*6+sideB] = true
+							if castBlock(me, fromX, fromY, fromZ, toX, toY, toZ) {
+								me.visibility[sideA*6+sideB] = true
 								break loop
 							}
 						}
@@ -173,22 +173,16 @@ func (me *occluder) visit(world *world, from int, B *block, to int) {
 		switch from {
 		case WorldPositiveX:
 			from = WorldNegativeX
-			break
 		case WorldNegativeX:
 			from = WorldPositiveX
-			break
 		case WorldPositiveY:
 			from = WorldNegativeY
-			break
 		case WorldNegativeY:
 			from = WorldPositiveY
-			break
 		case WorldPositiveZ:
 			from = WorldNegativeZ
-			break
 		case WorldNegativeZ:
 			from = WorldPositiveZ
-			break
 		}
 		var sideA, sideB int
 		if from < to {
@@ -198,18 +192,18 @@ func (me *occluder) visit(world *world, from int, B *block, to int) {
 			sideA = to
 			sideB = from
 		}
-		if !B.visibility[sideA*6+sideB] {
+		if B.visibility[sideA*6+sideB] == false {
 			return
 		}
 	}
 	me.gotoBlock[index] = false
-	Z := &world.blocks[index]
-	posZx := float32(Z.x * BlockSize)
-	posZy := float32(Z.y * BlockSize)
-	posZz := float32(Z.z * BlockSize)
+	C := &world.blocks[index]
+	posX := float32(C.x * BlockSize)
+	posY := float32(C.y * BlockSize)
+	posZ := float32(C.z * BlockSize)
 	box := me.inBox(
-		posZx+BlockSize, posZy+BlockSize, posZz+BlockSize,
-		posZx, posZy, posZz)
+		posX+BlockSize, posY+BlockSize, posZ+BlockSize,
+		posZ, posY, posZ)
 	if box == noOcclusion {
 		return
 	}
@@ -219,7 +213,7 @@ func (me *occluder) visit(world *world, from int, B *block, to int) {
 		queue -= world.all
 	}
 
-	me.queue[queue] = Z
+	me.queue[queue] = C
 	me.queueFrom[queue] = to
 	me.queueNum++
 }

@@ -239,6 +239,7 @@ func (me *world) build() {
 		for j := 0; j < block.lightCount; j++ {
 			block.lights[j].addToWorld(me, block)
 		}
+		block.occlusion()
 	}
 	for i := 0; i < me.all; i++ {
 		me.blocks[i].buildMesh(me)
