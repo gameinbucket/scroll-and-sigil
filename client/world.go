@@ -1,10 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"syscall/js"
 
+	"./fast"
 	"./graphics"
 )
 
@@ -77,19 +76,13 @@ func (me *world) reset() {
 }
 
 func (me *world) load(raw []byte) {
-	dat := bytes.NewReader(raw)
+	data := fast.ByteReaderInit(raw)
 
-	var uint8ref uint8
-	var uint16ref uint16
+	me.pid = data.GetUint16()
 
-	binary.Read(dat, binary.LittleEndian, &me.pid)
-
-	binary.Read(dat, binary.LittleEndian, &uint16ref)
-	me.width = int(uint16ref)
-	binary.Read(dat, binary.LittleEndian, &uint16ref)
-	me.height = int(uint16ref)
-	binary.Read(dat, binary.LittleEndian, &uint16ref)
-	me.length = int(uint16ref)
+	me.width = int(data.GetUint16())
+	me.height = int(data.GetUint16())
+	me.length = int(data.GetUint16())
 
 	me.slice = me.width * me.height
 	me.all = me.slice * me.length
@@ -119,112 +112,77 @@ func (me *world) load(raw []byte) {
 
 	for i := 0; i < me.all; i++ {
 		block := &me.blocks[i]
-		binary.Read(dat, binary.LittleEndian, &uint8ref)
-		notEmpty := uint8ref != 0
+		notEmpty := data.GetUint8() != 0
 		if notEmpty {
 			for t := 0; t < BlockAll; t++ {
-				binary.Read(dat, binary.LittleEndian, &uint8ref)
-				tileType := int(uint8ref)
+				tileType := int(data.GetUint8())
 				block.tiles[t].typeOf = tileType
 			}
 		}
 
-		var lightCount uint8
-		binary.Read(dat, binary.LittleEndian, &lightCount)
+		lightCount := data.GetUint8()
 		for t := uint8(0); t < lightCount; t++ {
-			var x uint8
-			var y uint8
-			var z uint8
-			var rgb int32
-			binary.Read(dat, binary.LittleEndian, &x)
-			binary.Read(dat, binary.LittleEndian, &y)
-			binary.Read(dat, binary.LittleEndian, &z)
-			binary.Read(dat, binary.LittleEndian, &rgb)
+			x := data.GetUint8()
+			y := data.GetUint8()
+			z := data.GetUint8()
+			rgb := data.GetInt32()
 			block.addLight(lightInit(x, y, z, rgb))
 		}
 	}
 
-	var thingCount uint16
-	binary.Read(dat, binary.LittleEndian, &thingCount)
+	thingCount := data.GetUint16()
 	for t := uint16(0); t < thingCount; t++ {
-		var uid uint16
-		var nid uint16
-		var x float32
-		var y float32
-		var z float32
-		binary.Read(dat, binary.LittleEndian, &uid)
-		binary.Read(dat, binary.LittleEndian, &nid)
-		binary.Read(dat, binary.LittleEndian, &x)
-		binary.Read(dat, binary.LittleEndian, &y)
-		binary.Read(dat, binary.LittleEndian, &z)
+		uid := data.GetUint16()
+		nid := data.GetUint16()
+		x := data.GetFloat32()
+		y := data.GetFloat32()
+		z := data.GetFloat32()
 		switch uid {
 		case HumanUID:
-			var angle float32
-			var health uint16
-			var status uint8
-			binary.Read(dat, binary.LittleEndian, &angle)
-			binary.Read(dat, binary.LittleEndian, &health)
-			binary.Read(dat, binary.LittleEndian, &status)
+			angle := data.GetFloat32()
+			health := data.GetUint16()
+			status := data.GetUint8()
 			if nid == me.pid {
 				youInit(me, nid, x, y, z, angle, health, status)
 			} else {
 				humanInit(me, nid, x, y, z, angle, health, status)
 			}
 		case BaronUID:
-			var direction uint8
-			var health uint16
-			var status uint8
-			binary.Read(dat, binary.LittleEndian, &direction)
-			binary.Read(dat, binary.LittleEndian, &health)
-			binary.Read(dat, binary.LittleEndian, &status)
+			direction := data.GetUint8()
+			health := data.GetUint16()
+			status := data.GetUint8()
 			baronInit(me, nid, x, y, z, direction, health, status)
 		case TreeUID:
 			treeInit(me, nid, x, y, z)
 		}
 	}
 
-	var itemCount uint16
-	binary.Read(dat, binary.LittleEndian, &itemCount)
+	itemCount := data.GetUint16()
 	for t := uint16(0); t < itemCount; t++ {
-		var uid uint16
-		var nid uint16
-		var x float32
-		var y float32
-		var z float32
-		binary.Read(dat, binary.LittleEndian, &uid)
-		binary.Read(dat, binary.LittleEndian, &nid)
-		binary.Read(dat, binary.LittleEndian, &x)
-		binary.Read(dat, binary.LittleEndian, &y)
-		binary.Read(dat, binary.LittleEndian, &z)
+		uid := data.GetUint16()
+		nid := data.GetUint16()
+		x := data.GetFloat32()
+		y := data.GetFloat32()
+		z := data.GetFloat32()
 		switch uid {
 		case MedkitUID:
 			medkitInit(me, nid, x, y, z)
 		}
 	}
 
-	var missileCount uint16
-	binary.Read(dat, binary.LittleEndian, &missileCount)
+	missileCount := data.GetUint16()
 	for t := uint16(0); t < missileCount; t++ {
-		var uid uint16
-		var nid uint16
-		var x float32
-		var y float32
-		var z float32
-		var dx float32
-		var dy float32
-		var dz float32
-		binary.Read(dat, binary.LittleEndian, &uid)
-		binary.Read(dat, binary.LittleEndian, &nid)
-		binary.Read(dat, binary.LittleEndian, &x)
-		binary.Read(dat, binary.LittleEndian, &y)
-		binary.Read(dat, binary.LittleEndian, &z)
-		binary.Read(dat, binary.LittleEndian, &dx)
-		binary.Read(dat, binary.LittleEndian, &dy)
-		binary.Read(dat, binary.LittleEndian, &dz)
+		uid := data.GetUint16()
+		nid := data.GetUint16()
+		x := data.GetFloat32()
+		y := data.GetFloat32()
+		z := data.GetFloat32()
+		dx := data.GetFloat32()
+		dy := data.GetFloat32()
+		dz := data.GetFloat32()
 		switch uid {
 		case PlasmaUID:
-			var damage uint16
-			binary.Read(dat, binary.LittleEndian, &damage)
+			damage := data.GetUint16()
 			plasmaInit(me, nid, damage, x, y, z, dx, dy, dz)
 		}
 	}

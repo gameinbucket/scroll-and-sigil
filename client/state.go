@@ -31,91 +31,64 @@ func (me *worldState) serverUpdates() {
 	socketQueue := me.app.socketQueue
 
 	for i := 0; i < len(socketQueue); i++ {
-		// dat := bytes.NewReader(socketQueue[i])
 		data := fast.ByteReaderInit(socketQueue[i])
 
-		// var uint32ref uint32
-		// binary.Read(dat, binary.LittleEndian, &uint32ref)
-		// me.snapshotTime = int64(uint32ref) + 1552330000000
-		me.snapshotTime = data.GetUint32()
+		me.snapshotTime = int64(data.GetUint32()) + 1552330000000
 		me.previousUpdate = time.Now().UnixNano()
 
-		// var broadcastCount uint8
-		// binary.Read(dat, binary.LittleEndian, &broadcastCount)
-		var broadcastCount = data.GetUint8()
-
+		broadcastCount := data.GetUint8()
 		for b := uint8(0); b < broadcastCount; b++ {
-			// var broadcastType uint8
-			// binary.Read(dat, binary.LittleEndian, &broadcastType)
 			broadcastType := data.GetUint8()
 			switch broadcastType {
 			case BroadcastNew:
-				var uid uint16
-				var nid uint16
-				binary.Read(dat, binary.LittleEndian, &uid)
-				binary.Read(dat, binary.LittleEndian, &nid)
+				uid := data.GetUint16()
+				nid := data.GetUint16()
 				if _, ok := world.netLookup[nid]; ok {
 					break
 				}
-				var x float32
-				var y float32
-				var z float32
-				binary.Read(dat, binary.LittleEndian, &x)
-				binary.Read(dat, binary.LittleEndian, &y)
-				binary.Read(dat, binary.LittleEndian, &z)
+				x := data.GetFloat32()
+				y := data.GetFloat32()
+				z := data.GetFloat32()
 				switch uid {
 				case PlasmaUID:
-					var dx float32
-					var dy float32
-					var dz float32
-					var damage uint16
-					binary.Read(dat, binary.LittleEndian, &dx)
-					binary.Read(dat, binary.LittleEndian, &dy)
-					binary.Read(dat, binary.LittleEndian, &dz)
-					binary.Read(dat, binary.LittleEndian, &damage)
+					dx := data.GetFloat32()
+					dy := data.GetFloat32()
+					dz := data.GetFloat32()
+					damage := data.GetUint16()
 					plasmaInit(world, nid, damage, x, y, z, dx, dy, dz)
 				case HumanUID:
-					var angle float32
-					var health uint16
-					var status uint8
-					binary.Read(dat, binary.LittleEndian, &angle)
-					binary.Read(dat, binary.LittleEndian, &health)
-					binary.Read(dat, binary.LittleEndian, &status)
+					angle := data.GetFloat32()
+					health := data.GetUint16()
+					status := data.GetUint8()
 					humanInit(world, nid, x, y, z, angle, health, status)
 				default:
 					panic("unknown UID")
 				}
 			case BroadcastDelete:
-				var nid uint16
-				binary.Read(dat, binary.LittleEndian, &nid)
+				nid := data.GetUint16()
 				if thing, ok := world.netLookup[nid]; ok {
 					thing.cleanup()
 				}
 			case BroadcastChat:
-				var size uint8
-				binary.Read(dat, binary.LittleEndian, &size)
+				size := data.GetUint8()
 				chat := &strings.Builder{}
-				for ch := uint8(0); ch < size; ch++ {
-					var char uint8
-					binary.Read(dat, binary.LittleEndian, &char)
-					chat.WriteByte(char)
+				for i := uint8(0); i < size; i++ {
+					ch := data.GetUint8()
+					chat.WriteByte(ch)
 				}
 				me.chatbox = append(me.chatbox, chat.String())
 			}
 		}
 
-		var thingCount uint16
-		binary.Read(dat, binary.LittleEndian, &thingCount)
+		thingCount := data.GetUint16()
 		for t := uint16(0); t < thingCount; t++ {
-			var nid uint16
-			binary.Read(dat, binary.LittleEndian, &nid)
+			nid := data.GetUint16()
 			thing, ok := world.netLookup[nid]
 			if !ok {
 				panic("missing thing nid")
 			}
-			var delta uint8
-			binary.Read(dat, binary.LittleEndian, &delta)
-			thing.netUpdate(dat, delta)
+			delta := data.GetUint8()
+			thing.netUpdate(data, delta)
 		}
 	}
 }

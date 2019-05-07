@@ -1,12 +1,11 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"math"
 	"math/rand"
 	"strconv"
 
+	"./fast"
 	"./render"
 )
 
@@ -59,22 +58,16 @@ func humanInit(world *world, nid uint16, x, y, z, angle float32, health uint16, 
 	return human
 }
 
-func (me *human) netUpdate(dat *bytes.Reader, delta uint8) {
-	me.thingNetUpdate(dat, delta)
+func (me *human) netUpdate(data *fast.ByteReader, delta uint8) {
+	me.thingNetUpdate(data, delta)
 	if delta&0x4 != 0 {
-		var health uint16
-		binary.Read(dat, binary.LittleEndian, &health)
-		me.netUpdateHealth(health)
+		me.netUpdateHealth(data.GetUint16())
 	}
 	if delta&0x8 != 0 {
-		var state uint8
-		binary.Read(dat, binary.LittleEndian, &state)
-		me.netUpdateState(state)
+		me.netUpdateState(data.GetUint8())
 	}
 	if delta&0x10 != 0 {
-		var angle float32
-		binary.Read(dat, binary.LittleEndian, &angle)
-		me.angle = angle
+		me.angle = data.GetFloat32()
 	}
 }
 

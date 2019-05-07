@@ -1,10 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"math"
 
+	"./fast"
 	"./graphics"
 	"./render"
 )
@@ -68,7 +67,7 @@ var (
 
 type netThing interface {
 	cleanup()
-	netUpdate(dat *bytes.Reader, delta uint8)
+	netUpdate(*fast.ByteReader, uint8)
 }
 
 type thing struct {
@@ -141,20 +140,17 @@ func (me *thing) removeFromBlocks() {
 	}
 }
 
-func (me *thing) thingNetUpdate(dat *bytes.Reader, delta uint8) {
+func (me *thing) thingNetUpdate(data *fast.ByteReader, delta uint8) {
 	if delta&0x1 != 0 {
-		var x float32
-		var z float32
-		binary.Read(dat, binary.LittleEndian, &x)
-		binary.Read(dat, binary.LittleEndian, &z)
+		x := data.GetFloat32()
+		z := data.GetFloat32()
 		me.netX = x
 		me.deltaNetX = (x - me.x) * InverseNetRate
 		me.netZ = z
 		me.deltaNetZ = (z - me.z) * InverseNetRate
 	}
 	if delta&0x2 != 0 {
-		var y float32
-		binary.Read(dat, binary.LittleEndian, &y)
+		y := data.GetFloat32()
 		me.netY = y
 		me.deltaNetY = (y - me.y) * InverseNetRate
 	}

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"math"
 
+	"./fast"
 	"./graphics"
 	"./render"
 )
@@ -58,7 +58,7 @@ func (me *item) removeFromBlocks() {
 	}
 }
 
-func (me *item) netUpdate(dat *bytes.Reader, delta uint8) {
+func (me *item) netUpdate(data *fast.ByteReader, delta uint8) {
 }
 
 func (me *item) cleanup() {

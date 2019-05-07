@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"math"
 
+	"./fast"
 	"./graphics"
 	"./render"
 )
@@ -69,7 +69,7 @@ func (me *missile) removeFromBlocks() {
 	}
 }
 
-func (me *missile) netUpdate(dat *bytes.Reader, delta uint8) {
+func (me *missile) netUpdate(data *fast.ByteReader, delta uint8) {
 }
 
 func (me *missile) cleanup() {
