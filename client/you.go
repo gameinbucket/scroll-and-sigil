@@ -94,9 +94,9 @@ func (me *you) netUpdateState(status uint8) {
 func (me *you) netUpdateHealth(health uint16) {
 	if health < me.health {
 		if health < 1 {
-			wadSounds["baron-death"].Call("play")
+			playWadSound("baron-death")
 		} else {
-			wadSounds["baron-pain"].Call("play")
+			playWadSound("baron-pain")
 		}
 		for i := 0; i < 20; i++ {
 			spriteName := "blood-" + strconv.Itoa(int(math.Floor(rand.Float64()*3)))
@@ -141,7 +141,8 @@ func (me *you) walk() {
 		me.animationMod = 0
 		me.animationFrame = 0
 		me.animation = humanAnimationMissile
-		wadSounds["baron-missile"].Call("play")
+		playWadSound("baron-missile")
+		return
 	}
 
 	const (

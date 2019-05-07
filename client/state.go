@@ -3,11 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"strings"
 	"syscall/js"
 	"time"
 
+	"./fast"
 	"./graphics"
 	"./matrix"
 	"./render"
@@ -31,19 +31,23 @@ func (me *worldState) serverUpdates() {
 	socketQueue := me.app.socketQueue
 
 	for i := 0; i < len(socketQueue); i++ {
-		dat := bytes.NewReader(socketQueue[i])
+		// dat := bytes.NewReader(socketQueue[i])
+		data := fast.ByteReaderInit(socketQueue[i])
 
-		var uint32ref uint32
-		binary.Read(dat, binary.LittleEndian, &uint32ref)
-		me.snapshotTime = int64(uint32ref) + 1552330000000
+		// var uint32ref uint32
+		// binary.Read(dat, binary.LittleEndian, &uint32ref)
+		// me.snapshotTime = int64(uint32ref) + 1552330000000
+		me.snapshotTime = data.GetUint32()
 		me.previousUpdate = time.Now().UnixNano()
 
-		var broadcastCount uint8
-		binary.Read(dat, binary.LittleEndian, &broadcastCount)
+		// var broadcastCount uint8
+		// binary.Read(dat, binary.LittleEndian, &broadcastCount)
+		var broadcastCount = data.GetUint8()
 
 		for b := uint8(0); b < broadcastCount; b++ {
-			var broadcastType uint8
-			binary.Read(dat, binary.LittleEndian, &broadcastType)
+			// var broadcastType uint8
+			// binary.Read(dat, binary.LittleEndian, &broadcastType)
+			broadcastType := data.GetUint8()
 			switch broadcastType {
 			case BroadcastNew:
 				var uid uint16
@@ -79,18 +83,13 @@ func (me *worldState) serverUpdates() {
 					binary.Read(dat, binary.LittleEndian, &status)
 					humanInit(world, nid, x, y, z, angle, health, status)
 				default:
-					panic(fmt.Sprintf("unknown UID", uid))
+					panic("unknown UID")
 				}
 			case BroadcastDelete:
 				var nid uint16
 				binary.Read(dat, binary.LittleEndian, &nid)
 				if thing, ok := world.netLookup[nid]; ok {
-					switch typed := thing.(type) {
-					case you:
-						typed.cleanup()
-					case human:
-						typed.cleanup()
-					}
+					thing.cleanup()
 				}
 			case BroadcastChat:
 				var size uint8
@@ -116,16 +115,7 @@ func (me *worldState) serverUpdates() {
 			}
 			var delta uint8
 			binary.Read(dat, binary.LittleEndian, &delta)
-			switch typed := thing.(type) {
-			case *you:
-				typed.netUpdate(dat, delta)
-			case *human:
-				typed.netUpdate(dat, delta)
-			case *baron:
-				typed.netUpdate(dat, delta)
-			default:
-				panic(fmt.Sprintf("unknown type of thing", typed))
-			}
+			thing.netUpdate(dat, delta)
 		}
 	}
 }

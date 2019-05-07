@@ -40,15 +40,17 @@ type world struct {
 	occluder      *occluder
 	spriteBuffer  map[string]*graphics.RenderBuffer
 	spriteCount   map[string]int
-	thingCount    int
-	itemCount     int
-	missileCount  int
-	particleCount int
 	things        []*thing
+	thingCount    int
+	scenery       []*scenery
+	sceneryCount  int
 	items         []*item
+	itemCount     int
 	missiles      []*missile
+	missileCount  int
 	particles     []*particle
-	netLookup     map[uint16]interface{}
+	particleCount int
+	netLookup     map[uint16]netThing
 	pid           uint16
 }
 
@@ -71,7 +73,7 @@ func (me *world) reset() {
 	me.items = make([]*item, 0)
 	me.missiles = make([]*missile, 0)
 	me.particles = make([]*particle, 0)
-	me.netLookup = make(map[uint16]interface{})
+	me.netLookup = make(map[uint16]netThing)
 }
 
 func (me *world) load(raw []byte) {
@@ -79,9 +81,6 @@ func (me *world) load(raw []byte) {
 
 	var uint8ref uint8
 	var uint16ref uint16
-
-	// TODO binary.Read sucks, implement custom solution for client and server
-	// https://github.com/golang/go/blob/master/src/encoding/binary/binary.go
 
 	binary.Read(dat, binary.LittleEndian, &me.pid)
 
@@ -323,6 +322,22 @@ func (me *world) getBlock(x, y, z int) *block {
 	return &me.blocks[x+y*me.width+z*me.slice]
 }
 
+func (me *world) verifySprites(sid string) {
+	count, has := me.spriteCount[sid]
+	if has {
+		count++
+		me.spriteCount[sid] = count
+		b := me.spriteBuffer[sid]
+		const stride = 5 * 4
+		if count*stride > len(b.Vertices) {
+			b.RenderBufferExpand(me.gl)
+		}
+	} else {
+		me.spriteCount[sid] = 1
+		me.spriteBuffer[sid] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
+	}
+}
+
 func (me *world) addThing(t *thing) {
 	if me.thingCount == len(me.things) {
 		array := make([]*thing, me.thingCount+5)
@@ -331,18 +346,19 @@ func (me *world) addThing(t *thing) {
 	}
 	me.things[me.thingCount] = t
 	me.thingCount++
+	me.verifySprites(t.sid)
+}
 
-	count, has := me.spriteCount[t.sid]
-	if has {
-		me.spriteCount[t.sid] = count + 1
-		b := me.spriteBuffer[t.sid]
-		if (count+2)*16 > len(b.Vertices) {
-			b.RenderBufferExpand(me.gl)
-		}
-	} else {
-		me.spriteCount[t.sid] = 1
-		me.spriteBuffer[t.sid] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
+func (me *world) addScenery(t *scenery) {
+	if me.sceneryCount == len(me.scenery) {
+		array := make([]*scenery, me.sceneryCount+5)
+		copy(array, me.scenery)
+		me.scenery = array
 	}
+	me.scenery[me.sceneryCount] = t
+	me.sceneryCount++
+	me.netLookup[t.nid] = t
+	me.verifySprites(t.sid)
 }
 
 func (me *world) addItem(t *item) {
@@ -353,20 +369,8 @@ func (me *world) addItem(t *item) {
 	}
 	me.items[me.itemCount] = t
 	me.itemCount++
-
 	me.netLookup[t.nid] = t
-
-	count, has := me.spriteCount[t.sid]
-	if has {
-		me.spriteCount[t.sid] = count + 1
-		b := me.spriteBuffer[t.sid]
-		if (count+2)*16 > len(b.Vertices) {
-			b.RenderBufferExpand(me.gl)
-		}
-	} else {
-		me.spriteCount[t.sid] = 1
-		me.spriteBuffer[t.sid] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
-	}
+	me.verifySprites(t.sid)
 }
 
 func (me *world) addMissile(t *missile) {
@@ -377,20 +381,8 @@ func (me *world) addMissile(t *missile) {
 	}
 	me.missiles[me.missileCount] = t
 	me.missileCount++
-
 	me.netLookup[t.nid] = t
-
-	count, has := me.spriteCount[t.sid]
-	if has {
-		me.spriteCount[t.sid] = count + 1
-		b := me.spriteBuffer[t.sid]
-		if (count+2)*16 > len(b.Vertices) {
-			b.RenderBufferExpand(me.gl)
-		}
-	} else {
-		me.spriteCount[t.sid] = 1
-		me.spriteBuffer[t.sid] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
-	}
+	me.verifySprites(t.sid)
 }
 
 func (me *world) addParticle(t *particle) {
@@ -401,18 +393,7 @@ func (me *world) addParticle(t *particle) {
 	}
 	me.particles[me.particleCount] = t
 	me.particleCount++
-
-	count, has := me.spriteCount[t.sid]
-	if has {
-		me.spriteCount[t.sid] = count + 1
-		b := me.spriteBuffer[t.sid]
-		if (count+2)*16 > len(b.Vertices) {
-			b.RenderBufferExpand(me.gl)
-		}
-	} else {
-		me.spriteCount[t.sid] = 1
-		me.spriteBuffer[t.sid] = graphics.RenderBufferInit(me.gl, 3, 0, 2, 40, 60)
-	}
+	me.verifySprites(t.sid)
 }
 
 func (me *world) removeThing(t *thing) {
@@ -422,6 +403,18 @@ func (me *world) removeThing(t *thing) {
 			me.things[i] = me.things[size-1]
 			me.things[size-1] = nil
 			me.thingCount--
+			break
+		}
+	}
+}
+
+func (me *world) removeScenery(t *scenery) {
+	size := me.sceneryCount
+	for i := 0; i < size; i++ {
+		if me.scenery[i] == t {
+			me.scenery[i] = me.scenery[size-1]
+			me.scenery[size-1] = nil
+			me.sceneryCount--
 			break
 		}
 	}

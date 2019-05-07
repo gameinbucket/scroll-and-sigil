@@ -51,7 +51,7 @@ func castBlock(block *block, fromX, fromY, fromZ, toX, toY, toZ float32) bool {
 		nextZ = (fromZ - float32(z)) * deltaZ
 	}
 	for {
-		if TileClosed[block.tiles[x+y*BlockSize+z*BlockSlice].typeOf] {
+		if TileClosed[block.tiles[x+(y<<BlockShift)+(z<<BlockShiftSlice)].typeOf] {
 			return false
 		} else if x == int(toX) && y == int(toY) && z == int(toZ) {
 			return true

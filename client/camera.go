@@ -1,6 +1,6 @@
 package main
 
-import "math"
+import "./fast"
 
 type camera struct {
 	thing  *thing
@@ -48,10 +48,14 @@ func (me *camera) update(world *world) {
 		me.rx += 0.05
 	}
 
-	sinX := math.Sin(float64(me.rx))
-	cosX := math.Cos(float64(me.rx))
-	sinY := math.Sin(float64(me.ry))
-	cosY := math.Cos(float64(me.ry))
+	// sinX := math.Sin(float64(me.rx))
+	// cosX := math.Cos(float64(me.rx))
+	// sinY := math.Sin(float64(me.ry))
+	// cosY := math.Cos(float64(me.ry))
+	sinX := fast.Sin(me.rx)
+	cosX := fast.Cos(me.rx)
+	sinY := fast.Sin(me.ry)
+	cosY := fast.Cos(me.ry)
 
 	thing := me.thing
 

@@ -173,3 +173,10 @@ func spriteBuilderDirectional(sid string, name string) [][]*render.Sprite {
 	}
 	return data
 }
+
+func playWadSound(name string) {
+	sound := wadSounds[name]
+	sound.Call("pause")
+	sound.Set("currentTime", 0)
+	sound.Call("play")
+}

@@ -13,7 +13,6 @@ class Scenery extends Thing {
         this.OldZ = z
         this.Radius = 0.4
         this.Height = 1.0
-        this.Speed = 0.1
         this.Health = 1
         world.AddThing(this)
         this.BlockBorders()

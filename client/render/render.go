@@ -36,152 +36,106 @@ func UnpackRgb(rgb int32) (int32, int32, int32) {
 
 // Index4 func
 func Index4(b *graphics.RenderBuffer) {
-	b.Indices[b.IndexPos] = b.IndexOffset
-	b.IndexPos++
-	b.Indices[b.IndexPos] = b.IndexOffset + 1
-	b.IndexPos++
-	b.Indices[b.IndexPos] = b.IndexOffset + 2
-	b.IndexPos++
-	b.Indices[b.IndexPos] = b.IndexOffset + 2
-	b.IndexPos++
-	b.Indices[b.IndexPos] = b.IndexOffset + 3
-	b.IndexPos++
-	b.Indices[b.IndexPos] = b.IndexOffset
-	b.IndexPos++
-
+	pos := b.IndexPos
+	offset := b.IndexOffset
+	b.Indices[pos] = offset
+	b.Indices[pos+1] = offset + 1
+	b.Indices[pos+2] = offset + 2
+	b.Indices[pos+3] = offset + 2
+	b.Indices[pos+4] = offset + 3
+	b.Indices[pos+5] = offset
+	b.IndexPos += 6
 	b.IndexOffset += 4
 }
 
 // MirrorIndex4 func
 func MirrorIndex4(b *graphics.RenderBuffer) {
-	b.Indices[b.IndexPos] = b.IndexOffset + 1
-	b.IndexPos++
-	b.Indices[b.IndexPos] = b.IndexOffset + 2
-	b.IndexPos++
-	b.Indices[b.IndexPos] = b.IndexOffset + 3
-	b.IndexPos++
-	b.Indices[b.IndexPos] = b.IndexOffset + 3
-	b.IndexPos++
-	b.Indices[b.IndexPos] = b.IndexOffset
-	b.IndexPos++
-	b.Indices[b.IndexPos] = b.IndexOffset + 1
-	b.IndexPos++
-
+	pos := b.IndexPos
+	offset := b.IndexOffset
+	b.Indices[pos] = offset + 1
+	b.Indices[pos+1] = offset + 2
+	b.Indices[pos+2] = offset + 3
+	b.Indices[pos+3] = offset + 3
+	b.Indices[pos+4] = offset
+	b.Indices[pos+5] = offset + 1
+	b.IndexPos += 6
 	b.IndexOffset += 4
 }
 
 // Screen func
 func Screen(b *graphics.RenderBuffer, x, y, width, height float32) {
-	b.Vertices[b.VertexPos] = x
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y
-	b.VertexPos++
+	pos := b.VertexPos
+	b.Vertices[pos] = x
+	b.Vertices[pos+1] = y
 
-	b.Vertices[b.VertexPos] = x + width
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y
-	b.VertexPos++
+	b.Vertices[pos+2] = x + width
+	b.Vertices[pos+3] = y
 
-	b.Vertices[b.VertexPos] = x + width
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y + height
-	b.VertexPos++
+	b.Vertices[pos+4] = x + width
+	b.Vertices[pos+5] = y + height
 
-	b.Vertices[b.VertexPos] = x
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y + height
-	b.VertexPos++
+	b.Vertices[pos+6] = x
+	b.Vertices[pos+7] = y + height
 
+	b.VertexPos += 8
 	Index4(b)
 }
 
 // Image func
 func Image(b *graphics.RenderBuffer, x, y, width, height, left, top, right, bottom float32) {
-	b.Vertices[b.VertexPos] = x
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = left
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = bottom
-	b.VertexPos++
+	pos := b.VertexPos
+	b.Vertices[pos] = x
+	b.Vertices[pos+1] = y
+	b.Vertices[pos+2] = left
+	b.Vertices[pos+3] = bottom
 
-	b.Vertices[b.VertexPos] = x + width
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = right
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = bottom
-	b.VertexPos++
+	b.Vertices[pos+4] = x + width
+	b.Vertices[pos+5] = y
+	b.Vertices[pos+6] = right
+	b.Vertices[pos+7] = bottom
 
-	b.Vertices[b.VertexPos] = x + width
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y + height
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = right
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = top
-	b.VertexPos++
+	b.Vertices[pos+8] = x + width
+	b.Vertices[pos+9] = y + height
+	b.Vertices[pos+10] = right
+	b.Vertices[pos+11] = top
 
-	b.Vertices[b.VertexPos] = x
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y + height
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = left
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = top
-	b.VertexPos++
+	b.Vertices[pos+12] = x
+	b.Vertices[pos+13] = y + height
+	b.Vertices[pos+14] = left
+	b.Vertices[pos+15] = top
 
+	b.VertexPos += 16
 	Index4(b)
 }
 
 // Rectangle func
 func Rectangle(b *graphics.RenderBuffer, x, y, width, height, red, green, blue float32) {
-	b.Vertices[b.VertexPos] = x
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = red
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = green
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = blue
-	b.VertexPos++
+	pos := b.VertexPos
+	b.Vertices[pos] = x
+	b.Vertices[pos+1] = y
+	b.Vertices[pos+2] = red
+	b.Vertices[pos+3] = green
+	b.Vertices[pos+4] = blue
 
-	b.Vertices[b.VertexPos] = x + width
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = red
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = green
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = blue
-	b.VertexPos++
+	b.Vertices[pos+5] = x + width
+	b.Vertices[pos+6] = y
+	b.Vertices[pos+7] = red
+	b.Vertices[pos+8] = green
+	b.Vertices[pos+9] = blue
 
-	b.Vertices[b.VertexPos] = x + width
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y + height
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = red
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = green
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = blue
-	b.VertexPos++
+	b.Vertices[pos+10] = x + width
+	b.Vertices[pos+11] = y + height
+	b.Vertices[pos+12] = red
+	b.Vertices[pos+13] = green
+	b.Vertices[pos+14] = blue
 
-	b.Vertices[b.VertexPos] = x
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = y + height
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = red
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = green
-	b.VertexPos++
-	b.Vertices[b.VertexPos] = blue
-	b.VertexPos++
+	b.Vertices[pos+15] = x
+	b.Vertices[pos+16] = y + height
+	b.Vertices[pos+17] = red
+	b.Vertices[pos+18] = green
+	b.Vertices[pos+19] = blue
 
+	b.VertexPos += 20
 	Index4(b)
 }
 

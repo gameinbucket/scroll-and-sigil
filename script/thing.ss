@@ -62,7 +62,7 @@ func NextNid :: uint16
   return ThingNetworkNum
 
 
-func LoadNewThing : world w uint16 uid float32 x float32 y float32 z
+func LoadNewThing : world w, uint16 uid, float32 x, float32 y, float32 z
   switch uid
   case BaronUID
       NewBaron w x y z
@@ -92,16 +92,16 @@ func thing.blockBorders
 
 
 func thing.addToBlocks
-  loop gx = me.minBX gx <= me.maxBX gx += 1
-    loop gy = me.minBY gy <= me.maxBY gy += 1
-      loop gz = me.minBZ gz <= me.maxBZ gz += 1
+  loop gx = me.minBX, gx <= me.maxBX, gx += 1
+    loop gy = me.minBY, gy <= me.maxBY, gy += 1
+      loop gz = me.minBZ, gz <= me.maxBZ, gz += 1
         (me.world.getBlock gx gy gz).addThing me
 
 
 func thing.removeFromBlocks
-  loop gx = me.minBX gx <= me.maxBX gx += 1
-    loop gy = me.minBY gy <= me.maxBY gy += 1
-      loop gz = me.minBZ gz <= me.maxBZ gz += 1
+  loop gx = me.minBX, gx <= me.maxBX, gx += 1
+    loop gy = me.minBY, gy <= me.maxBY, gy += 1
+      loop gz = me.minBZ, gz <= me.maxBZ, gz += 1
         (me.world.getBlock gx gy gz).removeThing me
 
 
@@ -119,7 +119,7 @@ func thing.overlap : thing b : bool
   return (abs me.x - b.x) <= square and (abs me.z - b.z) <= square
 
 
-func thing.tryOverlap : float32 x float32 z thing b : bool
+func thing.tryOverlap : float32 x, float32 z, thing b : bool
   square = me.radius + b.radius
   return (abs x - b.x) <= square and (abs z - b.z) <= square
 

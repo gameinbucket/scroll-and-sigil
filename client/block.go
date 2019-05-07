@@ -7,6 +7,8 @@ import (
 
 // Constants
 const (
+	BlockShift       = 3
+	BlockShiftSlice  = BlockShift + BlockShift
 	BlockSize        = 8
 	InverseBlockSize = 1.0 / BlockSize
 	BlockSlice       = BlockSize * BlockSize
@@ -39,16 +41,18 @@ type block struct {
 	visibility    [36]bool
 	beginSide     [6]int
 	countSide     [6]int
-	thingCount    int
-	itemCount     int
-	missileCount  int
-	particleCount int
-	lightCount    int
 	things        []*thing
+	thingCount    int
+	scenery       []*scenery
+	sceneryCount  int
 	items         []*item
+	itemCount     int
 	missiles      []*missile
+	missileCount  int
 	particles     []*particle
+	particleCount int
 	lights        []*light
+	lightCount    int
 	tiles         [BlockAll]tile
 }
 
@@ -92,6 +96,16 @@ func (me *block) addThing(t *thing) {
 	}
 	me.things[me.thingCount] = t
 	me.thingCount++
+}
+
+func (me *block) addScenery(t *scenery) {
+	if me.sceneryCount == len(me.scenery) {
+		array := make([]*scenery, me.sceneryCount+5)
+		copy(array, me.scenery)
+		me.scenery = array
+	}
+	me.scenery[me.sceneryCount] = t
+	me.sceneryCount++
 }
 
 func (me *block) addItem(t *item) {
@@ -141,6 +155,18 @@ func (me *block) removeThing(t *thing) {
 			me.things[i] = me.things[size-1]
 			me.things[size-1] = nil
 			me.thingCount--
+			break
+		}
+	}
+}
+
+func (me *block) removeScenery(t *scenery) {
+	size := me.sceneryCount
+	for i := 0; i < size; i++ {
+		if me.scenery[i] == t {
+			me.scenery[i] = me.scenery[size-1]
+			me.scenery[size-1] = nil
+			me.sceneryCount--
 			break
 		}
 	}
@@ -391,7 +417,7 @@ func (me *block) buildMesh(world *world) {
 		for blockSlice[2] = 0; blockSlice[2] < BlockSize; blockSlice[2]++ {
 			for blockSlice[1] = 0; blockSlice[1] < BlockSize; blockSlice[1]++ {
 				for blockSlice[0] = 0; blockSlice[0] < BlockSize; blockSlice[0]++ {
-					typeOf := me.tiles[blockSlice[pointerX]+blockSlice[pointerY]*BlockSize+blockSlice[pointerZ]*BlockSlice].typeOf
+					typeOf := me.tiles[blockSlice[pointerX]+(blockSlice[pointerY]<<BlockShift)+(blockSlice[pointerZ]<<BlockShiftSlice)].typeOf
 					if typeOf == TileNone {
 						continue
 					}
@@ -405,7 +431,7 @@ func (me *block) buildMesh(world *world) {
 					xs := blockSlice[pointerX]
 					ys := blockSlice[pointerY]
 					zs := blockSlice[pointerZ]
-					index := xs + ys*BlockSize + zs*BlockSlice
+					index := xs + (ys << BlockShift) + (zs << BlockShiftSlice)
 
 					texture := &TileTexture[typeOf]
 					gx := float32(xs + BlockSize*me.x)
@@ -447,13 +473,21 @@ func (me *block) renderThings(spriteSet map[interface{}]bool, spriteBuffer map[s
 		spriteSet[thing] = true
 		thing.render(spriteBuffer, camX, camZ, camAngle)
 	}
+	for i := 0; i < me.sceneryCount; i++ {
+		scene := me.scenery[i]
+		if _, ok := spriteSet[scene]; ok {
+			continue
+		}
+		spriteSet[scene] = true
+		scene.render(spriteBuffer, camX, camZ)
+	}
 	for i := 0; i < me.itemCount; i++ {
 		item := me.items[i]
 		if _, ok := spriteSet[item]; ok {
 			continue
 		}
 		spriteSet[item] = true
-		item.render(spriteBuffer, camX, camZ, camAngle)
+		item.render(spriteBuffer, camX, camZ)
 	}
 	for i := 0; i < me.missileCount; i++ {
 		missile := me.missiles[i]

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"math"
 
 	"./graphics"
@@ -57,12 +58,15 @@ func (me *item) removeFromBlocks() {
 	}
 }
 
+func (me *item) netUpdate(dat *bytes.Reader, delta uint8) {
+}
+
 func (me *item) cleanup() {
 	me.world.removeItem(me)
 	me.removeFromBlocks()
 }
 
-func (me *item) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ, camAngle float32) {
+func (me *item) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, camZ float32) {
 	sin := float64(camX - me.x)
 	cos := float64(camZ - me.z)
 	length := math.Sqrt(sin*sin + cos*cos)
@@ -72,19 +76,19 @@ func (me *item) render(spriteBuffer map[string]*graphics.RenderBuffer, camX, cam
 }
 
 func medkitInit(world *world, nid uint16, x, y, z float32) *item {
-	me := &item{}
-	me.world = world
-	me.x = x
-	me.y = y
-	me.z = z
-	me.blockBorders()
-	me.addToBlocks()
-	me.uid = MedkitUID
-	me.sid = "item"
-	me.nid = nid
-	me.sprite = wadSpriteData[me.sid]["medkit"]
-	me.radius = 0.2
-	me.height = 0.2
-	world.addItem(me)
-	return me
+	meds := &item{}
+	meds.world = world
+	meds.x = x
+	meds.y = y
+	meds.z = z
+	meds.blockBorders()
+	meds.addToBlocks()
+	meds.uid = MedkitUID
+	meds.sid = "item"
+	meds.nid = nid
+	meds.sprite = wadSpriteData[meds.sid]["medkit"]
+	meds.radius = 0.2
+	meds.height = 0.2
+	world.addItem(meds)
+	return meds
 }

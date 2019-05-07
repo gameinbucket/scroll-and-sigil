@@ -248,7 +248,6 @@ func appInit() *app {
 	app.drawImages = graphics.RenderBufferInit(gl, 2, 0, 2, 400, 600)
 	app.state = worldStateInit(app)
 	app.world = worldInit(g, gl)
-
 	app.call = js.FuncOf(func(self js.Value, args []js.Value) interface{} {
 		app.loop()
 		return nil

@@ -66,6 +66,11 @@ var (
 	}
 )
 
+type netThing interface {
+	cleanup()
+	netUpdate(dat *bytes.Reader, delta uint8)
+}
+
 type thing struct {
 	world          *world
 	uid            uint16

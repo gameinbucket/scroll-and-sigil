@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"math"
 
 	"./graphics"
@@ -8,26 +9,26 @@ import (
 )
 
 type missile struct {
-	world   *world
-	uid     uint16
-	sid     string
-	nid     uint16
-	sprite  *render.Sprite
-	x       float32
-	y       float32
-	z       float32
-	deltaX  float32
-	deltaY  float32
-	deltaZ  float32
-	minBX   int
-	minBY   int
-	minBZ   int
-	maxBX   int
-	maxBY   int
-	maxBZ   int
-	radius  float32
-	height  float32
-	cleanup func()
+	world     *world
+	uid       uint16
+	sid       string
+	nid       uint16
+	sprite    *render.Sprite
+	x         float32
+	y         float32
+	z         float32
+	deltaX    float32
+	deltaY    float32
+	deltaZ    float32
+	minBX     int
+	minBY     int
+	minBZ     int
+	maxBX     int
+	maxBY     int
+	maxBZ     int
+	radius    float32
+	height    float32
+	cleanupFn func()
 }
 
 func (me *missile) blockBorders() {
@@ -68,6 +69,15 @@ func (me *missile) removeFromBlocks() {
 	}
 }
 
+func (me *missile) netUpdate(dat *bytes.Reader, delta uint8) {
+}
+
+func (me *missile) cleanup() {
+	me.world.removeMissile(me)
+	me.removeFromBlocks()
+	me.cleanupFn()
+}
+
 func (me *missile) update() bool {
 	me.removeFromBlocks()
 	me.x += me.deltaX
@@ -105,13 +115,11 @@ func plasmaInit(world *world, nid uint16, damage uint16, x, y, z, dx, dy, dz flo
 	me.deltaZ = dz * InverseNetRate
 	me.radius = 0.2
 	me.height = 0.2
-	me.cleanup = me.cleanupPlasma
+	me.cleanupFn = me.plasmaCleanup
 	world.addMissile(me)
 }
 
-func (me *missile) cleanupPlasma() {
-	me.world.removeMissile(me)
-	me.removeFromBlocks()
-	wadSounds["plasma-impact"].Call("play")
+func (me *missile) plasmaCleanup() {
+	playWadSound("plasma-impact")
 	plasmaExplosionInit(me.world, me.x, me.y, me.z)
 }

@@ -89,7 +89,7 @@ func (me *human) netUpdateState(status uint8) {
 		me.animation = humanAnimationDeath
 	case humanMissile:
 		me.animation = humanAnimationMissile
-		wadSounds["baron-melee"].Call("play")
+		playWadSound("baron-melee")
 	case humanIdle:
 		me.animation = humanAnimationIdle
 	default:
@@ -101,9 +101,9 @@ func (me *human) netUpdateState(status uint8) {
 func (me *human) netUpdateHealth(health uint16) {
 	if health < me.health {
 		if health < 1 {
-			wadSounds["baron-death"].Call("play")
+			playWadSound("baron-death")
 		} else {
-			wadSounds["baron-pain"].Call("play")
+			playWadSound("baron-pain")
 		}
 		for i := 0; i < 20; i++ {
 			spriteName := "blood-" + strconv.Itoa(int(math.Floor(rand.Float64()*3)))

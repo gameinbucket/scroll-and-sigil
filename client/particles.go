@@ -67,8 +67,9 @@ func (me *particle) removeFromBlocks() {
 }
 
 func (me *particle) updateAnimation() int {
-	me.animationFrame++
-	if me.animationMod == AnimationRate {
+	const particleAnimationRate = 8
+	me.animationMod++
+	if me.animationMod == particleAnimationRate {
 		me.animationMod = 0
 		me.animationFrame++
 		size := len(me.animation)
@@ -117,21 +118,21 @@ func (me *particle) render(spriteBuffer map[string]*graphics.RenderBuffer, camX,
 }
 
 func plasmaExplosionInit(world *world, x, y, z float32) *particle {
-	p := &particle{}
-	p.world = world
-	p.x = x
-	p.y = y
-	p.z = z
-	p.sid = "particles"
-	p.animation = plasmaExplosionAnimation
-	p.sprite = p.animation[0]
-	p.radius = 0.2
-	p.height = 0.2
-	p.update = p.plasmaUpdate
-	world.addParticle(p)
-	p.blockBorders()
-	p.addToBlocks()
-	return p
+	plasma := &particle{}
+	plasma.world = world
+	plasma.x = x
+	plasma.y = y
+	plasma.z = z
+	plasma.sid = "particles"
+	plasma.animation = plasmaExplosionAnimation
+	plasma.sprite = plasma.animation[0]
+	plasma.radius = 0.2
+	plasma.height = 0.2
+	plasma.update = plasma.plasmaUpdate
+	world.addParticle(plasma)
+	plasma.blockBorders()
+	plasma.addToBlocks()
+	return plasma
 }
 
 func (me *particle) plasmaUpdate() bool {
@@ -144,23 +145,23 @@ func (me *particle) plasmaUpdate() bool {
 }
 
 func bloodInit(world *world, x, y, z, dx, dy, dz float32, spriteName string) *particle {
-	b := &particle{}
-	b.world = world
-	b.x = x
-	b.y = y
-	b.z = z
-	b.sid = "particles"
-	b.sprite = wadSpriteData[b.sid][spriteName]
-	b.deltaX = dx
-	b.deltaY = dy
-	b.deltaZ = dz
-	b.radius = 0.2
-	b.height = 0.2
-	b.update = b.bloodUpdate
-	world.addParticle(b)
-	b.blockBorders()
-	b.addToBlocks()
-	return b
+	blood := &particle{}
+	blood.world = world
+	blood.x = x
+	blood.y = y
+	blood.z = z
+	blood.sid = "particles"
+	blood.sprite = wadSpriteData[blood.sid][spriteName]
+	blood.deltaX = dx
+	blood.deltaY = dy
+	blood.deltaZ = dz
+	blood.radius = 0.2
+	blood.height = 0.2
+	blood.update = blood.bloodUpdate
+	world.addParticle(blood)
+	blood.blockBorders()
+	blood.addToBlocks()
+	return blood
 }
 
 func (me *particle) bloodUpdate() bool {
