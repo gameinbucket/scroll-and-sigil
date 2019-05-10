@@ -1,6 +1,6 @@
 package main
 
-import "./fast"
+import "../fast"
 
 type camera struct {
 	thing  *thing

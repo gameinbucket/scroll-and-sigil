@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"math"
+
+	"../fast"
 )
 
 // Animation constants
@@ -67,19 +67,19 @@ func NewBaron(world *World, x, y, z float32) *Baron {
 }
 
 // Save func
-func (me *Baron) Save(raw *bytes.Buffer) {
-	binary.Write(raw, binary.LittleEndian, me.UID)
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, float32(me.X))
-	binary.Write(raw, binary.LittleEndian, float32(me.Y))
-	binary.Write(raw, binary.LittleEndian, float32(me.Z))
-	binary.Write(raw, binary.LittleEndian, uint8(me.MoveDirection))
-	binary.Write(raw, binary.LittleEndian, uint16(me.Health))
-	binary.Write(raw, binary.LittleEndian, uint8(me.Status))
+func (me *Baron) Save(data *fast.ByteWriter) {
+	data.PutUint16(me.UID)
+	data.PutUint16(me.NID)
+	data.PutFloat32(me.X)
+	data.PutFloat32(me.Y)
+	data.PutFloat32(me.Z)
+	data.PutUint8(me.MoveDirection)
+	data.PutUint16(me.Health)
+	data.PutUint8(me.Status)
 }
 
 // Snap func
-func (me *Baron) Snap(raw *bytes.Buffer) {
+func (me *Baron) Snap(data *fast.ByteWriter) {
 	delta := uint8(0)
 	if me.DeltaMoveXZ {
 		delta |= 0x1
@@ -100,31 +100,31 @@ func (me *Baron) Snap(raw *bytes.Buffer) {
 		me.Binary = nil
 		return
 	}
-	raw.Reset()
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, delta)
+	data.Reset()
+	data.PutUint16(me.NID)
+	data.PutUint8(delta)
 	if me.DeltaMoveXZ {
-		binary.Write(raw, binary.LittleEndian, me.X)
-		binary.Write(raw, binary.LittleEndian, me.Z)
+		data.PutFloat32(me.X)
+		data.PutFloat32(me.Z)
 		me.DeltaMoveXZ = false
 	}
 	if me.DeltaMoveY {
-		binary.Write(raw, binary.LittleEndian, me.Y)
+		data.PutFloat32(me.Y)
 		me.DeltaMoveY = false
 	}
 	if me.DeltaHealth {
-		binary.Write(raw, binary.LittleEndian, me.Health)
+		data.PutUint16(me.Health)
 		me.DeltaHealth = false
 	}
 	if me.DeltaStatus {
-		binary.Write(raw, binary.LittleEndian, me.Status)
+		data.PutUint8(me.Status)
 		me.DeltaStatus = false
 	}
 	if me.DeltaMoveDirection {
-		binary.Write(raw, binary.LittleEndian, me.MoveDirection)
+		data.PutUint8(me.MoveDirection)
 		me.DeltaMoveDirection = false
 	}
-	binary := raw.Bytes()
+	binary := data.Bytes()
 	me.Binary = make([]byte, len(binary))
 	copy(me.Binary, binary)
 }

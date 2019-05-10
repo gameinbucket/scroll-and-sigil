@@ -3,7 +3,7 @@ package main
 import (
 	"syscall/js"
 
-	"./fast"
+	"../fast"
 	"./graphics"
 )
 

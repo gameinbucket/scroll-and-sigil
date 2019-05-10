@@ -3,7 +3,7 @@ package main
 import (
 	"math"
 
-	"./fast"
+	"../fast"
 	"./graphics"
 	"./render"
 )

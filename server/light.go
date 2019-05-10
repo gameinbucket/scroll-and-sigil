@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
+	"../fast"
 )
 
-// light struct
 type light struct {
 	X   int
 	Y   int
@@ -13,16 +11,15 @@ type light struct {
 	RGB int
 }
 
-// NewLight func
-func NewLight(x, y, z, rgb int) *light {
+func lightInit(x, y, z, rgb int) *light {
 	light := &light{X: x, Y: y, Z: z, RGB: rgb}
 	return light
 }
 
 // Save func
-func (me *light) Save(raw *bytes.Buffer) {
-	binary.Write(raw, binary.LittleEndian, uint8(me.X))
-	binary.Write(raw, binary.LittleEndian, uint8(me.Y))
-	binary.Write(raw, binary.LittleEndian, uint8(me.Z))
-	binary.Write(raw, binary.LittleEndian, int32(me.RGB))
+func (me *light) Save(data *fast.ByteWriter) {
+	data.PutUint8(uint8(me.X))
+	data.PutUint8(uint8(me.Y))
+	data.PutUint8(uint8(me.Z))
+	data.PutInt32(int32(me.RGB))
 }

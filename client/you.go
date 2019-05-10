@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"syscall/js"
 
-	"./fast"
+	"../fast"
 )
 
 const (

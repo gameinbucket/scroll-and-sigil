@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"math"
+
+	"../fast"
 )
 
 // Animation constants
@@ -70,19 +70,19 @@ func NewYou(world *World, person *Person, x, y, z float32) *You {
 }
 
 // Save func
-func (me *You) Save(raw *bytes.Buffer) {
-	binary.Write(raw, binary.LittleEndian, me.UID)
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, me.X)
-	binary.Write(raw, binary.LittleEndian, me.Y)
-	binary.Write(raw, binary.LittleEndian, me.Z)
-	binary.Write(raw, binary.LittleEndian, me.Angle)
-	binary.Write(raw, binary.LittleEndian, me.Health)
-	binary.Write(raw, binary.LittleEndian, me.Status)
+func (me *You) Save(data *fast.ByteWriter) {
+	data.PutUint16(me.UID)
+	data.PutUint16(me.NID)
+	data.PutFloat32(me.X)
+	data.PutFloat32(me.Y)
+	data.PutFloat32(me.Z)
+	data.PutFloat32(me.Angle)
+	data.PutUint16(me.Health)
+	data.PutUint8(me.Status)
 }
 
 // Snap func
-func (me *You) Snap(raw *bytes.Buffer) {
+func (me *You) Snap(data *fast.ByteWriter) {
 	delta := uint8(0)
 	if me.DeltaMoveXZ {
 		delta |= 0x1
@@ -103,31 +103,31 @@ func (me *You) Snap(raw *bytes.Buffer) {
 		me.Binary = nil
 		return
 	}
-	raw.Reset()
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, delta)
+	data.Reset()
+	data.PutUint16(me.NID)
+	data.PutUint8(delta)
 	if me.DeltaMoveXZ {
-		binary.Write(raw, binary.LittleEndian, me.X)
-		binary.Write(raw, binary.LittleEndian, me.Z)
+		data.PutFloat32(me.X)
+		data.PutFloat32(me.Z)
 		me.DeltaMoveXZ = false
 	}
 	if me.DeltaMoveY {
-		binary.Write(raw, binary.LittleEndian, me.Y)
+		data.PutFloat32(me.Y)
 		me.DeltaMoveY = false
 	}
 	if me.DeltaHealth {
-		binary.Write(raw, binary.LittleEndian, me.Health)
+		data.PutUint16(me.Health)
 		me.DeltaHealth = false
 	}
 	if me.DeltaStatus {
-		binary.Write(raw, binary.LittleEndian, me.Status)
+		data.PutUint8(me.Status)
 		me.DeltaStatus = false
 	}
 	if me.DeltaAngle {
-		binary.Write(raw, binary.LittleEndian, me.Angle)
+		data.PutFloat32(me.Angle)
 		me.DeltaAngle = false
 	}
-	binary := raw.Bytes()
+	binary := data.Bytes()
 	me.Binary = make([]byte, len(binary))
 	copy(me.Binary, binary)
 }
@@ -206,18 +206,16 @@ func (me *You) Walk() {
 gotoRead:
 	for i := 0; i < person.InputCount; i++ {
 		input := person.InputQueue[i]
-		reader := bytes.NewReader(input)
-		var opCount uint8
-		err := binary.Read(reader, binary.LittleEndian, &opCount)
-		if err != nil {
+		data := fast.ByteReaderInit(input)
+		if data.NotSafe(1) {
 			break gotoRead
 		}
+		opCount := data.GetUint8()
 		for c := uint8(0); c < opCount; c++ {
-			var opUint8 uint8
-			err = binary.Read(reader, binary.LittleEndian, &opUint8)
-			if err != nil {
+			if data.NotSafe(1) {
 				break gotoRead
 			}
+			opUint8 := data.GetUint8()
 			switch opUint8 {
 			case InputOpSearch:
 				me.Search()
@@ -226,33 +224,29 @@ gotoRead:
 			case InputOpContinueMove:
 				move = true
 			case InputOpNewMove:
-				var opFloat32 float32
-				err = binary.Read(reader, binary.LittleEndian, &opFloat32)
-				if err != nil {
+				if data.NotSafe(4) {
 					break gotoRead
 				}
-				me.Angle = opFloat32
+				me.Angle = data.GetFloat32()
 				me.DeltaAngle = true
 				move = true
 			case InputOpChat:
-				err = binary.Read(reader, binary.LittleEndian, &opUint8)
-				if err != nil {
+				if data.NotSafe(1) {
 					break gotoRead
 				}
-				num := opUint8
+				num := data.GetUint8()
 				chat := make([]uint8, num)
+				if data.NotSafe(int(num)) {
+					break gotoRead
+				}
 				for ch := uint8(0); ch < num; ch++ {
-					err = binary.Read(reader, binary.LittleEndian, &opUint8)
-					if err != nil {
-						break gotoRead
-					}
-					chat[ch] = opUint8
+					chat[ch] = data.GetUint8()
 				}
 				me.World.broadcastCount++
-				binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastChat)
-				binary.Write(me.World.broadcast, binary.LittleEndian, num)
+				me.World.broadcast.PutUint8(BroadcastChat)
+				me.World.broadcast.PutUint8(num)
 				for ch := uint8(0); ch < num; ch++ {
-					binary.Write(me.World.broadcast, binary.LittleEndian, chat[ch])
+					me.World.broadcast.PutUint8(chat[ch])
 				}
 			}
 		}

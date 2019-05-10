@@ -1,8 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
+	"../fast"
 )
 
 // item struct
@@ -69,17 +68,17 @@ func (me *item) Cleanup() {
 // BroadcastDelete func
 func (me *item) BroadcastDelete() {
 	me.World.broadcastCount++
-	binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastDelete)
-	binary.Write(me.World.broadcast, binary.LittleEndian, me.NID)
+	me.World.broadcast.PutUint8(BroadcastDelete)
+	me.World.broadcast.PutUint16(me.NID)
 }
 
 // Save func
-func (me *item) Save(raw *bytes.Buffer) {
-	binary.Write(raw, binary.LittleEndian, me.UID)
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, float32(me.X))
-	binary.Write(raw, binary.LittleEndian, float32(me.Y))
-	binary.Write(raw, binary.LittleEndian, float32(me.Z))
+func (me *item) Save(data *fast.ByteWriter) {
+	data.PutUint16(me.UID)
+	data.PutUint16(me.NID)
+	data.PutFloat32(me.X)
+	data.PutFloat32(me.Y)
+	data.PutFloat32(me.Z)
 }
 
 // LoadNewItem func

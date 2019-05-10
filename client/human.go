@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"strconv"
 
-	"./fast"
+	"../fast"
 	"./render"
 )
 

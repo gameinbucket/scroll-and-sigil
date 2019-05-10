@@ -1,8 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
+	"../fast"
 )
 
 // block constants
@@ -34,17 +33,17 @@ func (me *block) blockInit(x, y, z int) {
 }
 
 // Save func
-func (me *block) Save(raw *bytes.Buffer) {
+func (me *block) Save(data *fast.ByteWriter) {
 	notEmpty := me.NotEmpty()
-	binary.Write(raw, binary.LittleEndian, notEmpty)
+	data.PutUint8(notEmpty)
 	if notEmpty == 1 {
 		for i := 0; i < BlockAll; i++ {
-			binary.Write(raw, binary.LittleEndian, uint8(me.Tiles[i]))
+			data.PutUint8(uint8(me.Tiles[i]))
 		}
 	}
-	binary.Write(raw, binary.LittleEndian, uint8(me.lightCount))
+	data.PutUint8(uint8(me.lightCount))
 	for i := 0; i < me.lightCount; i++ {
-		me.lights[i].Save(raw)
+		me.lights[i].Save(data)
 	}
 }
 

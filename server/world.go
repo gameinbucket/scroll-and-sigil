@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"time"
+
+	"../fast"
 )
 
 // World constants
@@ -47,13 +47,13 @@ type World struct {
 	ThreadID                        string
 	SpawnYouX, SpawnYouY, SpawnYouZ float32
 	broadcastCount                  uint8
-	broadcast                       *bytes.Buffer
+	broadcast                       *fast.ByteWriter
 }
 
 // NewWorld func
 func NewWorld() *World {
 	world := &World{}
-	world.broadcast = &bytes.Buffer{}
+	world.broadcast = fast.ByteWriterInit(64)
 	world.SpawnYouX = 12
 	world.SpawnYouY = 12
 	world.SpawnYouZ = 12
@@ -111,7 +111,7 @@ func (me *World) Load(data []byte) {
 			y := ParseInt(light["y"].(string))
 			z := ParseInt(light["z"].(string))
 			rgb := ParseInt(light["v"].(string))
-			block.addLight(NewLight(x, y, z, rgb))
+			block.addLight(lightInit(x, y, z, rgb))
 		}
 
 		bx++
@@ -151,89 +151,84 @@ func (me *World) NewPlayer(person *Person) *You {
 
 // Save func
 func (me *World) Save(person *Person) []byte {
-	raw := &bytes.Buffer{}
+	data := fast.ByteWriterInit(256)
 
-	binary.Write(raw, binary.LittleEndian, person.Character.NID)
-	binary.Write(raw, binary.LittleEndian, uint16(me.Width))
-	binary.Write(raw, binary.LittleEndian, uint16(me.Height))
-	binary.Write(raw, binary.LittleEndian, uint16(me.Length))
+	data.PutUint16(person.Character.NID)
+	data.PutUint16(uint16(me.Width))
+	data.PutUint16(uint16(me.Height))
+	data.PutUint16(uint16(me.Length))
 
 	for i := 0; i < me.All; i++ {
-		me.Blocks[i].Save(raw)
+		me.Blocks[i].Save(data)
 	}
 
 	numthings := me.thingCount
-	binary.Write(raw, binary.LittleEndian, uint16(numthings))
+	data.PutUint16(uint16(numthings))
 	for i := 0; i < numthings; i++ {
-		me.things[i].Save(raw)
+		me.things[i].Save(data)
 	}
 
 	numItems := me.itemCount
-	binary.Write(raw, binary.LittleEndian, uint16(numItems))
+	data.PutUint16(uint16(numItems))
 	for i := 0; i < numItems; i++ {
-		me.items[i].Save(raw)
+		me.items[i].Save(data)
 	}
 
 	numMissiles := me.missileCount
-	binary.Write(raw, binary.LittleEndian, uint16(numMissiles))
+	data.PutUint16(uint16(numMissiles))
 	for i := 0; i < numMissiles; i++ {
-		me.missiles[i].Snap(raw)
+		me.missiles[i].Snap(data)
 	}
 
-	return raw.Bytes()
+	return data.Bytes()
 }
 
 // BuildSnapshots func
 func (me *World) BuildSnapshots(people []*Person) {
-	num := len(people)
+	peopleCount := len(people)
 	time := uint32(time.Now().UnixNano()/1000000 - 1552330000000)
-	numthings := me.thingCount
+	things := me.thingCount
 
-	full := &bytes.Buffer{}
-	body := &bytes.Buffer{}
-
-	var broadcast []byte
-	broadcasting := me.broadcastCount
-	if broadcasting > 0 {
+	var broadcastBinary []byte
+	broadcastSize := me.broadcastCount
+	if broadcastSize > 0 {
 		binary := me.broadcast.Bytes()
-		broadcast = make([]byte, len(binary))
-		copy(broadcast, binary)
+		broadcastBinary = make([]byte, len(binary))
+		copy(broadcastBinary, binary)
 		me.broadcast.Reset()
 		me.broadcastCount = 0
 	}
 
-	for i := 0; i < numthings; i++ {
+	full := &fast.ByteWriter{}
+	body := &fast.ByteWriter{}
+	for i := 0; i < things; i++ {
 		me.things[i].Snap(body)
 	}
 
 	body.Reset()
 	spriteSet := make(map[*thing]bool)
 	updatedThings := uint16(0)
-	for i := 0; i < numthings; i++ {
+	for i := 0; i < things; i++ {
 		thing := me.things[i]
 		if _, has := spriteSet[thing]; !has {
 			spriteSet[thing] = true
 			if thing.Binary != nil {
-				body.Write(thing.Binary)
+				body.PutBytes(thing.Binary)
 				updatedThings++
 			}
 		}
 	}
 
-	for i := 0; i < num; i++ {
+	full.PutUint32(time)
+	full.PutUint8(broadcastSize)
+	if broadcastSize > 0 {
+		full.PutBytes(broadcastBinary)
+	}
+	full.PutUint16(updatedThings)
+	full.PutBytes(body.Bytes())
+
+	for i := 0; i < peopleCount; i++ {
 		person := people[i]
-
-		full.Reset()
-		binary.Write(full, binary.LittleEndian, time)
-
-		binary.Write(full, binary.LittleEndian, broadcasting)
-		if broadcasting > 0 {
-			full.Write(broadcast)
-		}
-
-		binary.Write(full, binary.LittleEndian, updatedThings)
-		full.Write(body.Bytes())
-
 		binary := full.Bytes()
 		person.snap = make([]byte, len(binary))
 		copy(person.snap, binary)

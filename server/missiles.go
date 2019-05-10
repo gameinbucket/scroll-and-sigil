@@ -1,8 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
+	"../fast"
 )
 
 // missile struct
@@ -132,30 +131,30 @@ func (me *missile) Update() bool {
 }
 
 // Snap func
-func (me *missile) Snap(raw *bytes.Buffer) {
-	binary.Write(raw, binary.LittleEndian, me.UID)
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, float32(me.X))
-	binary.Write(raw, binary.LittleEndian, float32(me.Y))
-	binary.Write(raw, binary.LittleEndian, float32(me.Z))
-	binary.Write(raw, binary.LittleEndian, float32(me.DeltaX))
-	binary.Write(raw, binary.LittleEndian, float32(me.DeltaY))
-	binary.Write(raw, binary.LittleEndian, float32(me.DeltaZ))
-	binary.Write(raw, binary.LittleEndian, uint16(me.DamageAmount))
+func (me *missile) Snap(data *fast.ByteWriter) {
+	data.PutUint16(me.UID)
+	data.PutUint16(me.NID)
+	data.PutFloat32(me.X)
+	data.PutFloat32(me.Y)
+	data.PutFloat32(me.Z)
+	data.PutFloat32(me.DeltaX)
+	data.PutFloat32(me.DeltaY)
+	data.PutFloat32(me.DeltaZ)
+	data.PutUint16(me.DamageAmount)
 }
 
 // BroadcastNew func
 func (me *missile) BroadcastNew() {
 	me.World.broadcastCount++
-	binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastNew)
+	me.World.broadcast.PutUint8(BroadcastNew)
 	me.Snap(me.World.broadcast)
 }
 
 // BroadcastDelete func
 func (me *missile) BroadcastDelete() {
 	me.World.broadcastCount++
-	binary.Write(me.World.broadcast, binary.LittleEndian, BroadcastDelete)
-	binary.Write(me.World.broadcast, binary.LittleEndian, me.NID)
+	me.World.broadcast.PutUint8(BroadcastDelete)
+	me.World.broadcast.PutUint16(me.NID)
 }
 
 // NewPlasma func

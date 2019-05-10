@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"strings"
 	"syscall/js"
 	"time"
 
-	"./fast"
+	"../fast"
 	"./graphics"
 	"./matrix"
 	"./render"
@@ -108,29 +106,28 @@ func (me *worldState) update() {
 	socketSendOperations := uint8(0)
 	size := len(socketSend)
 	if size > 0 {
-		full := &bytes.Buffer{}
-		body := &bytes.Buffer{}
+		data := fast.ByteWriterInit(64)
+		data.Position(1)
 		for op, value := range socketSend {
-			binary.Write(body, binary.LittleEndian, op)
+			data.PutUint8(op)
 			switch op {
 			case inputOpNewMove:
-				binary.Write(body, binary.LittleEndian, value.(float32))
+				data.PutFloat32(value.(float32))
 			case inputOpChat:
 				chat := value.(string)
 				chatSize := uint8(len(chat))
 				if chatSize > 255 {
 					chatSize = 255
 				}
-				binary.Write(body, binary.LittleEndian, chatSize)
+				data.PutUint8(chatSize)
 				for ch := uint8(0); ch < chatSize; ch++ {
-					binary.Write(body, binary.LittleEndian, chat[ch])
+					data.PutUint8(chat[ch])
 				}
 			}
 			socketSendOperations++
 		}
-		binary.Write(full, binary.LittleEndian, socketSendOperations)
-		binary.Write(full, binary.LittleEndian, body.Bytes())
-		me.app.socket.Call("send", js.TypedArrayOf(full.Bytes()))
+		data.SetUint8(0, socketSendOperations)
+		me.app.socket.Call("send", js.TypedArrayOf(data.Bytes()))
 
 		for key := range socketSend {
 			delete(socketSend, key)

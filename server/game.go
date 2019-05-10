@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -135,7 +134,7 @@ func (me *Server) connectSocket(writer http.ResponseWriter, request *http.Reques
 	me.people = append(me.people, person)
 	data := me.world.Save(person)
 	me.world.broadcastCount++
-	binary.Write(me.world.broadcast, binary.LittleEndian, BroadcastNew)
+	me.world.broadcast.PutUint8(BroadcastNew)
 	person.Character.Save(me.world.broadcast)
 	me.mux.Unlock()
 	person.WriteBinaryToClient(data)
@@ -170,8 +169,8 @@ func (me *Server) RemovePerson(person *Person) {
 	defer me.mux.Unlock()
 
 	me.world.broadcastCount++
-	binary.Write(me.world.broadcast, binary.LittleEndian, BroadcastDelete)
-	binary.Write(me.world.broadcast, binary.LittleEndian, person.Character.NID)
+	me.world.broadcast.PutUint8(BroadcastDelete)
+	me.world.broadcast.PutUint16(person.Character.NID)
 
 	num := len(me.people)
 	for i := 0; i < num; i++ {

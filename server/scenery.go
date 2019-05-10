@@ -1,8 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
+	"../fast"
 )
 
 // NewTree func
@@ -29,10 +28,10 @@ func NewTree(world *World, x, y, z float32) *thing {
 }
 
 // ScenerySave func
-func (me *thing) ScenerySave(raw *bytes.Buffer) {
-	binary.Write(raw, binary.LittleEndian, me.UID)
-	binary.Write(raw, binary.LittleEndian, me.NID)
-	binary.Write(raw, binary.LittleEndian, float32(me.X))
-	binary.Write(raw, binary.LittleEndian, float32(me.Y))
-	binary.Write(raw, binary.LittleEndian, float32(me.Z))
+func (me *thing) ScenerySave(data *fast.ByteWriter) {
+	data.PutUint16(me.UID)
+	data.PutUint16(me.NID)
+	data.PutFloat32(me.X)
+	data.PutFloat32(me.Y)
+	data.PutFloat32(me.Z)
 }

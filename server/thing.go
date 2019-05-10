@@ -1,8 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"math"
+
+	"../fast"
 )
 
 // thing constants
@@ -37,30 +38,39 @@ var (
 
 // thing struct
 type thing struct {
-	World                  *World
-	UID                    uint16
-	NID                    uint16
-	Animation              int
-	AnimationFrame         int
-	X, Y, Z                float32
-	Angle                  float32
-	DeltaX, DeltaY, DeltaZ float32
-	OldX, OldZ             float32
-	MinBX, MinBY, MinBZ    int
-	MaxBX, MaxBY, MaxBZ    int
-	Ground                 bool
-	Radius                 float32
-	Height                 float32
-	Speed                  float32
-	Health                 uint16
-	Group                  int
-	DeltaMoveXZ            bool
-	DeltaMoveY             bool
-	Update                 func() bool
-	Damage                 func(uint16)
-	Save                   func(raw *bytes.Buffer)
-	Snap                   func(raw *bytes.Buffer)
-	Binary                 []byte
+	World          *World
+	UID            uint16
+	NID            uint16
+	Animation      int
+	AnimationFrame int
+	X              float32
+	Y              float32
+	Z              float32
+	Angle          float32
+	DeltaX         float32
+	DeltaY         float32
+	DeltaZ         float32
+	OldX           float32
+	OldZ           float32
+	MinBX          int
+	MinBY          int
+	MinBZ          int
+	MaxBX          int
+	MaxBY          int
+	MaxBZ          int
+	Ground         bool
+	Radius         float32
+	Height         float32
+	Speed          float32
+	Health         uint16
+	Group          int
+	DeltaMoveXZ    bool
+	DeltaMoveY     bool
+	Update         func() bool
+	Damage         func(uint16)
+	Save           func(data *fast.ByteWriter)
+	Snap           func(data *fast.ByteWriter)
+	Binary         []byte
 }
 
 // NextNID func
@@ -85,7 +95,7 @@ func (me *thing) NopUpdate() bool {
 }
 
 // NopSnap func
-func (me *thing) NopSnap(raw *bytes.Buffer) {
+func (me *thing) NopSnap(data *fast.ByteWriter) {
 	me.Binary = nil
 }
 
