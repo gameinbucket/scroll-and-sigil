@@ -1,3 +1,7 @@
+
+native/scroll-and-sigil
+
+certs/*
+
 *.app
 *.wasm
-certs/*

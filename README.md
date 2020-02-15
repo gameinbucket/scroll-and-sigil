@@ -1,16 +1,16 @@
 # scroll and sigil
 
-## todo
+## Timeline
 
-[] production should cache files on server
-[] allow config files for creating things/scenery/items/missiles (instead of hard coded)
-[] server should perform analysis of map to determine what blocks are visible from a given block, and cull network traffic per person
+* Production should cache files on server
+* Allow config files for creating things/scenery/items/missiles (instead of hard coded)
+* Server should perform analysis of map to determine what blocks are visible from a given block, and cull network traffic per person
   the same logic should be applicable for view culling for client rendering
   cast rays from edges of cube/blocks and determine if "solid" block prevents view
-[] camera will zoom to avoid clipping terrain
-[] client side movement prediction/reckoning
-[] chatbox for people to talk
-[] motion blur shader
-[] anti aliasing shader
-[] ambient occlusion shader
-[] depth of field shader
+* Camera will zoom to avoid clipping terrain
+* Client side movement prediction/reckoning
+* Chatbox for people to talk
+* Motion blur shader
+* Anti aliasing shader
+* Ambient occlusion shader
+* Depth of field shader
