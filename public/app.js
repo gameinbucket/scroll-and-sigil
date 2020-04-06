@@ -153,7 +153,7 @@ class App {
         this.resize()
         this.loop()
     }
-    switch (state) {
+    switch(state) {
         this.state = state
     }
     loop() {
@@ -171,5 +171,5 @@ function PlaySound(name) {
     sound.volume = 0.25
     sound.currentTime = 0
     let promise = sound.play()
-    if (promise) promise.then(_ => {}).catch(_ => {})
+    if (promise) promise.then(_ => { }).catch(_ => { })
 }

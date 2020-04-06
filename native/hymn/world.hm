@@ -1,0 +1,6 @@
+
+static net_update_rate = 50
+
+class world
+    g graphics.render_system
+    pid uint16

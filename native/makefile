@@ -1,4 +1,4 @@
-SOURCE = main.c
+SOURCE = src/main.c
 CC = gcc
 COMPILER_FLAGS = -Wall -Wextra -pedantic -std=c11
 LINKER_FLAGS = -lSDL2 -lGL
