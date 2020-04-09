@@ -1,3 +1,6 @@
 {
-    "go.formatTool": "goimports"
+    "go.formatTool": "goimports",
+    "files.associations": {
+        "matrix.h": "c"
+    }
 }
