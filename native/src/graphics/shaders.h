@@ -13,6 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-GLint compile_gl_program(char *vert, char *frag);
+GLint make_program(char *vert, char *frag);
 
 #endif

@@ -1,8 +1,6 @@
 #ifndef TEXTURES_H
 #define TEXTURES_H
 
-#include "core/file.h"
-
 #include <GL/glew.h>
 
 #include <GL/gl.h>
@@ -13,6 +11,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-GLint load_gl_texture(char *path);
+#include "core/file.h"
+#include "core/mem.h"
+
+struct texture_t {
+    GLint id;
+    int width;
+    int height;
+};
+
+typedef struct texture_t texture_t;
+
+texture_t *texture_init(GLint id, int width, int height);
+texture_t *make_texture(char *path, GLint clamp, GLint interpolate);
 
 #endif

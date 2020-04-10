@@ -33,7 +33,7 @@ GLint compile_shader(char *path, GLint type) {
     return shader;
 }
 
-GLint compile_gl_program(char *vert, char *frag) {
+GLint make_program(char *vert, char *frag) {
 
     GLuint vertex = compile_shader(vert, GL_VERTEX_SHADER);
     GLuint fragment = compile_shader(frag, GL_FRAGMENT_SHADER);
