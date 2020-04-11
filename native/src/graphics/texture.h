@@ -15,14 +15,13 @@
 #include "core/mem.h"
 
 struct texture {
-    GLint id;
+    GLuint id;
     int width;
     int height;
 };
 
 typedef struct texture texture;
 
-texture *texture_init(GLint id, int width, int height);
-texture *make_texture(char *path, GLint clamp, GLint interpolate);
+texture *texture_make(char *path, GLint clamp, GLint interpolate);
 
 #endif

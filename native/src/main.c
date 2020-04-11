@@ -13,7 +13,7 @@
 #include "graphics/graphics.h"
 #include "graphics/matrix.h"
 #include "graphics/renderbuffer.h"
-#include "graphics/shaders.h"
+#include "graphics/shader.h"
 #include "graphics/texture.h"
 
 #include "renderstate.h"
@@ -95,11 +95,6 @@ renderstate *renderstate_settings() {
     graphics_make_vao(draw_images);
     graphics_make_vao(draw_colors);
 
-    renderbuffer_zero(screen);
-    renderbuffer_zero(frame_screen);
-    renderbuffer_zero(draw_images);
-    renderbuffer_zero(draw_colors);
-
     rs->screen = screen;
     rs->frame_screen = frame_screen;
     rs->draw_images = draw_images;
@@ -107,8 +102,8 @@ renderstate *renderstate_settings() {
 
     renderstate_resize(rs, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    GLint program_tri = make_program("shaders/color.vert", "shaders/color.frag");
-    texture *texture_front = make_texture("textures/front-death-0.bmp", GL_CLAMP_TO_EDGE, GL_LINEAR);
+    shader *program_tri = shader_make("texture2d", "shaders/texture2d.vert", "shaders/texture2d.frag");
+    texture *texture_front = texture_make("textures/front-death-0.bmp", GL_CLAMP_TO_EDGE, GL_LINEAR);
 
     rs->shaders = safe_calloc(1, sizeof(GLint));
     rs->textures = safe_calloc(1, sizeof(texture));

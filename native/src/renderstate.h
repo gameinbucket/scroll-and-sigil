@@ -1,6 +1,8 @@
 #ifndef RENDER_STATE_H
 #define RENDER_STATE_H
 
+// #define RENDER_STATE_DEBUG
+
 #include <GL/glew.h>
 
 #include <GL/gl.h>
@@ -17,7 +19,9 @@
 #include "graphics/framebuffer.h"
 #include "graphics/graphics.h"
 #include "graphics/matrix.h"
+#include "graphics/render.h"
 #include "graphics/renderbuffer.h"
+#include "graphics/shader.h"
 #include "graphics/texture.h"
 
 struct renderstate {
@@ -37,20 +41,17 @@ struct renderstate {
     float view[16];
     float modelview[16];
     float modelviewprojection[16];
-    GLint program_id;
-    string program_name;
-    GLint *mvp_ids;
-    GLint *uniforms;
-    GLint *texture_ids;
-    GLint *shaders;
+    shader **shaders;
     texture **textures;
+    shader *active_shader;
 };
 
 typedef struct renderstate renderstate;
 
 renderstate *renderstate_init();
 void renderstate_resize(renderstate *self, int screen_width, int screen_height);
-void renderstate_set_texture(renderstate *self);
+void renderstate_set_mvp(renderstate *self, float *mvp);
 void renderstate_set_program(renderstate *self, int shader_index);
+void renderstate_set_texture(renderstate *self, int texture_index);
 
 #endif

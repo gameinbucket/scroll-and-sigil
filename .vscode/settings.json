@@ -8,6 +8,9 @@
         "texture.h": "c",
         "world.h": "c",
         "render.h": "c",
-        "graphics.h": "c"
+        "graphics.h": "c",
+        "shaders.h": "c",
+        "renderbuffer.h": "c",
+        "shader.h": "c"
     }
 }

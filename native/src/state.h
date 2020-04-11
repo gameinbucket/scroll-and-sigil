@@ -2,6 +2,7 @@
 #define STATE_H
 
 #include "graphics/graphics.h"
+#include "graphics/matrix.h"
 #include "graphics/render.h"
 #include "graphics/texture.h"
 #include "renderstate.h"

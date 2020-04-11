@@ -285,3 +285,25 @@ void matrix_inverse(float *matrix, float *from) {
         matrix[i] = dst[i] * det;
     }
 }
+
+void matrix_update_orthographic(float *orthographic, float x, float y, float *mvp, float *mv) {
+    matrix_identify(mv);
+    matrix_translate(mv, x, y, 0);
+    matrix_multiply(mvp, orthographic, mv);
+}
+
+void matrix_update_perspective(float *perspective, float x, float y, float z, float rx, float ry, float *mvp, float *mv) {
+    matrix_identify(mv);
+    if (rx != 0.0) {
+        float sine = sin(rx);
+        float cosine = cos(rx);
+        matrix_rotate_x(mv, sine, cosine);
+    }
+    if (ry != 0.0) {
+        float sine = sin(ry);
+        float cosine = cos(ry);
+        matrix_rotate_x(mv, sine, cosine);
+    }
+    matrix_translate(mv, x, y, z);
+    matrix_multiply(mvp, perspective, mv);
+}

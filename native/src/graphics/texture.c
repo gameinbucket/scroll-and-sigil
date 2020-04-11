@@ -1,6 +1,6 @@
 #include "texture.h"
 
-texture *texture_init(GLint id, int width, int height) {
+texture *texture_init(GLuint id, int width, int height) {
     texture *t = safe_malloc(sizeof(texture));
     t->id = id;
     t->width = width;
@@ -8,7 +8,7 @@ texture *texture_init(GLint id, int width, int height) {
     return t;
 }
 
-texture *make_texture(char *path, GLint clamp, GLint interpolate) {
+texture *texture_make(char *path, GLint clamp, GLint interpolate) {
     SDL_Surface *bmp = SDL_LoadBMP(path);
     if (bmp == NULL) {
         printf("Failed to load bitmap: %s\n", SDL_GetError());
@@ -30,6 +30,8 @@ texture *make_texture(char *path, GLint clamp, GLint interpolate) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interpolate);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bmp->pixels);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     SDL_FreeSurface(bmp);
 

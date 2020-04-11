@@ -12,35 +12,24 @@ void state_update(state *self) {
 }
 
 void state_render(state *self) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     renderstate *rs = self->rs;
 
+    graphics_disable_cull();
+    graphics_disable_depth();
+
     graphics_set_view(0, 0, rs->canvas_width, rs->canvas_height);
+    graphics_clear_color();
 
     renderstate_set_program(rs, 0);
 
-    graphics_set_orthographic(rs->canvas_orthographic, 0, 0, rs->modelviewprojection, rs->modelview);
-    graphics_set_mvp(rs->program_id, rs->modelviewprojection);
+    matrix_update_orthographic(rs->canvas_orthographic, 0, 0, rs->modelviewprojection, rs->modelview);
+    renderstate_set_mvp(rs, rs->modelviewprojection);
 
-    texture *t = rs->textures[0];
-    glBindTexture(GL_TEXTURE_2D, t->id);
+    renderstate_set_texture(rs, 0);
 
-    renderbuffer *colors = rs->draw_colors;
-
-    renderbuffer_zero(colors);
-    render_rectangle(colors, 0, 0, 64, 64, 1.0, 0.5, 0);
-
-    graphics_update_and_draw(colors);
-
-    // glRotatef(0.4f, 0.0f, 1.0f, 0.0f);
-    // glRotatef(0.2f, 1.0f, 1.0f, 1.0f);
-    // glColor3f(0.0f, 1.0f, 0.0f);
-
-    // glBegin(GL_QUADS);
-    // glVertex2f(-0.5f, -0.5f);
-    // glVertex2f(0.5f, -0.5f);
-    // glVertex2f(0.5f, 0.5f);
-    // glVertex2f(-0.5f, 0.5f);
-    // glEnd();
+    renderbuffer *images = rs->draw_images;
+    renderbuffer_zero(images);
+    render_image(images, 0, 0, 64, 64, 0, 0, 1, 1);
+    graphics_update_and_draw(images);
 }
