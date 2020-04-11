@@ -9,6 +9,15 @@ void *safe_malloc(size_t size) {
     exit(1);
 }
 
+void *safe_calloc(size_t members, size_t member_size) {
+    void *mem = calloc(members, member_size);
+    if (mem) {
+        return mem;
+    }
+    fprintf(stderr, "calloc failed.\n");
+    exit(1);
+}
+
 void *safe_realloc(void *mem, size_t size) {
     mem = realloc(mem, size);
     if (mem) {

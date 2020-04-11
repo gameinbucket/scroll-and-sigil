@@ -1,14 +1,14 @@
-#include "textures.h"
+#include "texture.h"
 
-texture_t *texture_init(GLint id, int width, int height) {
-    texture_t *t = safe_malloc(sizeof(texture_t));
+texture *texture_init(GLint id, int width, int height) {
+    texture *t = safe_malloc(sizeof(texture));
     t->id = id;
     t->width = width;
     t->height = height;
     return t;
 }
 
-texture_t *make_texture(char *path, GLint clamp, GLint interpolate) {
+texture *make_texture(char *path, GLint clamp, GLint interpolate) {
     SDL_Surface *bmp = SDL_LoadBMP(path);
     if (bmp == NULL) {
         printf("Failed to load bitmap: %s\n", SDL_GetError());

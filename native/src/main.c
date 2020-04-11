@@ -14,7 +14,10 @@
 #include "graphics/matrix.h"
 #include "graphics/renderbuffer.h"
 #include "graphics/shaders.h"
-#include "graphics/textures.h"
+#include "graphics/texture.h"
+
+#include "renderstate.h"
+#include "state.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -26,9 +29,6 @@ void input(unsigned char key, int x, int y) {
         run = false;
     }
     printf("%d %d\n", x, y);
-}
-
-void update() {
 }
 
 void window_init(SDL_Window **win) {
@@ -59,22 +59,7 @@ void window_init(SDL_Window **win) {
     *win = window;
 }
 
-void render() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glRotatef(0.4f, 0.0f, 1.0f, 0.0f);
-    glRotatef(0.2f, 1.0f, 1.0f, 1.0f);
-    glColor3f(0.0f, 1.0f, 0.0f);
-
-    glBegin(GL_QUADS);
-    glVertex2f(-0.5f, -0.5f);
-    glVertex2f(0.5f, -0.5f);
-    glVertex2f(0.5f, 0.5f);
-    glVertex2f(-0.5f, 0.5f);
-    glEnd();
-}
-
-void opengl_initial_settings() {
+void opengl_settings() {
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glDepthFunc(GL_LEQUAL);
     glCullFace(GL_BACK);
@@ -93,63 +78,48 @@ void opengl_initial_settings() {
     }
 }
 
-void resize() {
-}
+renderstate *renderstate_settings() {
 
-void initialize_render_system() {
-    GLint program = make_program("resources/shaders/tri.vert", "resources/shaders/tri.frag");
-    texture_t *texture = make_texture("resources/textures/front-death-0.bmp", GL_CLAMP_TO_EDGE, GL_LINEAR);
+    renderstate *rs = renderstate_init();
 
-    GLint internal[1] = {GL_RGB};
-    GLint format[1] = {GL_RGB};
-    GLint type[1] = {GL_UNSIGNED_BYTE};
-
-    framebuffer *frame = framebuffer_init(SCREEN_WIDTH, SCREEN_HEIGHT, 1, internal, format, type, true, true);
-    make_fbo(frame);
-
-    float perspective[16];
-    float orthographic[16];
-
-    float mv[16];
-    float mvp[16];
-
-    float fov = 60.0;
-    float ratio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-
-    matrix_perspective(perspective, fov, 0.01, 100.0, ratio);
-    matrix_orthographic(orthographic, 0.0, SCREEN_WIDTH, 0.0, SCREEN_HEIGHT, 0.0, 1.0);
-
-    resize();
-
-    ////
+    rs->canvas_width = SCREEN_WIDTH;
+    rs->canvas_height = SCREEN_HEIGHT;
 
     renderbuffer *screen = renderbuffer_init(2, 0, 0, 4, 6);
     renderbuffer *frame_screen = renderbuffer_init(2, 0, 0, 4, 6);
-    renderbuffer *draw_image_b = renderbuffer_init(2, 0, 2, 40, 60);
+    renderbuffer *draw_images = renderbuffer_init(2, 0, 2, 40, 60);
+    renderbuffer *draw_colors = renderbuffer_init(2, 3, 0, 40, 60);
 
     graphics_make_vao(screen);
     graphics_make_vao(frame_screen);
-    graphics_make_vao(draw_image_b);
+    graphics_make_vao(draw_images);
+    graphics_make_vao(draw_colors);
 
     renderbuffer_zero(screen);
     renderbuffer_zero(frame_screen);
-    renderbuffer_zero(draw_image_b);
+    renderbuffer_zero(draw_images);
+    renderbuffer_zero(draw_colors);
 
-    ////
+    rs->screen = screen;
+    rs->frame_screen = frame_screen;
+    rs->draw_images = draw_images;
+    rs->draw_colors = draw_colors;
 
-    // graphics_bind_fbo(frame->fbo);
+    renderstate_resize(rs, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    graphics_set_view(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    GLint program_tri = make_program("shaders/color.vert", "shaders/color.frag");
+    texture *texture_front = make_texture("textures/front-death-0.bmp", GL_CLAMP_TO_EDGE, GL_LINEAR);
 
-    glUseProgram(program);
+    rs->shaders = safe_calloc(1, sizeof(GLint));
+    rs->textures = safe_calloc(1, sizeof(texture));
 
-    graphics_set_orthographic(orthographic, 0, 0, mvp, mv);
-    graphics_set_mvp(program, mvp);
+    rs->shaders[0] = program_tri;
+    rs->textures[0] = texture_front;
 
-    glBindTexture(GL_TEXTURE_2D, texture->id);
+    return rs;
 }
 
-void loop(SDL_Window *window) {
+void main_loop(SDL_Window *window, state *s) {
     SDL_Event event;
     while (run) {
         while (SDL_PollEvent(&event) != 0) {
@@ -162,7 +132,8 @@ void loop(SDL_Window *window) {
                 input(event.text.text[0], x, y);
             }
         }
-        render();
+        state_update(s);
+        state_render(s);
         SDL_GL_SwapWindow(window);
     }
 }
@@ -171,12 +142,16 @@ int main() {
     SDL_Window *window = NULL;
     window_init(&window);
 
-    opengl_initial_settings();
-    initialize_render_system();
+    opengl_settings();
+
+    renderstate *rs = renderstate_settings();
+    world *w = world_init();
+
+    state *s = state_init(w, rs);
 
     SDL_StartTextInput();
 
-    loop(window);
+    main_loop(window, s);
 
     SDL_StopTextInput();
     SDL_DestroyWindow(window);

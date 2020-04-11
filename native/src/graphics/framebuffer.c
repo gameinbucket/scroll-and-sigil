@@ -19,9 +19,3 @@ void framebuffer_resize(framebuffer *self, int width, int height) {
     self->height = height;
     // graphics_update_framebuffer(self);
 }
-
-void make_fbo(framebuffer *f) {
-    GLuint fbo;
-    glGenFramebuffers(1, &fbo);
-    f->fbo = fbo;
-}

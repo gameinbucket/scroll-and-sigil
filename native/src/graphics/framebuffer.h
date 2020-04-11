@@ -18,7 +18,7 @@ struct framebuffer {
     int height;
     bool is_linear;
     bool has_depth;
-    GLint fbo;
+    GLuint fbo;
     GLint *internal_formats;
     GLint *formats;
     GLint *texture_types;
@@ -31,6 +31,5 @@ typedef struct framebuffer framebuffer;
 
 framebuffer *framebuffer_init(int width, int height, int len, GLint *internal_formats, GLint *formats, GLint *types, bool is_linear, bool has_depth);
 void framebuffer_resize(framebuffer *self, int width, int height);
-void make_fbo(framebuffer *f);
 
 #endif

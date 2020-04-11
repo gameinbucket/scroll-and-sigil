@@ -24,5 +24,6 @@ struct thing {
 typedef struct thing thing;
 
 void thing_block_borders(thing *self);
+void thing_update(thing *self);
 
 #endif

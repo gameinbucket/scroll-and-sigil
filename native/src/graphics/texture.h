@@ -1,5 +1,5 @@
-#ifndef TEXTURES_H
-#define TEXTURES_H
+#ifndef TEXTURE_H
+#define TEXTURE_H
 
 #include <GL/glew.h>
 
@@ -14,15 +14,15 @@
 #include "core/file.h"
 #include "core/mem.h"
 
-struct texture_t {
+struct texture {
     GLint id;
     int width;
     int height;
 };
 
-typedef struct texture_t texture_t;
+typedef struct texture texture;
 
-texture_t *texture_init(GLint id, int width, int height);
-texture_t *make_texture(char *path, GLint clamp, GLint interpolate);
+texture *texture_init(GLint id, int width, int height);
+texture *make_texture(char *path, GLint clamp, GLint interpolate);
 
 #endif

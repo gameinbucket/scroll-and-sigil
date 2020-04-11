@@ -12,3 +12,7 @@ void thing_block_borders(thing *self) {
     self->min_by = (int)(self->y * inverse_block_size);
     self->max_by = (int)((self->y + self->height) * inverse_block_size);
 }
+
+void thing_update(thing *self) {
+    self->x += self->delta_x;
+}
