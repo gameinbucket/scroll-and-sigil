@@ -11,6 +11,8 @@
         "graphics.h": "c",
         "shaders.h": "c",
         "renderbuffer.h": "c",
-        "shader.h": "c"
+        "shader.h": "c",
+        "sprite.h": "c",
+        "thing.h": "c"
     }
 }

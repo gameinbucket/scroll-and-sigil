@@ -20,9 +20,9 @@ struct renderbuffer {
     GLint vao;
     GLint vbo;
     GLint ebo;
-    int vertex_pos;
+    GLsizei vertex_pos;
     int vertex_limit;
-    int index_pos;
+    GLsizei index_pos;
     int index_limit;
     int index_offset;
     GLfloat *vertices;

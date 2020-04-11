@@ -24,17 +24,21 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
         printf("render state initial resize\n");
 #endif
 
-        GLint internal[1] = {GL_RGB};
-        GLint format[1] = {GL_RGB};
-        GLint type[1] = {GL_UNSIGNED_BYTE};
+        GLint *internal = safe_malloc(sizeof(GLint));
+        GLint *format = safe_malloc(sizeof(GLint));
+        GLint *texture_type = safe_malloc(sizeof(GLint));
 
-        framebuffer *frame = framebuffer_init(draw_width, draw_height, 1, internal, format, type, true, true);
+        internal[0] = GL_RGB;
+        format[0] = GL_RGB;
+        texture_type[0] = GL_UNSIGNED_BYTE;
+
+        framebuffer *frame = framebuffer_init(draw_width, draw_height, 1, internal, format, texture_type, GL_NEAREST, true);
         graphics_make_fbo(frame);
 
         self->frame = frame;
 
     } else {
-        framebuffer_resize(self->frame, draw_width, draw_height);
+        graphics_framebuffer_resize(self->frame, draw_width, draw_height);
     }
 
     renderbuffer_zero(self->screen);
@@ -66,8 +70,7 @@ void renderstate_set_program(renderstate *self, int shader_index) {
 }
 
 void renderstate_set_texture(renderstate *self, int texture_index) {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, self->textures[texture_index]->id);
+    graphics_bind_texture(GL_TEXTURE0, self->textures[texture_index]->id);
 
 #ifdef RENDER_STATE_DEBUG
     printf("render state bind texture := %d\n", self->textures[texture_index]->id);

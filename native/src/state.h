@@ -5,8 +5,10 @@
 #include "graphics/matrix.h"
 #include "graphics/render.h"
 #include "graphics/texture.h"
+
+#include "world/world.h"
+
 #include "renderstate.h"
-#include "world.h"
 
 struct state {
     renderstate *rs;

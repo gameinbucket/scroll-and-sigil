@@ -14,13 +14,17 @@
 #include "matrix.h"
 #include "renderbuffer.h"
 
+void graphics_update_fbo(framebuffer *f);
+void graphics_update_vao(renderbuffer *b, GLuint draw_type);
+
+void graphics_framebuffer_resize(framebuffer *f, int width, int height);
+
 void graphics_make_fbo(framebuffer *f);
 void graphics_make_vao(renderbuffer *b);
 
-void graphics_update_vao(renderbuffer *b, GLuint draw_type);
-
-void graphics_bind_fbo(GLint fbo);
-void graphics_bind_vao(GLint vao);
+void graphics_bind_fbo(GLuint fbo);
+void graphics_bind_vao(GLuint vao);
+void graphics_bind_texture(GLenum active, GLuint id);
 
 void graphics_set_view(GLint x, GLint y, GLint width, GLint height);
 

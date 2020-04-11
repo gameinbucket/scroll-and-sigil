@@ -16,20 +16,20 @@
 struct framebuffer {
     int width;
     int height;
-    bool is_linear;
+    GLint interpolate;
     bool has_depth;
     GLuint fbo;
     GLint *internal_formats;
     GLint *formats;
     GLint *texture_types;
-    GLint *textures;
-    GLint *draw_buffers;
+    GLuint *textures;
+    GLuint *draw_buffers;
     GLint depth_texture;
+    int texture_count;
 };
 
 typedef struct framebuffer framebuffer;
 
-framebuffer *framebuffer_init(int width, int height, int len, GLint *internal_formats, GLint *formats, GLint *types, bool is_linear, bool has_depth);
-void framebuffer_resize(framebuffer *self, int width, int height);
+framebuffer *framebuffer_init(int width, int height, int texture_count, GLint *internal_formats, GLint *formats, GLint *types, GLint interpolate, bool has_depth);
 
 #endif

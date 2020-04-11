@@ -1,6 +1,6 @@
 #include "matrix.h"
 
-void matrix_identify(float *matrix) {
+void matrix_identity(float *matrix) {
 
     matrix[0] = 1.0;
     matrix[1] = 0.0;
@@ -286,14 +286,14 @@ void matrix_inverse(float *matrix, float *from) {
     }
 }
 
-void matrix_update_orthographic(float *orthographic, float x, float y, float *mvp, float *mv) {
-    matrix_identify(mv);
+void matrix_orthographic_projection(float *mv, float *orthographic, float *mvp, float x, float y) {
+    matrix_identity(mv);
     matrix_translate(mv, x, y, 0);
     matrix_multiply(mvp, orthographic, mv);
 }
 
-void matrix_update_perspective(float *perspective, float x, float y, float z, float rx, float ry, float *mvp, float *mv) {
-    matrix_identify(mv);
+void matrix_perspective_projection(float *mv, float *perspective, float *mvp, float x, float y, float z, float rx, float ry) {
+    matrix_identity(mv);
     if (rx != 0.0) {
         float sine = sin(rx);
         float cosine = cos(rx);

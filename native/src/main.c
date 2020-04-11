@@ -9,12 +9,13 @@
 #include <stdlib.h>
 
 #include "core/system.h"
-#include "graphics/framebuffer.h"
 #include "graphics/graphics.h"
 #include "graphics/matrix.h"
 #include "graphics/renderbuffer.h"
 #include "graphics/shader.h"
 #include "graphics/texture.h"
+
+#include "world/world.h"
 
 #include "renderstate.h"
 #include "state.h"
@@ -102,13 +103,13 @@ renderstate *renderstate_settings() {
 
     renderstate_resize(rs, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    shader *program_tri = shader_make("texture2d", "shaders/texture2d.vert", "shaders/texture2d.frag");
+    rs->shaders = safe_calloc(2, sizeof(GLint));
+    rs->shaders[SHADER_SCREEN] = shader_make("screen", "shaders/screen.vert", "shaders/screen.frag");
+    rs->shaders[SHADER_TEXTURE_2D] = shader_make("texture2d", "shaders/texture2d.vert", "shaders/texture2d.frag");
+
+    rs->textures = safe_calloc(1, sizeof(texture));
     texture *texture_front = texture_make("textures/front-death-0.bmp", GL_CLAMP_TO_EDGE, GL_LINEAR);
 
-    rs->shaders = safe_calloc(1, sizeof(GLint));
-    rs->textures = safe_calloc(1, sizeof(texture));
-
-    rs->shaders[0] = program_tri;
     rs->textures[0] = texture_front;
 
     return rs;

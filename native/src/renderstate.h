@@ -3,6 +3,9 @@
 
 // #define RENDER_STATE_DEBUG
 
+#define SHADER_SCREEN 0
+#define SHADER_TEXTURE_2D 1
+
 #include <GL/glew.h>
 
 #include <GL/gl.h>
@@ -31,7 +34,6 @@ struct renderstate {
     renderbuffer *frame_screen;
     renderbuffer *draw_images;
     renderbuffer *draw_colors;
-    framebuffer *frame;
     float canvas_orthographic[16];
     float draw_orthographic[16];
     float draw_perspective[16];
@@ -41,6 +43,7 @@ struct renderstate {
     float view[16];
     float modelview[16];
     float modelviewprojection[16];
+    framebuffer *frame;
     shader **shaders;
     texture **textures;
     shader *active_shader;
