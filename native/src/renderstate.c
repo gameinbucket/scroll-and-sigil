@@ -24,15 +24,17 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
         printf("render state initial resize\n");
 #endif
 
-        GLint *internal = safe_malloc(sizeof(GLint));
-        GLint *format = safe_malloc(sizeof(GLint));
-        GLint *texture_type = safe_malloc(sizeof(GLint));
+        int textures = 1;
+
+        GLint *internal = safe_malloc(sizeof(GLint) * textures);
+        GLint *format = safe_malloc(sizeof(GLint) * textures);
+        GLint *texture_type = safe_malloc(sizeof(GLint) * textures);
 
         internal[0] = GL_RGB;
         format[0] = GL_RGB;
         texture_type[0] = GL_UNSIGNED_BYTE;
 
-        framebuffer *frame = framebuffer_init(draw_width, draw_height, 1, internal, format, texture_type, GL_NEAREST, true);
+        framebuffer *frame = framebuffer_init(draw_width, draw_height, textures, internal, format, texture_type, GL_NEAREST, false);
         graphics_make_fbo(frame);
 
         self->frame = frame;

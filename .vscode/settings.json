@@ -13,6 +13,14 @@
         "renderbuffer.h": "c",
         "shader.h": "c",
         "sprite.h": "c",
-        "thing.h": "c"
+        "thing.h": "c",
+        "camera.h": "c",
+        "*.tcc": "cpp",
+        "input.h": "c",
+        "sdl.h": "c",
+        "inttypes.h": "c",
+        "sdl_image.h": "c",
+        "worldrender.h": "c",
+        "mem.h": "c"
     }
 }

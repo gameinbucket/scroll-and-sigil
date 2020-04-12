@@ -1,6 +1,7 @@
 #include "camera.h"
 
-void camera_init() {
+camera *camera_init() {
+    return safe_calloc(1, sizeof(camera));
 }
 
 void camera_update() {

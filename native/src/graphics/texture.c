@@ -9,31 +9,29 @@ texture *texture_init(GLuint id, int width, int height) {
 }
 
 texture *texture_make(char *path, GLint clamp, GLint interpolate) {
-    SDL_Surface *bmp = SDL_LoadBMP(path);
-    if (bmp == NULL) {
-        printf("Failed to load bitmap: %s\n", SDL_GetError());
+    SDL_Surface *png = IMG_Load(path);
+    if (png == NULL) {
+        fprintf(stderr, "Failed to load image: %s\n", SDL_GetError());
         exit(1);
     }
 
-    int width = bmp->w;
-    int height = bmp->h;
+    int width = png->w;
+    int height = png->h;
 
-    GLuint texture = 0;
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    GLuint id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, clamp);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, clamp);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, interpolate);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interpolate);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bmp->pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, png->pixels);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    SDL_FreeSurface(bmp);
+    SDL_FreeSurface(png);
 
-    return texture_init(texture, width, height);
+    return texture_init(id, width, height);
 }

@@ -4,6 +4,26 @@ world *world_init() {
     return safe_calloc(1, sizeof(world));
 }
 
+void world_add_thing(world *self, thing *t) {
+    if (self->thing_count == self->thing_cap) {
+        self->thing_cap += 8;
+        self->things = safe_realloc(self->things, self->thing_cap * sizeof(thing *));
+    }
+    self->things[self->thing_count] = t;
+    self->thing_count++;
+}
+
+void world_remove_thing(world *self, thing *t) {
+    int len = self->thing_count;
+    thing **things = self->things;
+    for (int i = 0; i < len; i++) {
+        if (things[i] == t) {
+            things[i] = things[len - 1];
+            self->thing_count--;
+        }
+    }
+}
+
 void world_load_map(world *self) {
 
     int width = 8;
@@ -21,7 +41,8 @@ void world_load_map(world *self) {
     int by = 0;
     int bz = 0;
 
-    int *blocks = self->blocks;
+    int *blocks = safe_malloc(all * sizeof(int));
+    self->blocks = blocks;
 
     for (int i = 0; i < all; i++) {
         if (by == 0) {
@@ -39,11 +60,18 @@ void world_load_map(world *self) {
             }
         }
     }
+
+    self->thing_cap = 4;
+    self->things = safe_malloc(self->thing_cap * sizeof(thing *));
+
+    hero *h = hero_init();
+    world_add_thing(self, &h->super);
 }
 
 void world_update(world *self) {
-    int size = self->thing_count;
-    for (int i = 0; i < size; i++) {
-        thing_update(self->things[i]);
+    int thing_count = self->thing_count;
+    thing **things = self->things;
+    for (int i = 0; i < thing_count; i++) {
+        thing_update(things[i]);
     }
 }

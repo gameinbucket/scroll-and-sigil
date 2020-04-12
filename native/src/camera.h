@@ -8,18 +8,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "core/mem.h"
+
 struct camera {
-    float radius;
     float x;
     float y;
     float z;
     float rx;
     float ry;
+    float radius;
 };
 
 typedef struct camera camera;
 
-void camera_init();
+camera *camera_init();
 void camera_update();
 
 #endif

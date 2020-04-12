@@ -3,7 +3,7 @@
 size_t file_size(const char *path) {
     FILE *fp = fopen(path, "r");
     if (fp == NULL) {
-        printf("Could not open file: %s", path);
+        fprintf(stderr, "Could not open file: %s", path);
         exit(1);
     }
     size_t num = 0;
@@ -19,7 +19,7 @@ string cat(const char *path) {
     size_t size = file_size(path);
     FILE *fp = fopen(path, "r");
     if (fp == NULL) {
-        printf("Could not open file: %s", path);
+        fprintf(stderr, "Could not open file: %s", path);
         exit(1);
     }
     char *content = safe_malloc((size + 1) * sizeof(char));
@@ -35,7 +35,7 @@ string cat(const char *path) {
 void core_write(const char *path, const char *content) {
     FILE *fp = fopen(path, "a");
     if (fp == NULL) {
-        printf("Could not open file: %s", path);
+        fprintf(stderr, "Could not open file: %s", path);
         exit(1);
     }
     fputs(content, fp);

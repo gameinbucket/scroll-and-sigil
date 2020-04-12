@@ -90,7 +90,7 @@ system_std system_help(const char *command) {
     char buffer[256];
     FILE *fp;
     if ((fp = popen(command, "r")) == NULL) {
-        printf("popen failed");
+        fprintf(stderr, "popen failed");
         exit(1);
     }
     string in = NULL;
@@ -108,7 +108,7 @@ system_std system_help(const char *command) {
     }
     int code = 0;
     if (pclose(fp)) {
-        printf("popen close failed");
+        fprintf(stderr, "popen close failed");
         exit(1);
     }
     system_std tuple = {in, err, code};

@@ -2,6 +2,7 @@
 
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -25,17 +26,10 @@ const int SCREEN_HEIGHT = 480;
 
 bool run = true;
 
-void input(unsigned char key, int x, int y) {
-    if (key == 'q') {
-        run = false;
-    }
-    printf("%d %d\n", x, y);
-}
-
 void window_init(SDL_Window **win) {
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        printf("Could not initialize SDL: %s\n", SDL_GetError());
+        fprintf(stderr, "Could not initialize SDL: %s\n", SDL_GetError());
         exit(1);
     }
 
@@ -43,19 +37,21 @@ void window_init(SDL_Window **win) {
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     if (context == NULL) {
-        printf("OpenGL context could not be created: %s\n", SDL_GetError());
+        fprintf(stderr, "OpenGL context could not be created: %s\n", SDL_GetError());
         exit(1);
     }
 
     if (SDL_GL_SetSwapInterval(1) < 0) {
-        printf("Could not set VSync: %s\n", SDL_GetError());
+        fprintf(stderr, "Could not set VSync: %s\n", SDL_GetError());
     }
 
     GLenum result = glewInit();
     if (result != GLEW_OK) {
-        printf("Failed to initialize GLEW: %d\n", result);
+        fprintf(stderr, "Failed to initialize GLEW: %d\n", result);
         exit(1);
     }
+
+    IMG_Init(IMG_INIT_PNG);
 
     *win = window;
 }
@@ -74,7 +70,7 @@ void opengl_settings() {
 
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
-        printf("OpenGL error: %d\n", error);
+        fprintf(stderr, "OpenGL error: %d\n", error);
         exit(1);
     }
 }
@@ -86,31 +82,28 @@ renderstate *renderstate_settings() {
     rs->canvas_width = SCREEN_WIDTH;
     rs->canvas_height = SCREEN_HEIGHT;
 
-    renderbuffer *screen = renderbuffer_init(2, 0, 0, 4, 6);
-    renderbuffer *frame_screen = renderbuffer_init(2, 0, 0, 4, 6);
-    renderbuffer *draw_images = renderbuffer_init(2, 0, 2, 40, 60);
-    renderbuffer *draw_colors = renderbuffer_init(2, 3, 0, 40, 60);
+    rs->screen = renderbuffer_init(2, 0, 0, 4, 6);
+    rs->frame_screen = renderbuffer_init(2, 0, 0, 4, 6);
+    rs->draw_images = renderbuffer_init(2, 0, 2, 40, 60);
+    rs->draw_colors = renderbuffer_init(2, 3, 0, 40, 60);
+    rs->draw_cubes = renderbuffer_init(3, 3, 2, 4 * 200, 36 * 200);
 
-    graphics_make_vao(screen);
-    graphics_make_vao(frame_screen);
-    graphics_make_vao(draw_images);
-    graphics_make_vao(draw_colors);
-
-    rs->screen = screen;
-    rs->frame_screen = frame_screen;
-    rs->draw_images = draw_images;
-    rs->draw_colors = draw_colors;
+    graphics_make_vao(rs->screen);
+    graphics_make_vao(rs->frame_screen);
+    graphics_make_vao(rs->draw_images);
+    graphics_make_vao(rs->draw_colors);
+    graphics_make_vao(rs->draw_cubes);
 
     renderstate_resize(rs, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    rs->shaders = safe_calloc(2, sizeof(GLint));
+    rs->shaders = safe_malloc(3 * sizeof(shader *));
     rs->shaders[SHADER_SCREEN] = shader_make("screen", "shaders/screen.vert", "shaders/screen.frag");
     rs->shaders[SHADER_TEXTURE_2D] = shader_make("texture2d", "shaders/texture2d.vert", "shaders/texture2d.frag");
+    rs->shaders[SHADER_TEXTURE_3D] = shader_make("texture3d", "shaders/texture3d-color.vert", "shaders/texture3d-color.frag");
 
-    rs->textures = safe_calloc(1, sizeof(texture));
-    texture *texture_front = texture_make("textures/front-death-0.bmp", GL_CLAMP_TO_EDGE, GL_LINEAR);
-
-    rs->textures[0] = texture_front;
+    rs->textures = safe_malloc(2 * sizeof(texture *));
+    rs->textures[TEXTURE_BARON] = texture_make("textures/front-death-0.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
+    rs->textures[TEXTURE_PLANK] = texture_make("textures/plank-floor.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
 
     return rs;
 }
@@ -119,13 +112,37 @@ void main_loop(SDL_Window *window, state *s) {
     SDL_Event event;
     while (run) {
         while (SDL_PollEvent(&event) != 0) {
-            if (event.type == SDL_QUIT) {
-                run = false;
-            } else if (event.type == SDL_TEXTINPUT) {
-                int x = 0;
-                int y = 0;
-                SDL_GetMouseState(&x, &y);
-                input(event.text.text[0], x, y);
+            switch (event.type) {
+            case SDL_QUIT: run = false; break;
+            case SDL_MOUSEBUTTONUP: {
+                SDL_GetMouseState(&s->in.mouse_x, &s->in.mouse_y);
+                s->in.mouse_down = false;
+                break;
+            }
+            case SDL_MOUSEBUTTONDOWN: {
+                SDL_GetMouseState(&s->in.mouse_x, &s->in.mouse_y);
+                s->in.mouse_down = true;
+                break;
+            }
+            case SDL_KEYUP: {
+                switch (event.key.keysym.sym) {
+                case SDLK_w: s->in.up = false; break;
+                case SDLK_a: s->in.left = false; break;
+                case SDLK_s: s->in.down = false; break;
+                case SDLK_d: s->in.right = false; break;
+                }
+                break;
+            }
+            case SDL_KEYDOWN: {
+                switch (event.key.keysym.sym) {
+                case SDLK_q: run = false; break;
+                case SDLK_w: s->in.up = true; break;
+                case SDLK_a: s->in.left = true; break;
+                case SDLK_s: s->in.down = true; break;
+                case SDLK_d: s->in.right = true; break;
+                }
+                break;
+            }
             }
         }
         state_update(s);
@@ -141,7 +158,9 @@ int main() {
     opengl_settings();
 
     renderstate *rs = renderstate_settings();
+
     world *w = world_init();
+    world_load_map(w);
 
     state *s = state_init(w, rs);
 

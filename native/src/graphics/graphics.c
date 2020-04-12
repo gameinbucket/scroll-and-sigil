@@ -10,19 +10,21 @@ void graphics_update_fbo(framebuffer *f) {
         glBindTexture(GL_TEXTURE_2D, f->depth_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, f->width, f->height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
     }
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void graphics_update_vao(renderbuffer *b, GLuint draw_type) {
     glBindVertexArray(b->vao);
     glBindBuffer(GL_ARRAY_BUFFER, b->vbo);
-    glBufferData(GL_ARRAY_BUFFER, b->vertex_limit * sizeof(GLfloat), b->vertices, draw_type);
+    glBufferData(GL_ARRAY_BUFFER, b->vertex_size, b->vertices, draw_type);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, b->index_limit * sizeof(GLuint), b->indices, draw_type);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, b->index_size, b->indices, draw_type);
 }
 
 void graphics_framebuffer_resize(framebuffer *f, int width, int height) {
     f->width = width;
     f->height = height;
+    graphics_bind_fbo(f->fbo);
     graphics_update_fbo(f);
 }
 
@@ -31,6 +33,8 @@ void graphics_make_fbo(framebuffer *f) {
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
     f->fbo = fbo;
+
+    graphics_bind_fbo(fbo);
 
     int len = f->texture_count;
     for (int i = 0; i < len; i++) {
@@ -65,6 +69,14 @@ void graphics_make_fbo(framebuffer *f) {
     }
 
     graphics_update_fbo(f);
+
+    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "Frame buffer status: %d\n", status);
+        exit(1);
+    }
+
+    graphics_bind_fbo(0);
 }
 
 void graphics_bind_vao_attributes(GLint position, GLint color, GLint texture) {

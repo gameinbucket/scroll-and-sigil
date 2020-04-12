@@ -20,12 +20,12 @@ void world_render(world *w, renderstate *rs) {
     float color[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     float uv[4] = {0, 0, 1, 1};
 
-    renderbuffer *images = rs->draw_images;
-    renderbuffer_zero(images);
+    renderbuffer *cubes = rs->draw_cubes;
+    renderbuffer_zero(cubes);
 
     for (int i = 0; i < all; i++) {
         if (blocks[i] != 0) {
-            render_cube_positive_x(images, bx, by, bz, color, uv);
+            render_cube_positive_x(cubes, bx, by, bz, color, uv);
         }
         bx++;
         if (bx == width) {

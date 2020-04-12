@@ -6,12 +6,12 @@ renderbuffer *renderbuffer_init(int position, int color, int texture, int vertex
     r->color = color;
     r->texture = texture;
     r->vertex_pos = 0;
-    r->vertex_limit = vertex_limit;
+    r->vertex_size = vertex_limit * (position + color + texture) * sizeof(GLfloat);
     r->index_pos = 0;
-    r->index_limit = index_limit;
+    r->index_size = index_limit * sizeof(GLuint);
     r->index_offset = 0;
-    r->vertices = safe_malloc(sizeof(GLfloat) * vertex_limit);
-    r->indices = safe_malloc(sizeof(GLuint) * index_limit);
+    r->vertices = safe_malloc(r->vertex_size);
+    r->indices = safe_malloc(r->index_size);
     return r;
 }
 

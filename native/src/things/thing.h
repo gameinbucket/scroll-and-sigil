@@ -1,10 +1,19 @@
 #ifndef THING_H
 #define THING_H
 
+#include "core/mem.h"
+
 extern float gravity;
 extern float inverse_block_size;
 
+enum thing_type { THING_TYPE_HERO, THING_TYPE_BARON };
+
+typedef enum thing_type thing_type;
+
+typedef struct thing thing;
+
 struct thing {
+    thing_type type;
     float x;
     float y;
     float z;
@@ -19,10 +28,10 @@ struct thing {
     float delta_x;
     float delta_y;
     float delta_z;
+    void (*update)(void *);
 };
 
-typedef struct thing thing;
-
+thing *thing_init();
 void thing_block_borders(thing *self);
 void thing_update(thing *self);
 

@@ -8,11 +8,16 @@
 
 #include "world/world.h"
 
+#include "camera.h"
+#include "input.h"
 #include "renderstate.h"
+#include "worldrender.h"
 
 struct state {
+    input in;
     renderstate *rs;
     world *w;
+    camera *c;
 };
 
 typedef struct state state;

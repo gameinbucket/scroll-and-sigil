@@ -1,22 +1,29 @@
 #include "state.h"
 
 state *state_init(world *w, renderstate *rs) {
-    state *s = safe_malloc(sizeof(state));
+    state *s = safe_calloc(1, sizeof(state));
     s->w = w;
     s->rs = rs;
+    s->c = camera_init();
     return s;
 }
 
 void state_update(state *self) {
     world_update(self->w);
+
+    if (self->in.left) {
+        self->c->x--;
+    }
+
+    if (self->in.right) {
+        self->c->x++;
+    }
 }
 
 void state_render(state *self) {
 
+    camera *c = self->c;
     renderstate *rs = self->rs;
-
-    graphics_disable_cull();
-    graphics_disable_depth();
 
     framebuffer *f = rs->frame;
 
@@ -26,14 +33,34 @@ void state_render(state *self) {
 
     renderstate_set_program(rs, SHADER_TEXTURE_2D);
 
-    matrix_orthographic_projection(rs->modelview, rs->draw_orthographic, rs->modelviewprojection, 0, 0);
+    matrix_orthographic_projection(rs->modelview, rs->draw_orthographic, rs->modelviewprojection, c->x, c->y);
     renderstate_set_mvp(rs, rs->modelviewprojection);
 
-    renderstate_set_texture(rs, 0);
+    renderstate_set_texture(rs, TEXTURE_BARON);
 
     renderbuffer *images = rs->draw_images;
     renderbuffer_zero(images);
-    render_image(images, 0, 0, 64, 128, 0, 0, 1, 1);
+    render_image(images, 0, 0, 110, 128, 0, 0, 1, 1);
+
+    //
+
+    // world_render(self->w, self->rs);
+
+    // matrix_perspective_projection(rs->modelview, rs->draw_perspective, rs->modelviewprojection, c->x, c->y, c->z, c->rx, c->ry);
+    // renderstate_set_mvp(rs, rs->modelviewprojection);
+    // renderstate_set_texture(rs, TEXTURE_PLANK);
+
+    // renderstate_set_program(rs, SHADER_TEXTURE_3D);
+
+    // // graphics_enable_cull();
+    // graphics_enable_depth();
+
+    // graphics_update_and_draw(rs->draw_cubes);
+
+    // graphics_disable_cull();
+    // graphics_disable_depth();
+
+    //
 
     graphics_update_and_draw(images);
 
