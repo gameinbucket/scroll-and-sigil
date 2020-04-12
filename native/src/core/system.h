@@ -3,7 +3,6 @@
 
 #define _GNU_SOURCE
 
-#include "string.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -11,15 +10,8 @@
 #include <string.h>
 #include <unistd.h>
 
-typedef struct system_std system_std;
+#include "string.h"
 
-struct system_std {
-    string stdin;
-    string stdout;
-    int code;
-};
-
-string new_popen(const char *command);
-string core_system(const string command);
+string *cmd(char *command);
 
 #endif

@@ -1,9 +1,12 @@
 #ifndef STATE_H
 #define STATE_H
 
+#include <math.h>
+
 #include "graphics/graphics.h"
 #include "graphics/matrix.h"
 #include "graphics/render.h"
+#include "graphics/sprite.h"
 #include "graphics/texture.h"
 
 #include "world/world.h"
@@ -11,6 +14,7 @@
 #include "camera.h"
 #include "input.h"
 #include "renderstate.h"
+#include "wad.h"
 #include "worldrender.h"
 
 struct state {

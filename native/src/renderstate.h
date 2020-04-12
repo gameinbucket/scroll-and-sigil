@@ -3,13 +3,6 @@
 
 // #define RENDER_STATE_DEBUG
 
-#define SHADER_SCREEN 0
-#define SHADER_TEXTURE_2D 1
-#define SHADER_TEXTURE_3D 2
-
-#define TEXTURE_BARON 0
-#define TEXTURE_PLANK 1
-
 #include <GL/glew.h>
 
 #include <GL/gl.h>
@@ -39,6 +32,7 @@ struct renderstate {
     renderbuffer *draw_images;
     renderbuffer *draw_colors;
     renderbuffer *draw_cubes;
+    renderbuffer *draw_sprites;
     float canvas_orthographic[16];
     float draw_orthographic[16];
     float draw_perspective[16];

@@ -3,6 +3,8 @@
 
 #include "core/mem.h"
 
+#include "graphics/sprite.h"
+
 extern float gravity;
 extern float inverse_block_size;
 
@@ -28,10 +30,10 @@ struct thing {
     float delta_x;
     float delta_y;
     float delta_z;
+    sprite *sp;
     void (*update)(void *);
 };
 
-thing *thing_init();
 void thing_block_borders(thing *self);
 void thing_update(thing *self);
 

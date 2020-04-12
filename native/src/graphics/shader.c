@@ -12,7 +12,7 @@ void show_info_log(GLuint object, PFNGLGETSHADERIVPROC func_get, PFNGLGETSHADERI
 }
 
 GLint shader_compile_source(char *path, GLint type) {
-    string code = cat(path);
+    string *code = cat(path);
     GLuint shader = glCreateShader(type);
 
     GLint shader_ok = GL_FALSE;

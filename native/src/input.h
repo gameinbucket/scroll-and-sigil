@@ -7,10 +7,16 @@ struct input {
     int mouse_x;
     int mouse_y;
     bool mouse_down;
-    bool left;
-    bool right;
-    bool up;
-    bool down;
+    bool move_left;
+    bool move_right;
+    bool move_up;
+    bool move_down;
+    bool move_forward;
+    bool move_backward;
+    bool look_up;
+    bool look_down;
+    bool look_left;
+    bool look_right;
 };
 
 typedef struct input input;

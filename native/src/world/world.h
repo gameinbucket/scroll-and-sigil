@@ -6,6 +6,8 @@
 #include "things/hero.h"
 #include "things/thing.h"
 
+#include "sector.h"
+
 typedef struct world world;
 
 struct world {
@@ -14,15 +16,20 @@ struct world {
     int height;
     int length;
     int *blocks;
+    thing **things;
     int thing_cap;
     int thing_count;
-    thing **things;
+    sector **sectors;
+    int sector_cap;
+    int sector_count;
 };
 
 world *world_init();
 
 void world_add_thing(world *self, thing *t);
 void world_remove_thing(world *self, thing *t);
+void world_add_sector(world *self, sector *s);
+void world_build_map(world *self);
 void world_load_map(world *self);
 void world_update(world *self);
 

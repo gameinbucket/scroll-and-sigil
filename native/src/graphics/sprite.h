@@ -10,11 +10,14 @@
 
 #include "core/mem.h"
 
+extern const float sprite_scale;
+
+typedef struct sprite sprite;
+
 struct sprite {
-    int *atlas;
     float width;
-    float half_width;
     float height;
+    float half_width;
     float left;
     float top;
     float right;
@@ -23,9 +26,7 @@ struct sprite {
     float offset_y;
 };
 
-typedef struct sprite sprite;
-
 void simple_sprite(float *sprite, float left, float top, float width, float height, float atlas_width, float atlas_height);
-sprite *sprite_init(int *atlas, int atlas_width, int atlas_height, bool offset);
+sprite *sprite_init(int *atlas, int atlas_width, int atlas_height, bool offset, float scale);
 
 #endif

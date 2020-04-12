@@ -5,10 +5,19 @@ world *world_init() {
 }
 
 void world_add_thing(world *self, thing *t) {
+    if (self->thing_cap == 0) {
+        self->things = safe_malloc(sizeof(thing *));
+        self->things[0] = t;
+        self->thing_cap = 1;
+        self->thing_count = 1;
+        return;
+    }
+
     if (self->thing_count == self->thing_cap) {
         self->thing_cap += 8;
         self->things = safe_realloc(self->things, self->thing_cap * sizeof(thing *));
     }
+
     self->things[self->thing_count] = t;
     self->thing_count++;
 }
@@ -22,6 +31,24 @@ void world_remove_thing(world *self, thing *t) {
             self->thing_count--;
         }
     }
+}
+
+void world_add_sector(world *self, sector *s) {
+    if (self->sector_cap == 0) {
+        self->sectors = safe_malloc(sizeof(sector *));
+        self->sectors[0] = s;
+        self->sector_cap = 1;
+        self->sector_count = 1;
+        return;
+    }
+
+    if (self->sector_count == self->sector_cap) {
+        self->sector_cap += 8;
+        self->sectors = safe_realloc(self->sectors, self->sector_cap * sizeof(sector *));
+    }
+
+    self->sectors[self->sector_count] = s;
+    self->sector_count++;
 }
 
 void world_load_map(world *self) {

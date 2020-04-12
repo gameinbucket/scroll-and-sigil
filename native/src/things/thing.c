@@ -3,10 +3,6 @@
 float gravity = 0.01;
 float inverse_block_size = 1.0;
 
-thing *thing_init() {
-    return safe_calloc(1, sizeof(thing));
-}
-
 void thing_block_borders(thing *self) {
     float radius = self->radius;
     self->min_bx = (int)((self->x - radius) * inverse_block_size);

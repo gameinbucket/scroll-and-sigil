@@ -87,23 +87,18 @@ renderstate *renderstate_settings() {
     rs->draw_images = renderbuffer_init(2, 0, 2, 40, 60);
     rs->draw_colors = renderbuffer_init(2, 3, 0, 40, 60);
     rs->draw_cubes = renderbuffer_init(3, 3, 2, 4 * 200, 36 * 200);
+    rs->draw_sprites = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200);
 
     graphics_make_vao(rs->screen);
     graphics_make_vao(rs->frame_screen);
     graphics_make_vao(rs->draw_images);
     graphics_make_vao(rs->draw_colors);
     graphics_make_vao(rs->draw_cubes);
+    graphics_make_vao(rs->draw_sprites);
 
     renderstate_resize(rs, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    rs->shaders = safe_malloc(3 * sizeof(shader *));
-    rs->shaders[SHADER_SCREEN] = shader_make("screen", "shaders/screen.vert", "shaders/screen.frag");
-    rs->shaders[SHADER_TEXTURE_2D] = shader_make("texture2d", "shaders/texture2d.vert", "shaders/texture2d.frag");
-    rs->shaders[SHADER_TEXTURE_3D] = shader_make("texture3d", "shaders/texture3d-color.vert", "shaders/texture3d-color.frag");
-
-    rs->textures = safe_malloc(2 * sizeof(texture *));
-    rs->textures[TEXTURE_BARON] = texture_make("textures/front-death-0.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
-    rs->textures[TEXTURE_PLANK] = texture_make("textures/plank-floor.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
+    wad_load(rs);
 
     return rs;
 }
@@ -126,20 +121,32 @@ void main_loop(SDL_Window *window, state *s) {
             }
             case SDL_KEYUP: {
                 switch (event.key.keysym.sym) {
-                case SDLK_w: s->in.up = false; break;
-                case SDLK_a: s->in.left = false; break;
-                case SDLK_s: s->in.down = false; break;
-                case SDLK_d: s->in.right = false; break;
+                case SDLK_w: s->in.move_forward = false; break;
+                case SDLK_a: s->in.move_left = false; break;
+                case SDLK_s: s->in.move_backward = false; break;
+                case SDLK_d: s->in.move_right = false; break;
+                case SDLK_q: s->in.move_up = false; break;
+                case SDLK_e: s->in.move_down = false; break;
+                case SDLK_UP: s->in.look_up = false; break;
+                case SDLK_DOWN: s->in.look_down = false; break;
+                case SDLK_LEFT: s->in.look_left = false; break;
+                case SDLK_RIGHT: s->in.look_right = false; break;
                 }
                 break;
             }
             case SDL_KEYDOWN: {
                 switch (event.key.keysym.sym) {
-                case SDLK_q: run = false; break;
-                case SDLK_w: s->in.up = true; break;
-                case SDLK_a: s->in.left = true; break;
-                case SDLK_s: s->in.down = true; break;
-                case SDLK_d: s->in.right = true; break;
+                case SDLK_ESCAPE: run = false; break;
+                case SDLK_w: s->in.move_forward = true; break;
+                case SDLK_a: s->in.move_left = true; break;
+                case SDLK_s: s->in.move_backward = true; break;
+                case SDLK_d: s->in.move_right = true; break;
+                case SDLK_q: s->in.move_up = true; break;
+                case SDLK_e: s->in.move_down = true; break;
+                case SDLK_UP: s->in.look_up = true; break;
+                case SDLK_DOWN: s->in.look_down = true; break;
+                case SDLK_LEFT: s->in.look_left = true; break;
+                case SDLK_RIGHT: s->in.look_right = true; break;
                 }
                 break;
             }

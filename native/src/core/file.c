@@ -1,6 +1,6 @@
 #include "file.h"
 
-size_t file_size(const char *path) {
+size_t file_size(char *path) {
     FILE *fp = fopen(path, "r");
     if (fp == NULL) {
         fprintf(stderr, "Could not open file: %s", path);
@@ -15,7 +15,7 @@ size_t file_size(const char *path) {
     return num;
 }
 
-string cat(const char *path) {
+string *cat(char *path) {
     size_t size = file_size(path);
     FILE *fp = fopen(path, "r");
     if (fp == NULL) {
@@ -27,12 +27,12 @@ string cat(const char *path) {
         content[i] = fgetc(fp);
     }
     fclose(fp);
-    string s = string_init_with_length(content, size);
+    string *s = string_init_with_length(content, size);
     free(content);
     return s;
 }
 
-void core_write(const char *path, const char *content) {
+void core_write(char *path, char *content) {
     FILE *fp = fopen(path, "a");
     if (fp == NULL) {
         fprintf(stderr, "Could not open file: %s", path);

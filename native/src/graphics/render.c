@@ -1,5 +1,16 @@
 #include "render.h"
 
+void render_index3(renderbuffer *b) {
+    int pos = b->index_pos;
+    int offset = b->index_offset;
+    GLuint *indices = b->indices;
+    indices[pos] = offset;
+    indices[pos + 1] = offset + 1;
+    indices[pos + 2] = offset + 2;
+    b->index_pos += 3;
+    b->index_offset += 3;
+}
+
 void render_index4(renderbuffer *b) {
     int pos = b->index_pos;
     int offset = b->index_offset;

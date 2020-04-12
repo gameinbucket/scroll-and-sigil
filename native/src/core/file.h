@@ -10,7 +10,7 @@
 #include "mem.h"
 #include "string.h"
 
-string cat(const char *path);
-void core_write(const char *path, const char *content);
+string *cat(char *path);
+void core_write(char *path, char *content);
 
 #endif

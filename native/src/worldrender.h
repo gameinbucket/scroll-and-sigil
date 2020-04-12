@@ -26,6 +26,7 @@
 
 #include "renderstate.h"
 
-void world_render(world *w, renderstate *rs);
+void thing_render(renderbuffer *b, thing *t, float camera_x, float camera_z);
+void world_render(renderstate *rs, world *w);
 
 #endif

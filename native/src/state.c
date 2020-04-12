@@ -11,12 +11,46 @@ state *state_init(world *w, renderstate *rs) {
 void state_update(state *self) {
     world_update(self->w);
 
-    if (self->in.left) {
-        self->c->x--;
+    input in = self->in;
+
+    if (in.move_forward) {
+        self->c->x -= 0.1;
     }
 
-    if (self->in.right) {
-        self->c->x++;
+    if (in.move_backward) {
+        self->c->x += 0.1;
+    }
+
+    if (in.move_up) {
+        self->c->y += 0.1;
+    }
+
+    if (in.move_down) {
+        self->c->y -= 0.1;
+    }
+
+    if (in.move_left) {
+        self->c->z -= 0.1;
+    }
+
+    if (in.move_right) {
+        self->c->z += 0.1;
+    }
+
+    if (in.look_left) {
+        self->c->rx -= 0.05;
+    }
+
+    if (in.look_right) {
+        self->c->rx += 0.05;
+    }
+
+    if (in.look_up) {
+        self->c->ry -= 0.05;
+    }
+
+    if (in.look_down) {
+        self->c->ry += 0.05;
     }
 }
 
@@ -29,39 +63,45 @@ void state_render(state *self) {
 
     graphics_bind_fbo(f->fbo);
     graphics_set_view(0, 0, f->width, f->height);
-    graphics_clear_color();
+    graphics_clear_color_and_depth();
 
-    renderstate_set_program(rs, SHADER_TEXTURE_2D);
+    // 3d
 
-    matrix_orthographic_projection(rs->modelview, rs->draw_orthographic, rs->modelviewprojection, c->x, c->y);
+    graphics_enable_cull();
+    graphics_enable_depth();
+
+    renderstate_set_program(rs, SHADER_TEXTURE_3D);
+    matrix_perspective_projection(rs->modelview, rs->draw_perspective, rs->modelviewprojection, c->x, c->y, c->z, c->rx, c->ry);
+    renderbuffer *draw_sprites = rs->draw_sprites;
+    renderbuffer_zero(draw_sprites);
+    for (int i = 0; i < self->w->thing_count; i++) {
+        thing_render(draw_sprites, self->w->things[i], c->x, c->z);
+    }
     renderstate_set_mvp(rs, rs->modelviewprojection);
-
     renderstate_set_texture(rs, TEXTURE_BARON);
+    graphics_update_and_draw(draw_sprites);
 
-    renderbuffer *images = rs->draw_images;
-    renderbuffer_zero(images);
-    render_image(images, 0, 0, 110, 128, 0, 0, 1, 1);
-
-    //
-
+    // renderstate_set_program(rs, SHADER_TEXTURE_3D_COLOR);
     // world_render(self->w, self->rs);
-
     // matrix_perspective_projection(rs->modelview, rs->draw_perspective, rs->modelviewprojection, c->x, c->y, c->z, c->rx, c->ry);
     // renderstate_set_mvp(rs, rs->modelviewprojection);
     // renderstate_set_texture(rs, TEXTURE_PLANK);
-
-    // renderstate_set_program(rs, SHADER_TEXTURE_3D);
-
     // // graphics_enable_cull();
     // graphics_enable_depth();
-
     // graphics_update_and_draw(rs->draw_cubes);
 
-    // graphics_disable_cull();
-    // graphics_disable_depth();
+    // end 3d
 
-    //
+    graphics_disable_cull();
+    graphics_disable_depth();
 
+    renderstate_set_program(rs, SHADER_TEXTURE_2D);
+    matrix_orthographic_projection(rs->modelview, rs->draw_orthographic, rs->modelviewprojection, c->x, c->y);
+    renderbuffer *images = rs->draw_images;
+    renderbuffer_zero(images);
+    render_image(images, 0, 0, 110, 128, 0, 0, 1, 1);
+    renderstate_set_mvp(rs, rs->modelviewprojection);
+    renderstate_set_texture(rs, TEXTURE_BARON);
     graphics_update_and_draw(images);
 
     graphics_bind_fbo(0);

@@ -34,7 +34,7 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
         format[0] = GL_RGB;
         texture_type[0] = GL_UNSIGNED_BYTE;
 
-        framebuffer *frame = framebuffer_init(draw_width, draw_height, textures, internal, format, texture_type, GL_NEAREST, false);
+        framebuffer *frame = framebuffer_init(draw_width, draw_height, textures, internal, format, texture_type, GL_NEAREST, true);
         graphics_make_fbo(frame);
 
         self->frame = frame;

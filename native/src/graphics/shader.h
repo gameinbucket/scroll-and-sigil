@@ -18,7 +18,7 @@
 
 struct shader {
     GLuint id;
-    string name;
+    string *name;
     GLint u_mvp;
 };
 

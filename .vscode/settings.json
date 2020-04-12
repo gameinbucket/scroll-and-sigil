@@ -21,6 +21,17 @@
         "inttypes.h": "c",
         "sdl_image.h": "c",
         "worldrender.h": "c",
-        "mem.h": "c"
+        "mem.h": "c",
+        "linedef.h": "c",
+        "vec.h": "c",
+        "line.h": "c",
+        "cell.h": "c",
+        "string.h": "c",
+        "file.h": "c",
+        "system.h": "c",
+        "sector.h": "c",
+        "math.h": "c",
+        "hero.h": "c",
+        "triangulate.h": "c"
     }
 }
