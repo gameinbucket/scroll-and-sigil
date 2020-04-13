@@ -1,8 +1,8 @@
-#ifndef PLACES_H
-#define PLACES_H
+#ifndef PLACE_H
+#define PLACE_H
 
 #include "core/mem.h"
-#include "world/sector.h"
+#include "map/sector.h"
 #include "world/world.h"
 
 sector *place_flat(world *w);

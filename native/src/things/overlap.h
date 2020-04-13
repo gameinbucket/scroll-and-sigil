@@ -1,7 +1,7 @@
 #ifndef OVERLAP_H
 #define OVERLAP_H
 
-#include "world/sector.h"
+#include "map/sector.h"
 
 #include "thing.h"
 

@@ -3,9 +3,8 @@
 
 #include "core/mem.h"
 
+#include "map/sector.h"
 #include "things/thing.h"
-
-#include "sector.h"
 
 typedef struct cell cell;
 

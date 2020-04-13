@@ -17,6 +17,7 @@
 #include "graphics/texture.h"
 
 #include "world/world.h"
+#include "world/worldbuild.h"
 
 #include "renderstate.h"
 #include "state.h"
@@ -98,7 +99,7 @@ renderstate *renderstate_settings() {
 
     renderstate_resize(rs, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    wad_load(rs);
+    wad_load_resources(rs);
 
     return rs;
 }
@@ -167,7 +168,8 @@ int main() {
     renderstate *rs = renderstate_settings();
 
     world *w = world_init();
-    world_load_map(w);
+    wad_load_map(w);
+    world_build_map(w);
 
     state *s = state_init(w, rs);
 

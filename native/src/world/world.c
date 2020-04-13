@@ -51,50 +51,6 @@ void world_add_sector(world *self, sector *s) {
     self->sector_count++;
 }
 
-void world_load_map(world *self) {
-
-    int width = 8;
-    int height = 8;
-    int length = 8;
-
-    self->width = width;
-    self->height = height;
-    self->length = length;
-
-    int slice = width * height;
-    int all = slice * length;
-
-    int bx = 0;
-    int by = 0;
-    int bz = 0;
-
-    int *blocks = safe_malloc(all * sizeof(int));
-    self->blocks = blocks;
-
-    for (int i = 0; i < all; i++) {
-        if (by == 0) {
-            blocks[i] = 1;
-        } else {
-            blocks[i] = 0;
-        }
-        bx++;
-        if (bx == width) {
-            bx = 0;
-            by++;
-            if (by == height) {
-                by = 0;
-                bz++;
-            }
-        }
-    }
-
-    self->thing_cap = 4;
-    self->things = safe_malloc(self->thing_cap * sizeof(thing *));
-
-    hero *h = hero_init();
-    world_add_thing(self, &h->super);
-}
-
 void world_update(world *self) {
     int thing_count = self->thing_count;
     thing **things = self->things;

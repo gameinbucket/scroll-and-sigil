@@ -10,6 +10,8 @@
 
 #include "core/mem.h"
 
+typedef struct camera camera;
+
 struct camera {
     float x;
     float y;
@@ -18,8 +20,6 @@ struct camera {
     float ry;
     float radius;
 };
-
-typedef struct camera camera;
 
 camera *camera_init();
 void camera_update();

@@ -6,6 +6,9 @@
 #include "graphics/render.h"
 #include "graphics/texture.h"
 
+#include "places/place.h"
+#include "world/world.h"
+
 #include "renderstate.h"
 
 #define SHADER_SCREEN 0
@@ -16,6 +19,8 @@
 #define TEXTURE_BARON 0
 #define TEXTURE_PLANK 1
 
-void wad_load(renderstate *rs);
+void wad_load_resources(renderstate *rs);
+
+void wad_load_map(world *w);
 
 #endif

@@ -3,10 +3,9 @@
 
 #include "core/mem.h"
 #include "graphics/renderbuffer.h"
+#include "map/sector.h"
 #include "things/hero.h"
 #include "things/thing.h"
-
-#include "sector.h"
 
 typedef struct world world;
 
@@ -29,7 +28,6 @@ world *world_init();
 void world_add_thing(world *self, thing *t);
 void world_remove_thing(world *self, thing *t);
 void world_add_sector(world *self, sector *s);
-void world_build_map(world *self);
 void world_load_map(world *self);
 void world_update(world *self);
 
