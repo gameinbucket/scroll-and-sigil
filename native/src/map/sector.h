@@ -3,6 +3,7 @@
 
 #include <math.h>
 
+#include "core/math.h"
 #include "core/mem.h"
 
 #include "triangle.h"

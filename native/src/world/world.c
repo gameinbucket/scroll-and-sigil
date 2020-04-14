@@ -29,6 +29,7 @@ void world_remove_thing(world *self, thing *t) {
         if (things[i] == t) {
             things[i] = things[len - 1];
             self->thing_count--;
+            return;
         }
     }
 }

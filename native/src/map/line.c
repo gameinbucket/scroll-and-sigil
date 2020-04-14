@@ -33,7 +33,7 @@ vec_ok line_intersect(line *self, line *with) {
     float r3 = (a1 * with->va.x) + (b1 * with->va.y) + c1;
     float r4 = (a1 * with->vb.x) + (b1 * with->vb.y) + c1;
 
-    if ((r3 != 0.0) && (r4 != 0.0) && r3 * r4 >= 0.0) {
+    if (FLOAT_NOT_ZERO(r3) && FLOAT_NOT_ZERO(r4) && r3 * r4 >= 0) {
         return (vec_ok){{0, 0}, false};
     }
 
@@ -44,13 +44,13 @@ vec_ok line_intersect(line *self, line *with) {
     float r1 = (a2 * self->va.x) + (b2 * self->va.y) + c2;
     float r2 = (a2 * self->vb.x) + (b2 * self->vb.y) + c2;
 
-    if ((r1 != 0.0) && (r2 != 0.0) && r1 * r2 >= 0.0) {
+    if (FLOAT_NOT_ZERO(r1) && FLOAT_NOT_ZERO(r2) && r1 * r2 >= 0) {
         return (vec_ok){{0, 0}, false};
     }
 
     float denominator = (a1 * b2) - (a2 * b1);
 
-    if (denominator == 0.0) {
+    if (FLOAT_ZERO(denominator)) {
         return (vec_ok){{0, 0}, false};
     }
 

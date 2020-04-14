@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 
+#include "core/math.h"
 #include "core/mem.h"
 
 typedef struct vec vec;
@@ -20,5 +21,8 @@ struct vec_ok {
 };
 
 vec *vec_init(float x, float y);
+vec *vec_copy(vec *with);
+vec vec_of(vec *with);
+bool vec_intersect(vec *va, vec *vb, vec *vc, vec *vd);
 
 #endif

@@ -33,6 +33,14 @@
         "math.h": "c",
         "hero.h": "c",
         "triangulate.h": "c",
-        "places.h": "c"
+        "places.h": "c",
+        "array.h": "c",
+        "cmath": "c",
+        "cinttypes": "c",
+        "cstdlib": "c",
+        "list.h": "c",
+        "stdlib.h": "c",
+        "stdbool.h": "c",
+        "strings.h": "c"
     }
 }

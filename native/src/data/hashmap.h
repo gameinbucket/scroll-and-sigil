@@ -4,10 +4,12 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
-#include "mem.h"
-#include "slice.h"
+#include "core/mem.h"
+#include "core/slice.h"
 
 extern uint64_t hashmap_uint64_max;
+
+typedef struct hashmap_item hashmap_item;
 
 struct hashmap_item {
     int code;
@@ -16,7 +18,7 @@ struct hashmap_item {
     struct hashmap_item *next;
 };
 
-typedef struct hashmap_item hashmap_item;
+typedef struct hashmap hashmap;
 
 struct hashmap {
     int size;
@@ -24,8 +26,6 @@ struct hashmap {
     int (*code_function)(void *);
     hashmap_item **table;
 };
-
-typedef struct hashmap hashmap;
 
 int hashmap_string_hashcode(const char *key);
 hashmap *hashmap_init(int (*code_function)(void *));

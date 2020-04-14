@@ -1,0 +1,18 @@
+#ifndef SYSTEM_H
+#define PRECISION_H
+
+#include <math.h>
+
+#define MATH_PI 3.14159265358979323846
+#define MATH_TAU (MATH_PI * 2.0)
+
+#define FLOAT_MATH_PI 3.14159265358979323846f
+#define FLOAT_MATH_TAU (FLOAT_MATH_PI * 2.0f)
+
+#define FLOAT_PRECISION 0.00000001f
+
+#define FLOAT_ZERO(F) abs(F) < FLOAT_PRECISION
+#define FLOAT_NOT_ZERO(F) abs(F) > FLOAT_PRECISION
+#define FLOAT_EQUAL(X, Y) abs(X - Y) < FLOAT_PRECISION
+
+#endif
