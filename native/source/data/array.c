@@ -54,7 +54,7 @@ void array_insert(array *self, unsigned int index, void *item) {
     }
     self->length = length;
     void **items = self->items;
-    for (int i = length - 1; i > index; i--) {
+    for (unsigned int i = length - 1; i > index; i--) {
         items[i] = items[i - 1];
     }
     items[index] = item;

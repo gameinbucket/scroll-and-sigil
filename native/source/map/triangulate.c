@@ -1,5 +1,8 @@
 #include "triangulate.h"
 
+#define IGNORE
+#ifndef IGNORE
+
 typedef struct polygon_vertex polygon_vertex;
 
 struct polygon_vertex {
@@ -442,3 +445,5 @@ void triangulate_sector(sector *s, float scale) {
     s->triangles = (triangle **)list_to_array(ls);
     list_free(ls);
 }
+
+#endif
