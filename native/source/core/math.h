@@ -1,5 +1,5 @@
-#ifndef SYSTEM_H
-#define PRECISION_H
+#ifndef CORE_MATH_H
+#define CORE_MATH_H
 
 #include <math.h>
 
