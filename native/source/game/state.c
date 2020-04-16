@@ -5,6 +5,8 @@ state *state_init(world *w, renderstate *rs) {
     s->w = w;
     s->rs = rs;
     s->c = camera_init();
+    s->c->x = 10;
+    s->c->z = 40;
     return s;
 }
 
@@ -70,8 +72,9 @@ void state_render(state *self) {
     graphics_enable_cull();
     graphics_enable_depth();
 
-    renderstate_set_program(rs, SHADER_TEXTURE_3D);
     matrix_perspective_projection(rs->modelview, rs->draw_perspective, rs->modelviewprojection, c->x, c->y, c->z, c->rx, c->ry);
+
+    renderstate_set_program(rs, SHADER_TEXTURE_3D);
     renderbuffer *draw_sprites = rs->draw_sprites;
     renderbuffer_zero(draw_sprites);
     for (int i = 0; i < self->w->thing_count; i++) {
@@ -81,19 +84,22 @@ void state_render(state *self) {
     renderstate_set_texture(rs, TEXTURE_BARON);
     graphics_update_and_draw(draw_sprites);
 
-    // renderstate_set_program(rs, SHADER_TEXTURE_3D_COLOR);
-    // world_render(self->w, self->rs);
-    // matrix_perspective_projection(rs->modelview, rs->draw_perspective, rs->modelviewprojection, c->x, c->y, c->z, c->rx, c->ry);
-    // renderstate_set_mvp(rs, rs->modelviewprojection);
-    // renderstate_set_texture(rs, TEXTURE_PLANK);
-    // // graphics_enable_cull();
-    // graphics_enable_depth();
-    // graphics_update_and_draw(rs->draw_cubes);
-
-    // end 3d
+    renderstate_set_program(rs, SHADER_TEXTURE_3D_COLOR);
+    renderstate_set_mvp(rs, rs->modelviewprojection);
+    renderstate_set_texture(rs, TEXTURE_BARON);
+    renderbuffer *draw_sectors = rs->draw_sectors;
+    renderbuffer_zero(draw_sectors);
+    int sector_count = self->w->sector_count;
+    sector **sectors = self->w->sectors;
+    for (int i = 0; i < sector_count; i++) {
+        sector_render(draw_sectors, sectors[i]);
+    }
+    graphics_update_and_draw(rs->draw_sectors);
 
     graphics_disable_cull();
     graphics_disable_depth();
+
+    // end 3d
 
     renderstate_set_program(rs, SHADER_TEXTURE_2D);
     matrix_orthographic_projection(rs->modelview, rs->draw_orthographic, rs->modelviewprojection, c->x, c->y);

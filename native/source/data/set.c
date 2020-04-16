@@ -1,36 +1,36 @@
-#include "hashmap.h"
+#include "set.h"
 
-uint64_t hashmap_uint64_max = (uint64_t)2000000;
+uint64_t set_uint64_max = (uint64_t)2000000;
 
-int hashmap_string_hashcode(const char *key) {
+int set_string_hashcode(const char *key) {
     int pos = 0;
     uint64_t value = (uint64_t)0;
     int length = strlen(key);
-    while ((value < hashmap_uint64_max && pos < length)) {
+    while ((value < set_uint64_max && pos < length)) {
         value = (value << (uint64_t)8) + (uint64_t)key[pos];
         pos += 1;
     }
     return (int)value;
 }
 
-hashmap *hashmap_init(int (*code_function)(void *)) {
-    hashmap *h = safe_malloc(sizeof(hashmap));
+set *set_init(int (*code_function)(void *)) {
+    set *h = safe_malloc(sizeof(set));
     h->size = 0;
     h->capacity = 12;
     h->code_function = code_function;
-    h->table = slice_init(sizeof(hashmap_item *), 0, 12);
+    h->table = slice_init(sizeof(set_item *), 0, 12);
     return h;
 }
 
-int hashmap_get_bin(hashmap *self, int code) {
+int set_get_bin(set *self, int code) {
     return code % self->capacity;
 }
 
-void hashmap_put(hashmap *self, void *key, void *value) {
+void set_put(set *self, void *key, void *value) {
     int code = (*self->code_function)(key);
-    int bin = hashmap_get_bin(self, code);
-    hashmap_item *element = self->table[bin];
-    hashmap_item *previous = NULL;
+    int bin = set_get_bin(self, code);
+    set_item *element = self->table[bin];
+    set_item *previous = NULL;
     while (true) {
         if (element == NULL) {
             break;
@@ -43,7 +43,7 @@ void hashmap_put(hashmap *self, void *key, void *value) {
             element = element->next;
         }
     }
-    hashmap_item *item = safe_malloc(sizeof(hashmap_item));
+    set_item *item = safe_malloc(sizeof(set_item));
     item->code = code;
     item->key = key;
     item->value = value;
@@ -56,10 +56,10 @@ void hashmap_put(hashmap *self, void *key, void *value) {
     self->size += 1;
 }
 
-void *hashmap_get(hashmap *self, void *key) {
+void *set_get(set *self, void *key) {
     int code = (*self->code_function)(key);
-    int bin = hashmap_get_bin(self, code);
-    hashmap_item *element = self->table[bin];
+    int bin = set_get_bin(self, code);
+    set_item *element = self->table[bin];
     while (true) {
         if (element == NULL) {
             break;
@@ -73,15 +73,15 @@ void *hashmap_get(hashmap *self, void *key) {
     return NULL;
 }
 
-bool hashmap_has(hashmap *self, void *key) {
-    return hashmap_get(self, key) != NULL;
+bool set_has(set *self, void *key) {
+    return set_get(self, key) != NULL;
 }
 
-void *hashmap_delete(hashmap *self, void *key) {
+void *set_delete(set *self, void *key) {
     int code = (*self->code_function)(key);
-    int bin = hashmap_get_bin(self, code);
-    hashmap_item *element = self->table[bin];
-    hashmap_item *previous = NULL;
+    int bin = set_get_bin(self, code);
+    set_item *element = self->table[bin];
+    set_item *previous = NULL;
     while (true) {
         if (element == NULL) {
             break;
@@ -102,7 +102,7 @@ void *hashmap_delete(hashmap *self, void *key) {
     return NULL;
 }
 
-void hashmap_clear(hashmap *self) {
+void set_clear(set *self) {
     int size = slice_len(self->table);
     for (int i = 0; i < size; i++) {
         self->table[i] = NULL;

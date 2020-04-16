@@ -41,6 +41,10 @@
         "list.h": "c",
         "stdlib.h": "c",
         "stdbool.h": "c",
-        "strings.h": "c"
+        "strings.h": "c",
+        "test.h": "c",
+        "type_traits": "c",
+        "table.h": "c",
+        "set.h": "c"
     }
 }

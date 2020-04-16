@@ -31,7 +31,7 @@ struct renderstate {
     renderbuffer *frame_screen;
     renderbuffer *draw_images;
     renderbuffer *draw_colors;
-    renderbuffer *draw_cubes;
+    renderbuffer *draw_sectors;
     renderbuffer *draw_sprites;
     float canvas_orthographic[16];
     float draw_orthographic[16];

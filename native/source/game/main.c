@@ -87,14 +87,14 @@ renderstate *renderstate_settings() {
     rs->frame_screen = renderbuffer_init(2, 0, 0, 4, 6);
     rs->draw_images = renderbuffer_init(2, 0, 2, 40, 60);
     rs->draw_colors = renderbuffer_init(2, 3, 0, 40, 60);
-    rs->draw_cubes = renderbuffer_init(3, 3, 2, 4 * 200, 36 * 200);
+    rs->draw_sectors = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200);
     rs->draw_sprites = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200);
 
     graphics_make_vao(rs->screen);
     graphics_make_vao(rs->frame_screen);
     graphics_make_vao(rs->draw_images);
     graphics_make_vao(rs->draw_colors);
-    graphics_make_vao(rs->draw_cubes);
+    graphics_make_vao(rs->draw_sectors);
     graphics_make_vao(rs->draw_sprites);
 
     renderstate_resize(rs, SCREEN_WIDTH, SCREEN_HEIGHT);

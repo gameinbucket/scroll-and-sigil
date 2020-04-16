@@ -98,9 +98,6 @@ void sector_render(renderbuffer *b, sector *s) {
 
 void world_render(renderstate *rs, world *w) {
 
-    renderstate_set_program(rs, 0);
-    renderstate_set_mvp(rs, rs->modelviewprojection);
-
     int width = w->width;
     int height = w->height;
     int length = w->length;

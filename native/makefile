@@ -11,7 +11,7 @@ LINKER_FLAGS = -lSDL2 -lSDL2_image -lGL -lGLEW
 LIBS = -lm
 PREFIX =
 
-.PHONY: all analysis address valgrind clean list-source list-objects help
+.PHONY: all analysis address valgrind clean list-source list-objects test help
 
 all: $(NAME)
 
@@ -23,6 +23,7 @@ address: clean all
 
 valgrind: COMPILER_FLAGS += -g
 valgrind: clean all
+	@ ./valgrind.sh
 
 $(NAME): $(HEADERS) $(OBJECTS)
 	$(PREFIX) $(CC) $(OBJECTS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(NAME) $(LIBS)

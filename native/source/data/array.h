@@ -18,6 +18,8 @@ struct array {
 array *array_init_with_capacity(unsigned int length, unsigned int capacity);
 array *array_init(unsigned int length);
 array *array_init_with_items(unsigned int length, unsigned int capacity, void **items);
+void **array_copy(array *self);
+array *array_init_copy(array *self);
 void array_push(array *self, void *item);
 void array_insert(array *self, unsigned int index, void *item);
 void array_insert_sort(array *self, int (*compare)(void *, void *), void *item);
@@ -30,7 +32,6 @@ void array_clear(array *self);
 bool array_is_empty(array *self);
 bool array_not_empty(array *self);
 unsigned int array_size(array *self);
-void **array_copy(array *self);
 void array_free(array *self);
 
 #endif

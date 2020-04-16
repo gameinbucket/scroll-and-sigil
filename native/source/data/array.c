@@ -24,6 +24,21 @@ array *array_init_with_items(unsigned int length, unsigned int capacity, void **
     return a;
 }
 
+void **array_copy(array *self) {
+    size_t size = self->length * sizeof(void *);
+    void **copy = safe_malloc(size);
+    memcpy(copy, self->items, size);
+    return copy;
+}
+
+array *array_init_copy(array *self) {
+    array *a = safe_malloc(sizeof(array));
+    a->items = array_copy(self);
+    a->length = self->length;
+    a->capacity = self->length;
+    return a;
+}
+
 static void update_capacity(array *self, unsigned int length) {
     if (length > self->capacity) {
         if (self->capacity == 0) {
@@ -80,6 +95,7 @@ void *array_find(array *self, bool(find)(void *, void *), void *has) {
 
 void *array_get(array *self, unsigned int index) {
     if (index >= self->length) {
+        fprintf(stderr, "ARRAY OUT OF BOUNDS (%d of %d)\n", index, self->length);
         return NULL;
     }
     return self->items[index];
@@ -100,7 +116,7 @@ void array_remove(array *self, void *item) {
         if (items[i] == item) {
             len--;
             while (i < len) {
-                items[i] = items[len + 1];
+                items[i] = items[i + 1];
                 i++;
             }
             self->length--;
@@ -115,7 +131,7 @@ void array_remove_index(array *self, unsigned int index) {
     int len = self->length;
     void **items = self->items;
     for (int i = index; i < len; i++) {
-        items[i] = items[len + 1];
+        items[i] = items[i + 1];
     }
     items[len] = NULL;
 }
@@ -134,13 +150,6 @@ bool array_not_empty(array *self) {
 
 unsigned int array_size(array *self) {
     return self->length;
-}
-
-void **array_copy(array *self) {
-    unsigned int len = self->length;
-    void **copy = safe_malloc(len * sizeof(void *));
-    memcpy(copy, self->items, len);
-    return copy;
 }
 
 void array_free(array *self) {

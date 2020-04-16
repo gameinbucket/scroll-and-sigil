@@ -26,7 +26,10 @@
 
 #include "renderstate.h"
 
+void render_wall(renderbuffer *b, wall *w);
+void render_triangle(renderbuffer *b, triangle *t);
 void thing_render(renderbuffer *b, thing *t, float camera_x, float camera_z);
+void sector_render(renderbuffer *b, sector *s);
 void world_render(renderstate *rs, world *w);
 
 #endif
