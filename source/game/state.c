@@ -87,7 +87,7 @@ void state_render(state *self) {
     renderbuffer_zero(images);
     render_image(images, 0, 0, 110, 128, 0, 0, 1, 1);
     renderstate_set_mvp(rs, rs->modelviewprojection);
-    renderstate_set_texture(rs, TEXTURE_PLANK);
+    renderstate_set_texture(rs, TEXTURE_BARON);
     graphics_update_and_draw(images);
 
     graphics_bind_fbo(0);

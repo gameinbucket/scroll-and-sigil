@@ -1,7 +1,7 @@
 certs/*
 .vscode/
 
-native/scroll-and-sigil
+scroll-and-sigil
 
 *.app
 *.wasm
