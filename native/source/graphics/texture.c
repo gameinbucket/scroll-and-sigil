@@ -9,14 +9,15 @@ texture *texture_init(GLuint id, int width, int height) {
 }
 
 texture *texture_make(char *path, GLint clamp, GLint interpolate) {
-    SDL_Surface *png = IMG_Load(path);
+
+    simple_image *png = read_png_file(path);
     if (png == NULL) {
-        fprintf(stderr, "Failed to load image: %s\n", SDL_GetError());
+        fprintf(stderr, "Failed to load png file");
         exit(1);
     }
 
-    int width = png->w;
-    int height = png->h;
+    int width = png->width;
+    int height = png->height;
 
     GLuint id;
     glGenTextures(1, &id);
@@ -31,7 +32,7 @@ texture *texture_make(char *path, GLint clamp, GLint interpolate) {
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    SDL_FreeSurface(png);
+    simple_image_free(png);
 
     return texture_init(id, width, height);
 }

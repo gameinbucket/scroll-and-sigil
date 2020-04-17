@@ -1,8 +1,9 @@
+certs/*
+.vscode/
 
 native/scroll-and-sigil
-
-certs/*
 
 *.app
 *.wasm
 *.o
+*.d

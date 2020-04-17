@@ -10,7 +10,7 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
     int draw_height = screen_height;
 
     float fov = 60.0;
-    float ratio = (float)screen_width / (float)screen_height;
+    float ratio = (float)draw_width / (float)draw_height;
 
     matrix_orthographic(self->canvas_orthographic, 0.0, screen_width, 0.0, screen_height, 0.0, 1.0);
     matrix_orthographic(self->draw_orthographic, 0.0, draw_width, 0.0, draw_height, 0.0, 1.0);

@@ -2,7 +2,6 @@
 
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -51,8 +50,6 @@ void window_init(SDL_Window **win) {
         fprintf(stderr, "Failed to initialize GLEW: %d\n", result);
         exit(1);
     }
-
-    IMG_Init(IMG_INIT_PNG);
 
     *win = window;
 }

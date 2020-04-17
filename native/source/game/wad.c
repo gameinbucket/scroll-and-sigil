@@ -15,41 +15,6 @@ void wad_load_resources(renderstate *rs) {
 
 void wad_load_map(world *w) {
 
-    int width = 8;
-    int height = 8;
-    int length = 8;
-
-    w->width = width;
-    w->height = height;
-    w->length = length;
-
-    int slice = width * height;
-    int all = slice * length;
-
-    int bx = 0;
-    int by = 0;
-    int bz = 0;
-
-    int *blocks = safe_malloc(all * sizeof(int));
-    w->blocks = blocks;
-
-    for (int i = 0; i < all; i++) {
-        if (by == 0) {
-            blocks[i] = 1;
-        } else {
-            blocks[i] = 0;
-        }
-        bx++;
-        if (bx == width) {
-            bx = 0;
-            by++;
-            if (by == height) {
-                by = 0;
-                bz++;
-            }
-        }
-    }
-
     place_flat(w);
 
     hero *h = hero_init();

@@ -3,11 +3,12 @@ NAME = scroll-and-sigil
 SOURCE = $(wildcard source/*.c) $(wildcard source/**/*.c)
 HEADERS = $(wildcard source/*.h) $(wildcard source/**/*.h)
 OBJECTS = $(patsubst source/%.c,objects/%.o,$(SOURCE))
-INCLUDE = source/
+DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
+INCLUDE = -Isource/
 
 CC = gcc
-COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 -I$(INCLUDE) -fmax-errors=10
-LINKER_FLAGS = -lSDL2 -lSDL2_image -lGL -lGLEW 
+COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE)
+LINKER_FLAGS = -lSDL2 -lpng -lGL -lGLEW 
 LIBS = -lm
 PREFIX =
 
@@ -15,14 +16,16 @@ PREFIX =
 
 all: $(NAME)
 
+-include $(DEPENDENCY)
+
 analysis: PREFIX = scan-build
-analysis: clean all
+analysis: all
 
 address: COMPILER_FLAGS += -fsanitize=address
-address: clean all
+address: all
 
 valgrind: COMPILER_FLAGS += -g
-valgrind: clean all
+valgrind: all
 	@ ./valgrind.sh
 
 $(NAME): $(HEADERS) $(OBJECTS)
@@ -30,7 +33,7 @@ $(NAME): $(HEADERS) $(OBJECTS)
 
 objects/%.o: source/%.c
 	@mkdir -p $(dir $@)
-	$(CC) -c $< $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $@ $(LIBS)
+	$(CC) -c $< $(COMPILER_FLAGS) -MMD $(LINKER_FLAGS) -o $@ $(LIBS)
 
 clean:
 	rm -f ./$(NAME)
@@ -39,8 +42,14 @@ clean:
 list-source:
 	@echo $(SOURCE)
 
+list-headers:
+	@echo $(HEADERS)
+
 list-objects:
 	@echo $(OBJECTS)
+
+list-dependency:
+	@echo $(DEPENDENCY)
 
 TEST_SOURCE = $(wildcard tests/*.c) $(wildcard source/core/*.c) $(wildcard source/data/*.c)
 
@@ -53,5 +62,7 @@ help:
 	@echo > all
 	@echo > scroll-and-sigil
 	@echo > list-source
+	@echo > list-headers
 	@echo > list-objects
+	@echo > list-dependency
 	@echo > test

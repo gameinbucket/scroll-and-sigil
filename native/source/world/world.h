@@ -11,10 +11,6 @@ typedef struct world world;
 
 struct world {
     char *name;
-    int width;
-    int height;
-    int length;
-    int *blocks;
     thing **things;
     int thing_cap;
     int thing_count;

@@ -74,27 +74,7 @@ void state_render(state *self) {
 
     matrix_perspective_projection(rs->modelview, rs->draw_perspective, rs->modelviewprojection, c->x, c->y, c->z, c->rx, c->ry);
 
-    renderstate_set_program(rs, SHADER_TEXTURE_3D);
-    renderbuffer *draw_sprites = rs->draw_sprites;
-    renderbuffer_zero(draw_sprites);
-    for (int i = 0; i < self->w->thing_count; i++) {
-        thing_render(draw_sprites, self->w->things[i], c->x, c->z);
-    }
-    renderstate_set_mvp(rs, rs->modelviewprojection);
-    renderstate_set_texture(rs, TEXTURE_BARON);
-    graphics_update_and_draw(draw_sprites);
-
-    renderstate_set_program(rs, SHADER_TEXTURE_3D_COLOR);
-    renderstate_set_mvp(rs, rs->modelviewprojection);
-    renderstate_set_texture(rs, TEXTURE_BARON);
-    renderbuffer *draw_sectors = rs->draw_sectors;
-    renderbuffer_zero(draw_sectors);
-    int sector_count = self->w->sector_count;
-    sector **sectors = self->w->sectors;
-    for (int i = 0; i < sector_count; i++) {
-        sector_render(draw_sectors, sectors[i]);
-    }
-    graphics_update_and_draw(rs->draw_sectors);
+    world_render(rs, self->w, c);
 
     graphics_disable_cull();
     graphics_disable_depth();
@@ -107,7 +87,7 @@ void state_render(state *self) {
     renderbuffer_zero(images);
     render_image(images, 0, 0, 110, 128, 0, 0, 1, 1);
     renderstate_set_mvp(rs, rs->modelviewprojection);
-    renderstate_set_texture(rs, TEXTURE_BARON);
+    renderstate_set_texture(rs, TEXTURE_PLANK);
     graphics_update_and_draw(images);
 
     graphics_bind_fbo(0);
