@@ -13,6 +13,8 @@
 
 #include "core/mem.h"
 
+typedef struct renderbuffer renderbuffer;
+
 struct renderbuffer {
     int position;
     int color;
@@ -27,11 +29,11 @@ struct renderbuffer {
     int index_offset;
     GLfloat *vertices;
     GLuint *indices;
+    bool map_buffer_range;
 };
 
-typedef struct renderbuffer renderbuffer;
-
-renderbuffer *renderbuffer_init(int position, int color, int texture, int vertex_limit, int index_limit);
+renderbuffer *renderbuffer_init(int position, int color, int texture, int vertex_limit, int index_limit, bool map_buffer_range);
 void renderbuffer_zero(renderbuffer *self);
+void renderbuffer_free(renderbuffer *self);
 
 #endif

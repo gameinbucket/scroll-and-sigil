@@ -83,12 +83,13 @@ void state_render(state *self) {
 
     renderstate_set_program(rs, SHADER_TEXTURE_2D);
     matrix_orthographic_projection(rs->modelview, rs->draw_orthographic, rs->modelviewprojection, c->x, c->y);
-    renderbuffer *images = rs->draw_images;
-    renderbuffer_zero(images);
-    render_image(images, 0, 0, 110, 128, 0, 0, 1, 1);
+    renderbuffer *draw_images = rs->draw_images;
+    renderbuffer_zero(draw_images);
+    render_image(draw_images, 0, 0, 110, 128, 0, 0, 1, 1);
+    render_image(draw_images, 110 * 2, 0, 110, 128, 0, 0, 1, 1);
     renderstate_set_mvp(rs, rs->modelviewprojection);
     renderstate_set_texture(rs, TEXTURE_BARON);
-    graphics_update_and_draw(images);
+    graphics_update_and_draw(draw_images);
 
     graphics_bind_fbo(0);
     renderstate_set_program(rs, SHADER_SCREEN);

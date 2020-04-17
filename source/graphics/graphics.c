@@ -15,10 +15,12 @@ void graphics_update_fbo(framebuffer *f) {
 
 void graphics_update_vao(renderbuffer *b, GLuint draw_type) {
     glBindVertexArray(b->vao);
+
     glBindBuffer(GL_ARRAY_BUFFER, b->vbo);
-    glBufferData(GL_ARRAY_BUFFER, b->vertex_size, b->vertices, draw_type);
+    glBufferData(GL_ARRAY_BUFFER, b->vertex_pos * sizeof(GLfloat), b->vertices, draw_type);
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, b->index_size, b->indices, draw_type);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, b->index_pos * sizeof(GLuint), b->indices, draw_type);
 }
 
 void graphics_framebuffer_resize(framebuffer *f, int width, int height) {
@@ -127,6 +129,17 @@ void graphics_make_vao(renderbuffer *b) {
     b->vbo = vbo;
     b->ebo = ebo;
 
+    if (b->map_buffer_range) {
+
+        GLbitfield bits = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+
+        glBufferStorage(GL_ARRAY_BUFFER, b->vertex_size, 0, bits);
+        glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, b->index_size, 0, bits);
+
+        b->vertices = glMapBufferRange(GL_ARRAY_BUFFER, 0, b->vertex_size, bits);
+        b->indices = glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, b->index_size, bits);
+    }
+
     graphics_bind_vao_attributes(b->position, b->color, b->texture);
 }
 
@@ -156,11 +169,17 @@ void graphics_draw_range(void *start, GLsizei count) {
 }
 
 void graphics_bind_and_draw(renderbuffer *b) {
+    if (b->index_offset == 0) {
+        return;
+    }
     glBindVertexArray(b->vao);
     glDrawElements(GL_TRIANGLES, b->index_pos, GL_UNSIGNED_INT, 0);
 }
 
 void graphics_update_and_draw(renderbuffer *b) {
+    if (b->index_offset == 0) {
+        return;
+    }
     graphics_update_vao(b, GL_DYNAMIC_DRAW);
     glDrawElements(GL_TRIANGLES, b->index_pos, GL_UNSIGNED_INT, 0);
 }

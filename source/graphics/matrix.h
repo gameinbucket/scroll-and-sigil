@@ -2,7 +2,9 @@
 #define MATRIX_H
 
 #include <math.h>
+#include <stdio.h>
 
+void matrix_print(float *matrix);
 void matrix_identity(float *matrix);
 void matrix_orthographic(float *matrix, float left, float right, float bottom, float top, float near, float far);
 void matrix_frustum(float *matrix, float left, float right, float bottom, float top, float near, float far);

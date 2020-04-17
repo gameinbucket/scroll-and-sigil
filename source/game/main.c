@@ -80,12 +80,12 @@ renderstate *renderstate_settings() {
     rs->canvas_width = SCREEN_WIDTH;
     rs->canvas_height = SCREEN_HEIGHT;
 
-    rs->screen = renderbuffer_init(2, 0, 0, 4, 6);
-    rs->frame_screen = renderbuffer_init(2, 0, 0, 4, 6);
-    rs->draw_images = renderbuffer_init(2, 0, 2, 40, 60);
-    rs->draw_colors = renderbuffer_init(2, 3, 0, 40, 60);
-    rs->draw_sectors = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200);
-    rs->draw_sprites = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200);
+    rs->screen = renderbuffer_init(2, 0, 0, 4, 6, false);
+    rs->frame_screen = renderbuffer_init(2, 0, 0, 4, 6, false);
+    rs->draw_images = renderbuffer_init(2, 0, 2, 40, 60, true);
+    rs->draw_colors = renderbuffer_init(2, 3, 0, 40, 60, true);
+    rs->draw_sectors = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200, true);
+    rs->draw_sprites = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200, true);
 
     graphics_make_vao(rs->screen);
     graphics_make_vao(rs->frame_screen);

@@ -1,5 +1,13 @@
 #include "matrix.h"
 
+void matrix_print(float *matrix) {
+    printf("[");
+    for (int i = 0; i < 15; i++) {
+        printf("%f, ", matrix[i]);
+    }
+    printf("%f]\n", matrix[15]);
+}
+
 void matrix_identity(float *matrix) {
 
     matrix[0] = 1.0;
@@ -302,7 +310,7 @@ void matrix_perspective_projection(float *mv, float *perspective, float *mvp, fl
     if (ry != 0.0) {
         float sine = sin(ry);
         float cosine = cos(ry);
-        matrix_rotate_x(mv, sine, cosine);
+        matrix_rotate_y(mv, sine, cosine);
     }
     matrix_translate(mv, x, y, z);
     matrix_multiply(mvp, perspective, mv);

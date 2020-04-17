@@ -101,21 +101,25 @@ void world_render(renderstate *rs, world *w, camera *c) {
     renderstate_set_program(rs, SHADER_TEXTURE_3D);
     renderstate_set_mvp(rs, rs->modelviewprojection);
 
-    renderstate_set_texture(rs, TEXTURE_BARON);
     renderbuffer *draw_sprites = rs->draw_sprites;
     renderbuffer_zero(draw_sprites);
+
     for (int i = 0; i < w->thing_count; i++) {
         thing_render(draw_sprites, w->things[i], c->x, c->z);
     }
+
+    renderstate_set_texture(rs, TEXTURE_BARON);
     graphics_update_and_draw(draw_sprites);
 
-    renderstate_set_texture(rs, TEXTURE_PLANK);
     renderbuffer *draw_sectors = rs->draw_sectors;
     renderbuffer_zero(draw_sectors);
+
     int sector_count = w->sector_count;
     sector **sectors = w->sectors;
     for (int i = 0; i < sector_count; i++) {
         sector_render(draw_sectors, sectors[i]);
     }
-    graphics_update_and_draw(rs->draw_sectors);
+
+    renderstate_set_texture(rs, TEXTURE_PLANK);
+    graphics_update_and_draw(draw_sectors);
 }
