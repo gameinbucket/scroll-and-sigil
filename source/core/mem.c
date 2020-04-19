@@ -26,3 +26,9 @@ void *safe_realloc(void *mem, size_t size) {
     fprintf(stderr, "realloc failed.\n");
     exit(1);
 }
+
+void *safe_box(void *stack_struct, size_t size) {
+    void *mem = safe_malloc(size);
+    memcpy(mem, stack_struct, size);
+    return mem;
+}

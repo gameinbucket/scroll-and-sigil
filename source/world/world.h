@@ -7,6 +7,11 @@
 #include "things/hero.h"
 #include "things/thing.h"
 
+#include "cell.h"
+
+#define WORLD_SCALE 1.0f
+#define WORLD_CELL_SHIFT 5
+
 typedef struct world world;
 
 struct world {
@@ -17,6 +22,10 @@ struct world {
     sector **sectors;
     int sector_cap;
     int sector_count;
+    cell *cells;
+    int cell_columns;
+    int cell_rows;
+    int cell_count;
 };
 
 world *world_init();

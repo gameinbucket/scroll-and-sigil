@@ -1,42 +1,54 @@
 #include "array.h"
 
-array *array_init_with_capacity(unsigned int length, unsigned int capacity) {
-    array *a = safe_malloc(sizeof(array));
+bool find_address(void *item, void *has) {
+    return item == has;
+}
+
+void array_init_with_capacity(array *self, unsigned int length, unsigned int capacity) {
     if (capacity == 0) {
-        a->items = NULL;
+        self->items = NULL;
     } else {
-        a->items = safe_calloc(capacity, sizeof(void *));
+        self->items = safe_calloc(capacity, sizeof(void *));
     }
-    a->length = length;
-    a->capacity = capacity;
-    return a;
+    self->length = length;
+    self->capacity = capacity;
 }
 
-array *array_init(unsigned int length) {
-    return array_init_with_capacity(length, length);
+void array_init(array *self, unsigned int length) {
+    array_init_with_capacity(self, length, length);
 }
 
-array *array_init_with_items(unsigned int length, unsigned int capacity, void **items) {
-    array *a = safe_malloc(sizeof(array));
-    a->items = items;
-    a->length = length;
-    a->capacity = capacity;
-    return a;
+array *new_array_with_capacity(unsigned int length, unsigned int capacity) {
+    array *self = safe_malloc(sizeof(array));
+    array_init_with_capacity(self, length, capacity);
+    return self;
 }
 
-void **array_copy(array *self) {
+array *new_array(unsigned int length) {
+    return new_array_with_capacity(length, length);
+}
+
+array *new_array_with_items(unsigned int length, unsigned int capacity, void **items) {
+    array *self = safe_malloc(sizeof(array));
+    self->items = items;
+    self->length = length;
+    self->capacity = capacity;
+    return self;
+}
+
+void **array_copy_items(array *self) {
     size_t size = self->length * sizeof(void *);
     void **copy = safe_malloc(size);
     memcpy(copy, self->items, size);
     return copy;
 }
 
-array *array_init_copy(array *self) {
-    array *a = safe_malloc(sizeof(array));
-    a->items = array_copy(self);
-    a->length = self->length;
-    a->capacity = self->length;
-    return a;
+array *new_array_copy(array *from) {
+    array *self = safe_malloc(sizeof(array));
+    self->items = array_copy_items(from);
+    self->length = from->length;
+    self->capacity = from->length;
+    return self;
 }
 
 static void update_capacity(array *self, unsigned int length) {
@@ -152,7 +164,11 @@ unsigned int array_size(array *self) {
     return self->length;
 }
 
-void array_free(array *self) {
+void release_array(array *self) {
     free(self->items);
+}
+
+void destroy_array(array *self) {
+    release_array(self);
     free(self);
 }

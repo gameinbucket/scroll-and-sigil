@@ -7,4 +7,6 @@
 #define and &&
 #define or ||
 
+#define UNUSED __attribute__((unused))
+
 #endif

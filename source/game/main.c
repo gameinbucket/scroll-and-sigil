@@ -165,7 +165,7 @@ int main() {
     renderstate *rs = renderstate_settings();
 
     world *w = world_init();
-    wad_load_map(w);
+    wad_load_map(rs, w);
     world_build_map(w);
 
     state *s = state_init(w, rs);

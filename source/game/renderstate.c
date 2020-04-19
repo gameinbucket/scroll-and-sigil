@@ -20,10 +20,6 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
 
     if (self->frame == NULL) {
 
-#ifdef RENDER_STATE_DEBUG
-        printf("render state initial resize\n");
-#endif
-
         int textures = 1;
 
         GLint *internal = safe_malloc(sizeof(GLint) * textures);
@@ -55,26 +51,14 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
 
 void renderstate_set_mvp(renderstate *self, float *mvp) {
     glUniformMatrix4fv(self->active_shader->u_mvp, 1, GL_FALSE, mvp);
-
-#ifdef RENDER_STATE_DEBUG
-    printf("render state set model view projection := %d\n", self->active_shader->u_mvp);
-#endif
 }
 
 void renderstate_set_program(renderstate *self, int shader_index) {
     shader *s = self->shaders[shader_index];
     self->active_shader = s;
     glUseProgram(s->id);
-
-#ifdef RENDER_STATE_DEBUG
-    printf("render state use program := %d\n", s->id);
-#endif
 }
 
 void renderstate_set_texture(renderstate *self, int texture_index) {
     graphics_bind_texture(GL_TEXTURE0, self->textures[texture_index]->id);
-
-#ifdef RENDER_STATE_DEBUG
-    printf("render state bind texture := %d\n", self->textures[texture_index]->id);
-#endif
 }

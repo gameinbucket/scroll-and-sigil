@@ -14,8 +14,8 @@ struct polygon_vertex {
 static polygon_vertex *polygon_vertex_init(vec *v) {
     polygon_vertex *p = safe_calloc(1, sizeof(polygon_vertex));
     p->point = v;
-    p->last = array_init(0);
-    p->next = array_init(0);
+    p->last = new_array(0);
+    p->next = new_array(0);
     return p;
 }
 
@@ -37,10 +37,6 @@ static double interior_angle(vec *a, vec *b, vec *c) {
     return interior;
 }
 
-static bool find_address(void *item, void *has) {
-    return item == has;
-}
-
 static bool find_vertex(void *item, void *has) {
     vec *original = ((polygon_vertex *)item)->point;
     vec *v = has;
@@ -58,16 +54,16 @@ static int compare_vertex(void *item, void *existing) {
 
 static void clean_population(array *points) {
 
-    array *remaining = array_init_copy(points);
+    array *remaining = new_array_copy(points);
 
     while (array_not_empty(remaining)) {
 
         polygon_vertex *start = remaining->items[0];
         polygon_vertex *current = start;
 
-        array *temp = array_init(0);
-        array *dead = array_init(0);
-        array *pending = array_init(0);
+        array *temp = new_array(0);
+        array *dead = new_array(0);
+        array *pending = new_array(0);
 
         do {
             current->perimeter = true;
@@ -209,7 +205,7 @@ static void populate_with_vectors(array *points, sector *sec) {
 }
 
 static array *populate(sector *sec, bool floor) {
-    array *points = array_init(0);
+    array *points = new_array(0);
 
     printf("populate\n");
 
@@ -219,11 +215,11 @@ static array *populate(sector *sec, bool floor) {
     for (int i = 0; i < inside_count; i++) {
         sector *inner = inside[i];
         if (floor) {
-            if (!inner->has_floor) {
+            if (sector_has_floor(inner) == false) {
                 continue;
             }
         } else {
-            if (!inner->has_ceil) {
+            if (sector_has_ceiling(inner) == false) {
                 continue;
             }
         }
@@ -234,11 +230,11 @@ static array *populate(sector *sec, bool floor) {
     for (int i = 0; i < inside_count; i++) {
         sector *inner = inside[i];
         if (floor) {
-            if (!inner->has_floor) {
+            if (sector_has_floor(inner) == false) {
                 continue;
             }
         } else {
-            if (!inner->has_ceil) {
+            if (sector_has_ceiling(inner) == false) {
                 continue;
             }
         }
@@ -340,7 +336,7 @@ static void clip(array *vecs, sector *sec, bool floor, array *triangles, float s
                 vec a = vec_of(next);
                 vec b = vec_of(pos);
                 vec c = vec_of(last);
-                tri = triangle_init(sec->ceil, sec->ceil_texture, a, b, c, floor, scale);
+                tri = triangle_init(sec->ceiling, sec->ceiling_texture, a, b, c, floor, scale);
             }
 
             array_push(triangles, tri);
@@ -367,15 +363,15 @@ static void clip(array *vecs, sector *sec, bool floor, array *triangles, float s
         vec a = vec_of(vecs->items[2]);
         vec b = vec_of(vecs->items[1]);
         vec c = vec_of(vecs->items[0]);
-        tri = triangle_init(sec->ceil, sec->ceil_texture, a, b, c, floor, scale);
+        tri = triangle_init(sec->ceiling, sec->ceiling_texture, a, b, c, floor, scale);
     }
     array_push(triangles, tri);
 }
 
 static array *classify(array *points) {
-    array *start = array_init(0);
-    array *merge = array_init(0);
-    array *split = array_init(0);
+    array *start = new_array(0);
+    array *merge = new_array(0);
+    array *split = new_array(0);
 
     for (unsigned int i = 0; i < points->length; i++) {
         polygon_vertex *pos = points->items[i];
@@ -468,15 +464,15 @@ static array *classify(array *points) {
         array_push(diagonal->last, p);
     }
 
-    array_free(merge);
-    array_free(split);
+    destroy_array(merge);
+    destroy_array(split);
 
     return start;
 }
 
 static void iterate_clip(array *monotone, sector *sec, bool floor, array *triangles, float scale) {
     for (unsigned int i = 0; i < monotone->length; i++) {
-        array *vecs = array_init(0);
+        array *vecs = new_array(0);
         polygon_vertex *ini = monotone->items[i];
         polygon_vertex *nex = ini->next->items[0];
         polygon_vertex *pos = ini;
@@ -526,11 +522,11 @@ static void iterate_clip(array *monotone, sector *sec, bool floor, array *triang
 
 static void build(sector *sec, bool floor, array *triangles, float scale) {
     if (floor) {
-        if (sec->floor_texture == -1) {
+        if (sector_has_floor(sec) == false) {
             return;
         }
     } else {
-        if (sec->ceil_texture == -1) {
+        if (sector_has_ceiling(sec) == false) {
             return;
         }
     }
@@ -551,15 +547,15 @@ static void build(sector *sec, bool floor, array *triangles, float scale) {
 
     printf("triangle count %d\n", array_size(triangles));
 
-    array_free(points);
-    array_free(monotone);
+    destroy_array(points);
+    destroy_array(monotone);
 }
 
 void triangulate_sector(sector *sec, float scale) {
-    array *ls = array_init(0);
+    array *ls = new_array(0);
     build(sec, true, ls, scale);
     build(sec, false, ls, scale);
-    sec->triangles = (triangle **)array_copy(ls);
+    sec->triangles = (triangle **)array_copy_items(ls);
     sec->triangle_count = ls->length;
-    array_free(ls);
+    destroy_array(ls);
 }

@@ -5,8 +5,9 @@ state *state_init(world *w, renderstate *rs) {
     s->w = w;
     s->rs = rs;
     s->c = camera_init();
-    s->c->x = 10;
-    s->c->z = 40;
+    s->c->x = 0; // 10;
+    s->c->y = 0; // 1;
+    s->c->z = 0; // 40;
     return s;
 }
 
@@ -15,12 +16,24 @@ void state_update(state *self) {
 
     input in = self->in;
 
+    float speed = 0.1f;
+
+    float r = self->c->ry;
+
+    float dx = 0;
+    float dy = 0;
+    float dz = 0;
+
+    const float MAXSPEED = 0.5f;
+
     if (in.move_forward) {
-        self->c->x -= 0.1;
+        dx += sinf(r) * speed;
+        dz -= cosf(r) * speed;
     }
 
     if (in.move_backward) {
-        self->c->x += 0.1;
+        dx -= sinf(r) * speed * 0.5f;
+        dz += cosf(r) * speed * 0.5f;
     }
 
     if (in.move_up) {
@@ -32,28 +45,58 @@ void state_update(state *self) {
     }
 
     if (in.move_left) {
-        self->c->z -= 0.1;
+        dx -= cosf(r) * speed * 0.75f;
+        dz -= sinf(r) * speed * 0.75f;
     }
 
     if (in.move_right) {
-        self->c->z += 0.1;
+        dx += cosf(r) * speed * 0.75f;
+        dz += sinf(r) * speed * 0.75f;
+    }
+
+    if (dx > MAXSPEED) {
+        dx = MAXSPEED;
+    } else if (dx < -MAXSPEED) {
+        dx = -MAXSPEED;
+    }
+
+    if (dy > MAXSPEED) {
+        dy = MAXSPEED;
+    } else if (dy < -MAXSPEED) {
+        dy = -MAXSPEED;
     }
 
     if (in.look_left) {
-        self->c->rx -= 0.05;
+        self->c->ry -= 0.05;
+        if (self->c->ry < 0) {
+            self->c->ry += FLOAT_MATH_TAU;
+        }
     }
 
     if (in.look_right) {
-        self->c->rx += 0.05;
+        self->c->ry += 0.05;
+        if (self->c->ry >= FLOAT_MATH_TAU) {
+            self->c->ry -= FLOAT_MATH_TAU;
+        }
     }
 
     if (in.look_up) {
-        self->c->ry -= 0.05;
+        self->c->rx -= 0.05;
+        if (self->c->rx < 0) {
+            self->c->rx += FLOAT_MATH_TAU;
+        }
     }
 
     if (in.look_down) {
-        self->c->ry += 0.05;
+        self->c->rx += 0.05;
+        if (self->c->rx >= FLOAT_MATH_TAU) {
+            self->c->rx -= FLOAT_MATH_TAU;
+        }
     }
+
+    self->c->x += dx;
+    self->c->y += dy;
+    self->c->z += dz;
 }
 
 void state_render(state *self) {
@@ -63,11 +106,14 @@ void state_render(state *self) {
 
     framebuffer *f = rs->frame;
 
-    graphics_bind_fbo(f->fbo);
+    graphics_bind_fbo(0);
+    // graphics_bind_fbo(f->fbo);
     graphics_set_view(0, 0, f->width, f->height);
     graphics_clear_color_and_depth();
 
     // 3d
+
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     graphics_enable_cull();
     graphics_enable_depth();
@@ -75,6 +121,47 @@ void state_render(state *self) {
     matrix_perspective_projection(rs->modelview, rs->draw_perspective, rs->modelviewprojection, c->x, c->y, c->z, c->rx, c->ry);
 
     world_render(rs, self->w, c);
+
+    // renderstate_set_program(rs, SHADER_TEXTURE_3D);
+    // renderstate_set_mvp(rs, rs->modelviewprojection);
+
+    // renderbuffer *b = rs->draw_sectors;
+
+    // renderbuffer *draw_sectors = rs->draw_sectors;
+    // renderbuffer_zero(draw_sectors);
+
+    // int pos = b->vertex_pos;
+    // GLfloat *vertices = b->vertices;
+
+    // vertices[pos] = 0;
+    // vertices[pos + 1] = -1;
+    // vertices[pos + 2] = 0;
+    // vertices[pos + 3] = 0;
+    // vertices[pos + 4] = 0;
+
+    // vertices[pos + 5] = 10;
+    // vertices[pos + 6] = -1;
+    // vertices[pos + 7] = 0;
+    // vertices[pos + 8] = 1;
+    // vertices[pos + 9] = 0;
+
+    // vertices[pos + 10] = 10;
+    // vertices[pos + 11] = -1;
+    // vertices[pos + 12] = 10;
+    // vertices[pos + 13] = 1;
+    // vertices[pos + 14] = 1;
+
+    // vertices[pos + 15] = 0;
+    // vertices[pos + 16] = -1;
+    // vertices[pos + 17] = 10;
+    // vertices[pos + 18] = 0;
+    // vertices[pos + 19] = 1;
+
+    // b->vertex_pos = pos + 20;
+    // render_index4(b);
+
+    // renderstate_set_texture(rs, TEXTURE_PLANK);
+    // graphics_update_and_draw(b);
 
     graphics_disable_cull();
     graphics_disable_depth();
@@ -91,11 +178,11 @@ void state_render(state *self) {
     renderstate_set_texture(rs, TEXTURE_BARON);
     graphics_update_and_draw(draw_images);
 
-    graphics_bind_fbo(0);
-    renderstate_set_program(rs, SHADER_SCREEN);
-    graphics_set_view(0, 0, rs->canvas_width, rs->canvas_height);
-    matrix_orthographic_projection(rs->modelview, rs->canvas_orthographic, rs->modelviewprojection, 0, 0);
-    renderstate_set_mvp(rs, rs->modelviewprojection);
-    graphics_bind_texture(GL_TEXTURE0, f->textures[0]);
-    graphics_bind_and_draw(rs->screen);
+    // graphics_bind_fbo(0);
+    // renderstate_set_program(rs, SHADER_SCREEN);
+    // graphics_set_view(0, 0, rs->canvas_width, rs->canvas_height);
+    // matrix_orthographic_projection(rs->modelview, rs->canvas_orthographic, rs->modelviewprojection, 0, 0);
+    // renderstate_set_mvp(rs, rs->modelviewprojection);
+    // graphics_bind_texture(GL_TEXTURE0, f->textures[0]);
+    // graphics_bind_and_draw(rs->screen);
 }

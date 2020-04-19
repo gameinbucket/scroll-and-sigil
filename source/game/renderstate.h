@@ -1,8 +1,6 @@
 #ifndef RENDER_STATE_H
 #define RENDER_STATE_H
 
-// #define RENDER_STATE_DEBUG
-
 #include <GL/glew.h>
 
 #include <GL/gl.h>
@@ -23,6 +21,8 @@
 #include "graphics/renderbuffer.h"
 #include "graphics/shader.h"
 #include "graphics/texture.h"
+
+typedef struct renderstate renderstate;
 
 struct renderstate {
     int canvas_width;
@@ -47,8 +47,6 @@ struct renderstate {
     texture **textures;
     shader *active_shader;
 };
-
-typedef struct renderstate renderstate;
 
 renderstate *renderstate_init();
 void renderstate_resize(renderstate *self, int screen_width, int screen_height);

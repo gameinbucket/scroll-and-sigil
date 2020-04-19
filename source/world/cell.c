@@ -1,10 +1,5 @@
 #include "cell.h"
 
-cell *cell_init() {
-    cell *c = safe_calloc(1, sizeof(cell));
-    return c;
-}
-
 void cell_add_line(cell *self, line *ld) {
     if (self->line_count == 0) {
         self->lines = safe_malloc(sizeof(line *));

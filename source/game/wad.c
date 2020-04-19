@@ -13,9 +13,9 @@ void wad_load_resources(renderstate *rs) {
     rs->textures[TEXTURE_PLANK] = texture_make("textures/plank-floor.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
 }
 
-void wad_load_map(world *w) {
+void wad_load_map(renderstate *rs, world *w) {
 
-    place_flat(w);
+    place_flat(rs, w);
 
     hero *h = hero_init();
     world_add_thing(w, &h->super);

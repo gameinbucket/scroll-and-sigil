@@ -16,7 +16,7 @@ line *line_init(vec va, vec vb, int low, int mid, int top) {
     return ld;
 }
 
-void line_set(line *self, sector *plus, sector *minus) {
+void line_set_sectors(line *self, sector *plus, sector *minus) {
     self->plus = plus;
     self->minus = minus;
     float x = self->va.y - self->vb.y;

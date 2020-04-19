@@ -15,23 +15,37 @@ struct array {
     unsigned int capacity;
 };
 
-array *array_init_with_capacity(unsigned int length, unsigned int capacity);
-array *array_init(unsigned int length);
-array *array_init_with_items(unsigned int length, unsigned int capacity, void **items);
-void **array_copy(array *self);
-array *array_init_copy(array *self);
+bool find_address(void *item, void *has);
+
+void array_init_with_capacity(array *self, unsigned int length, unsigned int capacity);
+void array_init(array *self, unsigned int length);
+
+array *new_array_with_capacity(unsigned int length, unsigned int capacity);
+array *new_array(unsigned int length);
+array *new_array_with_items(unsigned int length, unsigned int capacity, void **items);
+
+void **array_copy_items(array *self);
+array *new_array_copy(array *self);
+
 void array_push(array *self, void *item);
 void array_insert(array *self, unsigned int index, void *item);
 void array_insert_sort(array *self, int (*compare)(void *, void *), void *item);
+
 void *array_find(array *self, bool(find)(void *, void *), void *has);
 void *array_get(array *self, unsigned int index);
+
 void *array_pop(array *self);
 void array_remove(array *self, void *item);
 void array_remove_index(array *self, unsigned int index);
+
 void array_clear(array *self);
+
 bool array_is_empty(array *self);
 bool array_not_empty(array *self);
+
 unsigned int array_size(array *self);
-void array_free(array *self);
+
+void release_array(array *self);
+void destroy_array(array *self);
 
 #endif

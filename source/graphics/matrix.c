@@ -217,15 +217,28 @@ void matrix_rotate_z(float *matrix, float sine, float cosine) {
 void matrix_inverse(float *matrix, float *from) {
 
     float src[16];
-    float dst[16];
-    float tmp[16];
 
-    for (int i = 0; i < 4; i++) {
-        src[i + 0] = from[i * 4 + 0];
-        src[i + 4] = from[i * 4 + 1];
-        src[i + 8] = from[i * 4 + 2];
-        src[i + 12] = from[i * 4 + 3];
-    }
+    src[0] = from[0];
+    src[4] = from[1];
+    src[8] = from[2];
+    src[12] = from[3];
+
+    src[1] = from[4];
+    src[5] = from[5];
+    src[9] = from[6];
+    src[13] = from[7];
+
+    src[2] = from[8];
+    src[6] = from[9];
+    src[10] = from[10];
+    src[14] = from[11];
+
+    src[3] = from[12];
+    src[7] = from[13];
+    src[11] = from[14];
+    src[15] = from[15];
+
+    float tmp[16];
 
     tmp[0] = src[10] * src[15];
     tmp[1] = src[11] * src[14];
@@ -239,6 +252,8 @@ void matrix_inverse(float *matrix, float *from) {
     tmp[9] = src[10] * src[12];
     tmp[10] = src[8] * src[13];
     tmp[11] = src[9] * src[12];
+
+    float dst[16];
 
     dst[0] = tmp[0] * src[5] + tmp[3] * src[6] + tmp[4] * src[7];
     dst[0] -= tmp[1] * src[5] + tmp[2] * src[6] + tmp[5] * src[7];
@@ -302,16 +317,8 @@ void matrix_orthographic_projection(float *mv, float *orthographic, float *mvp, 
 
 void matrix_perspective_projection(float *mv, float *perspective, float *mvp, float x, float y, float z, float rx, float ry) {
     matrix_identity(mv);
-    if (rx != 0.0) {
-        float sine = sin(rx);
-        float cosine = cos(rx);
-        matrix_rotate_x(mv, sine, cosine);
-    }
-    if (ry != 0.0) {
-        float sine = sin(ry);
-        float cosine = cos(ry);
-        matrix_rotate_y(mv, sine, cosine);
-    }
+    matrix_rotate_x(mv, sinf(rx), cosf(rx));
+    matrix_rotate_y(mv, sinf(ry), cosf(ry));
     matrix_translate(mv, x, y, z);
     matrix_multiply(mvp, perspective, mv);
 }

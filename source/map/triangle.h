@@ -15,9 +15,12 @@ struct triangle {
     vec va;
     vec vb;
     vec vc;
-    vec uv1;
-    vec uv2;
-    vec uv3;
+    float u1;
+    float v1;
+    float u2;
+    float v2;
+    float u3;
+    float v3;
     float normal;
 };
 

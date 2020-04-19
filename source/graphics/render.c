@@ -7,8 +7,8 @@ void render_index3(renderbuffer *b) {
     indices[pos] = offset;
     indices[pos + 1] = offset + 1;
     indices[pos + 2] = offset + 2;
-    b->index_pos += 3;
-    b->index_offset += 3;
+    b->index_pos = pos + 3;
+    b->index_offset = offset + 3;
 }
 
 void render_index4(renderbuffer *b) {
@@ -21,8 +21,8 @@ void render_index4(renderbuffer *b) {
     indices[pos + 3] = offset + 2;
     indices[pos + 4] = offset + 3;
     indices[pos + 5] = offset;
-    b->index_pos += 6;
-    b->index_offset += 4;
+    b->index_pos = pos + 6;
+    b->index_offset = offset + 4;
 }
 
 void render_screen(renderbuffer *b, float x, float y, float width, float height) {
@@ -36,7 +36,7 @@ void render_screen(renderbuffer *b, float x, float y, float width, float height)
     vertices[pos + 5] = y + height;
     vertices[pos + 6] = x;
     vertices[pos + 7] = y + height;
-    b->vertex_pos += 8;
+    b->vertex_pos = pos + 8;
     render_index4(b);
 }
 
@@ -64,7 +64,7 @@ void render_image(renderbuffer *b, float x, float y, float width, float height, 
     vertices[pos + 14] = left;
     vertices[pos + 15] = top;
 
-    b->vertex_pos += 16;
+    b->vertex_pos = pos + 16;
     render_index4(b);
 }
 
@@ -96,7 +96,7 @@ void render_rectangle(renderbuffer *b, float x, float y, float width, float heig
     vertices[pos + 18] = green;
     vertices[pos + 19] = blue;
 
-    b->vertex_pos += 20;
+    b->vertex_pos = pos + 20;
     render_index4(b);
 }
 
@@ -131,7 +131,7 @@ void render_sprite3d(renderbuffer *b, float x, float y, float z, float sine, flo
     vertices[pos + 18] = s->left;
     vertices[pos + 19] = s->top;
 
-    b->vertex_pos += 20;
+    b->vertex_pos = pos + 20;
     render_index4(b);
 }
 
@@ -175,6 +175,6 @@ void render_cube_positive_x(renderbuffer *b, float x, float y, float z, float *c
     vertices[pos + 30] = texture[0];
     vertices[pos + 31] = texture[3];
 
-    b->vertex_pos += 32;
+    b->vertex_pos = pos + 32;
     render_index4(b);
 }

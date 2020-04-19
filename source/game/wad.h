@@ -21,6 +21,6 @@
 
 void wad_load_resources(renderstate *rs);
 
-void wad_load_map(world *w);
+void wad_load_map(renderstate *rs, world *w);
 
 #endif

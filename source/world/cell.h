@@ -16,7 +16,6 @@ struct cell {
     int thing_count;
 };
 
-cell *cell_init();
 void cell_add_line(cell *self, line *ld);
 void cell_add_thing(cell *self, thing *t);
 void cell_remove_thing(cell *self, thing *t);

@@ -169,7 +169,7 @@ void graphics_draw_range(void *start, GLsizei count) {
 }
 
 void graphics_bind_and_draw(renderbuffer *b) {
-    if (b->index_offset == 0) {
+    if (b->index_pos == 0) {
         return;
     }
     glBindVertexArray(b->vao);
@@ -177,7 +177,7 @@ void graphics_bind_and_draw(renderbuffer *b) {
 }
 
 void graphics_update_and_draw(renderbuffer *b) {
-    if (b->index_offset == 0) {
+    if (b->index_pos == 0) {
         return;
     }
     graphics_update_vao(b, GL_DYNAMIC_DRAW);

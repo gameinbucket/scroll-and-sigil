@@ -2,7 +2,7 @@
 
 int sector_unique_index = 0;
 
-sector *sector_init(vec **vecs, int vec_count, line **lines, int line_count) {
+sector *sector_init(vec **vecs, int vec_count, line **lines, int line_count, float bottom, float floor, float ceiling, float top, int floor_texture, int ceiling_texture) {
     int index = sector_unique_index;
     sector_unique_index++;
     sector *s = safe_calloc(1, sizeof(sector));
@@ -11,6 +11,12 @@ sector *sector_init(vec **vecs, int vec_count, line **lines, int line_count) {
     s->vec_count = vec_count;
     s->lines = lines;
     s->line_count = line_count;
+    s->bottom = bottom;
+    s->floor = floor;
+    s->ceiling = ceiling;
+    s->top = top;
+    s->floor_texture = floor_texture;
+    s->ceiling_texture = ceiling_texture;
     return s;
 }
 
@@ -45,4 +51,12 @@ sector *sector_find(sector *self, float x, float y) {
         }
     }
     return self;
+}
+
+bool sector_has_floor(sector *self) {
+    return self->floor_texture != SECTOR_NO_SURFACE;
+}
+
+bool sector_has_ceiling(sector *self) {
+    return self->ceiling_texture != SECTOR_NO_SURFACE;
 }
