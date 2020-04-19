@@ -1,69 +1,150 @@
 #include "table.h"
 
-uint64_t table_address_hashcode(void *key) {
-    return (uint64_t)key;
+static const float LOAD_FACTOR = 0.80;
+
+static const unsigned int INITIAL_BINS = 1 << 3;
+
+static const unsigned int MAXIMUM_BINS = 1 << 30;
+
+bool table_string_equal(void *a, void *b) {
+    return strcmp(a, b) == 0;
 }
 
-uint64_t table_string_hashcode(void *key) {
+unsigned long table_string_hashcode(void *key) {
     char *str_key = key;
-    int pos = 0;
     int length = strlen(str_key);
-    uint64_t value = 0;
-    while (pos < length) {
-        value = (value << (uint64_t)8) + (uint64_t)str_key[pos];
-        pos += 1;
+    unsigned long hash = 0;
+    for (int i = 0; i < length; i++) {
+        hash = 31 * hash + (unsigned long)str_key[i];
     }
-    return value;
+    return hash;
 }
 
-table *new_table(uint64_t (*hashcode_fn)(void *)) {
-    table *h = safe_malloc(sizeof(table));
-    h->size = 0;
-    h->capacity = 12;
-    h->hashcode_fn = hashcode_fn;
-    h->table = slice_init(sizeof(table_item *), 0, 12);
-    return h;
+bool table_address_equal(void *a, void *b) {
+    return a == b;
 }
 
-static int get_bin(table *self, uint64_t code) {
-    return code % self->capacity;
+unsigned long table_address_hashcode(void *key) {
+    return (unsigned long)key;
+}
+
+table *new_table(bool (*equals_fn)(void *, void *), unsigned long (*hashcode_fn)(void *)) {
+    table *self = safe_malloc(sizeof(table));
+    self->equals_fn = equals_fn;
+    self->hashcode_fn = hashcode_fn;
+    self->size = 0;
+    self->bins = INITIAL_BINS;
+    self->items = safe_calloc(self->bins, sizeof(table_item *));
+    return self;
+}
+
+static unsigned int get_bin(table *self, unsigned long hash) {
+    return (self->bins - 1) & hash;
+}
+
+static unsigned long hash_mix(unsigned long hash) {
+    return hash ^ (hash >> 16);
+}
+
+static void resize(table *self) {
+
+    unsigned int old_bins = self->bins;
+    unsigned int bins = old_bins << 1;
+
+    if (bins > MAXIMUM_BINS) {
+        return;
+    }
+
+    table_item **old_items = self->items;
+    table_item **items = safe_calloc(bins, sizeof(table_item *));
+
+    for (unsigned int i = 0; i < old_bins; i++) {
+        table_item *item = old_items[i];
+        if (item == NULL) {
+            continue;
+        }
+        if (item->next == NULL) {
+            items[(bins - 1) & item->hash] = item;
+        } else {
+            table_item *low_head = NULL;
+            table_item *low_tail = NULL;
+            table_item *high_head = NULL;
+            table_item *high_tail = NULL;
+            do {
+                if ((old_bins & item->hash) == 0) {
+                    if (low_tail == NULL) {
+                        low_head = item;
+                    } else {
+                        low_tail->next = item;
+                    }
+                    low_tail = item;
+                } else {
+                    if (high_tail == NULL) {
+                        high_head = item;
+                    } else {
+                        high_tail->next = item;
+                    }
+                    high_tail = item;
+                }
+                item = item->next;
+            } while (item != NULL);
+
+            if (low_tail != NULL) {
+                low_tail->next = NULL;
+                items[i] = low_head;
+            }
+
+            if (high_tail != NULL) {
+                high_tail->next = NULL;
+                items[i + old_bins] = high_head;
+            }
+        }
+    }
+
+    free(old_items);
+
+    self->bins = bins;
+    self->items = items;
 }
 
 void table_put(table *self, void *key, void *value) {
-    uint64_t code = (*self->hashcode_fn)(key);
-    int bin = get_bin(self, code);
-    table_item *element = self->table[bin];
+    unsigned long hash = hash_mix((*self->hashcode_fn)(key));
+    unsigned int bin = get_bin(self, hash);
+    table_item *item = self->items[bin];
     table_item *previous = NULL;
-    while (element != NULL) {
-        if (code == element->code) {
-            element->value = value;
+    while (item != NULL) {
+        if (hash == item->hash && self->equals_fn(key, item->key)) {
+            item->value = value;
             return;
         }
-        previous = element;
-        element = element->next;
+        previous = item;
+        item = item->next;
     }
-    table_item *item = safe_malloc(sizeof(table_item));
-    item->code = code;
+    item = safe_malloc(sizeof(table_item));
+    item->hash = hash;
     item->key = key;
     item->value = value;
     item->next = NULL;
     if (previous == NULL) {
-        self->table[bin] = item;
+        self->items[bin] = item;
     } else {
         previous->next = item;
     }
-    self->size += 1;
+    self->size++;
+    if (self->size >= self->bins * LOAD_FACTOR) {
+        resize(self);
+    }
 }
 
 void *table_get(table *self, void *key) {
-    uint64_t code = (*self->hashcode_fn)(key);
-    int bin = get_bin(self, code);
-    table_item *element = self->table[bin];
-    while (element != NULL) {
-        if (code == element->code) {
-            return element->value;
+    unsigned long hash = hash_mix((*self->hashcode_fn)(key));
+    unsigned int bin = get_bin(self, hash);
+    table_item *item = self->items[bin];
+    while (item != NULL) {
+        if (hash == item->hash && self->equals_fn(key, item->key)) {
+            return item->value;
         }
-        element = element->next;
+        item = item->next;
     }
     return NULL;
 }
@@ -73,30 +154,36 @@ bool table_has(table *self, void *key) {
 }
 
 void *table_remove(table *self, void *key) {
-    uint64_t code = (*self->hashcode_fn)(key);
-    int bin = get_bin(self, code);
-    table_item *element = self->table[bin];
+    unsigned long hash = hash_mix((*self->hashcode_fn)(key));
+    unsigned int bin = get_bin(self, hash);
+    table_item *item = self->items[bin];
     table_item *previous = NULL;
-    while (element != NULL) {
-        if (code == element->code) {
+    while (item != NULL) {
+        if (hash == item->hash && self->equals_fn(key, item->key)) {
             if (previous == NULL) {
-                self->table[bin] = element->next;
+                self->items[bin] = item->next;
             } else {
-                previous->next = element->next;
+                previous->next = item->next;
             }
             self->size -= 1;
-            return element->value;
+            return item->value;
         }
-        previous = element;
-        element = element->next;
+        previous = item;
+        item = item->next;
     }
     return NULL;
 }
 
 void table_clear(table *self) {
-    int size = slice_len(self->table);
-    for (int i = 0; i < size; i++) {
-        self->table[i] = NULL;
+    unsigned int bins = self->bins;
+    for (unsigned int i = 0; i < bins; i++) {
+        table_item *item = self->items[i];
+        while (item != NULL) {
+            table_item *next = item->next;
+            free(item);
+            item = next;
+        }
+        self->items[i] = NULL;
     }
     self->size = 0;
 }
@@ -114,7 +201,8 @@ unsigned int table_size(table *self) {
 }
 
 void release_table(table *self) {
-    free(self->table);
+    table_clear(self);
+    free(self->items);
 }
 
 void destroy_table(table *self) {

@@ -5,7 +5,11 @@ typedef struct {
     int value;
 } Integer;
 
-uint64_t integer_hashcode(void *key) {
+bool integer_equal(void *a, void *b) {
+    return ((Integer *)a)->value == ((Integer *)b)->value;
+}
+
+unsigned long integer_hashcode(void *key) {
     return ((Integer *)key)->value;
 }
 
@@ -18,7 +22,7 @@ static char *test_remove() {
     Integer k = {16};
     Integer n = {18};
 
-    table *tab = new_table(&table_string_hashcode);
+    table *tab = new_table(&table_string_equal, &table_string_hashcode);
 
     table_put(tab, x, &w);
     table_put(tab, y, &k);
@@ -44,7 +48,7 @@ static char *test_stress() {
     Integer *keys = safe_calloc(size, sizeof(Integer));
     Integer *values = safe_calloc(size, sizeof(Integer));
 
-    table *tab = new_table(&integer_hashcode);
+    table *tab = new_table(&integer_equal, &integer_hashcode);
 
     for (unsigned int i = 0; i < size; i++) {
         keys[i] = (Integer){i};
@@ -72,7 +76,7 @@ static char *test_string() {
     Integer k = {16};
     Integer n = {18};
 
-    table *tab = new_table(&table_string_hashcode);
+    table *tab = new_table(&table_string_equal, &table_string_hashcode);
 
     table_put(tab, x, &w);
     table_put(tab, y, &k);
@@ -96,7 +100,7 @@ static char *test_address() {
     Integer k = {16};
     Integer n = {18};
 
-    table *tab = new_table(&table_address_hashcode);
+    table *tab = new_table(&table_address_equal, &table_address_hashcode);
 
     table_put(tab, &x, &w);
     table_put(tab, &y, &k);

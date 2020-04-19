@@ -6,12 +6,11 @@
 #include <stdlib.h>
 
 #include "core/mem.h"
-#include "core/slice.h"
 
 typedef struct table_item table_item;
 
 struct table_item {
-    uint64_t code;
+    unsigned long hash;
     void *key;
     void *value;
     table_item *next;
@@ -20,16 +19,20 @@ struct table_item {
 typedef struct table table;
 
 struct table {
+    bool (*equals_fn)(void *, void *);
+    unsigned long (*hashcode_fn)(void *);
     unsigned int size;
-    unsigned int capacity;
-    uint64_t (*hashcode_fn)(void *);
-    table_item **table;
+    unsigned int bins;
+    table_item **items;
 };
 
-uint64_t table_address_hashcode(void *key);
-uint64_t table_string_hashcode(void *key);
+bool table_string_equal(void *a, void *b);
+unsigned long table_string_hashcode(void *key);
 
-table *new_table(uint64_t (*hashcode_fn)(void *));
+bool table_address_equal(void *a, void *b);
+unsigned long table_address_hashcode(void *key);
+
+table *new_table(bool (*equals_fn)(void *, void *), unsigned long (*hashcode_fn)(void *));
 
 void table_put(table *self, void *key, void *value);
 void *table_get(table *self, void *key);
