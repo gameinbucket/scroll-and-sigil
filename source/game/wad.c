@@ -10,7 +10,7 @@ void wad_load_resources(renderstate *rs) {
 
     rs->textures = safe_malloc(2 * sizeof(texture *));
     rs->textures[TEXTURE_BARON] = texture_make("textures/front-death-0.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
-    rs->textures[TEXTURE_PLANK] = texture_make("textures/plank-floor.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
+    rs->textures[TEXTURE_PLANK] = texture_make("textures/plank-floor.png", GL_REPEAT, GL_NEAREST);
 }
 
 void wad_load_map(renderstate *rs, world *w) {

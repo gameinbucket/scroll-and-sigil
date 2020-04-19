@@ -1,47 +1,46 @@
 #include "table.h"
 
-uint64_t table_uint64_max = (uint64_t)2000000;
-
-int table_string_hashcode(const char *key) {
-    int pos = 0;
-    uint64_t value = (uint64_t)0;
-    int length = strlen(key);
-    while ((value < table_uint64_max && pos < length)) {
-        value = (value << (uint64_t)8) + (uint64_t)key[pos];
-        pos += 1;
-    }
-    return (int)value;
+uint64_t table_address_hashcode(void *key) {
+    return (uint64_t)key;
 }
 
-table *table_init(int (*code_function)(void *)) {
+uint64_t table_string_hashcode(void *key) {
+    char *str_key = key;
+    int pos = 0;
+    int length = strlen(str_key);
+    uint64_t value = 0;
+    while (pos < length) {
+        value = (value << (uint64_t)8) + (uint64_t)str_key[pos];
+        pos += 1;
+    }
+    return value;
+}
+
+table *new_table(uint64_t (*hashcode_fn)(void *)) {
     table *h = safe_malloc(sizeof(table));
     h->size = 0;
     h->capacity = 12;
-    h->code_function = code_function;
+    h->hashcode_fn = hashcode_fn;
     h->table = slice_init(sizeof(table_item *), 0, 12);
     return h;
 }
 
-int table_get_bin(table *self, int code) {
+static int get_bin(table *self, uint64_t code) {
     return code % self->capacity;
 }
 
 void table_put(table *self, void *key, void *value) {
-    int code = (*self->code_function)(key);
-    int bin = table_get_bin(self, code);
+    uint64_t code = (*self->hashcode_fn)(key);
+    int bin = get_bin(self, code);
     table_item *element = self->table[bin];
     table_item *previous = NULL;
-    while (true) {
-        if (element == NULL) {
-            break;
-        } else {
-            if (code == element->code) {
-                element->value = value;
-                return;
-            }
-            previous = element;
-            element = element->next;
+    while (element != NULL) {
+        if (code == element->code) {
+            element->value = value;
+            return;
         }
+        previous = element;
+        element = element->next;
     }
     table_item *item = safe_malloc(sizeof(table_item));
     item->code = code;
@@ -57,18 +56,14 @@ void table_put(table *self, void *key, void *value) {
 }
 
 void *table_get(table *self, void *key) {
-    int code = (*self->code_function)(key);
-    int bin = table_get_bin(self, code);
+    uint64_t code = (*self->hashcode_fn)(key);
+    int bin = get_bin(self, code);
     table_item *element = self->table[bin];
-    while (true) {
-        if (element == NULL) {
-            break;
-        } else {
-            if (code == element->code) {
-                return element->value;
-            }
-            element = element->next;
+    while (element != NULL) {
+        if (code == element->code) {
+            return element->value;
         }
+        element = element->next;
     }
     return NULL;
 }
@@ -77,27 +72,23 @@ bool table_has(table *self, void *key) {
     return table_get(self, key) != NULL;
 }
 
-void *table_delete(table *self, void *key) {
-    int code = (*self->code_function)(key);
-    int bin = table_get_bin(self, code);
+void *table_remove(table *self, void *key) {
+    uint64_t code = (*self->hashcode_fn)(key);
+    int bin = get_bin(self, code);
     table_item *element = self->table[bin];
     table_item *previous = NULL;
-    while (true) {
-        if (element == NULL) {
-            break;
-        } else {
-            if (code == element->code) {
-                if (previous == NULL) {
-                    self->table[bin] = element->next;
-                } else {
-                    previous->next = element->next;
-                }
-                self->size -= 1;
-                return element->value;
+    while (element != NULL) {
+        if (code == element->code) {
+            if (previous == NULL) {
+                self->table[bin] = element->next;
+            } else {
+                previous->next = element->next;
             }
-            previous = element;
-            element = element->next;
+            self->size -= 1;
+            return element->value;
         }
+        previous = element;
+        element = element->next;
     }
     return NULL;
 }
@@ -108,4 +99,25 @@ void table_clear(table *self) {
         self->table[i] = NULL;
     }
     self->size = 0;
+}
+
+bool table_is_empty(table *self) {
+    return self->size == 0;
+}
+
+bool table_not_empty(table *self) {
+    return self->size != 0;
+}
+
+unsigned int table_size(table *self) {
+    return self->size;
+}
+
+void release_table(table *self) {
+    free(self->table);
+}
+
+void destroy_table(table *self) {
+    release_table(self);
+    free(self);
 }

@@ -331,12 +331,12 @@ static void clip(array *vecs, sector *sec, bool floor, array *triangles, float s
                 vec a = vec_of(last);
                 vec b = vec_of(pos);
                 vec c = vec_of(next);
-                tri = triangle_init(sec->floor, sec->floor_texture, a, b, c, floor, scale);
+                tri = new_triangle(sec->floor, sec->floor_texture, a, b, c, floor, scale);
             } else {
                 vec a = vec_of(next);
                 vec b = vec_of(pos);
                 vec c = vec_of(last);
-                tri = triangle_init(sec->ceiling, sec->ceiling_texture, a, b, c, floor, scale);
+                tri = new_triangle(sec->ceiling, sec->ceiling_texture, a, b, c, floor, scale);
             }
 
             array_push(triangles, tri);
@@ -358,12 +358,12 @@ static void clip(array *vecs, sector *sec, bool floor, array *triangles, float s
         vec a = vec_of(vecs->items[0]);
         vec b = vec_of(vecs->items[1]);
         vec c = vec_of(vecs->items[2]);
-        tri = triangle_init(sec->floor, sec->floor_texture, a, b, c, floor, scale);
+        tri = new_triangle(sec->floor, sec->floor_texture, a, b, c, floor, scale);
     } else {
         vec a = vec_of(vecs->items[2]);
         vec b = vec_of(vecs->items[1]);
         vec c = vec_of(vecs->items[0]);
-        tri = triangle_init(sec->ceiling, sec->ceiling_texture, a, b, c, floor, scale);
+        tri = new_triangle(sec->ceiling, sec->ceiling_texture, a, b, c, floor, scale);
     }
     array_push(triangles, tri);
 }

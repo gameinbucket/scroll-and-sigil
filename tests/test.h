@@ -2,6 +2,7 @@
 #define TEST_H
 
 #include <stdbool.h>
+#include <stdio.h>
 
 extern int tests_success;
 extern int tests_fail;
@@ -32,7 +33,7 @@ char *run_test(char *message, void(test)());
 
 #define TEST(test)                                                                                                                                                                                     \
     do {                                                                                                                                                                                               \
-        printf("%s\n", #test);                                                                                                                                                                         \
+        printf("    %s\n", #test);                                                                                                                                                                     \
         char *message = test();                                                                                                                                                                        \
         tests_count++;                                                                                                                                                                                 \
         if (message) {                                                                                                                                                                                 \
@@ -41,5 +42,15 @@ char *run_test(char *message, void(test)());
         }                                                                                                                                                                                              \
         tests_success++;                                                                                                                                                                               \
     } while (0)
+
+#define TEST_SET(test_set)                                                                                                                                                                             \
+    do {                                                                                                                                                                                               \
+        printf("%s\n", #test_set);                                                                                                                                                                     \
+        char *result = test_set();                                                                                                                                                                     \
+        if (result != 0) {                                                                                                                                                                             \
+            printf("%s\n", result);                                                                                                                                                                    \
+        }                                                                                                                                                                                              \
+        printf("\n");                                                                                                                                                                                  \
+    } while (0);
 
 #endif

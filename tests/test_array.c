@@ -1,5 +1,4 @@
-#include "data/array.h"
-#include "test.h"
+#include "test_array.h"
 
 typedef struct {
     int value;
@@ -14,7 +13,7 @@ static char *test_capacity() {
     Integer y = {8};
     Integer z = {6};
 
-    array *ls = array_init_with_capacity(2, 3);
+    array *ls = new_array_with_capacity(2, 3);
 
     ASSERT("length == 2", ls->length == 2);
     ASSERT("capacity == 3", ls->capacity == 3);
@@ -26,7 +25,7 @@ static char *test_capacity() {
     ASSERT("length == 5", ls->length == 5);
     ASSERT("capacity >= 5", ls->capacity >= 5);
 
-    array_free(ls);
+    destroy_array(ls);
 
     return 0;
 }
@@ -36,14 +35,14 @@ static char *test_copy() {
     Integer y = {8};
     Integer z = {6};
 
-    array *ls = array_init(0);
+    array *ls = new_array(0);
     array_push(ls, &x);
     array_push(ls, &y);
     array_push(ls, &z);
 
-    Integer **integers = (Integer **)array_copy(ls);
+    Integer **integers = (Integer **)array_copy_items(ls);
 
-    array_free(ls);
+    destroy_array(ls);
 
     ASSERT("integers[0] == 4", ((Integer *)integers[0])->value == 4);
     ASSERT("integers[1] == 8", ((Integer *)integers[1])->value == 8);
@@ -54,7 +53,7 @@ static char *test_copy() {
 
 static char *test_is_empty_clear() {
 
-    array *ls = array_init(0);
+    array *ls = new_array(0);
     ASSERT("is empty", array_is_empty(ls));
 
     Integer x = {4};
@@ -64,7 +63,7 @@ static char *test_is_empty_clear() {
     array_clear(ls);
     ASSERT("is empty", array_is_empty(ls));
 
-    array_free(ls);
+    destroy_array(ls);
 
     return 0;
 }
@@ -75,7 +74,7 @@ static char *test_find() {
     Integer z = {6};
     Integer w = {0};
 
-    array *ls = array_init(0);
+    array *ls = new_array(0);
     array_push(ls, &x);
     array_push(ls, &y);
     array_push(ls, &z);
@@ -85,7 +84,7 @@ static char *test_find() {
 
     ASSERT("find(9) == NULL", array_find(ls, int_find, &n) == NULL);
 
-    array_free(ls);
+    destroy_array(ls);
 
     return 0;
 }
@@ -100,7 +99,7 @@ static char *test_sort() {
     Integer z = {6};
     Integer w = {0};
 
-    array *ls = array_init(0);
+    array *ls = new_array(0);
     array_insert_sort(ls, int_sort, &x);
     array_insert_sort(ls, int_sort, &y);
     array_insert_sort(ls, int_sort, &z);
@@ -114,7 +113,7 @@ static char *test_sort() {
     ASSERT("get(2) == 6", ((Integer *)array_get(ls, 2))->value == 6);
     ASSERT("get(3) == 8", ((Integer *)array_get(ls, 3))->value == 8);
 
-    array_free(ls);
+    destroy_array(ls);
 
     return 0;
 }
@@ -124,7 +123,7 @@ static char *test_insert_remove() {
     Integer y = {6};
     Integer z = {12};
 
-    array *ls = array_init(0);
+    array *ls = new_array(0);
     array_insert(ls, 0, &x);
     array_insert(ls, 0, &y);
     array_insert(ls, 0, &z);
@@ -145,7 +144,7 @@ static char *test_insert_remove() {
     ASSERT("size == 0", array_size(ls) == 0);
     ASSERT("capacity >= length", ls->capacity >= ls->length);
 
-    array_free(ls);
+    destroy_array(ls);
 
     return 0;
 }
@@ -155,7 +154,7 @@ static char *test_push_pop() {
     Integer y = {6};
     Integer z = {12};
 
-    array *ls = array_init(0);
+    array *ls = new_array(0);
     array_push(ls, &x);
     array_push(ls, &y);
     array_push(ls, &z);
@@ -174,12 +173,12 @@ static char *test_push_pop() {
     ASSERT("size == 0", array_size(ls) == 0);
     ASSERT("capacity >= length", ls->capacity >= ls->length);
 
-    array_free(ls);
+    destroy_array(ls);
 
     return 0;
 }
 
-static char *all_tests() {
+char *test_array_all() {
     TEST(test_push_pop);
     TEST(test_insert_remove);
     TEST(test_find);
@@ -187,15 +186,5 @@ static char *all_tests() {
     TEST(test_is_empty_clear);
     TEST(test_copy);
     TEST(test_capacity);
-    return 0;
-}
-
-int main() {
-    printf("\n");
-    char *result = all_tests();
-    if (result != 0) {
-        printf("%s\n", result);
-    }
-    printf("\nSuccess: %d, Failed: %d, Total: %d\n\n", tests_success, tests_fail, tests_count);
     return 0;
 }

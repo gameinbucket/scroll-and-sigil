@@ -5,46 +5,116 @@ typedef struct {
     int value;
 } Integer;
 
-static char *test_set() {
+uint64_t integer_hashcode(void *key) {
+    return ((Integer *)key)->value;
+}
+
+static char *test_remove() {
+    char *x = "foo";
+    char *y = "bar";
+    char *z = "zoo";
+
+    Integer w = {14};
+    Integer k = {16};
+    Integer n = {18};
+
+    table *tab = new_table(&table_string_hashcode);
+
+    table_put(tab, x, &w);
+    table_put(tab, y, &k);
+    table_put(tab, z, &n);
+
+    table_remove(tab, x);
+    table_remove(tab, y);
+    table_remove(tab, z);
+
+    ASSERT("size == 0", table_size(tab) == 0);
+
+    ASSERT("has(z) == false", table_has(tab, z) == false);
+    ASSERT("has(x) == false", table_has(tab, x) == false);
+    ASSERT("has(y) == false", table_has(tab, y) == false);
+
+    return 0;
+}
+
+static char *test_stress() {
+
+    unsigned int size = 10000;
+
+    Integer *keys = safe_calloc(size, sizeof(Integer));
+    Integer *values = safe_calloc(size, sizeof(Integer));
+
+    table *tab = new_table(&integer_hashcode);
+
+    for (unsigned int i = 0; i < size; i++) {
+        keys[i] = (Integer){i};
+        values[i] = (Integer){rand()};
+
+        table_put(tab, &keys[i], &values[i]);
+    }
+
+    ASSERT("size", table_size(tab) == size);
+
+    for (unsigned int i = 0; i < size; i++) {
+        Integer key = (Integer){keys[i].value};
+        ASSERT("get(i) == value[i]", table_get(tab, &key) == &values[i]);
+    }
+
+    return 0;
+}
+
+static char *test_string() {
+    char *x = "foo";
+    char *y = "bar";
+    char *z = "zoo";
+
+    Integer w = {14};
+    Integer k = {16};
+    Integer n = {18};
+
+    table *tab = new_table(&table_string_hashcode);
+
+    table_put(tab, x, &w);
+    table_put(tab, y, &k);
+    table_put(tab, z, &n);
+
+    ASSERT("size == 3", table_size(tab) == 3);
+
+    ASSERT("get(z) == n", table_get(tab, z) == &n);
+    ASSERT("get(x) == w", table_get(tab, x) == &w);
+    ASSERT("get(y) == k", table_get(tab, y) == &k);
+
+    return 0;
+}
+
+static char *test_address() {
     Integer x = {4};
     Integer y = {6};
     Integer z = {12};
 
-    array *ls = array_init(0);
-    array_push(ls, &x);
-    array_push(ls, &y);
-    array_push(ls, &z);
+    Integer w = {14};
+    Integer k = {16};
+    Integer n = {18};
 
-    ASSERT("size == 3", array_size(ls) == 3);
-    ASSERT("capacity >= length", ls->capacity >= ls->length);
+    table *tab = new_table(&table_address_hashcode);
 
-    ASSERT("get(0) == 4", ((Integer *)array_get(ls, 0))->value == 4);
-    ASSERT("get(1) == 6", ((Integer *)array_get(ls, 1))->value == 6);
-    ASSERT("get(2) == 12", ((Integer *)array_get(ls, 2))->value == 12);
+    table_put(tab, &x, &w);
+    table_put(tab, &y, &k);
+    table_put(tab, &z, &n);
 
-    ASSERT("1st pop", ((Integer *)array_pop(ls))->value == 12);
-    ASSERT("2nd pop", ((Integer *)array_pop(ls))->value == 6);
-    ASSERT("3rdt pop", ((Integer *)array_pop(ls))->value == 4);
+    ASSERT("size == 3", table_size(tab) == 3);
 
-    ASSERT("size == 0", array_size(ls) == 0);
-    ASSERT("capacity >= length", ls->capacity >= ls->length);
-
-    array_free(ls);
+    ASSERT("get(z) == n", table_get(tab, &z) == &n);
+    ASSERT("get(x) == w", table_get(tab, &x) == &w);
+    ASSERT("get(y) == k", table_get(tab, &y) == &k);
 
     return 0;
 }
 
-static char *all_tests() {
-    TEST(test_set);
-    return 0;
-}
-
-int main() {
-    printf("\n");
-    char *result = all_tests();
-    if (result != 0) {
-        printf("%s\n", result);
-    }
-    printf("\nSuccess: %d, Failed: %d, Total: %d\n\n", tests_success, tests_fail, tests_count);
+char *test_table_all() {
+    TEST(test_address);
+    TEST(test_string);
+    TEST(test_stress);
+    TEST(test_remove);
     return 0;
 }

@@ -1,6 +1,6 @@
 #include "worldrender.h"
 
-void render_wall(renderbuffer *b, wall *w) {
+static void render_wall(renderbuffer *b, wall *w) {
     int pos = b->vertex_pos;
     GLfloat *vertices = b->vertices;
 
@@ -32,7 +32,7 @@ void render_wall(renderbuffer *b, wall *w) {
     render_index4(b);
 }
 
-void render_triangle(renderbuffer *b, triangle *t) {
+static void render_triangle(renderbuffer *b, triangle *t) {
     int pos = b->vertex_pos;
     GLfloat *vertices = b->vertices;
 
@@ -58,16 +58,11 @@ void render_triangle(renderbuffer *b, triangle *t) {
     render_index3(b);
 }
 
-void thing_render(renderbuffer *b, thing *t, float camera_x, float camera_z) {
-    float sine = camera_x - t->x;
-    float cosine = camera_z - t->z;
-    float length = sqrt(sine * sine + cosine * cosine);
-    sine /= length;
-    cosine /= length;
+static void thing_render(renderbuffer *b, thing *t, float sine, float cosine) {
     render_sprite3d(b, t->x, t->y, t->z, sine, cosine, t->sp);
 }
 
-void sector_render(renderbuffer *b, sector *s) {
+static void sector_render(renderbuffer *b, sector *s) {
     line **lines = s->lines;
     int line_count = s->line_count;
 
@@ -91,41 +86,46 @@ void sector_render(renderbuffer *b, sector *s) {
     int triangle_count = s->triangle_count;
 
     for (int i = 0; i < triangle_count; i++) {
-        triangle *td = triangles[i];
-        render_triangle(b, td);
+        render_triangle(b, triangles[i]);
     }
 }
 
-void world_render(renderstate *rs, world *w, __attribute__((unused)) camera *c) {
+void world_render(renderstate *rs, world *w, camera *c) {
+
+    if (c->x == -999) {
+        return;
+    }
 
     renderstate_set_program(rs, SHADER_TEXTURE_3D);
     renderstate_set_mvp(rs, rs->modelviewprojection);
 
-    // renderbuffer *draw_sprites = rs->draw_sprites;
-    // renderbuffer_zero(draw_sprites);
-    // for (int i = 0; i < w->thing_count; i++) {
-    //     thing_render(draw_sprites, w->things[i], c->x, c->z);
-    // }
-    // renderstate_set_texture(rs, TEXTURE_BARON);
-    // graphics_update_and_draw(draw_sprites);
+    float sine = sinf(-c->ry);
+    float cosine = cosf(-c->ry);
+    renderbuffer *draw_sprites = rs->draw_sprites;
+    renderbuffer_zero(draw_sprites);
+    thing **things = w->things;
+    int thing_count = w->thing_count;
+    for (int i = 0; i < thing_count; i++) {
+        thing_render(draw_sprites, things[i], sine, cosine);
+    }
+    renderstate_set_texture(rs, TEXTURE_BARON);
+    graphics_bind_and_draw(draw_sprites);
 
     renderbuffer *draw_sectors = rs->draw_sectors;
     renderbuffer_zero(draw_sectors);
-
-    int sector_count = w->sector_count;
     sector **sectors = w->sectors;
+    int sector_count = w->sector_count;
     for (int i = 0; i < sector_count; i++) {
         sector_render(draw_sectors, sectors[i]);
     }
-
-    // int pos = draw_sectors->vertex_pos;
-    // GLfloat *vertices = draw_sectors->vertices;
-    // printf("-------------- %d | ", pos);
-    // for (int i = 0; i < pos; i++) {
-    //     printf("%f, ", vertices[i]);
-    // }
-    // printf("\n\n");
-
     renderstate_set_texture(rs, TEXTURE_PLANK);
-    graphics_update_and_draw(draw_sectors);
+    graphics_bind_and_draw(draw_sectors);
+
+    int pos = draw_sectors->vertex_pos;
+    GLfloat *vertices = draw_sectors->vertices;
+    printf("-------------- %d | ", pos);
+    for (int i = 0; i < pos; i++) {
+        printf("%f, ", vertices[i]);
+    }
+    printf("\n\n");
 }

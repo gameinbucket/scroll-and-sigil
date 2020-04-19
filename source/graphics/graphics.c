@@ -174,6 +174,7 @@ void graphics_bind_and_draw(renderbuffer *b) {
     }
     glBindVertexArray(b->vao);
     glDrawElements(GL_TRIANGLES, b->index_pos, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 }
 
 void graphics_update_and_draw(renderbuffer *b) {
@@ -182,6 +183,7 @@ void graphics_update_and_draw(renderbuffer *b) {
     }
     graphics_update_vao(b, GL_DYNAMIC_DRAW);
     glDrawElements(GL_TRIANGLES, b->index_pos, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 }
 
 void graphics_enable_depth() {

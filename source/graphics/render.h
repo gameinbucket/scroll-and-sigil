@@ -20,6 +20,4 @@ void render_rectangle(renderbuffer *b, float x, float y, float width, float heig
 
 void render_sprite3d(renderbuffer *b, float x, float y, float z, float sine, float cosine, sprite *s);
 
-void render_cube_positive_x(renderbuffer *b, float x, float y, float z, float *color, float *texture);
-
 #endif

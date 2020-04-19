@@ -63,9 +63,6 @@ void opengl_settings() {
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "OpenGL error: %d\n", error);
