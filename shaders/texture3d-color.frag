@@ -1,5 +1,4 @@
 #version 330
-precision mediump float;
 uniform sampler2D u_texture0;
 in vec3 v_color;
 in vec2 v_texture;

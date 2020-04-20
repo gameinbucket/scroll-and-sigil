@@ -92,12 +92,8 @@ static void sector_render(renderbuffer *b, sector *s) {
 
 void world_render(renderstate *rs, world *w, camera *c) {
 
-    if (c->x == -999) {
-        return;
-    }
-
     renderstate_set_program(rs, SHADER_TEXTURE_3D);
-    renderstate_set_mvp(rs, rs->modelviewprojection);
+    renderstate_set_mvp(rs, rs->mvp);
 
     float sine = sinf(-c->ry);
     float cosine = cosf(-c->ry);
@@ -120,12 +116,4 @@ void world_render(renderstate *rs, world *w, camera *c) {
     }
     renderstate_set_texture(rs, TEXTURE_PLANK);
     graphics_bind_and_draw(draw_sectors);
-
-    int pos = draw_sectors->vertex_pos;
-    GLfloat *vertices = draw_sectors->vertices;
-    printf("-------------- %d | ", pos);
-    for (int i = 0; i < pos; i++) {
-        printf("%f, ", vertices[i]);
-    }
-    printf("\n\n");
 }

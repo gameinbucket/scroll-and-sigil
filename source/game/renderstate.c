@@ -1,13 +1,15 @@
 #include "renderstate.h"
 
-renderstate *renderstate_init() {
+renderstate *new_renderstate() {
     return safe_calloc(1, sizeof(renderstate));
 }
 
 void renderstate_resize(renderstate *self, int screen_width, int screen_height) {
 
-    int draw_width = screen_width;
-    int draw_height = screen_height;
+    float draw_percent = 1.0;
+
+    int draw_width = screen_width * draw_percent;
+    int draw_height = screen_height * draw_percent;
 
     float fov = 60.0;
     float ratio = (float)draw_width / (float)draw_height;
@@ -20,17 +22,31 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
 
     if (self->frame == NULL) {
 
-        int textures = 1;
+        self->draw_frame = renderbuffer_init(2, 0, 0, 4, 6, false);
+        self->draw_canvas = renderbuffer_init(2, 0, 0, 4, 6, false);
+        self->draw_images = renderbuffer_init(2, 0, 2, 40, 60, true);
+        self->draw_colors = renderbuffer_init(2, 3, 0, 40, 60, true);
+        self->draw_sectors = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200, true);
+        self->draw_sprites = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200, true);
 
-        GLint *internal = safe_malloc(sizeof(GLint) * textures);
-        GLint *format = safe_malloc(sizeof(GLint) * textures);
-        GLint *texture_type = safe_malloc(sizeof(GLint) * textures);
+        graphics_make_vao(self->draw_frame);
+        graphics_make_vao(self->draw_canvas);
+        graphics_make_vao(self->draw_images);
+        graphics_make_vao(self->draw_colors);
+        graphics_make_vao(self->draw_sectors);
+        graphics_make_vao(self->draw_sprites);
+
+        int texture_count = 1;
+
+        GLint *internal = safe_malloc(sizeof(GLint) * texture_count);
+        GLint *format = safe_malloc(sizeof(GLint) * texture_count);
+        GLint *texture_type = safe_malloc(sizeof(GLint) * texture_count);
 
         internal[0] = GL_RGB;
         format[0] = GL_RGB;
         texture_type[0] = GL_UNSIGNED_BYTE;
 
-        framebuffer *frame = framebuffer_init(draw_width, draw_height, textures, internal, format, texture_type, GL_NEAREST, true);
+        framebuffer *frame = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, true);
         graphics_make_fbo(frame);
 
         self->frame = frame;
@@ -39,14 +55,14 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
         graphics_framebuffer_resize(self->frame, draw_width, draw_height);
     }
 
-    renderbuffer_zero(self->screen);
-    renderbuffer_zero(self->frame_screen);
+    renderbuffer_zero(self->draw_frame);
+    renderbuffer_zero(self->draw_canvas);
 
-    render_screen(self->screen, 0, 0, screen_width, screen_height);
-    render_screen(self->frame_screen, 0, 0, draw_width, draw_height);
+    render_screen(self->draw_frame, 0, 0, draw_width, draw_height);
+    render_screen(self->draw_canvas, 0, 0, screen_width, screen_height);
 
-    graphics_update_vao(self->screen, GL_STATIC_DRAW);
-    graphics_update_vao(self->frame_screen, GL_STATIC_DRAW);
+    graphics_update_vao(self->draw_frame, GL_STATIC_DRAW);
+    graphics_update_vao(self->draw_canvas, GL_STATIC_DRAW);
 }
 
 void renderstate_set_mvp(renderstate *self, float *mvp) {

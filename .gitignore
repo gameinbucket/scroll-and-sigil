@@ -7,3 +7,4 @@ scroll-and-sigil
 *.wasm
 *.o
 *.d
+*.wad

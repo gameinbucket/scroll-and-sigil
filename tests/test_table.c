@@ -5,11 +5,11 @@ typedef struct {
     int value;
 } Integer;
 
-bool integer_equal(void *a, void *b) {
+static bool integer_equal(void *a, void *b) {
     return ((Integer *)a)->value == ((Integer *)b)->value;
 }
 
-unsigned long integer_hashcode(void *key) {
+static unsigned long integer_hashcode(void *key) {
     return ((Integer *)key)->value;
 }
 

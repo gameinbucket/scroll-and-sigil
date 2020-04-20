@@ -9,6 +9,7 @@
 #include "triangle.h"
 #include "vec.h"
 
+#define LINE_NO_WALL -1
 #define SECTOR_NO_SURFACE -1
 
 extern int sector_unique_index;
@@ -60,7 +61,7 @@ struct sector {
     sector *outside;
 };
 
-wall *wall_init();
+wall *wall_init(line *ld, vec va, vec vb, int texture);
 void wall_set(wall *self, float floor, float ceiling, float u, float v, float s, float t);
 
 line *line_init(vec va, vec vb, int low, int mid, int top);

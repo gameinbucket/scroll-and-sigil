@@ -9,7 +9,7 @@
 
 #include "cell.h"
 
-#define WORLD_SCALE 1.0f
+#define WORLD_SCALE 0.25f
 #define WORLD_CELL_SHIFT 5
 
 typedef struct world world;

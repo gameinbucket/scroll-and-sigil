@@ -18,12 +18,11 @@
 
 struct shader {
     GLuint id;
-    string *name;
     GLint u_mvp;
 };
 
 typedef struct shader shader;
 
-shader *shader_make(char *name, char *vert, char *frag);
+shader *shader_make(char *vert, char *frag);
 
 #endif

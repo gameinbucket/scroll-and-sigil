@@ -205,9 +205,8 @@ static void populate_with_vectors(array *points, sector *sec) {
 }
 
 static array *populate(sector *sec, bool floor) {
-    array *points = new_array(0);
 
-    printf("populate\n");
+    array *points = new_array(0);
 
     sector **inside = sec->inside;
     int inside_count = sec->inside_count;
@@ -533,19 +532,25 @@ static void build(sector *sec, bool floor, array *triangles, float scale) {
 
     array *points = populate(sec, floor);
 
+#ifdef TRIANGULATE_DEBUG
     printf("points:\n");
     for (unsigned int i = 0; i < points->length; i++) {
         polygon_vertex *vert = points->items[i];
         printf("  (%d) %f, %f\n", vert->index, vert->point->x, vert->point->y);
     }
+#endif
 
     array *monotone = classify(points);
 
+#ifdef TRIANGULATE_DEBUG
     printf("monotone count %d\n", array_size(monotone));
+#endif
 
     iterate_clip(monotone, sec, floor, triangles, scale);
 
+#ifdef TRIANGULATE_DEBUG
     printf("triangle count %d\n", array_size(triangles));
+#endif
 
     destroy_array(points);
     destroy_array(monotone);

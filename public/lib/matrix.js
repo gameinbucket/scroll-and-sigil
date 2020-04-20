@@ -2,6 +2,14 @@ MatrixTemp = new Array(16)
 MatrixCopied = new Array(16)
 
 class Matrix {
+    static Print(matrix) {
+        let out = "["
+        for (let i = 0; i < 15; i++) {
+            out += matrix[i] + ", "
+        }
+        out += matrix[15] + "]";
+        console.log(out)
+    }
     static Identity(matrix) {
         matrix[0] = 1.0
         matrix[1] = 0.0

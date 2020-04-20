@@ -125,7 +125,7 @@ void render_sprite3d(renderbuffer *b, float x, float y, float z, float sine, flo
     vertices[pos + 13] = s->right;
     vertices[pos + 14] = s->top;
 
-    vertices[pos + 15] = x + cosine;
+    vertices[pos + 15] = x - cosine;
     vertices[pos + 16] = y + s->height;
     vertices[pos + 17] = z + sine;
     vertices[pos + 18] = s->left;

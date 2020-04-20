@@ -79,7 +79,7 @@ void matrix_frustum(float *matrix, float left, float right, float bottom, float 
 
 void matrix_perspective(float *matrix, float fov, float near, float far, float aspect) {
 
-    float top = near * fov;
+    float top = near * tanf(fov * MATH_PI / 360.0);
     float bottom = -top;
     float left = bottom * aspect;
     float right = top * aspect;
@@ -309,13 +309,13 @@ void matrix_inverse(float *matrix, float *from) {
     }
 }
 
-void matrix_orthographic_projection(float *mv, float *orthographic, float *mvp, float x, float y) {
+void matrix_orthographic_projection(float *mvp, float *orthographic, float *mv, float x, float y) {
     matrix_identity(mv);
     matrix_translate(mv, x, y, 0);
     matrix_multiply(mvp, orthographic, mv);
 }
 
-void matrix_perspective_projection(float *mv, float *perspective, float *mvp, float x, float y, float z, float rx, float ry) {
+void matrix_perspective_projection(float *mvp, float *perspective, float *mv, float x, float y, float z, float rx, float ry) {
     matrix_identity(mv);
     matrix_rotate_x(mv, sinf(rx), cosf(rx));
     matrix_rotate_y(mv, sinf(ry), cosf(ry));

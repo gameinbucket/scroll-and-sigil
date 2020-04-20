@@ -7,6 +7,7 @@
 #include "map/sector.h"
 #include "world/world.h"
 
-sector *place_flat(renderstate *rs, world *w);
+void place_flat(renderstate *rs, world *w);
+void place_house(renderstate *rs, world *w, int x, int y);
 
 #endif

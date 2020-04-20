@@ -2,6 +2,7 @@
 
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -21,17 +22,46 @@
 #include "renderstate.h"
 #include "state.h"
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 1000;
+const int SCREEN_HEIGHT = 800;
 
 bool run = true;
 
+#define SOUND_MAX_CHANNELS 8
+
 void window_init(SDL_Window **win) {
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
         fprintf(stderr, "Could not initialize SDL: %s\n", SDL_GetError());
         exit(1);
     }
+
+    // audio
+
+    int mix_flags = MIX_INIT_OGG;
+
+    if ((Mix_Init(mix_flags) & mix_flags) != mix_flags) {
+        fprintf(stderr, "Mix_Init: %s\n", Mix_GetError());
+        exit(1);
+    }
+
+    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024) == -1) {
+        fprintf(stderr, "Could not initialize SDL Mixer\n");
+        exit(1);
+    }
+
+    Mix_AllocateChannels(SOUND_MAX_CHANNELS);
+
+    Mix_Music *music = Mix_LoadMUS("music/vampire-killer.ogg");
+    Mix_PlayMusic(music, 0);
+    Mix_FreeMusic(music);
+    Mix_CloseAudio();
+
+    while (Mix_Init(0)) {
+        Mix_Quit();
+    }
+
+    // audio
 
     SDL_Window *window = SDL_CreateWindow("Scroll And Sigil", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     SDL_GLContext context = SDL_GL_CreateContext(window);
@@ -72,24 +102,10 @@ void opengl_settings() {
 
 renderstate *renderstate_settings() {
 
-    renderstate *rs = renderstate_init();
+    renderstate *rs = new_renderstate();
 
     rs->canvas_width = SCREEN_WIDTH;
     rs->canvas_height = SCREEN_HEIGHT;
-
-    rs->screen = renderbuffer_init(2, 0, 0, 4, 6, false);
-    rs->frame_screen = renderbuffer_init(2, 0, 0, 4, 6, false);
-    rs->draw_images = renderbuffer_init(2, 0, 2, 40, 60, true);
-    rs->draw_colors = renderbuffer_init(2, 3, 0, 40, 60, true);
-    rs->draw_sectors = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200, true);
-    rs->draw_sprites = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200, true);
-
-    graphics_make_vao(rs->screen);
-    graphics_make_vao(rs->frame_screen);
-    graphics_make_vao(rs->draw_images);
-    graphics_make_vao(rs->draw_colors);
-    graphics_make_vao(rs->draw_sectors);
-    graphics_make_vao(rs->draw_sprites);
 
     renderstate_resize(rs, SCREEN_WIDTH, SCREEN_HEIGHT);
 

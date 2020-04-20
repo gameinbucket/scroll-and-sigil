@@ -1,5 +1,4 @@
 #version 330
-precision mediump float;         
 in vec3 v_color;
 out vec4 pixel;
 void main() {

@@ -33,7 +33,7 @@ GLint shader_compile_source(char *path, GLint type) {
     return shader;
 }
 
-shader *shader_make(char *name, char *vert, char *frag) {
+shader *shader_make(char *vert, char *frag) {
 
     GLuint vertex = shader_compile_source(vert, GL_VERTEX_SHADER);
     GLuint fragment = shader_compile_source(frag, GL_FRAGMENT_SHADER);
@@ -85,7 +85,6 @@ shader *shader_make(char *name, char *vert, char *frag) {
 
     shader *s = safe_malloc(sizeof(shader));
     s->id = program;
-    s->name = string_init(name);
     s->u_mvp = u_mvp;
 
     return s;

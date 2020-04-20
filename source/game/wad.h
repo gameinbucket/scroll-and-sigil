@@ -1,6 +1,8 @@
 #ifndef WAD_H
 #define WAD_H
 
+#include <SDL2/SDL.h>
+
 #include "graphics/graphics.h"
 #include "graphics/matrix.h"
 #include "graphics/render.h"
