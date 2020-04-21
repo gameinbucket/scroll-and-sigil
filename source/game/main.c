@@ -9,25 +9,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "core/system.h"
 #include "graphics/graphics.h"
 #include "graphics/matrix.h"
 #include "graphics/renderbuffer.h"
 #include "graphics/shader.h"
 #include "graphics/texture.h"
-
 #include "world/world.h"
-#include "world/worldbuild.h"
 
 #include "renderstate.h"
+#include "soundstate.h"
 #include "state.h"
 
-const int SCREEN_WIDTH = 1000;
-const int SCREEN_HEIGHT = 800;
+static const int SCREEN_WIDTH = 1000;
+static const int SCREEN_HEIGHT = 800;
 
-bool run = true;
-
-#define SOUND_MAX_CHANNELS 8
+static bool run = true;
 
 void window_init(SDL_Window **win) {
 
@@ -36,32 +32,12 @@ void window_init(SDL_Window **win) {
         exit(1);
     }
 
-    // audio
-
-    int mix_flags = MIX_INIT_OGG;
-
-    if ((Mix_Init(mix_flags) & mix_flags) != mix_flags) {
-        fprintf(stderr, "Mix_Init: %s\n", Mix_GetError());
-        exit(1);
-    }
-
-    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024) == -1) {
-        fprintf(stderr, "Could not initialize SDL Mixer\n");
+    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
+        fprintf(stderr, "Could not initialize SDL Mixer: %s\n", Mix_GetError());
         exit(1);
     }
 
     Mix_AllocateChannels(SOUND_MAX_CHANNELS);
-
-    Mix_Music *music = Mix_LoadMUS("music/vampire-killer.ogg");
-    Mix_PlayMusic(music, 0);
-    Mix_FreeMusic(music);
-    Mix_CloseAudio();
-
-    while (Mix_Init(0)) {
-        Mix_Quit();
-    }
-
-    // audio
 
     SDL_Window *window = SDL_CreateWindow("Scroll And Sigil", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     SDL_GLContext context = SDL_GL_CreateContext(window);
@@ -100,18 +76,8 @@ void opengl_settings() {
     }
 }
 
-renderstate *renderstate_settings() {
-
-    renderstate *rs = new_renderstate();
-
-    rs->canvas_width = SCREEN_WIDTH;
-    rs->canvas_height = SCREEN_HEIGHT;
-
+void window_resize(renderstate *rs) {
     renderstate_resize(rs, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    wad_load_resources(rs);
-
-    return rs;
 }
 
 void main_loop(SDL_Window *window, state *s) {
@@ -175,20 +141,24 @@ int main() {
 
     opengl_settings();
 
-    renderstate *rs = renderstate_settings();
-
-    world *w = world_init();
-    wad_load_map(rs, w);
-    world_build_map(w);
-
-    state *s = state_init(w, rs);
+    renderstate *rs = new_renderstate();
+    window_resize(rs);
+    soundstate *ss = new_soundstate();
+    world *w = new_world();
+    state *s = new_state(w, rs, ss);
 
     SDL_StartTextInput();
 
     main_loop(window, s);
 
     SDL_StopTextInput();
+
+    destroy_renderstate(rs);
     SDL_DestroyWindow(window);
+
+    destroy_soundstate(ss);
+    Mix_CloseAudio();
+
     SDL_Quit();
 
     return 0;

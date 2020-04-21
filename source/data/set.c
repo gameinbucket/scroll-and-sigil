@@ -202,3 +202,50 @@ void destroy_set(set *self) {
     release_set(self);
     free(self);
 }
+
+set_iterator new_set_iterator(set *self) {
+    set_iterator iter;
+    iter.pointer = self;
+    if (self->size == 0) {
+        iter.bin = 0;
+        iter.item = NULL;
+    } else {
+        unsigned int bins = self->bins;
+        for (unsigned int i = 0; i < bins; i++) {
+            set_item *start = self->items[i];
+            if (start) {
+                iter.bin = i;
+                iter.item = start;
+                break;
+            }
+        }
+    }
+    return iter;
+}
+
+bool set_iterator_has_next(set_iterator *iter) {
+    return iter->item;
+}
+
+void *set_iterator_next(set_iterator *iter) {
+    set_item *item = iter->item;
+    if (item == NULL) {
+        return NULL;
+    }
+    void *key = item->key;
+    item = item->next;
+    if (item == NULL) {
+        unsigned int bin = iter->bin;
+        unsigned int stop = iter->pointer->bins;
+        for (bin = bin + 1; bin < stop; bin++) {
+            set_item *start = iter->pointer->items[bin];
+            if (start) {
+                item = start;
+                break;
+            }
+        }
+        iter->bin = bin;
+    }
+    iter->item = item;
+    return key;
+}

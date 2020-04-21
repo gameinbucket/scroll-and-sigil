@@ -1,5 +1,4 @@
-#include "data/set.h"
-#include "test.h"
+#include "test_set.h"
 
 typedef struct {
     int value;
@@ -11,6 +10,38 @@ static bool integer_equal(void *a, void *b) {
 
 static unsigned long integer_hashcode(void *key) {
     return ((Integer *)key)->value;
+}
+
+static char *test_iterator() {
+    char *x = "foo";
+    char *y = "bar";
+    char *z = "zoo";
+
+    set *tab = new_set(&set_string_equal, &set_string_hashcode);
+
+    set_add(tab, x);
+    set_add(tab, y);
+    set_add(tab, z);
+
+    set_iterator iter = new_set_iterator(tab);
+
+    ASSERT("(1) has next == true", set_iterator_has_next(&iter));
+    void *key = set_iterator_next(&iter);
+    ASSERT("(1) key not null", key != NULL);
+    ASSERT("(1) key equals ?", strcmp(key, "foo") || strcmp(key, "bar") || strcmp(key, "zoo"));
+
+    ASSERT("(2) has next == true", set_iterator_has_next(&iter));
+    key = set_iterator_next(&iter);
+    ASSERT("(2) key not null", key != NULL);
+    ASSERT("(2) key equals ?", strcmp(key, "foo") || strcmp(key, "bar") || strcmp(key, "zoo"));
+
+    key = set_iterator_next(&iter);
+    ASSERT("(3) key not null", key != NULL);
+    ASSERT("(3) key equals ?", strcmp(key, "foo") || strcmp(key, "bar") || strcmp(key, "zoo"));
+
+    ASSERT("(3) has next == false", set_iterator_has_next(&iter) == false);
+
+    return 0;
 }
 
 static char *test_stress() {
@@ -99,5 +130,6 @@ char *test_set_all() {
     TEST(test_address);
     TEST(test_string);
     TEST(test_stress);
+    TEST(test_iterator);
     return 0;
 }

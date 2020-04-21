@@ -23,9 +23,9 @@ struct __attribute__((__packed__)) string_head {
 string *string_init_with_length(char *init, size_t length);
 string *string_init(char *init);
 
-size_t string_len_size(string *s);
+size_t string_size_t(string *s);
 int string_len(string *s);
-size_t string_cap_size(string *s);
+size_t string_cap_size_t(string *s);
 int string_cap(string *s);
 void string_free(string *s);
 
@@ -36,6 +36,7 @@ string *concat_varg(int size, ...);
 string *substring(string *s, size_t start, size_t end);
 
 string *string_append(string *a, char *b);
+string *string_append_char(string *a, char b);
 
 int string_compare(string *a, string *b);
 bool string_equal(string *a, string *b);

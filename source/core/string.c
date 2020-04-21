@@ -22,22 +22,22 @@ string *string_init(char *init) {
     return string_init_with_length(init, len);
 }
 
-size_t string_len_size(string *s) {
+size_t string_size_t(string *s) {
     string_head *head = (string_head *)((char *)s - sizeof(string_head));
     return head->length;
 }
 
 int string_len(string *s) {
-    return (int)string_len_size(s);
+    return (int)string_size_t(s);
 }
 
-size_t string_cap_size(string *s) {
+size_t string_cap_size_t(string *s) {
     string_head *head = (string_head *)((char *)s - sizeof(string_head));
     return head->capacity;
 }
 
 int string_cap(string *s) {
-    return (int)string_cap_size(s);
+    return (int)string_cap_size_t(s);
 }
 
 void string_free(string *s) {
@@ -45,8 +45,8 @@ void string_free(string *s) {
 }
 
 string *concat(string *a, string *b) {
-    size_t len1 = string_len_size(a);
-    size_t len2 = string_len_size(b);
+    size_t len1 = string_size_t(a);
+    size_t len2 = string_size_t(b);
     size_t len = len1 + len2;
     string_head *head = string_head_init(len, len);
     char *s = (char *)(head + 1);
@@ -59,13 +59,13 @@ string *concat(string *a, string *b) {
 string *concat_list(string **list, int size) {
     size_t len = 0;
     for (int i = 0; i < size; i++) {
-        len += string_len_size(list[i]);
+        len += string_size_t(list[i]);
     }
     string_head *head = string_head_init(len, len);
     char *s = (char *)(head + 1);
     size_t pos = 0;
     for (int i = 0; i < size; i++) {
-        size_t len_i = string_len_size(list[i]);
+        size_t len_i = string_size_t(list[i]);
         memcpy(s + pos, list[i], len_i);
         pos += len_i;
     }
@@ -79,7 +79,7 @@ string *concat_varg(int size, ...) {
     size_t len = 0;
     va_start(ap, size);
     for (int i = 0; i < size; i++) {
-        len += string_len_size(va_arg(ap, string *));
+        len += string_size_t(va_arg(ap, string *));
     }
     va_end(ap);
 
@@ -90,7 +90,7 @@ string *concat_varg(int size, ...) {
     va_start(ap, size);
     for (int i = 0; i < size; i++) {
         string *param = va_arg(ap, string *);
-        size_t len_i = string_len_size(param);
+        size_t len_i = string_size_t(param);
         memcpy(s + pos, param, len_i);
         pos += len_i;
     }
@@ -110,13 +110,25 @@ string *substring(string *a, size_t start, size_t end) {
 }
 
 string *string_append(string *a, char *b) {
-    size_t len1 = string_len_size(a);
+    size_t len1 = string_size_t(a);
     size_t len2 = strlen(b);
     size_t len = len1 + len2;
     string_head *head = string_head_init(len, len);
     char *s = (char *)(head + 1);
     memcpy(s, a, len1);
     memcpy(s + len1, b, len2 + 1);
+    s[len] = '\0';
+    return (string *)s;
+}
+
+string *string_append_char(string *a, char b) {
+    size_t len1 = string_size_t(a);
+    size_t len2 = 1;
+    size_t len = len1 + len2;
+    string_head *head = string_head_init(len, len);
+    char *s = (char *)(head + 1);
+    memcpy(s, a, len1);
+    s[len1] = b;
     s[len] = '\0';
     return (string *)s;
 }

@@ -48,4 +48,23 @@ unsigned int table_size(table *self);
 void release_table(table *self);
 void destroy_table(table *self);
 
+typedef struct table_pair table_pair;
+
+struct table_pair {
+    void *key;
+    void *value;
+};
+
+typedef struct table_iterator table_iterator;
+
+struct table_iterator {
+    table *pointer;
+    unsigned int bin;
+    table_item *item;
+};
+
+table_iterator new_table_iterator(table *self);
+bool table_iterator_has_next(table_iterator *iter);
+table_pair table_iterator_next(table_iterator *iter);
+
 #endif

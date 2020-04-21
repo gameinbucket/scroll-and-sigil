@@ -209,3 +209,50 @@ void destroy_table(table *self) {
     release_table(self);
     free(self);
 }
+
+table_iterator new_table_iterator(table *self) {
+    table_iterator iter;
+    iter.pointer = self;
+    if (self->size == 0) {
+        iter.bin = 0;
+        iter.item = NULL;
+    } else {
+        unsigned int bins = self->bins;
+        for (unsigned int i = 0; i < bins; i++) {
+            table_item *start = self->items[i];
+            if (start) {
+                iter.bin = i;
+                iter.item = start;
+                break;
+            }
+        }
+    }
+    return iter;
+}
+
+bool table_iterator_has_next(table_iterator *iter) {
+    return iter->item;
+}
+
+table_pair table_iterator_next(table_iterator *iter) {
+    table_item *item = iter->item;
+    if (item == NULL) {
+        return (table_pair){NULL, NULL};
+    }
+    table_pair pair = {item->key, item->value};
+    item = item->next;
+    if (item == NULL) {
+        unsigned int bin = iter->bin;
+        unsigned int stop = iter->pointer->bins;
+        for (bin = bin + 1; bin < stop; bin++) {
+            table_item *start = iter->pointer->items[bin];
+            if (start) {
+                item = start;
+                break;
+            }
+        }
+        iter->bin = bin;
+    }
+    iter->item = item;
+    return pair;
+}

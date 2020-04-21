@@ -62,23 +62,30 @@ static void thing_render(renderbuffer *b, thing *t, float sine, float cosine) {
     render_sprite3d(b, t->x, t->y, t->z, sine, cosine, t->sp);
 }
 
-static void sector_render(renderbuffer *b, sector *s) {
+static void sector_render(uint_table *cache, sector *s) {
     line **lines = s->lines;
     int line_count = s->line_count;
 
     for (int i = 0; i < line_count; i++) {
         line *ld = lines[i];
 
-        if (ld->bottom) {
-            render_wall(b, ld->bottom);
+        wall *top = ld->top;
+        wall *middle = ld->middle;
+        wall *bottom = ld->bottom;
+
+        if (top) {
+            renderbuffer *b = uint_table_get(cache, top->texture);
+            render_wall(b, top);
         }
 
         if (ld->middle) {
-            render_wall(b, ld->middle);
+            renderbuffer *b = uint_table_get(cache, middle->texture);
+            render_wall(b, middle);
         }
 
-        if (ld->top) {
-            render_wall(b, ld->top);
+        if (ld->bottom) {
+            renderbuffer *b = uint_table_get(cache, bottom->texture);
+            render_wall(b, bottom);
         }
     }
 
@@ -86,7 +93,9 @@ static void sector_render(renderbuffer *b, sector *s) {
     int triangle_count = s->triangle_count;
 
     for (int i = 0; i < triangle_count; i++) {
-        render_triangle(b, triangles[i]);
+        triangle *td = triangles[i];
+        renderbuffer *b = uint_table_get(cache, td->texture);
+        render_triangle(b, td);
     }
 }
 
@@ -107,13 +116,32 @@ void world_render(renderstate *rs, world *w, camera *c) {
     renderstate_set_texture(rs, TEXTURE_BARON);
     graphics_bind_and_draw(draw_sprites);
 
-    renderbuffer *draw_sectors = rs->draw_sectors;
-    renderbuffer_zero(draw_sectors);
+    uint_table *cache = new_uint_table();
+
+    uint_table_iterator iter = new_uint_table_iterator(cache);
+    while (uint_table_iterator_has_next(&iter)) {
+        uint_table_pair pair = uint_table_iterator_next(&iter);
+        renderbuffer *b = pair.value;
+        renderbuffer_zero(b);
+    }
+
+    // renderbuffer *draw_sectors = rs->draw_sectors;
+    // renderbuffer_zero(draw_sectors);
+
     sector **sectors = w->sectors;
     int sector_count = w->sector_count;
     for (int i = 0; i < sector_count; i++) {
-        sector_render(draw_sectors, sectors[i]);
+        sector_render(cache, sectors[i]);
     }
-    renderstate_set_texture(rs, TEXTURE_PLANK);
-    graphics_bind_and_draw(draw_sectors);
+
+    uint_table_iterator iter = new_uint_table_iterator(cache);
+    while (uint_table_iterator_has_next(&iter)) {
+        uint_table_pair pair = uint_table_iterator_next(&iter);
+        renderbuffer *b = pair.value;
+        graphics_bind_texture(GL_TEXTURE0, pair.key);
+        graphics_bind_and_draw(b);
+    }
+
+    // renderstate_set_texture(rs, TEXTURE_PLANK);
+    // graphics_bind_and_draw(draw_sectors);
 }

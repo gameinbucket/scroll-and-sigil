@@ -28,7 +28,7 @@ struct world {
     int cell_count;
 };
 
-world *world_init();
+world *new_world();
 
 void world_add_thing(world *self, thing *t);
 void world_remove_thing(world *self, thing *t);

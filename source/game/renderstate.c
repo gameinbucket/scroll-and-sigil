@@ -6,6 +6,9 @@ renderstate *new_renderstate() {
 
 void renderstate_resize(renderstate *self, int screen_width, int screen_height) {
 
+    self->canvas_width = screen_width;
+    self->canvas_height = screen_height;
+
     float draw_percent = 1.0;
 
     int draw_width = screen_width * draw_percent;
@@ -77,4 +80,8 @@ void renderstate_set_program(renderstate *self, int shader_index) {
 
 void renderstate_set_texture(renderstate *self, int texture_index) {
     graphics_bind_texture(GL_TEXTURE0, self->textures[texture_index]->id);
+}
+
+void destroy_renderstate(renderstate *self) {
+    printf("destroy renderstate %p\n", (void *)self);
 }

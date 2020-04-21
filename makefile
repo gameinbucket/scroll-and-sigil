@@ -8,7 +8,7 @@ INCLUDE = -Isource/
 
 CC = gcc
 COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE)
-LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lGL -lGLEW 
+LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip -lGL -lGLEW 
 LIBS = -lm
 PREFIX =
 

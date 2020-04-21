@@ -1,5 +1,4 @@
-#include "data/table.h"
-#include "test.h"
+#include "test_table.h"
 
 typedef struct {
     int value;
@@ -11,6 +10,45 @@ static bool integer_equal(void *a, void *b) {
 
 static unsigned long integer_hashcode(void *key) {
     return ((Integer *)key)->value;
+}
+
+static char *test_iterator() {
+    char *x = "foo";
+    char *y = "bar";
+    char *z = "zoo";
+
+    Integer w = {14};
+    Integer k = {16};
+    Integer n = {18};
+
+    table *tab = new_table(&table_string_equal, &table_string_hashcode);
+
+    table_put(tab, x, &w);
+    table_put(tab, y, &k);
+    table_put(tab, z, &n);
+
+    table_iterator iter = new_table_iterator(tab);
+
+    ASSERT("(1) has next == true", table_iterator_has_next(&iter));
+    table_pair pair = table_iterator_next(&iter);
+    ASSERT("(1) pair not null", pair.value != NULL);
+    int value = ((Integer *)pair.value)->value;
+    ASSERT("(1) pair equals 14 or 16 or 18", value == 14 || value == 16 || value == 18);
+
+    ASSERT("(2) has next == true", table_iterator_has_next(&iter));
+    pair = table_iterator_next(&iter);
+    ASSERT("(2) pair not null", pair.value != NULL);
+    value = ((Integer *)pair.value)->value;
+    ASSERT("(2) pair equals 14 or 16 or 18", value == 14 || value == 16 || value == 18);
+
+    pair = table_iterator_next(&iter);
+    ASSERT("(3) pair not null", pair.value != NULL);
+    value = ((Integer *)pair.value)->value;
+    ASSERT("(3) pair equals 14 or 16 or 18", value == 14 || value == 16 || value == 18);
+
+    ASSERT("(3) has next == false", table_iterator_has_next(&iter) == false);
+
+    return 0;
 }
 
 static char *test_remove() {
@@ -120,5 +158,6 @@ char *test_table_all() {
     TEST(test_string);
     TEST(test_stress);
     TEST(test_remove);
+    TEST(test_iterator);
     return 0;
 }

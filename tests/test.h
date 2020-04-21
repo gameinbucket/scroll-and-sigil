@@ -48,7 +48,7 @@ char *run_test(char *message, void(test)());
         printf("%s\n", #test_set);                                                                                                                                                                     \
         char *result = test_set();                                                                                                                                                                     \
         if (result != 0) {                                                                                                                                                                             \
-            printf("%s\n", result);                                                                                                                                                                    \
+            printf("    ERROR: %s\n", result);                                                                                                                                                         \
         }                                                                                                                                                                                              \
         printf("\n");                                                                                                                                                                                  \
     } while (0);

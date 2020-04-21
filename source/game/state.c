@@ -1,13 +1,22 @@
 #include "state.h"
 
-state *state_init(world *w, renderstate *rs) {
+state *new_state(world *w, renderstate *rs, soundstate *ss) {
     state *s = safe_calloc(1, sizeof(state));
     s->w = w;
     s->rs = rs;
+    s->ss = ss;
     s->c = camera_init();
     s->c->x = 10;
     s->c->y = 1;
     s->c->z = 40;
+
+    wad_load_resources(rs);
+    wad_load_map(rs, w);
+
+    world_build_map(w);
+
+    soundstate_load_files(ss);
+
     return s;
 }
 
@@ -119,7 +128,20 @@ void state_render(state *self) {
 
     matrix_perspective_projection(rs->mvp, rs->draw_perspective, rs->mv, -c->x, -c->y, -c->z, c->rx, c->ry);
 
+    uint_table *cache = new_uint_table();
+
+    unsigned int plank_id = rs->textures[TEXTURE_PLANK]->id;
+
+    uint_table_put(cache, plank_id, rs->draw_sectors);
+
+    // How can we split a section of the map into a efficient chunk that is not too big or small
+    // And also split textures to avoid excessive swapping
+    // GL_REPEAT is a must, so texture atlassing is not possible
+    // Probably better to cache textures and remap vertices
+
     world_render(rs, self->w, c);
+
+    destroy_uint_table(cache);
 
     graphics_disable_cull();
     graphics_disable_depth();

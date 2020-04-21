@@ -12,7 +12,6 @@
 #include <stdlib.h>
 
 #include "core/mem.h"
-#include "core/string.h"
 
 #include "graphics/framebuffer.h"
 #include "graphics/graphics.h"
@@ -49,9 +48,12 @@ struct renderstate {
 };
 
 renderstate *new_renderstate();
+
 void renderstate_resize(renderstate *self, int screen_width, int screen_height);
 void renderstate_set_mvp(renderstate *self, float *mvp);
 void renderstate_set_program(renderstate *self, int shader_index);
 void renderstate_set_texture(renderstate *self, int texture_index);
+
+void destroy_renderstate(renderstate *self);
 
 #endif

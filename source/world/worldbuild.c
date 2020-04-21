@@ -114,8 +114,6 @@ void world_build_map(world *self) {
 
     const int cell_size = 1 << WORLD_CELL_SHIFT;
 
-    printf("world build map\n");
-
     float top = 0;
     float left = 0;
 
@@ -240,6 +238,4 @@ void world_build_map(world *self) {
     for (int i = 0; i < sector_count; i++) {
         build_lines(self, sectors[i]);
     }
-
-    printf("world build map done!\n");
 }

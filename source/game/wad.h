@@ -1,13 +1,22 @@
 #ifndef WAD_H
 #define WAD_H
 
+// #define WAD_USE_ZIP
+
+#ifdef WAD_USE_ZIP
+#include <zip.h>
+#endif
+
 #include <SDL2/SDL.h>
 
+#include "core/file.h"
+#include "core/string.h"
+#include "data/array.h"
+#include "data/table.h"
 #include "graphics/graphics.h"
 #include "graphics/matrix.h"
 #include "graphics/render.h"
 #include "graphics/texture.h"
-
 #include "places/place.h"
 #include "world/world.h"
 

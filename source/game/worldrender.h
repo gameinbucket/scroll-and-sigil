@@ -13,6 +13,7 @@
 
 #include "core/mem.h"
 #include "core/string.h"
+#include "data/uint_table.h"
 #include "graphics/framebuffer.h"
 #include "graphics/graphics.h"
 #include "graphics/matrix.h"

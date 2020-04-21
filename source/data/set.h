@@ -47,4 +47,16 @@ unsigned int set_size(set *self);
 void release_set(set *self);
 void destroy_set(set *self);
 
+typedef struct set_iterator set_iterator;
+
+struct set_iterator {
+    set *pointer;
+    unsigned int bin;
+    set_item *item;
+};
+
+set_iterator new_set_iterator(set *self);
+bool set_iterator_has_next(set_iterator *iter);
+void *set_iterator_next(set_iterator *iter);
+
 #endif
