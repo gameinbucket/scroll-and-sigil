@@ -30,7 +30,8 @@ struct thing {
     float delta_x;
     float delta_y;
     float delta_z;
-    sprite *sp;
+    unsigned int sprite_id;
+    sprite *sprite_data;
     void (*update)(void *);
 };
 

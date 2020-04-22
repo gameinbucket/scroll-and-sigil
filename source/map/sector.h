@@ -40,6 +40,7 @@ struct wall {
     float v;
     float s;
     float t;
+    // float *vertices;
 };
 
 struct sector {

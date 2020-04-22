@@ -1,8 +1,6 @@
 #include "place.h"
 
-void place_flat(renderstate *rs, world *w) {
-
-    texture **textures = rs->textures;
+void place_flat(world *w) {
 
     int vec_count = 4;
     vec **vecs = safe_malloc(vec_count * sizeof(vec *));
@@ -15,14 +13,12 @@ void place_flat(renderstate *rs, world *w) {
     int line_count = 0;
     line **lines = NULL;
 
-    sector *s = sector_init(vecs, vec_count, lines, line_count, 0, 0, 10, 0, textures[TEXTURE_PLANK]->id, SECTOR_NO_SURFACE);
+    sector *s = sector_init(vecs, vec_count, lines, line_count, 0, 0, 10, 0, TEXTURE_GRASS, SECTOR_NO_SURFACE);
 
     world_add_sector(w, s);
 }
 
-void place_house(renderstate *rs, world *w, int x, int y) {
-
-    texture **textures = rs->textures;
+void place_house(world *w, int x, int y) {
 
     int p_count = 12;
     vec **p = safe_malloc(p_count * sizeof(vec *));
@@ -44,7 +40,7 @@ void place_house(renderstate *rs, world *w, int x, int y) {
     int k = line_out_count - 1;
     for (int i = 0; i < line_out_count; i++) {
 
-        line_out[i] = line_init(vec_of(p[k]), vec_of(p[i]), LINE_NO_WALL, textures[TEXTURE_PLANK]->id, LINE_NO_WALL);
+        line_out[i] = line_init(vec_of(p[k]), vec_of(p[i]), LINE_NO_WALL, TEXTURE_STONE, LINE_NO_WALL);
         k = i;
     }
 
@@ -61,11 +57,11 @@ void place_house(renderstate *rs, world *w, int x, int y) {
 
     int line_in_count = 1;
     line **line_in = safe_malloc(line_in_count * sizeof(line *));
-    line_in[0] = line_init(vec_of(p[2]), vec_of(p[9]), LINE_NO_WALL, LINE_NO_WALL, textures[TEXTURE_PLANK]->id);
+    line_in[0] = line_init(vec_of(p[2]), vec_of(p[9]), LINE_NO_WALL, LINE_NO_WALL, TEXTURE_PLANKS);
 
     sector *outside = sector_init(p, p_count, line_out, line_out_count, 0, 0, 6, 0, SECTOR_NO_SURFACE, SECTOR_NO_SURFACE);
 
-    sector *inside = sector_init(vec_in, vec_in_count, line_in, line_in_count, 0, 0, 5, 6, textures[TEXTURE_PLANK]->id, textures[TEXTURE_PLANK]->id);
+    sector *inside = sector_init(vec_in, vec_in_count, line_in, line_in_count, 0, 0, 5, 6, TEXTURE_PLANK_FLOOR, TEXTURE_STONE_FLOOR);
 
     world_add_sector(w, outside);
     world_add_sector(w, inside);

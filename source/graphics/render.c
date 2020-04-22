@@ -134,3 +134,44 @@ void render_sprite3d(renderbuffer *b, float x, float y, float z, float sine, flo
     b->vertex_pos = pos + 20;
     render_index4(b);
 }
+
+#define STRIDE 8
+#define CUBE_VERTEX_COUNT 24 * STRIDE
+
+#define RENDER_CUBE(x, y, z)                                                                                                                                                                           \
+    {                                                                                                                                                                                                  \
+        x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,      /* pos x 0 */                                                                                                                                         \
+            x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos x 1 */                                                                                                                                         \
+            x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,    /* pos x 2 */                                                                                                                                         \
+            x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos x 3 */                                                                                                                                         \
+            -x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0, /* neg x 0 */                                                                                                                                         \
+            -x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg x 1 */                                                                                                                                         \
+            -x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* neg x 2 */                                                                                                                                         \
+            -x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg x 3 */                                                                                                                                         \
+            -x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* pos y 0 */                                                                                                                                         \
+            -x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos y 1 */                                                                                                                                         \
+            +x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos y 2 */                                                                                                                                         \
+            +x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* pos y 3 */                                                                                                                                         \
+            -x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0, /* neg y 0 */                                                                                                                                         \
+            +x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0, /* neg y 1 */                                                                                                                                         \
+            +x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg y 2 */                                                                                                                                         \
+            -x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg y 3 */                                                                                                                                         \
+            +x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* pos z 0 */                                                                                                                                         \
+            +x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos z 1 */                                                                                                                                         \
+            -x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos z 2 */                                                                                                                                         \
+            -x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* pos z 3 */                                                                                                                                         \
+            -x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0, /* neg z 0 */                                                                                                                                         \
+            -x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg z 1 */                                                                                                                                         \
+            +x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg z 2 */                                                                                                                                         \
+            +x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0  /* neg z 3 */                                                                                                                                         \
+    }
+
+void render_model(renderbuffer *b) {
+    float cube[CUBE_VERTEX_COUNT] = RENDER_CUBE(1, 1, 1);
+
+    memcpy(b->vertices, &cube, CUBE_VERTEX_COUNT * sizeof(float));
+    b->vertex_pos += CUBE_VERTEX_COUNT;
+
+    for (int i = 0; i < 6; i++)
+        render_index4(b);
+}

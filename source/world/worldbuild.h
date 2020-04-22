@@ -6,7 +6,6 @@
 
 #include "core/mem.h"
 #include "data/array.h"
-#include "graphics/renderbuffer.h"
 #include "map/sector.h"
 #include "map/triangulate.h"
 #include "things/hero.h"

@@ -29,15 +29,11 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
         self->draw_canvas = renderbuffer_init(2, 0, 0, 4, 6, false);
         self->draw_images = renderbuffer_init(2, 0, 2, 40, 60, true);
         self->draw_colors = renderbuffer_init(2, 3, 0, 40, 60, true);
-        self->draw_sectors = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200, true);
-        self->draw_sprites = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200, true);
 
         graphics_make_vao(self->draw_frame);
         graphics_make_vao(self->draw_canvas);
         graphics_make_vao(self->draw_images);
         graphics_make_vao(self->draw_colors);
-        graphics_make_vao(self->draw_sectors);
-        graphics_make_vao(self->draw_sprites);
 
         int texture_count = 1;
 

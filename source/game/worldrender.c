@@ -1,5 +1,24 @@
 #include "worldrender.h"
 
+worldrender *new_worldrender(renderstate *rs, world *w) {
+    worldrender *self = safe_calloc(1, sizeof(worldrender));
+    self->rs = rs;
+    self->w = w;
+    self->cache = new_uint_table();
+    return self;
+}
+
+void worldrender_create_buffers(worldrender *self) {
+    uint_table *cache = self->cache;
+
+    for (int i = 0; i < TEXTURE_COUNT; i++) {
+        renderbuffer *b = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200, true);
+        graphics_make_vao(b);
+
+        uint_table_put(cache, i, b);
+    }
+}
+
 static void render_wall(renderbuffer *b, wall *w) {
     int pos = b->vertex_pos;
     GLfloat *vertices = b->vertices;
@@ -27,6 +46,8 @@ static void render_wall(renderbuffer *b, wall *w) {
     vertices[pos + 17] = w->vb.y;
     vertices[pos + 18] = w->s;
     vertices[pos + 19] = w->t;
+
+    // memcpy(vertices, w->vertices, 20 * sizeof(float));
 
     b->vertex_pos = pos + 20;
     render_index4(b);
@@ -58,8 +79,9 @@ static void render_triangle(renderbuffer *b, triangle *t) {
     render_index3(b);
 }
 
-static void thing_render(renderbuffer *b, thing *t, float sine, float cosine) {
-    render_sprite3d(b, t->x, t->y, t->z, sine, cosine, t->sp);
+static void thing_render(uint_table *cache, thing *t, float sine, float cosine) {
+    renderbuffer *b = uint_table_get(cache, t->sprite_id);
+    render_sprite3d(b, t->x, t->y, t->z, sine, cosine, t->sprite_data);
 }
 
 static void sector_render(uint_table *cache, sector *s) {
@@ -99,24 +121,16 @@ static void sector_render(uint_table *cache, sector *s) {
     }
 }
 
-void world_render(renderstate *rs, world *w, camera *c) {
+void world_render(worldrender *wr, camera *c) {
+
+    // TODO: Store vertices in memory, then memcpy to gl mapped buffer per texture (or use glBufferSubData)
+
+    renderstate *rs = wr->rs;
+    world *w = wr->w;
+    uint_table *cache = wr->cache;
 
     renderstate_set_program(rs, SHADER_TEXTURE_3D);
     renderstate_set_mvp(rs, rs->mvp);
-
-    float sine = sinf(-c->ry);
-    float cosine = cosf(-c->ry);
-    renderbuffer *draw_sprites = rs->draw_sprites;
-    renderbuffer_zero(draw_sprites);
-    thing **things = w->things;
-    int thing_count = w->thing_count;
-    for (int i = 0; i < thing_count; i++) {
-        thing_render(draw_sprites, things[i], sine, cosine);
-    }
-    renderstate_set_texture(rs, TEXTURE_BARON);
-    graphics_bind_and_draw(draw_sprites);
-
-    uint_table *cache = new_uint_table();
 
     uint_table_iterator iter = new_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
@@ -125,8 +139,13 @@ void world_render(renderstate *rs, world *w, camera *c) {
         renderbuffer_zero(b);
     }
 
-    // renderbuffer *draw_sectors = rs->draw_sectors;
-    // renderbuffer_zero(draw_sectors);
+    float sine = sinf(-c->ry);
+    float cosine = cosf(-c->ry);
+    thing **things = w->things;
+    int thing_count = w->thing_count;
+    for (int i = 0; i < thing_count; i++) {
+        thing_render(cache, things[i], sine, cosine);
+    }
 
     sector **sectors = w->sectors;
     int sector_count = w->sector_count;
@@ -134,14 +153,15 @@ void world_render(renderstate *rs, world *w, camera *c) {
         sector_render(cache, sectors[i]);
     }
 
-    uint_table_iterator iter = new_uint_table_iterator(cache);
+    iter = new_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
         uint_table_pair pair = uint_table_iterator_next(&iter);
         renderbuffer *b = pair.value;
-        graphics_bind_texture(GL_TEXTURE0, pair.key);
+        renderstate_set_texture(rs, pair.key);
         graphics_bind_and_draw(b);
     }
+}
 
-    // renderstate_set_texture(rs, TEXTURE_PLANK);
-    // graphics_bind_and_draw(draw_sectors);
+void destroy_worldrender(worldrender *self) {
+    destroy_uint_table(self->cache);
 }

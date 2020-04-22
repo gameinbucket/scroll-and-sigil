@@ -1,6 +1,7 @@
 #ifndef HERO_H
 #define HERO_H
 
+#include "assets/assets.h"
 #include "core/mem.h"
 
 #include "thing.h"

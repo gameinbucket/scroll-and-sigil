@@ -27,10 +27,14 @@ struct state {
     soundstate *ss;
     world *w;
     camera *c;
+    worldrender *wr;
 };
 
 state *new_state(world *w, renderstate *rs, soundstate *ss);
+
 void state_update(state *self);
 void state_render(state *self);
+
+void destroy_state(state *self);
 
 #endif

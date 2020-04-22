@@ -159,6 +159,8 @@ int main() {
     destroy_soundstate(ss);
     Mix_CloseAudio();
 
+    destroy_state(s);
+
     SDL_Quit();
 
     return 0;

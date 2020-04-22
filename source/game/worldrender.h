@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "assets/assets.h"
 #include "core/mem.h"
 #include "core/string.h"
 #include "data/uint_table.h"
@@ -25,8 +26,20 @@
 
 #include "camera.h"
 #include "renderstate.h"
-#include "wad.h"
 
-void world_render(renderstate *rs, world *w, camera *c);
+typedef struct worldrender worldrender;
+
+struct worldrender {
+    renderstate *rs;
+    world *w;
+    uint_table *cache;
+};
+
+worldrender *new_worldrender(renderstate *rs, world *w);
+
+void worldrender_create_buffers(worldrender *self);
+void world_render(worldrender *self, camera *c);
+
+void destroy_worldrender(worldrender *self);
 
 #endif

@@ -22,16 +22,15 @@ struct __attribute__((__packed__)) string_head {
 
 string *string_init_with_length(char *init, size_t length);
 string *string_init(char *init);
+string *string_copy(string *self);
 
-size_t string_size_t(string *s);
-int string_len(string *s);
-size_t string_cap_size_t(string *s);
-int string_cap(string *s);
+size_t string_len(string *s);
+size_t string_cap(string *s);
 void string_free(string *s);
 
-string *concat(string *a, string *b);
-string *concat_list(string **list, int size);
-string *concat_varg(int size, ...);
+string *string_concat(string *a, string *b);
+string *string_concat_list(string **list, int size);
+string *string_concat_varg(int size, ...);
 
 string *substring(string *s, size_t start, size_t end);
 
@@ -40,6 +39,8 @@ string *string_append_char(string *a, char b);
 
 int string_compare(string *a, string *b);
 bool string_equal(string *a, string *b);
+
+void string_zero(string *self);
 
 string *char_to_string(char ch);
 string *int_to_string(int number);
@@ -76,6 +77,6 @@ float string_to_float(string *str);
 float string_to_float32(string *str);
 double string_to_float64(string *str);
 
-string *format(string *f, ...);
+string *string_format(string *f, ...);
 
 #endif

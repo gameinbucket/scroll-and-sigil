@@ -4,29 +4,38 @@ soundstate *new_soundstate() {
     return safe_calloc(1, sizeof(soundstate));
 }
 
-void soundstate_load_files(soundstate *self) {
-
-    char *vampire_wav = "music/vampire-killer.wav";
-    self->vampire_killer = Mix_LoadMUS(vampire_wav);
-    if (self->vampire_killer == NULL) {
-        fprintf(stderr, "Could not load %s\n", vampire_wav);
+void soundstate_load_music(soundstate *self, int id, char *path) {
+    Mix_Music *music = Mix_LoadMUS(path);
+    if (music == NULL) {
+        fprintf(stderr, "Could not load %s\n", path);
         exit(1);
     }
+    self->music[id] = music;
+}
 
-    Mix_PlayMusic(self->vampire_killer, 0);
-
-    char *baron_wav = "sounds/baron-scream.wav";
-    self->baron_scream = Mix_LoadWAV(baron_wav);
-    if (self->baron_scream == NULL) {
-        fprintf(stderr, "Could not load %s\n", baron_wav);
+void soundstate_load_sound(soundstate *self, int id, char *path) {
+    Mix_Chunk *sound = Mix_LoadWAV(path);
+    if (sound == NULL) {
+        fprintf(stderr, "Could not load %s\n", path);
         exit(1);
     }
+    self->sound[id] = sound;
+}
 
-    Mix_PlayChannel(-1, self->baron_scream, 0);
+void soundstate_play_music(soundstate *self, int id) {
+    Mix_PlayMusic(self->music[id], 0);
+}
+
+void soundstate_play_sound(soundstate *self, int id) {
+    Mix_PlayChannel(-1, self->sound[id], 0);
 }
 
 void destroy_soundstate(soundstate *self) {
     Mix_HaltMusic();
-    Mix_FreeMusic(self->vampire_killer);
-    Mix_FreeChunk(self->baron_scream);
+    for (int i = 0; i < MUSIC_COUNT; i++) {
+        Mix_FreeMusic(self->music[i]);
+    }
+    for (int i = 0; i < SOUND_COUNT; i++) {
+        Mix_FreeChunk(self->sound[i]);
+    }
 }

@@ -2,7 +2,6 @@
 #define WORLD_H
 
 #include "core/mem.h"
-#include "graphics/renderbuffer.h"
 #include "map/sector.h"
 #include "things/hero.h"
 #include "things/thing.h"

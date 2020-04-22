@@ -22,31 +22,28 @@ string *string_init(char *init) {
     return string_init_with_length(init, len);
 }
 
-size_t string_size_t(string *s) {
+string *string_copy(string *self) {
+    string_head *head = (string_head *)((char *)self - sizeof(string_head));
+    return string_init_with_length(self, head->length);
+}
+
+size_t string_len(string *s) {
     string_head *head = (string_head *)((char *)s - sizeof(string_head));
     return head->length;
 }
 
-int string_len(string *s) {
-    return (int)string_size_t(s);
-}
-
-size_t string_cap_size_t(string *s) {
+size_t string_cap(string *s) {
     string_head *head = (string_head *)((char *)s - sizeof(string_head));
     return head->capacity;
-}
-
-int string_cap(string *s) {
-    return (int)string_cap_size_t(s);
 }
 
 void string_free(string *s) {
     free((char *)s - sizeof(string_head));
 }
 
-string *concat(string *a, string *b) {
-    size_t len1 = string_size_t(a);
-    size_t len2 = string_size_t(b);
+string *string_concat(string *a, string *b) {
+    size_t len1 = string_len(a);
+    size_t len2 = string_len(b);
     size_t len = len1 + len2;
     string_head *head = string_head_init(len, len);
     char *s = (char *)(head + 1);
@@ -56,16 +53,16 @@ string *concat(string *a, string *b) {
     return (string *)s;
 }
 
-string *concat_list(string **list, int size) {
+string *string_concat_list(string **list, int size) {
     size_t len = 0;
     for (int i = 0; i < size; i++) {
-        len += string_size_t(list[i]);
+        len += string_len(list[i]);
     }
     string_head *head = string_head_init(len, len);
     char *s = (char *)(head + 1);
     size_t pos = 0;
     for (int i = 0; i < size; i++) {
-        size_t len_i = string_size_t(list[i]);
+        size_t len_i = string_len(list[i]);
         memcpy(s + pos, list[i], len_i);
         pos += len_i;
     }
@@ -73,13 +70,13 @@ string *concat_list(string **list, int size) {
     return (string *)s;
 }
 
-string *concat_varg(int size, ...) {
+string *string_concat_varg(int size, ...) {
     va_list ap;
 
     size_t len = 0;
     va_start(ap, size);
     for (int i = 0; i < size; i++) {
-        len += string_size_t(va_arg(ap, string *));
+        len += string_len(va_arg(ap, string *));
     }
     va_end(ap);
 
@@ -90,7 +87,7 @@ string *concat_varg(int size, ...) {
     va_start(ap, size);
     for (int i = 0; i < size; i++) {
         string *param = va_arg(ap, string *);
-        size_t len_i = string_size_t(param);
+        size_t len_i = string_len(param);
         memcpy(s + pos, param, len_i);
         pos += len_i;
     }
@@ -110,7 +107,7 @@ string *substring(string *a, size_t start, size_t end) {
 }
 
 string *string_append(string *a, char *b) {
-    size_t len1 = string_size_t(a);
+    size_t len1 = string_len(a);
     size_t len2 = strlen(b);
     size_t len = len1 + len2;
     string_head *head = string_head_init(len, len);
@@ -122,7 +119,7 @@ string *string_append(string *a, char *b) {
 }
 
 string *string_append_char(string *a, char b) {
-    size_t len1 = string_size_t(a);
+    size_t len1 = string_len(a);
     size_t len2 = 1;
     size_t len = len1 + len2;
     string_head *head = string_head_init(len, len);
@@ -140,6 +137,11 @@ int string_compare(string *a, string *b) {
 bool string_equal(string *a, string *b) {
     int comparison = string_compare(a, b);
     return comparison == 0;
+}
+
+void string_zero(string *self) {
+    string_head *head = (string_head *)((char *)self - sizeof(string_head));
+    head->length = 0;
 }
 
 string *char_to_string(char ch) {

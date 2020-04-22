@@ -7,8 +7,7 @@
 #include <zip.h>
 #endif
 
-#include <SDL2/SDL.h>
-
+#include "assets/assets.h"
 #include "core/file.h"
 #include "core/string.h"
 #include "data/array.h"
@@ -21,17 +20,45 @@
 #include "world/world.h"
 
 #include "renderstate.h"
+#include "soundstate.h"
 
-#define SHADER_SCREEN 0
-#define SHADER_TEXTURE_2D 1
-#define SHADER_TEXTURE_3D 2
-#define SHADER_TEXTURE_3D_COLOR 3
+enum wad_type { WAD_OBJECT, WAD_ARRAY, WAD_STRING };
 
-#define TEXTURE_BARON 0
-#define TEXTURE_PLANK 1
+typedef enum wad_type wad_type;
 
-void wad_load_resources(renderstate *rs);
+typedef table wad_object;
+typedef array wad_array;
 
-void wad_load_map(renderstate *rs, world *w);
+typedef struct wad_element wad_element;
+
+union wad_union {
+    wad_object *object;
+    wad_array *array;
+    string *str;
+};
+
+struct wad_element {
+    enum wad_type type;
+    union wad_union value;
+};
+
+wad_element *new_wad_object();
+wad_element *new_wad_array();
+wad_element *new_wad_string(string *value);
+
+wad_object *wad_get_object(wad_element *element);
+wad_array *wad_get_array(wad_element *element);
+string *wad_get_string(wad_element *element);
+
+void wad_object_add(wad_element *element, string *key, wad_element *value);
+wad_element *wad_object_get(wad_element *object, string *key);
+
+void dealloc_wad(wad_element *element);
+wad_element *parse_wad(string *str);
+
+string *wad_to_string(wad_element *element);
+
+void wad_load_resources(renderstate *rs, soundstate *ss);
+void wad_load_map(world *w);
 
 #endif
