@@ -1,13 +1,10 @@
 #ifndef WAD_H
 #define WAD_H
 
-// #define WAD_USE_ZIP
-
-#ifdef WAD_USE_ZIP
 #include <zip.h>
-#endif
 
 #include "assets/assets.h"
+#include "core/archive.h"
 #include "core/file.h"
 #include "core/string.h"
 #include "data/array.h"

@@ -198,58 +198,48 @@ string *wad_to_string(wad_element *element) {
 
 void wad_load_resources(renderstate *rs, soundstate *ss) {
 
+#define WAD_USE_ZIP
+
 #ifdef WAD_USE_ZIP
-    int err = 0;
-    zip *z = zip_open("scroll-and-sigil.wad", 0, &err);
-
-    const char *name = "shaders/screen.vert";
-    struct zip_stat st;
-    zip_stat_init(&st);
-    zip_stat(z, name, 0, &st);
-
-    char *contents = new char[st.size];
-
-    zip_file *f = zip_fopen(z, name, 0);
-    zip_fread(f, contents, st.size);
-    zip_fclose(f);
-
-    zip_close(z);
+    struct zip *z = open_zip_archive("scroll-and-sigil.wad");
+#else
+    struct zip *z = NULL;
 #endif
 
     string *wad_data = cat("wads/wad");
-    printf("\n%s\n", wad_data);
 
     wad_element *wad = parse_wad(wad_data);
     string_free(wad_data);
 
     string *wad_str = wad_to_string(wad);
-    printf("\nWAD: %s\n", wad_str);
+    printf("\n%c\n", wad_str[0]);
     string_free(wad_str);
 
     rs->shaders = safe_malloc(SOUND_COUNT * sizeof(shader *));
-    rs->shaders[SHADER_SCREEN] = shader_make("shaders/screen.vert", "shaders/screen.frag");
-    rs->shaders[SHADER_TEXTURE_2D] = shader_make("shaders/texture2d.vert", "shaders/texture2d.frag");
-    rs->shaders[SHADER_TEXTURE_3D] = shader_make("shaders/texture3d.vert", "shaders/texture3d.frag");
-    rs->shaders[SHADER_TEXTURE_3D_COLOR] = shader_make("shaders/texture3d-color.vert", "shaders/texture3d-color.frag");
+    rs->shaders[SHADER_SCREEN] = shader_make(z, "shaders/screen.vert", "shaders/screen.frag");
+    rs->shaders[SHADER_TEXTURE_2D] = shader_make(z, "shaders/texture2d.vert", "shaders/texture2d.frag");
+    rs->shaders[SHADER_TEXTURE_3D] = shader_make(z, "shaders/texture3d.vert", "shaders/texture3d.frag");
+    rs->shaders[SHADER_TEXTURE_3D_COLOR] = shader_make(z, "shaders/texture3d-color.vert", "shaders/texture3d-color.frag");
 
     rs->textures = safe_malloc(TEXTURE_COUNT * sizeof(texture *));
-    rs->textures[TEXTURE_BARON] = texture_make("textures/baron.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
-    rs->textures[TEXTURE_GRASS] = texture_make("textures/tiles/grass.png", GL_REPEAT, GL_NEAREST);
-    rs->textures[TEXTURE_PLANK_FLOOR] = texture_make("textures/tiles/plank-floor.png", GL_REPEAT, GL_NEAREST);
-    rs->textures[TEXTURE_PLANKS] = texture_make("textures/tiles/planks.png", GL_REPEAT, GL_NEAREST);
-    rs->textures[TEXTURE_STONE] = texture_make("textures/tiles/stone.png", GL_REPEAT, GL_NEAREST);
-    rs->textures[TEXTURE_STONE_FLOOR] = texture_make("textures/tiles/stone-floor.png", GL_REPEAT, GL_NEAREST);
+    rs->textures[TEXTURE_BARON] = texture_make(z, "textures/baron.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
+    rs->textures[TEXTURE_GRASS] = texture_make(z, "textures/tiles/grass.png", GL_REPEAT, GL_NEAREST);
+    rs->textures[TEXTURE_PLANK_FLOOR] = texture_make(z, "textures/tiles/plank-floor.png", GL_REPEAT, GL_NEAREST);
+    rs->textures[TEXTURE_PLANKS] = texture_make(z, "textures/tiles/planks.png", GL_REPEAT, GL_NEAREST);
+    rs->textures[TEXTURE_STONE] = texture_make(z, "textures/tiles/stone.png", GL_REPEAT, GL_NEAREST);
+    rs->textures[TEXTURE_STONE_FLOOR] = texture_make(z, "textures/tiles/stone-floor.png", GL_REPEAT, GL_NEAREST);
 
     ss->music = safe_malloc(MUSIC_COUNT * sizeof(Mix_Music *));
-    soundstate_load_music(ss, MUSIC_VAMPIRE_KILLER, "music/vampire-killer.wav");
+    soundstate_load_music(ss, z, MUSIC_VAMPIRE_KILLER, "music/vampire-killer.wav");
 
     ss->sound = safe_malloc(SOUND_COUNT * sizeof(Mix_Chunk *));
-    soundstate_load_sound(ss, SOUND_BARON_SCREAM, "sounds/baron-scream.wav");
+    soundstate_load_sound(ss, z, SOUND_BARON_SCREAM, "sounds/baron-scream.wav");
 
-    soundstate_play_music(ss, MUSIC_VAMPIRE_KILLER);
+    // soundstate_play_music(ss, MUSIC_VAMPIRE_KILLER);
     soundstate_play_sound(ss, SOUND_BARON_SCREAM);
 
     dealloc_wad(wad);
+    zip_close(z);
 }
 
 void wad_load_map(world *w) {

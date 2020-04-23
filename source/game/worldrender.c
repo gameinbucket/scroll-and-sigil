@@ -80,8 +80,12 @@ static void render_triangle(renderbuffer *b, triangle *t) {
 }
 
 static void thing_render(uint_table *cache, thing *t, float sine, float cosine) {
-    renderbuffer *b = uint_table_get(cache, t->sprite_id);
-    render_sprite3d(b, t->x, t->y, t->z, sine, cosine, t->sprite_data);
+    // renderbuffer *b = uint_table_get(cache, t->sprite_id);
+    // render_sprite3d(b, t->x, t->y, t->z, sine, cosine, t->sprite_data);
+    if (sine < -999 || cosine < -999)
+        return;
+    renderbuffer *b = uint_table_get(cache, TEXTURE_PLANKS);
+    render_model(b, t->x, t->y, t->z, t->angle);
 }
 
 static void sector_render(uint_table *cache, sector *s) {

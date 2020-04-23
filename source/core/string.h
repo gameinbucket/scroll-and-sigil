@@ -22,6 +22,7 @@ struct __attribute__((__packed__)) string_head {
 
 string *string_init_with_length(char *init, size_t length);
 string *string_init(char *init);
+string *string_allocate(size_t length);
 string *string_copy(string *self);
 
 size_t string_len(string *s);

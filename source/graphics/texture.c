@@ -8,13 +8,9 @@ texture *texture_init(GLuint id, int width, int height) {
     return t;
 }
 
-texture *texture_make(char *path, GLint clamp, GLint interpolate) {
+texture *texture_make(struct zip *z, char *path, GLint clamp, GLint interpolate) {
 
-    simple_image *png = read_png_file(path);
-    if (png == NULL) {
-        fprintf(stderr, "Failed to load png file");
-        exit(1);
-    }
+    simple_image *png = read_png_file(z, path);
 
     int width = png->width;
     int height = png->height;

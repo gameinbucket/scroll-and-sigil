@@ -11,8 +11,15 @@ void show_info_log(GLuint object, PFNGLGETSHADERIVPROC func_get, PFNGLGETSHADERI
     free(log);
 }
 
-GLint shader_compile_source(char *path, GLint type) {
-    string *code = cat(path);
+GLint shader_compile_source(struct zip *z, char *path, GLint type) {
+
+    string *code;
+    if (z != NULL) {
+        code = read_string_from_zip(z, path);
+    } else {
+        code = cat(path);
+    }
+
     GLuint shader = glCreateShader(type);
 
     GLint shader_ok = GL_FALSE;
@@ -33,10 +40,10 @@ GLint shader_compile_source(char *path, GLint type) {
     return shader;
 }
 
-shader *shader_make(char *vert, char *frag) {
+shader *shader_make(struct zip *z, char *vert, char *frag) {
 
-    GLuint vertex = shader_compile_source(vert, GL_VERTEX_SHADER);
-    GLuint fragment = shader_compile_source(frag, GL_FRAGMENT_SHADER);
+    GLuint vertex = shader_compile_source(z, vert, GL_VERTEX_SHADER);
+    GLuint fragment = shader_compile_source(z, frag, GL_FRAGMENT_SHADER);
 
     GLuint program = glCreateProgram();
 

@@ -6,6 +6,7 @@ void hero_update(void *void_self) {
     self->super.y = 1;
     self->super.z = 40;
     self->super.delta_x = 0.0001;
+    self->super.angle += 0.001;
 }
 
 hero *hero_init() {

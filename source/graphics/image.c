@@ -1,27 +1,47 @@
 #include "image.h"
 
-simple_image *read_png_file(char *path) {
+struct png_blob_handle {
+    char *data;
+    png_size_t offset;
+};
 
-    FILE *fp = fopen(path, "rb");
+static void png_read_from_buffer(png_structp png, png_bytep out, png_size_t read_length) {
+    png_voidp io_ptr = png_get_io_ptr(png);
+    struct png_blob_handle *handle = io_ptr;
+    memcpy(out, handle->data + handle->offset, read_length);
+    handle->offset += read_length;
+}
+
+simple_image *read_png_file(struct zip *z, char *path) {
 
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png) {
-        fprintf(stderr, "libpng png pointer null\n");
+        fprintf(stderr, "Error: NULL libpng png pointer\n");
         exit(1);
     }
 
     png_infop info = png_create_info_struct(png);
     if (!info) {
-        fprintf(stderr, "libpng info null\n");
+        fprintf(stderr, "Error: NULL libpng info\n");
         exit(1);
     }
 
     if (setjmp(png_jmpbuf(png))) {
-        fprintf(stderr, "libpng exception\n");
         exit(1);
     }
 
-    png_init_io(png, fp);
+    FILE *fp = NULL;
+    struct png_blob_handle blob_handle;
+
+    if (z != NULL) {
+        struct archive_blob blob = read_blob_from_zip(z, path);
+        blob_handle.data = blob.data;
+        blob_handle.offset = 0;
+        png_set_read_fn(png, (png_voidp)&blob_handle, &png_read_from_buffer);
+    } else {
+        fp = fopen(path, "rb");
+        png_init_io(png, fp);
+    }
 
     png_read_info(png, info);
 
@@ -67,7 +87,11 @@ simple_image *read_png_file(char *path) {
 
     png_read_image(png, &row_ptrs[0]);
 
-    fclose(fp);
+    if (z != NULL) {
+        free(blob_handle.data);
+    } else {
+        fclose(fp);
+    }
 
     png_destroy_read_struct(&png, &info, NULL);
 

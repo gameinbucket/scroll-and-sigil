@@ -19,6 +19,7 @@ struct thing {
     float x;
     float y;
     float z;
+    float angle;
     float radius;
     float height;
     int min_bx;

@@ -7,7 +7,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <zip.h>
 
+#include "core/archive.h"
 #include "core/file.h"
 #include "core/mem.h"
 
@@ -19,7 +21,7 @@ struct simple_image {
     void *pixels;
 };
 
-simple_image *read_png_file(char *path);
+simple_image *read_png_file(struct zip *z, char *path);
 void simple_image_free(simple_image *self);
 
 #endif

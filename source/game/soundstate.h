@@ -8,8 +8,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <zip.h>
 
 #include "assets/assets.h"
+#include "core/archive.h"
 #include "core/mem.h"
 
 #define SOUND_MAX_CHANNELS 8
@@ -23,8 +25,8 @@ struct soundstate {
 
 soundstate *new_soundstate();
 
-void soundstate_load_music(soundstate *self, int id, char *path);
-void soundstate_load_sound(soundstate *self, int id, char *path);
+void soundstate_load_music(soundstate *self, struct zip *z, int id, char *path);
+void soundstate_load_sound(soundstate *self, struct zip *z, int id, char *path);
 
 void soundstate_play_music(soundstate *self, int id);
 void soundstate_play_sound(soundstate *self, int id);

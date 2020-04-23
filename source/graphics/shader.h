@@ -1,11 +1,6 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-// #define SHADER_DEBUG
-
-#include "core/file.h"
-#include "core/string.h"
-
 #include <GL/glew.h>
 
 #include <GL/gl.h>
@@ -15,6 +10,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <zip.h>
+
+#include "core/archive.h"
+#include "core/file.h"
+#include "core/string.h"
 
 struct shader {
     GLuint id;
@@ -23,6 +23,6 @@ struct shader {
 
 typedef struct shader shader;
 
-shader *shader_make(char *vert, char *frag);
+shader *shader_make(struct zip *z, char *vert, char *frag);
 
 #endif

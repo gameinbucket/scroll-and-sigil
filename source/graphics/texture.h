@@ -10,7 +10,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <zip.h>
 
+#include "core/archive.h"
 #include "core/mem.h"
 
 #include "image.h"
@@ -23,6 +25,6 @@ struct texture {
     int height;
 };
 
-texture *texture_make(char *path, GLint clamp, GLint interpolate);
+texture *texture_make(struct zip *z, char *path, GLint clamp, GLint interpolate);
 
 #endif

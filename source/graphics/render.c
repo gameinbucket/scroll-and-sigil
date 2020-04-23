@@ -135,41 +135,70 @@ void render_sprite3d(renderbuffer *b, float x, float y, float z, float sine, flo
     render_index4(b);
 }
 
-#define STRIDE 8
+#define STRIDE 5
 #define CUBE_VERTEX_COUNT 24 * STRIDE
 
 #define RENDER_CUBE(x, y, z)                                                                                                                                                                           \
     {                                                                                                                                                                                                  \
-        x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,      /* pos x 0 */                                                                                                                                         \
-            x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos x 1 */                                                                                                                                         \
-            x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,    /* pos x 2 */                                                                                                                                         \
-            x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos x 3 */                                                                                                                                         \
-            -x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0, /* neg x 0 */                                                                                                                                         \
-            -x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg x 1 */                                                                                                                                         \
-            -x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* neg x 2 */                                                                                                                                         \
-            -x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg x 3 */                                                                                                                                         \
-            -x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* pos y 0 */                                                                                                                                         \
-            -x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos y 1 */                                                                                                                                         \
-            +x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos y 2 */                                                                                                                                         \
-            +x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* pos y 3 */                                                                                                                                         \
-            -x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0, /* neg y 0 */                                                                                                                                         \
-            +x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0, /* neg y 1 */                                                                                                                                         \
-            +x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg y 2 */                                                                                                                                         \
-            -x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg y 3 */                                                                                                                                         \
-            +x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* pos z 0 */                                                                                                                                         \
-            +x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos z 1 */                                                                                                                                         \
-            -x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0,   /* pos z 2 */                                                                                                                                         \
-            -x, -y, z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* pos z 3 */                                                                                                                                         \
-            -x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0, /* neg z 0 */                                                                                                                                         \
-            -x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg z 1 */                                                                                                                                         \
-            +x, y, -z, 0.0, 0.0, 0.0, 0.0, 0.0,  /* neg z 2 */                                                                                                                                         \
-            +x, -y, -z, 0.0, 0.0, 0.0, 0.0, 0.0  /* neg z 3 */                                                                                                                                         \
+        x, -y, -z, 0, 0,      /* pos x 0 */                                                                                                                                                            \
+            x, y, -z, 1, 0,   /* pos x 1 */                                                                                                                                                            \
+            x, y, z, 1, 1,    /* pos x 2 */                                                                                                                                                            \
+            x, -y, z, 0, 1,   /* pos x 3 */                                                                                                                                                            \
+            -x, -y, -z, 0, 0, /* neg x 0 */                                                                                                                                                            \
+            -x, -y, z, 0, 1,  /* neg x 1 */                                                                                                                                                            \
+            -x, y, z, 1, 1,   /* neg x 2 */                                                                                                                                                            \
+            -x, y, -z, 1, 0,  /* neg x 3 */                                                                                                                                                            \
+            -x, y, -z, 0, 0,  /* pos y 0 */                                                                                                                                                            \
+            -x, y, z, 0, 1,   /* pos y 1 */                                                                                                                                                            \
+            x, y, z, 1, 1,    /* pos y 2 */                                                                                                                                                            \
+            x, y, -z, 1, 0,   /* pos y 3 */                                                                                                                                                            \
+            -x, -y, -z, 0, 0, /* neg y 0 */                                                                                                                                                            \
+            x, -y, -z, 1, 0,  /* neg y 1 */                                                                                                                                                            \
+            x, -y, z, 1, 1,   /* neg y 2 */                                                                                                                                                            \
+            -x, -y, z, 0, 1,  /* neg y 3 */                                                                                                                                                            \
+            x, -y, z, 1, 0,   /* pos z 0 */                                                                                                                                                            \
+            x, y, z, 1, 1,    /* pos z 1 */                                                                                                                                                            \
+            -x, y, z, 0, 1,   /* pos z 2 */                                                                                                                                                            \
+            -x, -y, z, 0, 0,  /* pos z 3 */                                                                                                                                                            \
+            -x, -y, -z, 0, 0, /* neg z 0 */                                                                                                                                                            \
+            -x, y, -z, 0, 1,  /* neg z 1 */                                                                                                                                                            \
+            x, y, -z, 1, 1,   /* neg z 2 */                                                                                                                                                            \
+            x, -y, -z, 1, 0   /* neg z 3 */                                                                                                                                                            \
     }
 
-void render_model(renderbuffer *b) {
+static void translate_vectors(float *vertices, unsigned int count, float x, float y, float z) {
+    for (unsigned int i = 0; i < count; i += STRIDE) {
+        vertices[i] += x;
+        vertices[i + 1] += y;
+        vertices[i + 2] += z;
+    }
+}
+
+// static void rotate_vectors_x(float *vertices, unsigned int count, float sine, float cosine) {
+//     for (unsigned int i = 0; i < count; i += STRIDE) {
+//         float y = vertices[i + 1] * cosine - vertices[i + 2] * sine;
+//         float z = vertices[i + 1] * sine + vertices[i + 2] * cosine;
+//         vertices[i + 1] = y;
+//         vertices[i + 2] = z;
+//     }
+// }
+
+static void rotate_vectors_y(float *vertices, unsigned int count, float sine, float cosine) {
+    for (unsigned int i = 0; i < count; i += STRIDE) {
+        float x = vertices[i] * cosine + vertices[i + 2] * sine;
+        float z = vertices[i + 2] * cosine - vertices[i] * sine;
+        vertices[i] = x;
+        vertices[i + 2] = z;
+    }
+}
+
+void render_model(renderbuffer *b, float x, float y, float z, float angle) {
     float cube[CUBE_VERTEX_COUNT] = RENDER_CUBE(1, 1, 1);
 
-    memcpy(b->vertices, &cube, CUBE_VERTEX_COUNT * sizeof(float));
+    rotate_vectors_y(cube, CUBE_VERTEX_COUNT, sinf(angle), cosf(angle));
+    translate_vectors(cube, CUBE_VERTEX_COUNT, x, y, z);
+
+    memcpy(b->vertices, cube, CUBE_VERTEX_COUNT * sizeof(float));
     b->vertex_pos += CUBE_VERTEX_COUNT;
 
     for (int i = 0; i < 6; i++)

@@ -17,6 +17,13 @@ string *string_init_with_length(char *init, size_t length) {
     return (string *)s;
 }
 
+string *string_allocate(size_t length) {
+    string_head *head = string_head_init(length, length);
+    char *s = (char *)(head + 1);
+    memset(s, '\0', length + 1);
+    return (string *)s;
+}
+
 string *string_init(char *init) {
     size_t len = strlen(init);
     return string_init_with_length(init, len);
