@@ -81,6 +81,42 @@ void graphics_make_fbo(framebuffer *f) {
     graphics_bind_fbo(0);
 }
 
+void graphics_make_shadow_map(shadowmap *s) {
+
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+    s->fbo = fbo;
+
+    graphics_bind_fbo(fbo);
+
+    GLuint map;
+    glGenTextures(1, &map);
+    s->depth_texture = map;
+
+    glBindTexture(GL_TEXTURE_2D, map);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, map, 0);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s->width, s->height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "Shadow map status: %d\n", status);
+        exit(1);
+    }
+
+    graphics_bind_fbo(0);
+}
+
 void graphics_bind_vao_attributes(GLint position, GLint color, GLint texture) {
 
     GLsizei stride = (position + color + texture) * sizeof(GLfloat);
@@ -204,6 +240,10 @@ void graphics_disable_cull() {
 
 void graphics_clear_color() {
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void graphics_clear_depth() {
+    glClear(GL_DEPTH_BUFFER_BIT);
 }
 
 void graphics_clear_color_and_depth() {

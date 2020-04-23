@@ -50,6 +50,11 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
 
         self->frame = frame;
 
+        shadowmap *shadow_map = alloc_shadowmap(1024, 1024);
+        graphics_make_shadow_map(shadow_map);
+
+        self->shadow_map = shadow_map;
+
     } else {
         graphics_framebuffer_resize(self->frame, draw_width, draw_height);
     }

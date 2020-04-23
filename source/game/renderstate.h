@@ -19,6 +19,7 @@
 #include "graphics/render.h"
 #include "graphics/renderbuffer.h"
 #include "graphics/shader.h"
+#include "graphics/shadowmap.h"
 #include "graphics/texture.h"
 
 typedef struct renderstate renderstate;
@@ -42,6 +43,7 @@ struct renderstate {
     float mv[16];
     float mvp[16];
     framebuffer *frame;
+    shadowmap *shadow_map;
     shader **shaders;
     texture **textures;
     shader *active_shader;

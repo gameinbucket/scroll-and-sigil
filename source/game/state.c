@@ -113,27 +113,39 @@ void state_render(state *self) {
     camera *c = self->c;
     renderstate *rs = self->rs;
 
+    graphics_enable_cull();
+    graphics_enable_depth();
+
+    // shadow map
+
+    shadowmap *s = rs->shadow_map;
+
+    graphics_bind_fbo(s->fbo);
+    graphics_set_view(0, 0, s->width, s->height);
+    graphics_clear_depth();
+
+    world_render(self->wr, c);
+
+    // end shadow map
+
     framebuffer *f = rs->frame;
 
     graphics_bind_fbo(f->fbo);
     graphics_set_view(0, 0, f->width, f->height);
     graphics_clear_color_and_depth();
 
-    // 3d
-
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    graphics_enable_cull();
-    graphics_enable_depth();
+    // render scene
 
     matrix_perspective_projection(rs->mvp, rs->draw_perspective, rs->mv, -c->x, -c->y, -c->z, c->rx, c->ry);
+
+    graphics_bind_texture(GL_TEXTURE1, s->depth_texture);
 
     world_render(self->wr, c);
 
     graphics_disable_cull();
     graphics_disable_depth();
 
-    // end 3d
+    // end render scene
 
     renderstate_set_program(rs, SHADER_TEXTURE_2D);
     matrix_orthographic_projection(rs->mvp, rs->draw_orthographic, rs->mv, 0, 0);
