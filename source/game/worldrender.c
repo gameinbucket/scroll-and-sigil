@@ -133,9 +133,6 @@ void world_render(worldrender *wr, camera *c) {
     world *w = wr->w;
     uint_table *cache = wr->cache;
 
-    renderstate_set_program(rs, SHADER_TEXTURE_3D);
-    renderstate_set_mvp(rs, rs->mvp);
-
     uint_table_iterator iter = new_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
         uint_table_pair pair = uint_table_iterator_next(&iter);

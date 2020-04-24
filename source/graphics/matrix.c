@@ -95,27 +95,27 @@ void matrix_translate(float *matrix, float x, float y, float z) {
     matrix[15] = x * matrix[3] + y * matrix[7] + z * matrix[11] + matrix[15];
 }
 
-void matrix_multiply(float *matrix, float *from, float *temp) {
+void matrix_multiply(float *matrix, float *a, float *b) {
 
-    matrix[0] = from[0] * temp[0] + from[4] * temp[1] + from[8] * temp[2] + from[12] * temp[3];
-    matrix[1] = from[1] * temp[0] + from[5] * temp[1] + from[9] * temp[2] + from[13] * temp[3];
-    matrix[2] = from[2] * temp[0] + from[6] * temp[1] + from[10] * temp[2] + from[14] * temp[3];
-    matrix[3] = from[3] * temp[0] + from[7] * temp[1] + from[11] * temp[2] + from[15] * temp[3];
+    matrix[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3];
+    matrix[1] = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3];
+    matrix[2] = a[2] * b[0] + a[6] * b[1] + a[10] * b[2] + a[14] * b[3];
+    matrix[3] = a[3] * b[0] + a[7] * b[1] + a[11] * b[2] + a[15] * b[3];
 
-    matrix[4] = from[0] * temp[4] + from[4] * temp[5] + from[8] * temp[6] + from[12] * temp[7];
-    matrix[5] = from[1] * temp[4] + from[5] * temp[5] + from[9] * temp[6] + from[13] * temp[7];
-    matrix[6] = from[2] * temp[4] + from[6] * temp[5] + from[10] * temp[6] + from[14] * temp[7];
-    matrix[7] = from[3] * temp[4] + from[7] * temp[5] + from[11] * temp[6] + from[15] * temp[7];
+    matrix[4] = a[0] * b[4] + a[4] * b[5] + a[8] * b[6] + a[12] * b[7];
+    matrix[5] = a[1] * b[4] + a[5] * b[5] + a[9] * b[6] + a[13] * b[7];
+    matrix[6] = a[2] * b[4] + a[6] * b[5] + a[10] * b[6] + a[14] * b[7];
+    matrix[7] = a[3] * b[4] + a[7] * b[5] + a[11] * b[6] + a[15] * b[7];
 
-    matrix[8] = from[0] * temp[8] + from[4] * temp[9] + from[8] * temp[10] + from[12] * temp[11];
-    matrix[9] = from[1] * temp[8] + from[5] * temp[9] + from[9] * temp[10] + from[13] * temp[11];
-    matrix[10] = from[2] * temp[8] + from[6] * temp[9] + from[10] * temp[10] + from[14] * temp[11];
-    matrix[11] = from[3] * temp[8] + from[7] * temp[9] + from[11] * temp[10] + from[15] * temp[11];
+    matrix[8] = a[0] * b[8] + a[4] * b[9] + a[8] * b[10] + a[12] * b[11];
+    matrix[9] = a[1] * b[8] + a[5] * b[9] + a[9] * b[10] + a[13] * b[11];
+    matrix[10] = a[2] * b[8] + a[6] * b[9] + a[10] * b[10] + a[14] * b[11];
+    matrix[11] = a[3] * b[8] + a[7] * b[9] + a[11] * b[10] + a[15] * b[11];
 
-    matrix[12] = from[0] * temp[12] + from[4] * temp[13] + from[8] * temp[14] + from[12] * temp[15];
-    matrix[13] = from[1] * temp[12] + from[5] * temp[13] + from[9] * temp[14] + from[13] * temp[15];
-    matrix[14] = from[2] * temp[12] + from[6] * temp[13] + from[10] * temp[14] + from[14] * temp[15];
-    matrix[15] = from[3] * temp[12] + from[7] * temp[13] + from[11] * temp[14] + from[15] * temp[15];
+    matrix[12] = a[0] * b[12] + a[4] * b[13] + a[8] * b[14] + a[12] * b[15];
+    matrix[13] = a[1] * b[12] + a[5] * b[13] + a[9] * b[14] + a[13] * b[15];
+    matrix[14] = a[2] * b[12] + a[6] * b[13] + a[10] * b[14] + a[14] * b[15];
+    matrix[15] = a[3] * b[12] + a[7] * b[13] + a[11] * b[14] + a[15] * b[15];
 }
 
 void matrix_rotate_x(float *matrix, float sine, float cosine) {
@@ -143,9 +143,7 @@ void matrix_rotate_x(float *matrix, float sine, float cosine) {
     temp[15] = 1.0;
 
     float copy[16];
-    for (int i = 0; i < 16; i++) {
-        copy[i] = matrix[i];
-    }
+    memcpy(copy, matrix, 16 * sizeof(float));
 
     matrix_multiply(matrix, copy, temp);
 }
@@ -175,9 +173,7 @@ void matrix_rotate_y(float *matrix, float sine, float cosine) {
     temp[15] = 1.0;
 
     float copy[16];
-    for (int i = 0; i < 16; i++) {
-        copy[i] = matrix[i];
-    }
+    memcpy(copy, matrix, 16 * sizeof(float));
 
     matrix_multiply(matrix, copy, temp);
 }
@@ -207,9 +203,7 @@ void matrix_rotate_z(float *matrix, float sine, float cosine) {
     temp[15] = 1.0;
 
     float copy[16];
-    for (int i = 0; i < 16; i++) {
-        copy[i] = matrix[i];
-    }
+    memcpy(copy, matrix, 16 * sizeof(float));
 
     matrix_multiply(matrix, copy, temp);
 }
@@ -307,6 +301,41 @@ void matrix_inverse(float *matrix, float *from) {
     for (int i = 0; i < 16; i++) {
         matrix[i] = dst[i] * det;
     }
+}
+
+void matrix_look_at(float *matrix, float *eye, float *center) {
+
+    float forward[3] = {
+        eye[0] - center[0],
+        eye[1] - center[1],
+        eye[2] - center[2],
+    };
+    vector_normalize(forward);
+
+    float right[3] = {forward[2], 0, -forward[0]};
+
+    float up[3];
+    vector_cross(up, forward, right);
+
+    matrix[0] = right[0];
+    matrix[4] = right[1];
+    matrix[8] = right[2];
+    matrix[12] = 0;
+
+    matrix[1] = up[0];
+    matrix[5] = up[1];
+    matrix[9] = up[2];
+    matrix[13] = 0;
+
+    matrix[2] = forward[0];
+    matrix[6] = forward[1];
+    matrix[10] = forward[2];
+    matrix[14] = 0;
+
+    matrix[3] = eye[0];
+    matrix[7] = eye[1];
+    matrix[11] = eye[2];
+    matrix[15] = 1;
 }
 
 void matrix_orthographic_projection(float *mvp, float *orthographic, float *mv, float x, float y) {

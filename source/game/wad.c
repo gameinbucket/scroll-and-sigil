@@ -212,14 +212,16 @@ void wad_load_resources(renderstate *rs, soundstate *ss) {
     string_free(wad_data);
 
     string *wad_str = wad_to_string(wad);
-    printf("\n%c\n", wad_str[0]);
+    printf("\nWAD: %c\n", wad_str[0]);
     string_free(wad_str);
 
-    rs->shaders = safe_malloc(SOUND_COUNT * sizeof(shader *));
+    rs->shaders = safe_malloc(SHADER_COUNT * sizeof(shader *));
     rs->shaders[SHADER_SCREEN] = shader_make(z, "shaders/screen.vert", "shaders/screen.frag");
     rs->shaders[SHADER_TEXTURE_2D] = shader_make(z, "shaders/texture2d.vert", "shaders/texture2d.frag");
     rs->shaders[SHADER_TEXTURE_3D] = shader_make(z, "shaders/texture3d.vert", "shaders/texture3d.frag");
     rs->shaders[SHADER_TEXTURE_3D_COLOR] = shader_make(z, "shaders/texture3d-color.vert", "shaders/texture3d-color.frag");
+    rs->shaders[SHADER_TEXTURE_3D_SHADOW] = shader_make(z, "shaders/texture3d-shadow.vert", "shaders/texture3d-shadow.frag");
+    rs->shaders[SHADER_SHADOW_PASS] = shader_make(z, "shaders/shadow-pass.vert", "shaders/shadow-pass.frag");
 
     rs->textures = safe_malloc(TEXTURE_COUNT * sizeof(texture *));
     rs->textures[TEXTURE_BARON] = texture_make(z, "textures/baron.png", GL_CLAMP_TO_EDGE, GL_NEAREST);

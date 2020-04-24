@@ -124,9 +124,28 @@ void state_render(state *self) {
     graphics_set_view(0, 0, s->width, s->height);
     graphics_clear_depth();
 
+    float shadow_orthographic[16];
+    matrix_orthographic(shadow_orthographic, -10, 10, -10, 10, 1, 100);
+
+    float shadow_view[16];
+    float eye[3] = {0, 0, 0};
+    float center[3] = {10, 1, 40};
+    // float center[3] = {c->x, c->y, c->z};
+    matrix_look_at(shadow_view, eye, center);
+
+    matrix_multiply(rs->mvp, shadow_orthographic, shadow_view);
+
+    float shadow_bias[16] = {0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0};
+
+    float depth_bias_mvp[16];
+    matrix_multiply(depth_bias_mvp, shadow_bias, rs->mvp);
+
+    renderstate_set_program(rs, SHADER_SHADOW_PASS);
+    renderstate_set_mvp(rs, rs->mvp);
+
     world_render(self->wr, c);
 
-    // end shadow map
+    // ----------------------------------------
 
     framebuffer *f = rs->frame;
 
@@ -138,6 +157,11 @@ void state_render(state *self) {
 
     matrix_perspective_projection(rs->mvp, rs->draw_perspective, rs->mv, -c->x, -c->y, -c->z, c->rx, c->ry);
 
+    renderstate_set_program(rs, SHADER_TEXTURE_3D_SHADOW);
+    renderstate_set_mvp(rs, rs->mvp);
+
+    renderstate_set_uniform_matrix(rs, "u_depth_bias_mvp", depth_bias_mvp);
+
     graphics_bind_texture(GL_TEXTURE1, s->depth_texture);
 
     world_render(self->wr, c);
@@ -145,7 +169,7 @@ void state_render(state *self) {
     graphics_disable_cull();
     graphics_disable_depth();
 
-    // end render scene
+    // ----------------------------------------
 
     renderstate_set_program(rs, SHADER_TEXTURE_2D);
     matrix_orthographic_projection(rs->mvp, rs->draw_orthographic, rs->mv, 0, 0);
@@ -162,6 +186,7 @@ void state_render(state *self) {
     matrix_orthographic_projection(rs->mvp, rs->canvas_orthographic, rs->mv, 0, 0);
     renderstate_set_mvp(rs, rs->mvp);
     graphics_bind_texture(GL_TEXTURE0, f->textures[0]);
+    // graphics_bind_texture(GL_TEXTURE0, s->depth_texture);
     graphics_bind_and_draw(rs->draw_canvas);
 }
 

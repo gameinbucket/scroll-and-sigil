@@ -17,10 +17,10 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
     float fov = 60.0;
     float ratio = (float)draw_width / (float)draw_height;
 
-    matrix_orthographic(self->canvas_orthographic, 0.0, screen_width, 0.0, screen_height, 0.0, 1.0);
-    matrix_orthographic(self->draw_orthographic, 0.0, draw_width, 0.0, draw_height, 0.0, 1.0);
+    matrix_orthographic(self->canvas_orthographic, 0, screen_width, 0, screen_height, 0, 1);
+    matrix_orthographic(self->draw_orthographic, 0, draw_width, 0, draw_height, 0, 1);
 
-    matrix_perspective(self->draw_perspective, fov, 0.01, 100.0, ratio);
+    matrix_perspective(self->draw_perspective, fov, 0.01, 100, ratio);
     matrix_inverse(self->draw_inverse_perspective, self->draw_perspective);
 
     if (self->frame == NULL) {
@@ -71,6 +71,11 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
 
 void renderstate_set_mvp(renderstate *self, float *mvp) {
     glUniformMatrix4fv(self->active_shader->u_mvp, 1, GL_FALSE, mvp);
+}
+
+void renderstate_set_uniform_matrix(renderstate *self, char *name, float *mvp) {
+    GLint location = glGetUniformLocation(self->active_shader->id, name);
+    glUniformMatrix4fv(location, 1, GL_FALSE, mvp);
 }
 
 void renderstate_set_program(renderstate *self, int shader_index) {
