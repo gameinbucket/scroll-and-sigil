@@ -15,4 +15,7 @@
 #define FLOAT_NOT_ZERO(F) abs(F) > FLOAT_PRECISION
 #define FLOAT_EQUAL(X, Y) abs(X - Y) < FLOAT_PRECISION
 
+#define DEGREE_TO_RADIAN(D) (D * (MATH_PI / 180.0))
+#define RADIAN_TO_DEGREE(R) (R * (180.0 / MATH_PI))
+
 #endif

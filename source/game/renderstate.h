@@ -36,10 +36,6 @@ struct renderstate {
     float canvas_orthographic[16];
     float draw_orthographic[16];
     float draw_perspective[16];
-    float draw_inverse_perspective[16];
-    float draw_inverse_modelview[16];
-    float draw_current_to_previous_modelviewprojection[16];
-    float view[16];
     float mv[16];
     float mvp[16];
     framebuffer *frame;

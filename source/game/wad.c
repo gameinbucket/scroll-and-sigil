@@ -198,13 +198,12 @@ string *wad_to_string(wad_element *element) {
 
 void wad_load_resources(renderstate *rs, soundstate *ss) {
 
-#define WAD_USE_ZIP
-
-#ifdef WAD_USE_ZIP
-    struct zip *z = open_zip_archive("scroll-and-sigil.wad");
-#else
     struct zip *z = NULL;
-#endif
+    const bool use_zip = false;
+
+    if (use_zip) {
+        z = open_zip_archive("scroll-and-sigil.wad");
+    }
 
     string *wad_data = cat("wads/wad");
 
@@ -222,6 +221,7 @@ void wad_load_resources(renderstate *rs, soundstate *ss) {
     rs->shaders[SHADER_TEXTURE_3D_COLOR] = shader_make(z, "shaders/texture3d-color.vert", "shaders/texture3d-color.frag");
     rs->shaders[SHADER_TEXTURE_3D_SHADOW] = shader_make(z, "shaders/texture3d-shadow.vert", "shaders/texture3d-shadow.frag");
     rs->shaders[SHADER_SHADOW_PASS] = shader_make(z, "shaders/shadow-pass.vert", "shaders/shadow-pass.frag");
+    rs->shaders[SHADER_VISUALIZE_DEPTH] = shader_make(z, "shaders/visualize-depth.vert", "shaders/visualize-depth.frag");
 
     rs->textures = safe_malloc(TEXTURE_COUNT * sizeof(texture *));
     rs->textures[TEXTURE_BARON] = texture_make(z, "textures/baron.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
@@ -238,7 +238,7 @@ void wad_load_resources(renderstate *rs, soundstate *ss) {
     soundstate_load_sound(ss, z, SOUND_BARON_SCREAM, "sounds/baron-scream.wav");
 
     // soundstate_play_music(ss, MUSIC_VAMPIRE_KILLER);
-    soundstate_play_sound(ss, SOUND_BARON_SCREAM);
+    // soundstate_play_sound(ss, SOUND_BARON_SCREAM);
 
     dealloc_wad(wad);
     zip_close(z);

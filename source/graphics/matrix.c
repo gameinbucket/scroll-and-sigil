@@ -303,39 +303,122 @@ void matrix_inverse(float *matrix, float *from) {
     }
 }
 
-void matrix_look_at(float *matrix, float *eye, float *center) {
+void matrix_multiply_vector4(vec4 *transform, float *matrix, vec4 *vec) {
+    transform->x = vec->x * matrix[0] + vec->y * matrix[1] + vec->z * matrix[2] + vec->w * matrix[3];
+    transform->y = vec->x * matrix[4] + vec->y * matrix[5] + vec->z * matrix[6] + vec->w * matrix[7];
+    transform->z = vec->x * matrix[8] + vec->y * matrix[9] + vec->z * matrix[10] + vec->w * matrix[11];
+    transform->w = vec->x * matrix[12] + vec->y * matrix[13] + vec->z * matrix[14] + vec->w * matrix[15];
+}
 
-    float forward[3] = {
-        eye[0] - center[0],
-        eye[1] - center[1],
-        eye[2] - center[2],
+void matrix_look_at(float *matrix, vec3 *eye, vec3 *center) {
+
+    vec3 forward = {
+        center->x - eye->x,
+        center->y - eye->y,
+        center->z - eye->z,
     };
-    vector_normalize(forward);
+    vector3_normalize(&forward);
 
-    float right[3] = {forward[2], 0, -forward[0]};
+    vec3 any = {0, 1, 0};
 
-    float up[3];
-    vector_cross(up, forward, right);
+    vec3 side;
+    VECTOR_3_CROSS(side, forward, any);
 
-    matrix[0] = right[0];
-    matrix[4] = right[1];
-    matrix[8] = right[2];
+    vec3 up;
+    VECTOR_3_CROSS(up, side, forward);
+
+    matrix[0] = side.x;
+    matrix[4] = side.y;
+    matrix[8] = side.z;
     matrix[12] = 0;
 
-    matrix[1] = up[0];
-    matrix[5] = up[1];
-    matrix[9] = up[2];
+    matrix[1] = up.x;
+    matrix[5] = up.y;
+    matrix[9] = up.z;
     matrix[13] = 0;
 
-    matrix[2] = forward[0];
-    matrix[6] = forward[1];
-    matrix[10] = forward[2];
+    matrix[2] = -forward.x;
+    matrix[6] = -forward.y;
+    matrix[10] = -forward.z;
     matrix[14] = 0;
 
-    matrix[3] = eye[0];
-    matrix[7] = eye[1];
-    matrix[11] = eye[2];
+    matrix[3] = 0;
+    matrix[7] = 0;
+    matrix[11] = 0;
     matrix[15] = 1;
+
+    matrix_translate(matrix, -eye->x, -eye->y, -eye->z);
+}
+
+void matrix_frustum_planes(float *frustum, float *matrix) {
+
+    // Left
+    frustum[0] = matrix[3] + matrix[0];
+    frustum[1] = matrix[7] + matrix[4];
+    frustum[2] = matrix[11] + matrix[8];
+    frustum[3] = matrix[15] + matrix[12];
+
+    // Right
+    frustum[4] = matrix[3] - matrix[0];
+    frustum[5] = matrix[7] - matrix[4];
+    frustum[6] = matrix[11] - matrix[8];
+    frustum[7] = matrix[15] - matrix[12];
+
+    // Top
+    frustum[8] = matrix[3] - matrix[1];
+    frustum[9] = matrix[7] - matrix[5];
+    frustum[10] = matrix[11] - matrix[9];
+    frustum[11] = matrix[15] - matrix[13];
+
+    // Bottom
+    frustum[12] = matrix[3] + matrix[1];
+    frustum[13] = matrix[7] + matrix[5];
+    frustum[14] = matrix[11] + matrix[9];
+    frustum[15] = matrix[15] + matrix[13];
+
+    // Near
+    frustum[16] = matrix[3] + matrix[2];
+    frustum[17] = matrix[7] + matrix[6];
+    frustum[18] = matrix[11] + matrix[10];
+    frustum[19] = matrix[15] + matrix[14];
+
+    // Far
+    frustum[20] = matrix[3] - matrix[2];
+    frustum[21] = matrix[7] - matrix[6];
+    frustum[22] = matrix[11] - matrix[10];
+    frustum[23] = matrix[15] - matrix[14];
+
+    for (int i = 0; i < 6; i++) {
+        float x = frustum[i * 4];
+        float y = frustum[i * 4 + 1];
+        float z = frustum[i * 4 + 2];
+        float n = sqrtf(x * x + y * y + z * z);
+        frustum[i * 4] /= n;
+        frustum[i * 4 + 1] /= n;
+        frustum[i * 4 + 2] /= n;
+        frustum[i * 4 + 3] /= n;
+    }
+}
+
+void matrix_frustum_corners(vec4 *corners, float *inverse_matrix) {
+    corners[0] = (vec4){-1, -1, -1, 1};
+    corners[1] = (vec4){1, -1, -1, 1};
+    corners[2] = (vec4){1, -1, 1, 1};
+    corners[3] = (vec4){-1, -1, 1, 1};
+    corners[4] = (vec4){-1, 1, -1, 1};
+    corners[5] = (vec4){1, 1, -1, 1};
+    corners[6] = (vec4){1, 1, 1, 1};
+    corners[7] = (vec4){-1, 1, 1, 1};
+
+    vec4 transform;
+
+    for (int i = 0; i < 8; i++) {
+        matrix_multiply_vector4(&transform, inverse_matrix, &corners[i]);
+        corners[i].x = transform.x / transform.w;
+        corners[i].y = transform.y / transform.w;
+        corners[i].z = transform.z / transform.w;
+        corners[i].w = 1;
+    }
 }
 
 void matrix_orthographic_projection(float *mvp, float *orthographic, float *mv, float x, float y) {

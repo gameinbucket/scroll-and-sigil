@@ -238,6 +238,14 @@ void graphics_disable_cull() {
     glDisable(GL_CULL_FACE);
 }
 
+void graphics_cull_front() {
+    glCullFace(GL_FRONT);
+}
+
+void graphics_cull_back() {
+    glCullFace(GL_BACK);
+}
+
 void graphics_clear_color() {
     glClear(GL_COLOR_BUFFER_BIT);
 }

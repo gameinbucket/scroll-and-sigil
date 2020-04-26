@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 
 #include <GL/gl.h>
+#include <float.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdbool.h>
@@ -12,6 +13,8 @@
 #include <stdlib.h>
 
 #include "core/mem.h"
+
+#include "matrix.h"
 
 struct shadowmap {
     int width;
@@ -24,5 +27,6 @@ struct shadowmap {
 typedef struct shadowmap shadowmap;
 
 shadowmap *alloc_shadowmap(int width, int height);
+void shadow_map_view_projection(float *matrix, vec3 shadow_direction, float shadow_rx, float shadow_ry, float *view_projection);
 
 #endif

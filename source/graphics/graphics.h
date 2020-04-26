@@ -39,6 +39,8 @@ void graphics_disable_depth();
 
 void graphics_enable_cull();
 void graphics_disable_cull();
+void graphics_cull_front();
+void graphics_cull_back();
 
 void graphics_clear_color();
 void graphics_clear_depth();

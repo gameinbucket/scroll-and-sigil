@@ -116,6 +116,19 @@ void state_render(state *self) {
     graphics_enable_cull();
     graphics_enable_depth();
 
+    // model view projection
+
+    float view[16];
+    float view_projection[16];
+    float inverse_view_projection[16];
+
+    matrix_identity(view);
+    matrix_rotate_x(view, sinf(c->rx), cosf(c->rx));
+    matrix_rotate_y(view, sinf(c->ry), cosf(c->ry));
+    matrix_translate(view, -c->x, -c->y, -c->z);
+    matrix_multiply(view_projection, rs->draw_perspective, view);
+    matrix_inverse(inverse_view_projection, view_projection);
+
     // shadow map
 
     shadowmap *s = rs->shadow_map;
@@ -124,28 +137,47 @@ void state_render(state *self) {
     graphics_set_view(0, 0, s->width, s->height);
     graphics_clear_depth();
 
-    float shadow_orthographic[16];
-    matrix_orthographic(shadow_orthographic, -10, 10, -10, 10, 1, 100);
-
     float shadow_view[16];
-    float eye[3] = {0, 0, 0};
-    float center[3] = {10, 1, 40};
-    // float center[3] = {c->x, c->y, c->z};
-    matrix_look_at(shadow_view, eye, center);
+    float shadow_inverse_view[16];
+    float shadow_view_projection[16];
 
-    matrix_multiply(rs->mvp, shadow_orthographic, shadow_view);
+    vec3 eye = {0, 10, 0};
+    vec3 center = {c->x, c->y, c->z};
+    matrix_look_at(shadow_view, &eye, &center);
+    matrix_inverse(shadow_inverse_view, shadow_view);
+    matrix_multiply(shadow_view_projection, rs->draw_perspective, shadow_view);
+
+    float shadow_rx = DEGREE_TO_RADIAN(20);
+    float shadow_ry = DEGREE_TO_RADIAN(180);
+
+    float shadow_sin_x = sinf(shadow_rx);
+    float shadow_cos_x = cosf(shadow_rx);
+    float shadow_sin_y = sinf(shadow_ry);
+    float shadow_cos_y = cosf(shadow_ry);
+
+    vec3 shadow_direction;
+    shadow_direction.x = -shadow_cos_x * shadow_sin_y;
+    shadow_direction.y = shadow_sin_x;
+    shadow_direction.x = shadow_cos_x * shadow_cos_y;
+    vector3_normalize(&shadow_direction);
+
+    // shadow_map_view_projection(shadow_view_projection, shadow_direction, shadow_rx, shadow_ry, view_projection);
 
     float shadow_bias[16] = {0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0};
 
     float depth_bias_mvp[16];
-    matrix_multiply(depth_bias_mvp, shadow_bias, rs->mvp);
+    matrix_multiply(depth_bias_mvp, shadow_bias, shadow_view_projection);
 
     renderstate_set_program(rs, SHADER_SHADOW_PASS);
-    renderstate_set_mvp(rs, rs->mvp);
+    renderstate_set_mvp(rs, shadow_view_projection);
+
+    graphics_cull_front();
 
     world_render(self->wr, c);
 
     // ----------------------------------------
+
+    graphics_cull_back();
 
     framebuffer *f = rs->frame;
 
@@ -155,10 +187,8 @@ void state_render(state *self) {
 
     // render scene
 
-    matrix_perspective_projection(rs->mvp, rs->draw_perspective, rs->mv, -c->x, -c->y, -c->z, c->rx, c->ry);
-
     renderstate_set_program(rs, SHADER_TEXTURE_3D_SHADOW);
-    renderstate_set_mvp(rs, rs->mvp);
+    renderstate_set_mvp(rs, view_projection);
 
     renderstate_set_uniform_matrix(rs, "u_depth_bias_mvp", depth_bias_mvp);
 
@@ -182,6 +212,7 @@ void state_render(state *self) {
 
     graphics_bind_fbo(0);
     renderstate_set_program(rs, SHADER_SCREEN);
+    // renderstate_set_program(rs, SHADER_VISUALIZE_DEPTH);
     graphics_set_view(0, 0, rs->canvas_width, rs->canvas_height);
     matrix_orthographic_projection(rs->mvp, rs->canvas_orthographic, rs->mv, 0, 0);
     renderstate_set_mvp(rs, rs->mvp);

@@ -9,6 +9,7 @@
 #include "graphics/render.h"
 #include "graphics/sprite.h"
 #include "graphics/texture.h"
+#include "graphics/vector.h"
 #include "world/world.h"
 #include "world/worldbuild.h"
 

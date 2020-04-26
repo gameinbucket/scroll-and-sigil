@@ -21,7 +21,6 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
     matrix_orthographic(self->draw_orthographic, 0, draw_width, 0, draw_height, 0, 1);
 
     matrix_perspective(self->draw_perspective, fov, 0.01, 100, ratio);
-    matrix_inverse(self->draw_inverse_perspective, self->draw_perspective);
 
     if (self->frame == NULL) {
 
