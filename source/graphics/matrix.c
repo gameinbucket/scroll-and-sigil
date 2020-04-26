@@ -398,20 +398,20 @@ void matrix_frustum_planes(float *frustum, float *matrix) {
     }
 }
 
-void matrix_frustum_corners(vec4 *corners, float *inverse_matrix) {
-    corners[0] = (vec4){-1, -1, -1, 1};
-    corners[1] = (vec4){1, -1, -1, 1};
-    corners[2] = (vec4){1, -1, 1, 1};
-    corners[3] = (vec4){-1, -1, 1, 1};
-    corners[4] = (vec4){-1, 1, -1, 1};
-    corners[5] = (vec4){1, 1, -1, 1};
-    corners[6] = (vec4){1, 1, 1, 1};
-    corners[7] = (vec4){-1, 1, 1, 1};
+void matrix_frustum_corners(vec4 *corners, float *matrix) {
+
+    corners[0] = (vec4){-1, -1, -1, 1}; // Left  Bottom Near
+    corners[1] = (vec4){1, -1, -1, 1};  // Right Bottom Near
+    corners[2] = (vec4){-1, 1, -1, 1};  // Left  Top    Near
+    corners[3] = (vec4){1, 1, -1, 1};   // Right Top    Near
+    corners[4] = (vec4){-1, -1, 1, 1};  // Left  Bottom Far
+    corners[5] = (vec4){1, -1, 1, 1};   // Right Bottom Far
+    corners[6] = (vec4){-1, 1, 1, 1};   // Left  Top    Far
+    corners[7] = (vec4){1, 1, 1, 1};    // Right Top    Far
 
     vec4 transform;
-
     for (int i = 0; i < 8; i++) {
-        matrix_multiply_vector4(&transform, inverse_matrix, &corners[i]);
+        matrix_multiply_vector4(&transform, matrix, &corners[i]);
         corners[i].x = transform.x / transform.w;
         corners[i].y = transform.y / transform.w;
         corners[i].z = transform.z / transform.w;
@@ -420,12 +420,14 @@ void matrix_frustum_corners(vec4 *corners, float *inverse_matrix) {
 }
 
 void matrix_orthographic_projection(float *mvp, float *orthographic, float *mv, float x, float y) {
+
     matrix_identity(mv);
     matrix_translate(mv, x, y, 0);
     matrix_multiply(mvp, orthographic, mv);
 }
 
 void matrix_perspective_projection(float *mvp, float *perspective, float *mv, float x, float y, float z, float rx, float ry) {
+
     matrix_identity(mv);
     matrix_rotate_x(mv, sinf(rx), cosf(rx));
     matrix_rotate_y(mv, sinf(ry), cosf(ry));

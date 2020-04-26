@@ -22,7 +22,7 @@ void matrix_inverse(float *matrix, float *from);
 void matrix_multiply_vector4(vec4 *transform, float *matrix, vec4 *vec);
 void matrix_look_at(float *matrix, vec3 *eye, vec3 *center);
 void matrix_frustum_planes(float *frustum, float *matrix);
-void matrix_frustum_corners(vec4 *corners, float *inverse_matrix);
+void matrix_frustum_corners(vec4 *corners, float *matrix);
 void matrix_orthographic_projection(float *mvp, float *orthographic, float *mv, float x, float y);
 void matrix_perspective_projection(float *mvp, float *perspective, float *mv, float x, float y, float z, float rx, float ry);
 

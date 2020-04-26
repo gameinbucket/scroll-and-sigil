@@ -14,9 +14,11 @@ void thing_block_borders(thing *self) {
 }
 
 void thing_update(thing *self) {
+    self->update((void *)self);
+}
+
+void thing_standard_update(thing *self) {
     self->x += self->delta_x;
     self->y += self->delta_y;
     self->z += self->delta_z;
-
-    self->update((void *)self);
 }

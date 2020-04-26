@@ -3,6 +3,7 @@
 
 #include "core/mem.h"
 
+#include "graphics/model.h"
 #include "graphics/sprite.h"
 
 extern float gravity;
@@ -33,10 +34,12 @@ struct thing {
     float delta_z;
     unsigned int sprite_id;
     sprite *sprite_data;
+    model *model_data;
     void (*update)(void *);
 };
 
 void thing_block_borders(thing *self);
 void thing_update(thing *self);
+void thing_standard_update(thing *self);
 
 #endif

@@ -32,7 +32,9 @@ typedef struct worldrender worldrender;
 struct worldrender {
     renderstate *rs;
     world *w;
-    uint_table *cache;
+    bool current_cache;
+    uint_table *cache_a;
+    uint_table *cache_b;
 };
 
 worldrender *new_worldrender(renderstate *rs, world *w);

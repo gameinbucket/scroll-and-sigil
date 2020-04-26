@@ -120,14 +120,12 @@ void state_render(state *self) {
 
     float view[16];
     float view_projection[16];
-    float inverse_view_projection[16];
 
     matrix_identity(view);
     matrix_rotate_x(view, sinf(c->rx), cosf(c->rx));
     matrix_rotate_y(view, sinf(c->ry), cosf(c->ry));
     matrix_translate(view, -c->x, -c->y, -c->z);
     matrix_multiply(view_projection, rs->draw_perspective, view);
-    matrix_inverse(inverse_view_projection, view_projection);
 
     // shadow map
 
@@ -138,34 +136,14 @@ void state_render(state *self) {
     graphics_clear_depth();
 
     float shadow_view[16];
-    float shadow_inverse_view[16];
     float shadow_view_projection[16];
 
     vec3 eye = {0, 10, 0};
-    // vec3 center = {c->x, c->y, c->z};
     vec3 center = {10, 0, 40};
     matrix_look_at(shadow_view, &eye, &center);
     // matrix_translate(shadow_view, -eye.x, -eye.y, -eye.z);
-    matrix_inverse(shadow_inverse_view, shadow_view);
 
-    float shadow_rx = DEGREE_TO_RADIAN(20);
-    float shadow_ry = DEGREE_TO_RADIAN(180);
-
-    float shadow_sin_x = sinf(shadow_rx);
-    float shadow_cos_x = cosf(shadow_rx);
-    float shadow_sin_y = sinf(shadow_ry);
-    float shadow_cos_y = cosf(shadow_ry);
-
-    vec3 shadow_direction;
-    shadow_direction.x = -shadow_cos_x * shadow_sin_y;
-    shadow_direction.y = shadow_sin_x;
-    shadow_direction.x = shadow_cos_x * shadow_cos_y;
-    vector3_normalize(&shadow_direction);
-
-    shadow_direction = (vec3){-shadow_view[2], -shadow_view[6], -shadow_view[10]};
-    vector3_normalize(&shadow_direction);
-
-    shadow_map_view_projection(shadow_view_projection, shadow_direction, shadow_rx, shadow_ry, shadow_view, view_projection);
+    shadow_map_view_projection(shadow_view_projection, shadow_view, view, view_projection);
 
     float shadow_bias[16] = {0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.5, 0, 0.5, 0.5, 0.5, 1};
 

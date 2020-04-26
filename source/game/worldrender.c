@@ -4,19 +4,23 @@ worldrender *new_worldrender(renderstate *rs, world *w) {
     worldrender *self = safe_calloc(1, sizeof(worldrender));
     self->rs = rs;
     self->w = w;
-    self->cache = new_uint_table();
+    self->cache_a = new_uint_table();
+    self->cache_b = new_uint_table();
     return self;
 }
 
-void worldrender_create_buffers(worldrender *self) {
-    uint_table *cache = self->cache;
-
+static void create_cache(uint_table *cache) {
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        renderbuffer *b = renderbuffer_init(3, 0, 2, 4 * 200, 36 * 200, true);
+        renderbuffer *b = renderbuffer_init(3, 0, 2, 4 * 800, 36 * 800, true);
         graphics_make_vao(b);
 
         uint_table_put(cache, i, b);
     }
+}
+
+void worldrender_create_buffers(worldrender *self) {
+    create_cache(self->cache_a);
+    create_cache(self->cache_b);
 }
 
 static void render_wall(renderbuffer *b, wall *w) {
@@ -79,13 +83,22 @@ static void render_triangle(renderbuffer *b, triangle *t) {
     render_index3(b);
 }
 
-static void thing_render(uint_table *cache, thing *t, float sine, float cosine) {
+static void thing_render(uint_table *cache, thing *t) {
     // renderbuffer *b = uint_table_get(cache, t->sprite_id);
-    // render_sprite3d(b, t->x, t->y, t->z, sine, cosine, t->sprite_data);
-    if (sine < -999 || cosine < -999)
-        return;
     renderbuffer *b = uint_table_get(cache, TEXTURE_PLANKS);
-    render_model(b, t->x, t->y, t->z, t->angle);
+
+    model *m = t->model_data;
+    bone *body = &m->bones[BIPED_BODY];
+
+    body->world_x = t->x;
+    body->world_y = t->y + 0.4;
+    body->world_z = t->z;
+
+    body->local_ry = t->angle;
+
+    bone_recursive_compute(body);
+
+    render_model(b, m);
 }
 
 static void sector_render(uint_table *cache, sector *s) {
@@ -127,11 +140,17 @@ static void sector_render(uint_table *cache, sector *s) {
 
 void world_render(worldrender *wr, camera *c) {
 
+    if (c->x < -999) {
+        printf("foobar\n");
+    }
+
     // TODO: Store vertices in memory, then memcpy to gl mapped buffer per texture (or use glBufferSubData)
 
     renderstate *rs = wr->rs;
     world *w = wr->w;
-    uint_table *cache = wr->cache;
+
+    wr->current_cache = !wr->current_cache;
+    uint_table *cache = wr->current_cache ? wr->cache_a : wr->cache_b;
 
     uint_table_iterator iter = new_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
@@ -140,12 +159,10 @@ void world_render(worldrender *wr, camera *c) {
         renderbuffer_zero(b);
     }
 
-    float sine = sinf(-c->ry);
-    float cosine = cosf(-c->ry);
     thing **things = w->things;
     int thing_count = w->thing_count;
     for (int i = 0; i < thing_count; i++) {
-        thing_render(cache, things[i], sine, cosine);
+        thing_render(cache, things[i]);
     }
 
     sector **sectors = w->sectors;
@@ -164,5 +181,6 @@ void world_render(worldrender *wr, camera *c) {
 }
 
 void destroy_worldrender(worldrender *self) {
-    destroy_uint_table(self->cache);
+    destroy_uint_table(self->cache_a);
+    destroy_uint_table(self->cache_b);
 }

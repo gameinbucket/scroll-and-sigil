@@ -174,14 +174,14 @@ static void translate_vectors(float *vertices, unsigned int count, float x, floa
     }
 }
 
-// static void rotate_vectors_x(float *vertices, unsigned int count, float sine, float cosine) {
-//     for (unsigned int i = 0; i < count; i += STRIDE) {
-//         float y = vertices[i + 1] * cosine - vertices[i + 2] * sine;
-//         float z = vertices[i + 1] * sine + vertices[i + 2] * cosine;
-//         vertices[i + 1] = y;
-//         vertices[i + 2] = z;
-//     }
-// }
+static void rotate_vectors_x(float *vertices, unsigned int count, float sine, float cosine) {
+    for (unsigned int i = 0; i < count; i += STRIDE) {
+        float y = vertices[i + 1] * cosine - vertices[i + 2] * sine;
+        float z = vertices[i + 1] * sine + vertices[i + 2] * cosine;
+        vertices[i + 1] = y;
+        vertices[i + 2] = z;
+    }
+}
 
 static void rotate_vectors_y(float *vertices, unsigned int count, float sine, float cosine) {
     for (unsigned int i = 0; i < count; i += STRIDE) {
@@ -192,15 +192,27 @@ static void rotate_vectors_y(float *vertices, unsigned int count, float sine, fl
     }
 }
 
-void render_model(renderbuffer *b, float x, float y, float z, float angle) {
-    float cube[CUBE_VERTEX_COUNT] = RENDER_CUBE(1, 1, 1);
+void render_model(renderbuffer *b, model *m) {
+    for (int i = 0; i < m->bone_count; i++) {
+        bone *s = &m->bones[i];
 
-    rotate_vectors_y(cube, CUBE_VERTEX_COUNT, sinf(angle), cosf(angle));
-    translate_vectors(cube, CUBE_VERTEX_COUNT, x, y, z);
+        float width = s->width;
+        float height = s->height;
+        float length = s->length;
 
-    memcpy(b->vertices, cube, CUBE_VERTEX_COUNT * sizeof(float));
-    b->vertex_pos += CUBE_VERTEX_COUNT;
+        float cube[CUBE_VERTEX_COUNT] = RENDER_CUBE(width, height, length);
 
-    for (int i = 0; i < 6; i++)
-        render_index4(b);
+        translate_vectors(cube, CUBE_VERTEX_COUNT, s->plane_offset_x, s->plane_offset_y, s->plane_offset_z);
+
+        rotate_vectors_x(cube, CUBE_VERTEX_COUNT, s->sin_x, s->cos_x);
+        rotate_vectors_y(cube, CUBE_VERTEX_COUNT, s->sin_y, s->cos_y);
+
+        translate_vectors(cube, CUBE_VERTEX_COUNT, s->world_x, s->world_y, s->world_z);
+
+        memcpy(b->vertices + b->vertex_pos, cube, CUBE_VERTEX_COUNT * sizeof(float));
+        b->vertex_pos += CUBE_VERTEX_COUNT;
+
+        for (int k = 0; k < 6; k++)
+            render_index4(b);
+    }
 }

@@ -3,6 +3,7 @@
 
 #include "assets/assets.h"
 #include "core/mem.h"
+#include "mesh/biped.h"
 
 #include "thing.h"
 
