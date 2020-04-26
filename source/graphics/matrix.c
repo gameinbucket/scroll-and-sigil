@@ -346,8 +346,6 @@ void matrix_look_at(float *matrix, vec3 *eye, vec3 *center) {
     matrix[7] = 0;
     matrix[11] = 0;
     matrix[15] = 1;
-
-    matrix_translate(matrix, -eye->x, -eye->y, -eye->z);
 }
 
 void matrix_frustum_planes(float *frustum, float *matrix) {

@@ -31,7 +31,7 @@ struct vec4 {
     float w;
 };
 
-#define VECTOR_3_DOT(a, b) (a.x * b.x + a.y * b.y + a.z * b.z);
+#define VECTOR_3_DOT(a, b) (a.x * b.x + a.y * b.y + a.z * b.z)
 
 #define VECTOR_3_CROSS(c, a, b)                                                                                                                                                                        \
     c.x = a.y * b.z - a.z * b.y;                                                                                                                                                                       \
