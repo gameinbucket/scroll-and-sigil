@@ -14,7 +14,9 @@
 #include "graphics/render.h"
 #include "graphics/texture.h"
 #include "places/place.h"
+#include "things/hero.h"
 #include "world/world.h"
+#include "world/worldbuild.h"
 
 #include "renderstate.h"
 #include "soundstate.h"
@@ -56,6 +58,6 @@ wad_element *parse_wad(string *str);
 string *wad_to_string(wad_element *element);
 
 void wad_load_resources(renderstate *rs, soundstate *ss);
-void wad_load_map(world *w);
+void wad_load_map(input *in, world *w);
 
 #endif

@@ -14,7 +14,7 @@
 #include "world/worldbuild.h"
 
 #include "camera.h"
-#include "input.h"
+#include "input/input.h"
 #include "renderstate.h"
 #include "soundstate.h"
 #include "wad.h"

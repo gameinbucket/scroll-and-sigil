@@ -52,6 +52,17 @@ void world_add_sector(world *self, sector *s) {
     self->sector_count++;
 }
 
+sector *world_find_sector(world *self, float x, float y) {
+    for (int i = 0; i < self->sector_count; i++) {
+        sector *s = self->sectors[i];
+        if (s->outside != NULL)
+            continue;
+        if (sector_contains(s, x, y))
+            return sector_find(s, x, y);
+    }
+    return NULL;
+}
+
 void world_update(world *self) {
     int thing_count = self->thing_count;
     thing **things = self->things;

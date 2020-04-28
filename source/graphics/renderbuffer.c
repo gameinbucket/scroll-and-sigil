@@ -1,6 +1,8 @@
 #include "renderbuffer.h"
 
-renderbuffer *renderbuffer_init(int position, int color, int texture, int vertex_limit, int index_limit, bool map_buffer_range) {
+// NORMALS
+
+renderbuffer *renderbuffer_init(int position, int color, int texture, int normal, int vertex_limit, int index_limit, bool map_buffer_range) {
     renderbuffer *r = safe_malloc(sizeof(renderbuffer));
     r->position = position;
     r->color = color;

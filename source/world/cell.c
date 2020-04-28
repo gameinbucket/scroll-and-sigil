@@ -1,4 +1,4 @@
-#include "cell.h"
+#include "world.h"
 
 void cell_add_line(cell *self, line *ld) {
     if (self->line_count == 0) {

@@ -244,12 +244,13 @@ void wad_load_resources(renderstate *rs, soundstate *ss) {
     zip_close(z);
 }
 
-void wad_load_map(world *w) {
+void wad_load_map(input *in, world *w) {
 
     place_flat(w);
     place_house(w, 10, 10);
     place_house(w, 40, 60);
 
-    hero *h = hero_init();
-    world_add_thing(w, &h->super);
+    world_build_map(w);
+
+    hero_init(in, w);
 }

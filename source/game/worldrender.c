@@ -84,17 +84,16 @@ static void render_triangle(renderbuffer *b, triangle *t) {
 }
 
 static void thing_render(uint_table *cache, thing *t) {
-    // renderbuffer *b = uint_table_get(cache, t->sprite_id);
-    renderbuffer *b = uint_table_get(cache, TEXTURE_PLANKS);
+    renderbuffer *b = uint_table_get(cache, t->sprite_id);
 
     model *m = t->model_data;
     bone *body = &m->bones[BIPED_BODY];
 
     body->world_x = t->x;
-    body->world_y = t->y + 0.4;
-    body->world_z = t->z;
+    body->world_y = t->z;
+    body->world_z = t->y;
 
-    body->local_ry = t->angle;
+    body->local_ry = t->rotation;
 
     bone_recursive_compute(body);
 

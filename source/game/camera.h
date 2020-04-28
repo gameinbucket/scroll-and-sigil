@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "core/mem.h"
+#include "world/world.h"
 
 typedef struct camera camera;
 
@@ -19,9 +20,10 @@ struct camera {
     float rx;
     float ry;
     float radius;
+    thing *target;
 };
 
-camera *camera_init();
-void camera_update();
+camera *camera_init(float radius);
+void camera_update(camera *self);
 
 #endif

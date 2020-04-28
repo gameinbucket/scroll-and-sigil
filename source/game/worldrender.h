@@ -22,6 +22,7 @@
 #include "graphics/renderbuffer.h"
 #include "graphics/shader.h"
 #include "graphics/texture.h"
+#include "mesh/biped.h"
 #include "world/world.h"
 
 #include "camera.h"

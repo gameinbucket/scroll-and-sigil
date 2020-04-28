@@ -1,111 +1,121 @@
 #include "state.h"
 
 state *new_state(world *w, renderstate *rs, soundstate *ss) {
-    state *s = safe_calloc(1, sizeof(state));
-    s->w = w;
-    s->rs = rs;
-    s->ss = ss;
-    s->c = camera_init();
-    s->c->x = 10;
-    s->c->y = 1;
-    s->c->z = 40;
-    s->wr = new_worldrender(rs, w);
+    state *self = safe_calloc(1, sizeof(state));
+    self->w = w;
+    self->rs = rs;
+    self->ss = ss;
+    self->c = camera_init(8);
+    self->c->x = 10;
+    self->c->y = 1;
+    self->c->z = 40;
+    self->wr = new_worldrender(rs, w);
 
     wad_load_resources(rs, ss);
-    worldrender_create_buffers(s->wr);
+    worldrender_create_buffers(self->wr);
 
-    wad_load_map(w);
-    world_build_map(w);
+    wad_load_map(&self->in, w);
 
-    return s;
+    int thing_count = w->thing_count;
+    thing **things = w->things;
+    for (int i = 0; i < thing_count; i++) {
+        if (things[i]->type == THING_TYPE_HERO) {
+            self->c->target = things[i];
+            break;
+        }
+    }
+
+    return self;
 }
 
 void state_update(state *self) {
     world_update(self->w);
 
-    input in = self->in;
+    input *in = &self->in;
 
-    float speed = 0.1f;
+    // float speed = 0.1f;
 
-    float r = self->c->ry;
+    // float r = self->c->ry;
 
-    float dx = 0;
-    float dy = 0;
-    float dz = 0;
+    // float dx = 0;
+    // float dy = 0;
+    // float dz = 0;
 
-    const float MAXSPEED = 0.5f;
+    // const float MAXSPEED = 0.5f;
 
-    if (in.move_forward) {
-        dx += sinf(r) * speed;
-        dz -= cosf(r) * speed;
-    }
+    // if (in.move_forward) {
+    //     dx += sinf(r) * speed;
+    //     dz -= cosf(r) * speed;
+    // }
 
-    if (in.move_backward) {
-        dx -= sinf(r) * speed * 0.5f;
-        dz += cosf(r) * speed * 0.5f;
-    }
+    // if (in.move_backward) {
+    //     dx -= sinf(r) * speed * 0.5f;
+    //     dz += cosf(r) * speed * 0.5f;
+    // }
 
-    if (in.move_up) {
-        self->c->y += 0.1;
-    }
+    // if (in.move_up) {
+    //     self->c->y += 0.1;
+    // }
 
-    if (in.move_down) {
-        self->c->y -= 0.1;
-    }
+    // if (in.move_down) {
+    //     self->c->y -= 0.1;
+    // }
 
-    if (in.move_left) {
-        dx -= cosf(r) * speed * 0.75f;
-        dz -= sinf(r) * speed * 0.75f;
-    }
+    // if (in.move_left) {
+    //     dx -= cosf(r) * speed * 0.75f;
+    //     dz -= sinf(r) * speed * 0.75f;
+    // }
 
-    if (in.move_right) {
-        dx += cosf(r) * speed * 0.75f;
-        dz += sinf(r) * speed * 0.75f;
-    }
+    // if (in.move_right) {
+    //     dx += cosf(r) * speed * 0.75f;
+    //     dz += sinf(r) * speed * 0.75f;
+    // }
 
-    if (dx > MAXSPEED) {
-        dx = MAXSPEED;
-    } else if (dx < -MAXSPEED) {
-        dx = -MAXSPEED;
-    }
+    // if (dx > MAXSPEED) {
+    //     dx = MAXSPEED;
+    // } else if (dx < -MAXSPEED) {
+    //     dx = -MAXSPEED;
+    // }
 
-    if (dy > MAXSPEED) {
-        dy = MAXSPEED;
-    } else if (dy < -MAXSPEED) {
-        dy = -MAXSPEED;
-    }
+    // if (dy > MAXSPEED) {
+    //     dy = MAXSPEED;
+    // } else if (dy < -MAXSPEED) {
+    //     dy = -MAXSPEED;
+    // }
 
-    if (in.look_left) {
+    // self->c->x += dx;
+    // self->c->y += dy;
+    // self->c->z += dz;
+
+    if (in->look_left) {
         self->c->ry -= 0.05;
         if (self->c->ry < 0) {
             self->c->ry += FLOAT_MATH_TAU;
         }
     }
 
-    if (in.look_right) {
+    if (in->look_right) {
         self->c->ry += 0.05;
         if (self->c->ry >= FLOAT_MATH_TAU) {
             self->c->ry -= FLOAT_MATH_TAU;
         }
     }
 
-    if (in.look_up) {
+    if (in->look_up) {
         self->c->rx -= 0.05;
         if (self->c->rx < 0) {
             self->c->rx += FLOAT_MATH_TAU;
         }
     }
 
-    if (in.look_down) {
+    if (in->look_down) {
         self->c->rx += 0.05;
         if (self->c->rx >= FLOAT_MATH_TAU) {
             self->c->rx -= FLOAT_MATH_TAU;
         }
     }
 
-    self->c->x += dx;
-    self->c->y += dy;
-    self->c->z += dz;
+    camera_update(self->c);
 }
 
 void state_render(state *self) {

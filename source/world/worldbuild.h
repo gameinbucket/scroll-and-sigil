@@ -9,7 +9,6 @@
 #include "map/sector.h"
 #include "map/triangulate.h"
 #include "things/hero.h"
-#include "things/thing.h"
 
 #include "world.h"
 

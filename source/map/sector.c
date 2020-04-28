@@ -1,12 +1,10 @@
 #include "sector.h"
 
-int sector_unique_index = 0;
+unsigned int sector_unique_id = 0;
 
 sector *sector_init(vec **vecs, int vec_count, line **lines, int line_count, float bottom, float floor, float ceiling, float top, int floor_texture, int ceiling_texture) {
-    int index = sector_unique_index;
-    sector_unique_index++;
     sector *s = safe_calloc(1, sizeof(sector));
-    s->index = index;
+    s->id = sector_unique_id++;
     s->vecs = vecs;
     s->vec_count = vec_count;
     s->lines = lines;
