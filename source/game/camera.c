@@ -17,6 +17,6 @@ void camera_update(camera *self) {
     float dz = cos_x * cos_y;
 
     self->x = self->target->x + self->radius * dx;
-    self->y = self->target->z + self->radius * dy + self->target->height;
-    self->z = self->target->y + self->radius * dz;
+    self->y = self->target->y + self->radius * dy + self->target->height;
+    self->z = self->target->z + self->radius * dz;
 }

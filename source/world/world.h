@@ -74,11 +74,11 @@ struct thing {
     float x;
     float y;
     float z;
-    float delta_x;
-    float delta_y;
-    float delta_z;
+    float dx;
+    float dy;
+    float dz;
     float previous_x;
-    float previous_y;
+    float previous_z;
     float rotation;
     bool ground;
     int c_min;
@@ -91,7 +91,7 @@ struct thing {
     void (*update)(void *);
 };
 
-void thing_initialize(thing *self, world *map, float x, float y, float r, float radius, float height);
+void thing_initialize(thing *self, world *map, float x, float y, float r, float box, float height);
 void thing_block_borders(thing *self);
 void thing_update(thing *self);
 void thing_standard_update(thing *self);

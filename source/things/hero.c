@@ -3,7 +3,7 @@
 void hero_update(void *void_self) {
     hero *self = void_self;
 
-    // self->super.delta_x = 0.0001;
+    // self->super.dx = 0.0001;
     // self->super.rotation += 0.001;
 
     input *in = self->in;
@@ -18,7 +18,6 @@ void hero_update(void *void_self) {
     if (in->move_forward) {
         dx += sinf(r) * speed;
         dz -= cosf(r) * speed;
-        printf("%f, %f, %f\n", dx, dz, speed);
     }
 
     if (in->move_backward) {
@@ -48,16 +47,16 @@ void hero_update(void *void_self) {
         dz = -MAXSPEED;
     }
 
-    self->super.delta_x = dx;
-    self->super.delta_y = dz;
+    self->super.dx = dx;
+    self->super.dz = dz;
 
     thing_standard_update(&self->super);
 }
 
-hero *hero_init(input *in, world *map) {
+hero *create_hero(input *in, world *map, float x, float z) {
     hero *self = safe_calloc(1, sizeof(hero));
 
-    thing_initialize(&self->super, map, 10, 40, 0, 0.5, 1.76);
+    thing_initialize(&self->super, map, x, z, 0, 0.5, 1.76);
 
     self->super.speed = 0.1;
 

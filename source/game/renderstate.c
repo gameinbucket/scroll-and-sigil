@@ -24,10 +24,10 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
 
     if (self->frame == NULL) {
 
-        self->draw_frame = renderbuffer_init(2, 0, 0, 4, 6, false);
-        self->draw_canvas = renderbuffer_init(2, 0, 0, 4, 6, false);
-        self->draw_images = renderbuffer_init(2, 0, 2, 40, 60, true);
-        self->draw_colors = renderbuffer_init(2, 3, 0, 40, 60, true);
+        self->draw_frame = create_renderbuffer(2, 0, 0, 0, 4, 6, false);
+        self->draw_canvas = create_renderbuffer(2, 0, 0, 0, 4, 6, false);
+        self->draw_images = create_renderbuffer(2, 0, 2, 0, 40, 60, true);
+        self->draw_colors = create_renderbuffer(2, 3, 0, 0, 40, 60, true);
 
         graphics_make_vao(self->draw_frame);
         graphics_make_vao(self->draw_canvas);

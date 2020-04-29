@@ -2,8 +2,8 @@
 
 static void build_cell_lines(world *self, line *ld) {
 
-    double dx = abs(ld->vb.x - ld->va.x);
-    double dy = abs(ld->vb.y - ld->va.y);
+    double dx = fabs(ld->vb.x - ld->va.x);
+    double dy = fabs(ld->vb.y - ld->va.y);
 
     int x = (int)floor(ld->va.x);
     int y = (int)floor(ld->va.y);

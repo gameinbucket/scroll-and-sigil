@@ -252,5 +252,6 @@ void wad_load_map(input *in, world *w) {
 
     world_build_map(w);
 
-    hero_init(in, w);
+    create_hero(in, w, 10, 40);
+    create_baron(w, 8, 45);
 }

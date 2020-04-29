@@ -117,9 +117,9 @@ void graphics_make_shadow_map(shadowmap *s) {
     graphics_bind_fbo(0);
 }
 
-void graphics_bind_vao_attributes(GLint position, GLint color, GLint texture) {
+static void bind_vao_attributes(GLint position, GLint color, GLint texture, GLint normal) {
 
-    GLsizei stride = (position + color + texture) * sizeof(GLfloat);
+    GLsizei stride = (position + color + texture + normal) * sizeof(GLfloat);
     GLint offset = 0;
     GLuint index = 0;
 
@@ -139,6 +139,13 @@ void graphics_bind_vao_attributes(GLint position, GLint color, GLint texture) {
 
     if (texture > 0) {
         glVertexAttribPointer(index, texture, GL_FLOAT, false, stride, (GLvoid *)(offset * sizeof(GLfloat)));
+        glEnableVertexAttribArray(index);
+        index++;
+        offset += texture;
+    }
+
+    if (normal > 0) {
+        glVertexAttribPointer(index, normal, GL_FLOAT, false, stride, (GLvoid *)(offset * sizeof(GLfloat)));
         glEnableVertexAttribArray(index);
     }
 
@@ -176,7 +183,7 @@ void graphics_make_vao(renderbuffer *b) {
         b->indices = glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, b->index_size, bits);
     }
 
-    graphics_bind_vao_attributes(b->position, b->color, b->texture);
+    bind_vao_attributes(b->position, b->color, b->texture, b->normal);
 }
 
 void graphics_bind_fbo(GLuint fbo) {

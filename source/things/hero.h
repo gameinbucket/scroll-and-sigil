@@ -16,6 +16,6 @@ struct hero {
 };
 
 void hero_update(void *void_self);
-hero *hero_init(input *in, world *map);
+hero *create_hero(input *in, world *map, float x, float z);
 
 #endif

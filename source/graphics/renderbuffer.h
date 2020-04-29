@@ -19,6 +19,7 @@ struct renderbuffer {
     int position;
     int color;
     int texture;
+    int normal;
     GLint vao;
     GLint vbo;
     GLint ebo;
@@ -32,7 +33,7 @@ struct renderbuffer {
     bool map_buffer_range;
 };
 
-renderbuffer *renderbuffer_init(int position, int color, int texture, int vertex_limit, int index_limit, bool map_buffer_range);
+renderbuffer *create_renderbuffer(int position, int color, int texture, int normal, int vertex_limit, int index_limit, bool map_buffer_range);
 void renderbuffer_zero(renderbuffer *self);
 void renderbuffer_free(renderbuffer *self);
 

@@ -14,6 +14,7 @@
 #include "graphics/render.h"
 #include "graphics/texture.h"
 #include "places/place.h"
+#include "things/baron.h"
 #include "things/hero.h"
 #include "world/world.h"
 #include "world/worldbuild.h"

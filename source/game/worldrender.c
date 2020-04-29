@@ -11,7 +11,7 @@ worldrender *new_worldrender(renderstate *rs, world *w) {
 
 static void create_cache(uint_table *cache) {
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        renderbuffer *b = renderbuffer_init(3, 0, 2, 4 * 800, 36 * 800, true);
+        renderbuffer *b = create_renderbuffer(3, 0, 2, 3, 4 * 800, 36 * 800, true);
         graphics_make_vao(b);
 
         uint_table_put(cache, i, b);
@@ -32,28 +32,40 @@ static void render_wall(renderbuffer *b, wall *w) {
     vertices[pos + 2] = w->va.y;
     vertices[pos + 3] = w->u;
     vertices[pos + 4] = w->t;
+    vertices[pos + 5] = w->ld->normal.x;
+    vertices[pos + 6] = 0;
+    vertices[pos + 7] = w->ld->normal.y;
 
-    vertices[pos + 5] = w->va.x;
-    vertices[pos + 6] = w->floor;
-    vertices[pos + 7] = w->va.y;
-    vertices[pos + 8] = w->u;
-    vertices[pos + 9] = w->v;
+    vertices[pos + 8] = w->va.x;
+    vertices[pos + 9] = w->floor;
+    vertices[pos + 10] = w->va.y;
+    vertices[pos + 11] = w->u;
+    vertices[pos + 12] = w->v;
+    vertices[pos + 13] = w->ld->normal.x;
+    vertices[pos + 14] = 0;
+    vertices[pos + 15] = w->ld->normal.y;
 
-    vertices[pos + 10] = w->vb.x;
-    vertices[pos + 11] = w->floor;
-    vertices[pos + 12] = w->vb.y;
-    vertices[pos + 13] = w->s;
-    vertices[pos + 14] = w->v;
+    vertices[pos + 16] = w->vb.x;
+    vertices[pos + 17] = w->floor;
+    vertices[pos + 18] = w->vb.y;
+    vertices[pos + 19] = w->s;
+    vertices[pos + 20] = w->v;
+    vertices[pos + 21] = w->ld->normal.x;
+    vertices[pos + 22] = 0;
+    vertices[pos + 23] = w->ld->normal.y;
 
-    vertices[pos + 15] = w->vb.x;
-    vertices[pos + 16] = w->ceiling;
-    vertices[pos + 17] = w->vb.y;
-    vertices[pos + 18] = w->s;
-    vertices[pos + 19] = w->t;
+    vertices[pos + 24] = w->vb.x;
+    vertices[pos + 25] = w->ceiling;
+    vertices[pos + 26] = w->vb.y;
+    vertices[pos + 27] = w->s;
+    vertices[pos + 28] = w->t;
+    vertices[pos + 29] = w->ld->normal.x;
+    vertices[pos + 30] = 0;
+    vertices[pos + 31] = w->ld->normal.y;
 
     // memcpy(vertices, w->vertices, 20 * sizeof(float));
 
-    b->vertex_pos = pos + 20;
+    b->vertex_pos = pos + 32;
     render_index4(b);
 }
 
@@ -66,20 +78,29 @@ static void render_triangle(renderbuffer *b, triangle *t) {
     vertices[pos + 2] = t->vc.y;
     vertices[pos + 3] = t->u3;
     vertices[pos + 4] = t->v3;
+    vertices[pos + 5] = 0;
+    vertices[pos + 6] = t->normal;
+    vertices[pos + 7] = 0;
 
-    vertices[pos + 5] = t->vb.x;
-    vertices[pos + 6] = t->height;
-    vertices[pos + 7] = t->vb.y;
-    vertices[pos + 8] = t->u2;
-    vertices[pos + 9] = t->v2;
+    vertices[pos + 8] = t->vb.x;
+    vertices[pos + 9] = t->height;
+    vertices[pos + 10] = t->vb.y;
+    vertices[pos + 11] = t->u2;
+    vertices[pos + 12] = t->v2;
+    vertices[pos + 13] = 0;
+    vertices[pos + 14] = t->normal;
+    vertices[pos + 15] = 0;
 
-    vertices[pos + 10] = t->va.x;
-    vertices[pos + 11] = t->height;
-    vertices[pos + 12] = t->va.y;
-    vertices[pos + 13] = t->u1;
-    vertices[pos + 14] = t->v1;
+    vertices[pos + 16] = t->va.x;
+    vertices[pos + 17] = t->height;
+    vertices[pos + 18] = t->va.y;
+    vertices[pos + 19] = t->u1;
+    vertices[pos + 20] = t->v1;
+    vertices[pos + 21] = 0;
+    vertices[pos + 22] = t->normal;
+    vertices[pos + 23] = 0;
 
-    b->vertex_pos = pos + 15;
+    b->vertex_pos = pos + 24;
     render_index3(b);
 }
 
@@ -90,8 +111,8 @@ static void thing_render(uint_table *cache, thing *t) {
     bone *body = &m->bones[BIPED_BODY];
 
     body->world_x = t->x;
-    body->world_y = t->z;
-    body->world_z = t->y;
+    body->world_y = t->y + 0.8;
+    body->world_z = t->z;
 
     body->local_ry = t->rotation;
 
