@@ -39,7 +39,14 @@ void window_init(SDL_Window **win) {
 
     Mix_AllocateChannels(SOUND_MAX_CHANNELS);
 
-    SDL_Window *window = SDL_CreateWindow("Scroll And Sigil", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    Uint32 window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+    SDL_Window *window = SDL_CreateWindow("Scroll And Sigil", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, window_flags);
+
+    if (window == NULL) {
+        fprintf(stderr, "Window could not be created: %s\n", SDL_GetError());
+        exit(1);
+    }
+
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     if (context == NULL) {
@@ -49,6 +56,7 @@ void window_init(SDL_Window **win) {
 
     if (SDL_GL_SetSwapInterval(1) < 0) {
         fprintf(stderr, "Could not set VSync: %s\n", SDL_GetError());
+        exit(1);
     }
 
     GLenum result = glewInit();
