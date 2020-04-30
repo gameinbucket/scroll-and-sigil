@@ -25,7 +25,7 @@ static const int SCREEN_HEIGHT = 800;
 
 static bool run = true;
 
-void window_init(SDL_Window **win) {
+static void window_init(SDL_Window **win) {
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
         fprintf(stderr, "Could not initialize SDL: %s\n", SDL_GetError());
@@ -68,7 +68,7 @@ void window_init(SDL_Window **win) {
     *win = window;
 }
 
-void opengl_settings() {
+static void opengl_settings() {
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glDepthFunc(GL_LEQUAL);
     glCullFace(GL_BACK);
@@ -88,7 +88,7 @@ void window_resize(renderstate *rs) {
     renderstate_resize(rs, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
-void main_loop(SDL_Window *window, state *s) {
+static void main_loop(SDL_Window *window, state *s) {
     SDL_Event event;
     while (run) {
         while (SDL_PollEvent(&event) != 0) {
