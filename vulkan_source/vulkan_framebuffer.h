@@ -1,5 +1,5 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef VULKAN_FRAMEBUFFER_H
+#define VULKAN_FRAMEBUFFER_H
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
@@ -9,9 +9,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <vulkan/vulkan.h>
+
+#include "file.h"
 #include "mem.h"
-#include "vulkan_framebuffer.h"
 #include "vulkan_init.h"
-#include "vulkan_pipeline.h"
+
+void vk_create_framebuffers(vulkan_state *vk_state);
 
 #endif
