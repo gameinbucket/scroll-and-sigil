@@ -153,7 +153,7 @@ bool vk_physical_device_initialize(vulkan_state *vk_state) {
         }
     }
 
-    fprintf(stderr, "Failed: No suitable GPU\n");
+    fprintf(stderr, "Error: No suitable GPU\n");
     exit(1);
 
     return false;
@@ -189,7 +189,7 @@ void vk_create_logical_device(vulkan_state *vk_state) {
     vk_create_info.ppEnabledExtensionNames = VULKAN_DEVICE_EXTENSIONS;
 
     if (vkCreateDevice(vk_state->vk_physical, &vk_create_info, NULL, &vk_state->vk_device) != VK_SUCCESS) {
-        fprintf(stderr, "Failed: Vulkan Create Device\n");
+        fprintf(stderr, "Error: Vulkan Create Device\n");
         exit(1);
     }
 
@@ -234,6 +234,7 @@ static VkExtent2D vk_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, u
 }
 
 void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height) {
+
     struct swapchain_support_details swapchain_details = vk_query_swapchain_support(vk_state, vk_state->vk_physical);
 
     VkSurfaceFormatKHR surface_format = vk_choose_swap_surface_format(swapchain_details.formats, swapchain_details.format_count);
@@ -276,7 +277,7 @@ void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height
     }
 
     if (vkCreateSwapchainKHR(vk_state->vk_device, &vk_swapchain_info, NULL, &vk_state->vk_swapchain) != VK_SUCCESS) {
-        fprintf(stderr, "Failed: Vulkan Create Swapchain\n");
+        fprintf(stderr, "Error: Vulkan Create Swapchain\n");
         exit(1);
     }
 
@@ -313,7 +314,7 @@ void vk_create_image_views(vulkan_state *vk_state) {
         vk_image_view_info.subresourceRange.layerCount = 1;
 
         if (vkCreateImageView(vk_state->vk_device, &vk_image_view_info, NULL, &swapchain_image_views[i]) != VK_SUCCESS) {
-            fprintf(stderr, "Failed: Vulkan Create Image View\n");
+            fprintf(stderr, "Error: Vulkan Create Image View\n");
             exit(1);
         }
     }
@@ -322,14 +323,24 @@ void vk_create_image_views(vulkan_state *vk_state) {
 }
 
 void vulkan_quit(vulkan_state *self) {
-    vkDestroyPipeline(self->vk_device, self->vk_pipeline, NULL);
-    vkDestroyPipelineLayout(self->vk_device, self->vk_pipeline_layout, NULL);
-    vkDestroyRenderPass(self->vk_device, self->vk_render_pass, NULL);
-    for (uint32_t i = 0; i < self->swapchain_image_count; i++) {
-        vkDestroyImageView(self->vk_device, self->swapchain_image_views[i], NULL);
+    VkDevice device = self->vk_device;
+    for (int i = 0; i < VULKAN_MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroyFence(device, self->vk_flight_fences[i], NULL);
+        vkDestroySemaphore(device, self->vk_image_available_semaphores[i], NULL);
+        vkDestroySemaphore(device, self->vk_render_finished_semaphores[i], NULL);
     }
-    vkDestroySwapchainKHR(self->vk_device, self->vk_swapchain, NULL);
-    vkDestroyDevice(self->vk_device, NULL);
+    vkDestroyCommandPool(device, self->vk_command_pool, NULL);
+    for (uint32_t i = 0; i < self->swapchain_image_count; i++) {
+        vkDestroyFramebuffer(device, self->vk_framebuffers[i], NULL);
+    }
+    vkDestroyPipeline(device, self->vk_pipeline, NULL);
+    vkDestroyPipelineLayout(device, self->vk_pipeline_layout, NULL);
+    vkDestroyRenderPass(device, self->vk_render_pass, NULL);
+    for (uint32_t i = 0; i < self->swapchain_image_count; i++) {
+        vkDestroyImageView(device, self->swapchain_image_views[i], NULL);
+    }
+    vkDestroySwapchainKHR(device, self->vk_swapchain, NULL);
+    vkDestroyDevice(device, NULL);
     vkDestroySurfaceKHR(self->vk_instance, self->vk_surface, NULL);
     vkDestroyInstance(self->vk_instance, NULL);
 }

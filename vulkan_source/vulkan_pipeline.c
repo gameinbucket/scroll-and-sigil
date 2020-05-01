@@ -21,17 +21,27 @@ void vk_create_render_pass(vulkan_state *vk_state) {
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &color_attachment_ref;
 
+    VkSubpassDependency dependency = {0};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
     VkRenderPassCreateInfo render_pass_info = {0};
     render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     render_pass_info.attachmentCount = 1;
     render_pass_info.pAttachments = &color_attachment;
     render_pass_info.subpassCount = 1;
     render_pass_info.pSubpasses = &subpass;
+    render_pass_info.dependencyCount = 1;
+    render_pass_info.pDependencies = &dependency;
 
     VkRenderPass render_pass;
 
     if (vkCreateRenderPass(vk_state->vk_device, &render_pass_info, NULL, &render_pass) != VK_SUCCESS) {
-        fprintf(stderr, "Failed: Vulkan Create Render Pass\n");
+        fprintf(stderr, "Error: Vulkan Create Render Pass\n");
         exit(1);
     }
 
@@ -48,7 +58,7 @@ VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_
     VkShaderModule vk_shader_module;
 
     if (vkCreateShaderModule(vk_state->vk_device, &vk_shader_info, NULL, &vk_shader_module) != VK_SUCCESS) {
-        fprintf(stderr, "Failed: Vulkan Create Shader Module\n");
+        fprintf(stderr, "Error: Vulkan Create Shader Module\n");
         exit(1);
     }
 
@@ -140,7 +150,7 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     VkPipelineLayout pipeline_layout;
 
     if (vkCreatePipelineLayout(vk_state->vk_device, &pipeline_layout_info, NULL, &pipeline_layout) != VK_SUCCESS) {
-        fprintf(stderr, "Failed: Vulkan Create Pipeline Layout\n");
+        fprintf(stderr, "Error: Vulkan Create Pipeline Layout\n");
         exit(1);
     }
 
@@ -164,7 +174,7 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     VkPipeline pipeline;
 
     if (vkCreateGraphicsPipelines(vk_state->vk_device, VK_NULL_HANDLE, 1, &pipeline_info, NULL, &pipeline) != VK_SUCCESS) {
-        fprintf(stderr, "Failed: Vulkan Create Pipeline\n");
+        fprintf(stderr, "Error: Vulkan Create Pipeline\n");
         exit(1);
     }
 

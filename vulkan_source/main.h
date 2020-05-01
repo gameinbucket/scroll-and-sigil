@@ -10,8 +10,10 @@
 #include <stdlib.h>
 
 #include "mem.h"
+#include "vulkan_commands.h"
 #include "vulkan_framebuffer.h"
 #include "vulkan_init.h"
 #include "vulkan_pipeline.h"
+#include "vulkan_struct.h"
 
 #endif
