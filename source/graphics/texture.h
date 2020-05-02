@@ -5,6 +5,7 @@
 
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
+
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>

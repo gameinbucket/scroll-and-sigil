@@ -3,6 +3,7 @@
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>

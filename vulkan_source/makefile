@@ -6,11 +6,9 @@ OBJECTS = $(patsubst %.c,objects/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
 INCLUDE = -I$(VULKAN_SDK)/include
 
-W_ERROR = -Werror
-
 CC = gcc
-COMPILER_FLAGS = -Wall -Wextra -pedantic -std=c11 $(INCLUDE)
-LINKER_FLAGS =  -L$(VULKAN_SDK)/lib -lvulkan -lSDL2
+COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 -Wno-unused $(INCLUDE)
+LINKER_FLAGS = -lSDL2 -lvulkan -L$(VULKAN_SDK)/lib
 LIBS = -lm
 PREFIX =
 

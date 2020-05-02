@@ -92,8 +92,21 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
 
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertex_input_info.vertexBindingDescriptionCount = 0;
-    vertex_input_info.vertexAttributeDescriptionCount = 0;
+
+    int position = 2;
+    int color = 3;
+    int texture = 0;
+    int normal = 0;
+
+    int attribute_count = vk_attribute_count(position, color, texture, normal);
+
+    VkVertexInputBindingDescription binding_description = vk_binding_description(position, color, texture, normal);
+    VkVertexInputAttributeDescription *attribute_description = vk_attribute_description(position, color, texture, normal);
+
+    vertex_input_info.pVertexBindingDescriptions = &binding_description;
+    vertex_input_info.vertexBindingDescriptionCount = 1;
+    vertex_input_info.pVertexAttributeDescriptions = attribute_description;
+    vertex_input_info.vertexAttributeDescriptionCount = attribute_count;
 
     VkPipelineInputAssemblyStateCreateInfo input_assembly = {0};
     input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

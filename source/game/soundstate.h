@@ -2,6 +2,7 @@
 #define SOUND_STATE_H
 
 #include <SDL2/SDL_mixer.h>
+
 #include <inttypes.h>
 #include <math.h>
 #include <stdbool.h>

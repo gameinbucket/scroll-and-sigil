@@ -4,7 +4,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback_func(__attribute__((unused)
                                                           __attribute__((unused)) VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT *callback_data,
                                                           __attribute__((unused)) void *user_data) {
 
-    fprintf(stderr, "\nVulkan Validation: %s\n\n", callback_data->pMessage);
+    fprintf(stderr, "\n(Vulkan) %s\n\n", callback_data->pMessage);
     fflush(stderr);
 
     return VK_FALSE;
@@ -414,6 +414,55 @@ void vk_create_image_views(vulkan_state *vk_state) {
     vk_state->swapchain_image_views = swapchain_image_views;
 }
 
+void vk_clean_swapchain(vulkan_state *vk_state) {
+
+    VkDevice device = vk_state->vk_device;
+
+    for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
+        vkDestroyFramebuffer(device, vk_state->vk_framebuffers[i], NULL);
+    }
+
+    vkFreeCommandBuffers(device, vk_state->vk_command_pool, vk_state->swapchain_image_count, vk_state->vk_command_buffers);
+
+    vkDestroyPipeline(device, vk_state->vk_pipeline, NULL);
+    vkDestroyPipelineLayout(device, vk_state->vk_pipeline_layout, NULL);
+    vkDestroyRenderPass(device, vk_state->vk_render_pass, NULL);
+
+    for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
+        vkDestroyImageView(device, vk_state->swapchain_image_views[i], NULL);
+    }
+
+    vkDestroySwapchainKHR(device, vk_state->vk_swapchain, NULL);
+}
+
+void vk_recreate_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height) {
+
+    vkDeviceWaitIdle(vk_state->vk_device);
+
+    vk_clean_swapchain(vk_state);
+
+    vk_create_swapchain(vk_state, width, height);
+    vk_create_image_views(vk_state);
+    vk_create_render_pass(vk_state);
+    vk_create_graphics_pipeline(vk_state);
+    vk_create_framebuffers(vk_state);
+    vk_create_command_buffers(vk_state);
+}
+
+void vk_create(vulkan_state *vk_state, uint32_t width, uint32_t height) {
+
+    vk_get_physical_device(vk_state);
+    vk_create_logical_device(vk_state);
+    vk_create_swapchain(vk_state, width, height);
+    vk_create_image_views(vk_state);
+    vk_create_render_pass(vk_state);
+    vk_create_graphics_pipeline(vk_state);
+    vk_create_framebuffers(vk_state);
+    vk_create_command_pool(vk_state);
+    vk_create_command_buffers(vk_state);
+    vk_create_semaphores(vk_state);
+}
+
 void destroy_debug_utils_messennger(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks *allocator) {
 
     PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
@@ -422,28 +471,26 @@ void destroy_debug_utils_messennger(VkInstance instance, VkDebugUtilsMessengerEX
     }
 }
 
-void vulkan_quit(vulkan_state *self) {
-    VkDevice device = self->vk_device;
+void vk_quit(vulkan_state *vk_state) {
+
+    vk_clean_swapchain(vk_state);
+
+    VkDevice device = vk_state->vk_device;
+
     for (int i = 0; i < VULKAN_MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroyFence(device, self->vk_flight_fences[i], NULL);
-        vkDestroySemaphore(device, self->vk_image_available_semaphores[i], NULL);
-        vkDestroySemaphore(device, self->vk_render_finished_semaphores[i], NULL);
+        vkDestroyFence(device, vk_state->vk_flight_fences[i], NULL);
+        vkDestroySemaphore(device, vk_state->vk_image_available_semaphores[i], NULL);
+        vkDestroySemaphore(device, vk_state->vk_render_finished_semaphores[i], NULL);
     }
-    vkDestroyCommandPool(device, self->vk_command_pool, NULL);
-    for (uint32_t i = 0; i < self->swapchain_image_count; i++) {
-        vkDestroyFramebuffer(device, self->vk_framebuffers[i], NULL);
-    }
-    vkDestroyPipeline(device, self->vk_pipeline, NULL);
-    vkDestroyPipelineLayout(device, self->vk_pipeline_layout, NULL);
-    vkDestroyRenderPass(device, self->vk_render_pass, NULL);
-    for (uint32_t i = 0; i < self->swapchain_image_count; i++) {
-        vkDestroyImageView(device, self->swapchain_image_views[i], NULL);
-    }
-    vkDestroySwapchainKHR(device, self->vk_swapchain, NULL);
+
+    vkDestroyCommandPool(device, vk_state->vk_command_pool, NULL);
+
     vkDestroyDevice(device, NULL);
+
 #ifdef VULKAN_ENABLE_VALIDATION
-    destroy_debug_utils_messennger(self->vk_instance, self->vk_debug_messenger, NULL);
+    destroy_debug_utils_messennger(vk_state->vk_instance, vk_state->vk_debug_messenger, NULL);
 #endif
-    vkDestroySurfaceKHR(self->vk_instance, self->vk_surface, NULL);
-    vkDestroyInstance(self->vk_instance, NULL);
+
+    vkDestroySurfaceKHR(vk_state->vk_instance, vk_state->vk_surface, NULL);
+    vkDestroyInstance(vk_state->vk_instance, NULL);
 }

@@ -24,8 +24,8 @@ void vk_create_command_buffers(vulkan_state *vk_state) {
 
     VkCommandBufferAllocateInfo command_buffer_allocate_info = {0};
     command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    command_buffer_allocate_info.commandPool = vk_state->vk_command_pool;
     command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    command_buffer_allocate_info.commandPool = vk_state->vk_command_pool;
     command_buffer_allocate_info.commandBufferCount = size;
 
     if (vkAllocateCommandBuffers(vk_state->vk_device, &command_buffer_allocate_info, command_buffers) != VK_SUCCESS) {

@@ -1,6 +1,7 @@
 #ifndef VULKAN_STRUCT_H
 #define VULKAN_STRUCT_H
 
+#include <stdbool.h>
 #include <vulkan/vulkan.h>
 
 #define MAX(x, y) (x > y ? x : y)
@@ -44,6 +45,7 @@ struct vulkan_state {
     VkSemaphore *vk_image_available_semaphores;
     VkSemaphore *vk_render_finished_semaphores;
     int current_frame;
+    bool framebuffer_resized;
     VkDebugUtilsMessengerEXT vk_debug_messenger;
 };
 
