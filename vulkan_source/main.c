@@ -5,6 +5,10 @@ static const int SCREEN_HEIGHT = 800;
 
 static bool run = true;
 
+#define log(message)                                                                                                                                                                                   \
+    printf(message);                                                                                                                                                                                   \
+    fflush(stdout)
+
 static void window_init(SDL_Window **win, vulkan_state *vk_state) {
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -20,27 +24,42 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
         exit(1);
     }
 
-    VkInstanceCreateInfo vk_info = vk_info_initialize(window);
-
-    if (vkCreateInstance(&vk_info, NULL, &vk_state->vk_instance) != VK_SUCCESS) {
-        fprintf(stderr, "Error: Vulkan Create Instance\n");
-        exit(1);
-    }
+    log("create instance\n");
+    vk_create_instance(window, vk_state);
 
     if (!SDL_Vulkan_CreateSurface(window, vk_state->vk_instance, &vk_state->vk_surface)) {
         fprintf(stderr, "SDL Vulkan Create Surface: %s\n", SDL_GetError());
         exit(1);
     }
 
-    vk_physical_device_initialize(vk_state);
+    log("physical device\n");
+    vk_get_physical_device(vk_state);
+
+    log("logical device\n");
     vk_create_logical_device(vk_state);
+
+    log("swapchain\n");
     vk_create_swapchain(vk_state, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    log("image views\n");
     vk_create_image_views(vk_state);
+
+    log("render pass\n");
     vk_create_render_pass(vk_state);
+
+    log("pipeline\n");
     vk_create_graphics_pipeline(vk_state);
+
+    log("framebuffers\n");
     vk_create_framebuffers(vk_state);
+
+    log("command pool\n");
     vk_create_command_pool(vk_state);
+
+    log("command buffers\n");
     vk_create_command_buffers(vk_state);
+
+    log("semaphores\n");
     vk_create_semaphores(vk_state);
 
     *win = window;
@@ -50,12 +69,15 @@ static void draw(vulkan_state *vk_state) {
 
     int current_frame = vk_state->current_frame;
 
+    log("wait for flight fences\n");
     vkWaitForFences(vk_state->vk_device, 1, &vk_state->vk_flight_fences[current_frame], VK_TRUE, UINT64_MAX);
 
+    log("acquire next image\n");
     uint32_t image_index;
     vkAcquireNextImageKHR(vk_state->vk_device, vk_state->vk_swapchain, UINT64_MAX, vk_state->vk_image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
 
     if (vk_state->vk_images_in_flight[image_index] != VK_NULL_HANDLE) {
+        log("wait for image fences\n");
         vkWaitForFences(vk_state->vk_device, 1, &vk_state->vk_images_in_flight[image_index], VK_TRUE, UINT64_MAX);
     }
 
@@ -78,8 +100,10 @@ static void draw(vulkan_state *vk_state) {
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores = signal_semaphores;
 
+    log("reset fences\n");
     vkResetFences(vk_state->vk_device, 1, &vk_state->vk_flight_fences[current_frame]);
 
+    log("queue submit\n");
     if (vkQueueSubmit(vk_state->vk_graphics_queue, 1, &submit_info, vk_state->vk_flight_fences[current_frame]) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Queue Submit\n");
         exit(1);
@@ -95,6 +119,7 @@ static void draw(vulkan_state *vk_state) {
     present_info.pSwapchains = swapchains;
     present_info.pImageIndices = &image_index;
 
+    log("queue present khr\n");
     vkQueuePresentKHR(vk_state->vk_present_queue, &present_info);
 
     vk_state->current_frame = (current_frame + 1) % VULKAN_MAX_FRAMES_IN_FLIGHT;
@@ -114,11 +139,16 @@ static void main_loop(vulkan_state *vk_state) {
             }
         }
         draw(vk_state);
+        sleep_ms(16);
+        vkDeviceWaitIdle(vk_state->vk_device);
+        // run = false;
     }
     vkDeviceWaitIdle(vk_state->vk_device);
 }
 
 int main() {
+    printf("----------------------------------------------------------------------\n");
+
     SDL_Window *window = NULL;
     vulkan_state vk_state = {0};
 

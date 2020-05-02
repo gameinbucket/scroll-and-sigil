@@ -6,6 +6,11 @@
 #define MAX(x, y) (x > y ? x : y)
 #define MIN(x, y) (x < y ? x : y)
 
+#define VULKAN_ENABLE_VALIDATION
+
+#define VULKAN_VALIDATION_LAYER_COUNT 1
+static const char *const VULKAN_VALIDATION_LAYERS[VULKAN_VALIDATION_LAYER_COUNT] = {"VK_LAYER_KHRONOS_validation"};
+
 #define VULKAN_DEVICE_EXTENSION_COUNT 1
 static const char *const VULKAN_DEVICE_EXTENSIONS[VULKAN_DEVICE_EXTENSION_COUNT] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
@@ -39,6 +44,7 @@ struct vulkan_state {
     VkSemaphore *vk_image_available_semaphores;
     VkSemaphore *vk_render_finished_semaphores;
     int current_frame;
+    VkDebugUtilsMessengerEXT vk_debug_messenger;
 };
 
 #endif

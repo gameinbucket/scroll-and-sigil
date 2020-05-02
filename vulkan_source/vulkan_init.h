@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 
 #include <vulkan/vulkan.h>
 
@@ -22,8 +23,8 @@ struct swapchain_support_details {
     uint32_t present_mode_count;
 };
 
-VkInstanceCreateInfo vk_info_initialize(SDL_Window *window);
-bool vk_physical_device_initialize(vulkan_state *vk_state);
+void vk_create_instance(SDL_Window *window, vulkan_state *vk_state);
+bool vk_get_physical_device(vulkan_state *vk_state);
 void vk_create_logical_device(vulkan_state *vk_state);
 void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height);
 void vk_create_image_views(vulkan_state *vk_state);

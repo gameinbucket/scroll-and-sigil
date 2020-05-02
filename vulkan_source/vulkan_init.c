@@ -1,11 +1,78 @@
 #include "vulkan_init.h"
 
-VkInstanceCreateInfo vk_info_initialize(SDL_Window *window) {
+static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback_func(__attribute__((unused)) VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+                                                          __attribute__((unused)) VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT *callback_data,
+                                                          __attribute__((unused)) void *user_data) {
 
-    uint32_t vk_extension_count;
-    SDL_Vulkan_GetInstanceExtensions(window, &vk_extension_count, NULL);
+    fprintf(stderr, "\nVulkan Validation: %s\n\n", callback_data->pMessage);
+    fflush(stderr);
+
+    return VK_FALSE;
+}
+
+VkResult create_debug_messenger(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *create_info, const VkAllocationCallbacks *allocator, VkDebugUtilsMessengerEXT *debug_messenger) {
+
+    PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    if (func != NULL) {
+        return func(instance, create_info, allocator, debug_messenger);
+    } else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+static bool check_validation_support() {
+
+    uint32_t validation_count;
+    vkEnumerateInstanceLayerProperties(&validation_count, NULL);
+
+    VkLayerProperties *validation_layers = safe_calloc(validation_count, sizeof(VkLayerProperties));
+    vkEnumerateInstanceLayerProperties(&validation_count, validation_layers);
+
+    bool good = true;
+
+    for (int i = 0; i < VULKAN_VALIDATION_LAYER_COUNT; i++) {
+        bool found = false;
+        for (uint32_t j = 0; j < validation_count; j++) {
+            if (strcmp(VULKAN_VALIDATION_LAYERS[i], validation_layers[j].layerName) == 0) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            good = false;
+            break;
+        }
+    }
+
+    free(validation_layers);
+
+    return good;
+}
+
+void vk_create_instance(SDL_Window *window, vulkan_state *vk_state) {
+
+#ifdef VULKAN_ENABLE_VALIDATION
+    if (!check_validation_support()) {
+        fprintf(stderr, "Error: No vulkan validation support\n");
+        exit(1);
+    }
+#endif
+
+    uint32_t vk_sdl_extension_count;
+    SDL_Vulkan_GetInstanceExtensions(window, &vk_sdl_extension_count, NULL);
+
+    const char **vk_sdl_extension_names = safe_calloc(vk_sdl_extension_count, sizeof(char *));
+    SDL_Vulkan_GetInstanceExtensions(window, &vk_sdl_extension_count, vk_sdl_extension_names);
+
+#ifdef VULKAN_ENABLE_VALIDATION
+    uint32_t vk_extension_count = vk_sdl_extension_count + 1;
     const char **vk_extension_names = safe_calloc(vk_extension_count, sizeof(char *));
-    SDL_Vulkan_GetInstanceExtensions(window, &vk_extension_count, vk_extension_names);
+    memcpy(vk_extension_names, vk_sdl_extension_names, vk_sdl_extension_count * sizeof(char *));
+    vk_extension_names[vk_sdl_extension_count] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+#else
+    uint32_t vk_extension_count = vk_sdl_extension_count;
+    const char **vk_extension_names = vk_sdl_extension_names;
+#endif
 
     VkApplicationInfo vk_app = {0};
     vk_app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -18,15 +85,39 @@ VkInstanceCreateInfo vk_info_initialize(SDL_Window *window) {
 
     VkInstanceCreateInfo vk_info = {0};
     vk_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    vk_info.pNext = NULL;
     vk_info.flags = 0;
     vk_info.pApplicationInfo = &vk_app;
-    vk_info.enabledLayerCount = 0;
-    vk_info.ppEnabledLayerNames = NULL;
-    vk_info.enabledExtensionCount = vk_extension_count;
     vk_info.ppEnabledExtensionNames = vk_extension_names;
+    vk_info.enabledExtensionCount = vk_extension_count;
 
-    return vk_info;
+#ifdef VULKAN_ENABLE_VALIDATION
+    vk_info.ppEnabledLayerNames = VULKAN_VALIDATION_LAYERS;
+    vk_info.enabledLayerCount = VULKAN_VALIDATION_LAYER_COUNT;
+
+    VkDebugUtilsMessengerCreateInfoEXT debug_info = {0};
+    debug_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    debug_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    debug_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    debug_info.pfnUserCallback = debug_callback_func;
+
+    vk_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debug_info;
+#else
+    vk_info.ppEnabledLayerNames = NULL;
+    vk_info.enabledLayerCount = 0;
+    vk_info.pNext = NULL;
+#endif
+
+    if (vkCreateInstance(&vk_info, NULL, &vk_state->vk_instance) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan Create Instance\n");
+        exit(1);
+    }
+
+#ifdef VULKAN_ENABLE_VALIDATION
+    if (create_debug_messenger(vk_state->vk_instance, &debug_info, NULL, &vk_state->vk_debug_messenger) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan Create Debug Utils Messenger\n");
+        exit(1);
+    }
+#endif
 }
 
 static struct swapchain_support_details vk_query_swapchain_support(vulkan_state *vk_state, VkPhysicalDevice device) {
@@ -130,7 +221,7 @@ static bool is_vk_physical_device_suitable(vulkan_state *vk_state, VkPhysicalDev
     return false;
 }
 
-bool vk_physical_device_initialize(vulkan_state *vk_state) {
+bool vk_get_physical_device(vulkan_state *vk_state) {
 
     uint32_t vk_device_count = 0;
     vkEnumeratePhysicalDevices(vk_state->vk_instance, &vk_device_count, NULL);
@@ -264,6 +355,7 @@ void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height
     vk_swapchain_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     vk_swapchain_info.presentMode = present_mode;
     vk_swapchain_info.clipped = VK_TRUE;
+    vk_swapchain_info.preTransform = swapchain_details.capabilities.currentTransform;
     vk_swapchain_info.oldSwapchain = VK_NULL_HANDLE;
 
     uint32_t queue_families[2] = {vk_state->present_family_index, vk_state->graphics_family_index};
@@ -322,6 +414,14 @@ void vk_create_image_views(vulkan_state *vk_state) {
     vk_state->swapchain_image_views = swapchain_image_views;
 }
 
+void destroy_debug_utils_messennger(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks *allocator) {
+
+    PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (func != NULL) {
+        func(instance, debug_messenger, allocator);
+    }
+}
+
 void vulkan_quit(vulkan_state *self) {
     VkDevice device = self->vk_device;
     for (int i = 0; i < VULKAN_MAX_FRAMES_IN_FLIGHT; i++) {
@@ -341,6 +441,9 @@ void vulkan_quit(vulkan_state *self) {
     }
     vkDestroySwapchainKHR(device, self->vk_swapchain, NULL);
     vkDestroyDevice(device, NULL);
+#ifdef VULKAN_ENABLE_VALIDATION
+    destroy_debug_utils_messennger(self->vk_instance, self->vk_debug_messenger, NULL);
+#endif
     vkDestroySurfaceKHR(self->vk_instance, self->vk_surface, NULL);
     vkDestroyInstance(self->vk_instance, NULL);
 }
