@@ -16,5 +16,6 @@
 #include "sleep.h"
 #include "vulkan_init.h"
 #include "vulkan_struct.h"
+#include "vulkan_uniforms.h"
 
 #endif

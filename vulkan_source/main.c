@@ -11,11 +11,11 @@ uint64_t VULKAN_TIMEOUT = 5; // UINT64_MAX;
     printf(message);                                                                                                                                                                                   \
     fflush(stdout)
 
-#define vk_ok(call)                                                                                                                                                                                    \
-    if (call != VK_SUCCESS) {                                                                                                                                                                          \
-        fprintf(stderr, "Vulkan Error (line %d): %s\n", __LINE__, #call);                                                                                                                              \
-        exit(1);                                                                                                                                                                                       \
-    }
+static uint32_t vertex_count = 4;
+static float vertices[] = {-0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, -0.5f, 0.5f, 1.0f, 1.0f, 1.0f};
+
+static uint32_t index_count = 6;
+static uint32_t indices[] = {0, 1, 2, 2, 3, 0};
 
 static void window_resize(vulkan_state *vk_state) {
     log("window resize\n");
@@ -44,6 +44,15 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
         exit(1);
     }
 
+    vk_state->position = 2;
+    vk_state->color = 3;
+    vk_state->vertex_stride = 2 + 3;
+    vk_state->vertices = vertices;
+    vk_state->vertex_count = vertex_count;
+
+    vk_state->indices = indices;
+    vk_state->index_count = index_count;
+
     vk_create(vk_state, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     *win = window;
@@ -67,6 +76,8 @@ static void draw(SDL_Window *window, vulkan_state *vk_state) {
     } else {
         vk_ok(acquire_result);
     }
+
+    vk_update_uniform_buffer(vk_state, image_index);
 
     if (vk_state->vk_images_in_flight[image_index] != VK_NULL_HANDLE) {
         vk_ok(vkWaitForFences(vk_state->vk_device, 1, &vk_state->vk_images_in_flight[image_index], VK_TRUE, VULKAN_TIMEOUT));
@@ -137,12 +148,15 @@ static void main_loop(SDL_Window *window, vulkan_state *vk_state) {
         log("draw. ");
         draw(window, vk_state);
 
-        // Some kind of deadlock without this
-        vkDeviceWaitIdle(vk_state->vk_device);
+        sleep_ms(16);
+        log("wait. ");
+        vk_ok(vkDeviceWaitIdle(vk_state->vk_device));
+        log("done. ");
+        sleep_ms(16);
 
-        // sleep_ms(16);
+        run = false;
     }
-    vkDeviceWaitIdle(vk_state->vk_device);
+    vk_ok(vkDeviceWaitIdle(vk_state->vk_device));
 }
 
 int main() {

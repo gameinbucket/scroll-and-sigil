@@ -18,6 +18,8 @@
 #include "vulkan_framebuffer.h"
 #include "vulkan_pipeline.h"
 #include "vulkan_struct.h"
+#include "vulkan_uniforms.h"
+#include "vulkan_vertex.h"
 
 struct swapchain_support_details {
     VkSurfaceCapabilitiesKHR capabilities;

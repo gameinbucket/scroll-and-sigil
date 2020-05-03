@@ -60,7 +60,13 @@ void vk_create_command_buffers(vulkan_state *vk_state) {
 
         vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->vk_pipeline);
 
-        vkCmdDraw(command_buffers[i], 3, 1, 0, 0);
+        VkDeviceSize offsets[1] = {0};
+        VkBuffer vertex_buffers[1] = {vk_state->vk_vertex_buffer};
+        vkCmdBindVertexBuffers(command_buffers[i], 0, 1, vertex_buffers, offsets);
+
+        vkCmdBindIndexBuffer(command_buffers[i], vk_state->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+
+        vkCmdDrawIndexed(command_buffers[i], vk_state->index_count, 1, 0, 0, 0);
 
         vkCmdEndRenderPass(command_buffers[i]);
 

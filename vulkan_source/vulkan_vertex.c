@@ -55,7 +55,7 @@ VkVertexInputAttributeDescription *vk_attribute_description(int position, int co
         description[i].binding = 0;
         description[i].location = i;
         description[i].format = vk_vertex_format(position);
-        description[i].offset = offset;
+        description[i].offset = offset * sizeof(float);
         i++;
         offset += position;
     }
@@ -64,7 +64,7 @@ VkVertexInputAttributeDescription *vk_attribute_description(int position, int co
         description[i].binding = 0;
         description[i].location = i;
         description[i].format = vk_vertex_format(color);
-        description[i].offset = offset;
+        description[i].offset = offset * sizeof(float);
         i++;
         offset += color;
     }
@@ -73,7 +73,7 @@ VkVertexInputAttributeDescription *vk_attribute_description(int position, int co
         description[i].binding = 0;
         description[i].location = i;
         description[i].format = vk_vertex_format(texture);
-        description[i].offset = offset;
+        description[i].offset = offset * sizeof(float);
         i++;
         offset += texture;
     }
@@ -82,9 +82,65 @@ VkVertexInputAttributeDescription *vk_attribute_description(int position, int co
         description[i].binding = 0;
         description[i].location = i;
         description[i].format = vk_vertex_format(normal);
-        description[i].offset = offset;
+        description[i].offset = offset * sizeof(float);
         i++;
     }
 
     return description;
+}
+
+void vk_create_vertex_buffer(vulkan_state *vk_state) {
+
+    VkDeviceSize size = vk_state->vertex_count * vk_state->vertex_stride * sizeof(vk_state->vertices[0]);
+
+    VkBuffer staging_buffer;
+    VkDeviceMemory staging_buffer_memory;
+
+    VkBufferUsageFlagBits staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    VkMemoryPropertyFlagBits staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+    vk_create_buffer(vk_state, size, staging_usage, staging_properties, &staging_buffer, &staging_buffer_memory);
+
+    void *data;
+    vkMapMemory(vk_state->vk_device, staging_buffer_memory, 0, size, 0, &data);
+    memcpy(data, vk_state->vertices, (size_t)size);
+    vkUnmapMemory(vk_state->vk_device, staging_buffer_memory);
+
+    VkBufferUsageFlagBits vertex_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    VkMemoryPropertyFlagBits vertex_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    vk_create_buffer(vk_state, size, vertex_usage, vertex_properties, &vk_state->vk_vertex_buffer, &vk_state->vk_vertex_buffer_memory);
+
+    vk_copy_buffer(vk_state, staging_buffer, vk_state->vk_vertex_buffer, size);
+
+    vkDestroyBuffer(vk_state->vk_device, staging_buffer, NULL);
+    vkFreeMemory(vk_state->vk_device, staging_buffer_memory, NULL);
+}
+
+void vk_create_index_buffer(vulkan_state *vk_state) {
+
+    VkDeviceSize size = vk_state->index_count * sizeof(vk_state->indices[0]);
+
+    VkBuffer staging_buffer;
+    VkDeviceMemory staging_buffer_memory;
+
+    VkBufferUsageFlagBits staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    VkMemoryPropertyFlagBits staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+    vk_create_buffer(vk_state, size, staging_usage, staging_properties, &staging_buffer, &staging_buffer_memory);
+
+    void *data;
+    vkMapMemory(vk_state->vk_device, staging_buffer_memory, 0, size, 0, &data);
+    memcpy(data, vk_state->indices, (size_t)size);
+    vkUnmapMemory(vk_state->vk_device, staging_buffer_memory);
+
+    VkBufferUsageFlagBits index_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+    VkMemoryPropertyFlagBits index_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    vk_create_buffer(vk_state, size, index_usage, index_properties, &vk_state->vk_index_buffer, &vk_state->vk_index_buffer_memory);
+
+    vk_copy_buffer(vk_state, staging_buffer, vk_state->vk_index_buffer, size);
+
+    vkDestroyBuffer(vk_state->vk_device, staging_buffer, NULL);
+    vkFreeMemory(vk_state->vk_device, staging_buffer_memory, NULL);
 }

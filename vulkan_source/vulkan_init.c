@@ -419,6 +419,11 @@ void vk_clean_swapchain(vulkan_state *vk_state) {
     VkDevice device = vk_state->vk_device;
 
     for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
+        vkDestroyBuffer(device, vk_state->uniform_buffers[i], NULL);
+        vkFreeMemory(device, vk_state->uniform_buffers_memory[i], NULL);
+    }
+
+    for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
         vkDestroyFramebuffer(device, vk_state->vk_framebuffers[i], NULL);
     }
 
@@ -437,7 +442,7 @@ void vk_clean_swapchain(vulkan_state *vk_state) {
 
 void vk_recreate_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height) {
 
-    vkDeviceWaitIdle(vk_state->vk_device);
+    vk_ok(vkDeviceWaitIdle(vk_state->vk_device));
 
     vk_clean_swapchain(vk_state);
 
@@ -446,6 +451,7 @@ void vk_recreate_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t heig
     vk_create_render_pass(vk_state);
     vk_create_graphics_pipeline(vk_state);
     vk_create_framebuffers(vk_state);
+    vk_create_uniform_buffers(vk_state);
     vk_create_command_buffers(vk_state);
 }
 
@@ -456,9 +462,13 @@ void vk_create(vulkan_state *vk_state, uint32_t width, uint32_t height) {
     vk_create_swapchain(vk_state, width, height);
     vk_create_image_views(vk_state);
     vk_create_render_pass(vk_state);
+    vk_create_descriptor_set_layout(vk_state);
     vk_create_graphics_pipeline(vk_state);
     vk_create_framebuffers(vk_state);
     vk_create_command_pool(vk_state);
+    vk_create_vertex_buffer(vk_state);
+    vk_create_index_buffer(vk_state);
+    vk_create_uniform_buffers(vk_state);
     vk_create_command_buffers(vk_state);
     vk_create_semaphores(vk_state);
 }
@@ -477,10 +487,18 @@ void vk_quit(vulkan_state *vk_state) {
 
     VkDevice device = vk_state->vk_device;
 
+    vkDestroyDescriptorSetLayout(device, vk_state->vk_descriptor_set_layout, NULL);
+
+    vkDestroyBuffer(device, vk_state->vk_index_buffer, NULL);
+    vkFreeMemory(device, vk_state->vk_index_buffer_memory, NULL);
+
+    vkDestroyBuffer(device, vk_state->vk_vertex_buffer, NULL);
+    vkFreeMemory(device, vk_state->vk_vertex_buffer_memory, NULL);
+
     for (int i = 0; i < VULKAN_MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroyFence(device, vk_state->vk_flight_fences[i], NULL);
-        vkDestroySemaphore(device, vk_state->vk_image_available_semaphores[i], NULL);
         vkDestroySemaphore(device, vk_state->vk_render_finished_semaphores[i], NULL);
+        vkDestroySemaphore(device, vk_state->vk_image_available_semaphores[i], NULL);
+        vkDestroyFence(device, vk_state->vk_flight_fences[i], NULL);
     }
 
     vkDestroyCommandPool(device, vk_state->vk_command_pool, NULL);

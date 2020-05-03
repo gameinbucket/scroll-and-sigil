@@ -93,10 +93,10 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    int position = 2;
-    int color = 3;
-    int texture = 0;
-    int normal = 0;
+    int position = vk_state->position;
+    int color = vk_state->color;
+    int texture = vk_state->texture;
+    int normal = vk_state->normal;
 
     int attribute_count = vk_attribute_count(position, color, texture, normal);
 
