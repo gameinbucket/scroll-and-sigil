@@ -14,5 +14,7 @@
 void vk_create_descriptor_set_layout(vulkan_state *vk_state);
 void vk_create_uniform_buffers(vulkan_state *vk_state);
 void vk_update_uniform_buffer(vulkan_state *vk_state, uint32_t current_image);
+void vk_create_descriptor_pool(vulkan_state *vk_state);
+void vk_create_descriptor_sets(vulkan_state *vk_state);
 
 #endif

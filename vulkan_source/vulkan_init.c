@@ -418,9 +418,11 @@ void vk_clean_swapchain(vulkan_state *vk_state) {
 
     VkDevice device = vk_state->vk_device;
 
+    vkDestroyDescriptorPool(device, vk_state->vk_descriptor_pool, NULL);
+
     for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
-        vkDestroyBuffer(device, vk_state->uniform_buffers[i], NULL);
-        vkFreeMemory(device, vk_state->uniform_buffers_memory[i], NULL);
+        vkDestroyBuffer(device, vk_state->vk_uniform_buffers[i], NULL);
+        vkFreeMemory(device, vk_state->vk_uniform_buffers_memory[i], NULL);
     }
 
     for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
@@ -452,6 +454,8 @@ void vk_recreate_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t heig
     vk_create_graphics_pipeline(vk_state);
     vk_create_framebuffers(vk_state);
     vk_create_uniform_buffers(vk_state);
+    vk_create_descriptor_pool(vk_state);
+    vk_create_descriptor_sets(vk_state);
     vk_create_command_buffers(vk_state);
 }
 
@@ -469,6 +473,8 @@ void vk_create(vulkan_state *vk_state, uint32_t width, uint32_t height) {
     vk_create_vertex_buffer(vk_state);
     vk_create_index_buffer(vk_state);
     vk_create_uniform_buffers(vk_state);
+    vk_create_descriptor_pool(vk_state);
+    vk_create_descriptor_sets(vk_state);
     vk_create_command_buffers(vk_state);
     vk_create_semaphores(vk_state);
 }

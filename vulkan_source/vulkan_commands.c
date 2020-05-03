@@ -66,6 +66,8 @@ void vk_create_command_buffers(vulkan_state *vk_state) {
 
         vkCmdBindIndexBuffer(command_buffers[i], vk_state->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
+        vkCmdBindDescriptorSets(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->vk_pipeline_layout, 0, 1, &vk_state->vk_descriptor_sets[i], 0, NULL);
+
         vkCmdDrawIndexed(command_buffers[i], vk_state->index_count, 1, 0, 0, 0);
 
         vkCmdEndRenderPass(command_buffers[i]);

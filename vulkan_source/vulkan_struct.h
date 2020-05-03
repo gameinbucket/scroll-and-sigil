@@ -43,6 +43,8 @@ struct vulkan_state {
     uint32_t swapchain_image_count;
     VkRenderPass vk_render_pass;
     VkDescriptorSetLayout vk_descriptor_set_layout;
+    VkDescriptorPool vk_descriptor_pool;
+    VkDescriptorSet *vk_descriptor_sets;
     VkPipelineLayout vk_pipeline_layout;
     VkPipeline vk_pipeline;
     VkFramebuffer *vk_framebuffers;
@@ -61,8 +63,8 @@ struct vulkan_state {
     uint32_t index_count;
     VkBuffer vk_index_buffer;
     VkDeviceMemory vk_index_buffer_memory;
-    VkBuffer *uniform_buffers;
-    VkDeviceMemory *uniform_buffers_memory;
+    VkBuffer *vk_uniform_buffers;
+    VkDeviceMemory *vk_uniform_buffers_memory;
     VkFence *vk_flight_fences;
     VkFence *vk_images_in_flight;
     VkSemaphore *vk_image_available_semaphores;
