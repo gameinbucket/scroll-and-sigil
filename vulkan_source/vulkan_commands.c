@@ -6,7 +6,7 @@ void vk_create_command_pool(vulkan_state *vk_state) {
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_info.queueFamilyIndex = vk_state->graphics_family_index;
 
-    VkCommandPool command_pool;
+    VkCommandPool command_pool = {0};
 
     if (vkCreateCommandPool(vk_state->vk_device, &pool_info, NULL, &command_pool) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Command Pool\n");
@@ -22,23 +22,25 @@ void vk_create_command_buffers(vulkan_state *vk_state) {
 
     VkCommandBuffer *command_buffers = safe_calloc(size, sizeof(VkCommandBuffer));
 
-    VkCommandBufferAllocateInfo command_buffer_allocate_info = {0};
-    command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    command_buffer_allocate_info.commandPool = vk_state->vk_command_pool;
-    command_buffer_allocate_info.commandBufferCount = size;
+    VkCommandBufferAllocateInfo command_buffer_alloc_info = {0};
+    command_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    command_buffer_alloc_info.commandPool = vk_state->vk_command_pool;
+    command_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    command_buffer_alloc_info.commandBufferCount = size;
 
-    if (vkAllocateCommandBuffers(vk_state->vk_device, &command_buffer_allocate_info, command_buffers) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(vk_state->vk_device, &command_buffer_alloc_info, command_buffers) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Allocate Command Buffers\n");
         exit(1);
     }
 
     for (uint32_t i = 0; i < size; i++) {
 
+        VkCommandBuffer command_buffer = command_buffers[i];
+
         VkCommandBufferBeginInfo command_begin_info = {0};
         command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-        if (vkBeginCommandBuffer(command_buffers[i], &command_begin_info) != VK_SUCCESS) {
+        if (vkBeginCommandBuffer(command_buffer, &command_begin_info) != VK_SUCCESS) {
             fprintf(stderr, "Error: Vulkan Begin Command Buffer\n");
             exit(1);
         }
@@ -56,23 +58,23 @@ void vk_create_command_buffers(vulkan_state *vk_state) {
         render_pass_info.pClearValues = &clear_color;
         render_pass_info.clearValueCount = 1;
 
-        vkCmdBeginRenderPass(command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->vk_pipeline);
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->vk_pipeline);
 
-        VkDeviceSize offsets[1] = {0};
         VkBuffer vertex_buffers[1] = {vk_state->vk_vertex_buffer};
-        vkCmdBindVertexBuffers(command_buffers[i], 0, 1, vertex_buffers, offsets);
+        VkDeviceSize vertex_offsets[1] = {0};
+        vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, vertex_offsets);
 
-        vkCmdBindIndexBuffer(command_buffers[i], vk_state->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(command_buffer, vk_state->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
-        vkCmdBindDescriptorSets(command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->vk_pipeline_layout, 0, 1, &vk_state->vk_descriptor_sets[i], 0, NULL);
+        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->vk_pipeline_layout, 0, 1, &vk_state->vk_descriptor_sets[i], 0, NULL);
 
-        vkCmdDrawIndexed(command_buffers[i], vk_state->index_count, 1, 0, 0, 0);
+        vkCmdDrawIndexed(command_buffer, vk_state->index_count, 1, 0, 0, 0);
 
-        vkCmdEndRenderPass(command_buffers[i]);
+        vkCmdEndRenderPass(command_buffer);
 
-        if (vkEndCommandBuffer(command_buffers[i]) != VK_SUCCESS) {
+        if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
             fprintf(stderr, "Error: Vulkan End Command Buffer\n");
             exit(1);
         }
@@ -87,13 +89,13 @@ void vk_create_semaphores(vulkan_state *vk_state) {
     fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-    VkFence *flight_fences = safe_malloc(VULKAN_MAX_FRAMES_IN_FLIGHT * sizeof(VkFence));
+    VkFence *flight_fences = safe_calloc(VULKAN_MAX_FRAMES_IN_FLIGHT, sizeof(VkFence));
 
     VkSemaphoreCreateInfo semaphore_info = {0};
     semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-    VkSemaphore *image_available_semaphores = safe_malloc(VULKAN_MAX_FRAMES_IN_FLIGHT * sizeof(VkSemaphore));
-    VkSemaphore *render_finished_semaphores = safe_malloc(VULKAN_MAX_FRAMES_IN_FLIGHT * sizeof(VkSemaphore));
+    VkSemaphore *image_available_semaphores = safe_calloc(VULKAN_MAX_FRAMES_IN_FLIGHT, sizeof(VkSemaphore));
+    VkSemaphore *render_finished_semaphores = safe_calloc(VULKAN_MAX_FRAMES_IN_FLIGHT, sizeof(VkSemaphore));
 
     for (int i = 0; i < VULKAN_MAX_FRAMES_IN_FLIGHT; i++) {
 
@@ -117,7 +119,7 @@ void vk_create_semaphores(vulkan_state *vk_state) {
     vk_state->vk_image_available_semaphores = image_available_semaphores;
     vk_state->vk_render_finished_semaphores = render_finished_semaphores;
 
-    VkFence *images_in_flight = safe_malloc(vk_state->swapchain_image_count * sizeof(VkFence));
+    VkFence *images_in_flight = safe_calloc(vk_state->swapchain_image_count, sizeof(VkFence));
 
     for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
         images_in_flight[i] = VK_NULL_HANDLE;

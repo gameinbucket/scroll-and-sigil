@@ -1,6 +1,7 @@
 #ifndef VULKAN_STRUCT_H
 #define VULKAN_STRUCT_H
 
+#include <stdalign.h>
 #include <stdbool.h>
 
 #include <vulkan/vulkan.h>
@@ -75,7 +76,7 @@ struct vulkan_state {
 };
 
 struct uniform_buffer_object {
-    float *mvp;
+    alignas(16) float mvp[16];
 };
 
 #endif

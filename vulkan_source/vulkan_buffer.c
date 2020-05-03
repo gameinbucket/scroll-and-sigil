@@ -2,7 +2,7 @@
 
 static uint32_t memory_type(vulkan_state *vk_state, uint32_t filter, VkMemoryPropertyFlags properties) {
 
-    VkPhysicalDeviceMemoryProperties mem_properties;
+    VkPhysicalDeviceMemoryProperties mem_properties = {0};
     vkGetPhysicalDeviceMemoryProperties(vk_state->vk_physical, &mem_properties);
 
     for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++) {
@@ -28,7 +28,7 @@ void vk_create_buffer(vulkan_state *vk_state, VkDeviceSize size, VkBufferUsageFl
         exit(1);
     }
 
-    VkMemoryRequirements mem_requirements;
+    VkMemoryRequirements mem_requirements = {0};
     vkGetBufferMemoryRequirements(vk_state->vk_device, (*buffer), &mem_requirements);
 
     VkMemoryAllocateInfo mem_info = {0};
@@ -52,7 +52,7 @@ void vk_copy_buffer(vulkan_state *vk_state, VkBuffer source, VkBuffer destinatio
     alloc_info.commandPool = vk_state->vk_command_pool;
     alloc_info.commandBufferCount = 1;
 
-    VkCommandBuffer command_buffer;
+    VkCommandBuffer command_buffer = {0};
     vkAllocateCommandBuffers(vk_state->vk_device, &alloc_info, &command_buffer);
 
     VkCommandBufferBeginInfo beginInfo = {0};

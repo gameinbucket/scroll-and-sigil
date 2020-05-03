@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 #include "mem.h"
+#include "render.h"
 #include "sleep.h"
 #include "vulkan_init.h"
 #include "vulkan_struct.h"

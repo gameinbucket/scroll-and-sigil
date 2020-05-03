@@ -46,7 +46,7 @@ VkVertexInputAttributeDescription *vk_attribute_description(int position, int co
 
     int count = vk_attribute_count(position, color, texture, normal);
 
-    VkVertexInputAttributeDescription *description = safe_malloc(count * sizeof(VkVertexInputAttributeDescription));
+    VkVertexInputAttributeDescription *description = safe_calloc(count, sizeof(VkVertexInputAttributeDescription));
 
     uint32_t i = 0;
     uint32_t offset = 0;
@@ -93,8 +93,8 @@ void vk_create_vertex_buffer(vulkan_state *vk_state) {
 
     VkDeviceSize size = vk_state->vertex_count * vk_state->vertex_stride * sizeof(vk_state->vertices[0]);
 
-    VkBuffer staging_buffer;
-    VkDeviceMemory staging_buffer_memory;
+    VkBuffer staging_buffer = {0};
+    VkDeviceMemory staging_buffer_memory = {0};
 
     VkBufferUsageFlagBits staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     VkMemoryPropertyFlagBits staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
@@ -121,8 +121,8 @@ void vk_create_index_buffer(vulkan_state *vk_state) {
 
     VkDeviceSize size = vk_state->index_count * sizeof(vk_state->indices[0]);
 
-    VkBuffer staging_buffer;
-    VkDeviceMemory staging_buffer_memory;
+    VkBuffer staging_buffer = {0};
+    VkDeviceMemory staging_buffer_memory = {0};
 
     VkBufferUsageFlagBits staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     VkMemoryPropertyFlagBits staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;

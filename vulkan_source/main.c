@@ -11,12 +11,6 @@ uint64_t VULKAN_TIMEOUT = 5; // UINT64_MAX;
     printf(message);                                                                                                                                                                                   \
     fflush(stdout)
 
-static uint32_t vertex_count = 4;
-static float vertices[] = {-0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, -0.5f, 0.5f, 1.0f, 1.0f, 1.0f};
-
-static uint32_t index_count = 6;
-static uint32_t indices[] = {0, 1, 2, 2, 3, 0};
-
 static void window_resize(vulkan_state *vk_state) {
     log("window resize\n");
     vk_state->framebuffer_resized = true;
@@ -44,14 +38,25 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
         exit(1);
     }
 
-    vk_state->position = 2;
+    vk_state->position = 3;
     vk_state->color = 3;
-    vk_state->vertex_stride = 2 + 3;
-    vk_state->vertices = vertices;
-    vk_state->vertex_count = vertex_count;
+    vk_state->vertex_stride = vk_state->position + vk_state->color;
 
-    vk_state->indices = indices;
-    vk_state->index_count = index_count;
+    vk_state->vertices = safe_malloc(CUBE_VERTEX_FLOAT * sizeof(float));
+    vk_state->vertex_count = CUBE_VERTEX_COUNT;
+
+    vk_state->indices = safe_malloc(CUBE_INDICE_COUNT * sizeof(uint32_t));
+    vk_state->index_count = CUBE_INDICE_COUNT;
+
+    float cube[CUBE_VERTEX_FLOAT] = RENDER_CUBE(1, 1, 1);
+
+    memcpy(vk_state->vertices, cube, CUBE_VERTEX_FLOAT * sizeof(float));
+
+    uint32_t index_position = 0;
+    uint32_t index_offset = 0;
+
+    for (int k = 0; k < 6; k++)
+        render_index4(&index_position, &index_offset, vk_state->indices);
 
     vk_create(vk_state, SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -132,7 +137,7 @@ static void draw(SDL_Window *window, vulkan_state *vk_state) {
 }
 
 static void main_loop(SDL_Window *window, vulkan_state *vk_state) {
-    SDL_Event event;
+    SDL_Event event = {0};
     while (run) {
         while (SDL_PollEvent(&event) != 0) {
             switch (event.type) {

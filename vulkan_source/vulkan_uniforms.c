@@ -43,11 +43,18 @@ void vk_update_uniform_buffer(vulkan_state *vk_state, uint32_t current_image) {
     float view[16];
     float perspective[16];
 
-    vec3 eye = {2, 2, 2};
+    static float x = 0.0f;
+
+    x += 0.001f;
+
+    vec3 eye = {3 + x, 3, 5};
     vec3 center = {0, 0, 0};
     matrix_look_at(view, &eye, &center);
+    matrix_translate(view, -eye.x, -eye.y, -eye.z);
 
-    matrix_perspective(perspective, 60.0, 0.01, 100, (float)vk_state->swapchain_extent.width / (float)vk_state->swapchain_extent.height);
+    float ratio = (float)vk_state->swapchain_extent.width / (float)vk_state->swapchain_extent.height;
+
+    matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
 
     matrix_multiply(ubo.mvp, perspective, view);
 
@@ -81,8 +88,11 @@ void vk_create_descriptor_sets(vulkan_state *vk_state) {
 
     uint32_t size = vk_state->swapchain_image_count;
 
-    VkDescriptorSetLayout *descriptor_set_layouts = safe_malloc(size * sizeof(VkDescriptorSetLayout));
-    memcpy(descriptor_set_layouts, vk_state->vk_descriptor_set_layout, size * sizeof(VkDescriptorSetLayout));
+    VkDescriptorSetLayout *descriptor_set_layouts = safe_calloc(size, sizeof(VkDescriptorSetLayout));
+
+    for (uint32_t i = 0; i < size; i++) {
+        memcpy(&descriptor_set_layouts[i], &vk_state->vk_descriptor_set_layout, sizeof(VkDescriptorSetLayout));
+    }
 
     VkDescriptorSetAllocateInfo alloc_info = {0};
     alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -90,10 +100,14 @@ void vk_create_descriptor_sets(vulkan_state *vk_state) {
     alloc_info.descriptorSetCount = size;
     alloc_info.pSetLayouts = descriptor_set_layouts;
 
+    vk_state->vk_descriptor_sets = safe_calloc(size, sizeof(VkDescriptorSet));
+
     if (vkAllocateDescriptorSets(vk_state->vk_device, &alloc_info, vk_state->vk_descriptor_sets) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Allocate Descriptor Sets\n");
         exit(1);
     }
+
+    free(descriptor_set_layouts);
 
     for (uint32_t i = 0; i < size; i++) {
 

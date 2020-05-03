@@ -117,16 +117,21 @@ void vk_create_instance(SDL_Window *window, vulkan_state *vk_state) {
         fprintf(stderr, "Error: Vulkan Create Debug Utils Messenger\n");
         exit(1);
     }
+
+    free(vk_extension_names);
 #endif
+
+    free(vk_sdl_extension_names);
 }
 
 static struct swapchain_support_details vk_query_swapchain_support(vulkan_state *vk_state, VkPhysicalDevice device) {
 
-    struct swapchain_support_details details;
+    struct swapchain_support_details details = {0};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, vk_state->vk_surface, &details.capabilities);
 
     uint32_t format_count;
     vkGetPhysicalDeviceSurfaceFormatsKHR(device, vk_state->vk_surface, &format_count, NULL);
+    details.format_count = format_count;
 
     if (format_count != 0) {
         details.formats = safe_calloc(format_count, sizeof(VkSurfaceFormatKHR));
@@ -134,10 +139,10 @@ static struct swapchain_support_details vk_query_swapchain_support(vulkan_state 
     } else {
         details.formats = NULL;
     }
-    details.format_count = format_count;
 
     uint32_t present_mode_count;
     vkGetPhysicalDeviceSurfacePresentModesKHR(device, vk_state->vk_surface, &present_mode_count, NULL);
+    details.present_mode_count = present_mode_count;
 
     if (present_mode_count != 0) {
         details.present_modes = safe_calloc(present_mode_count, sizeof(VkPresentModeKHR));
@@ -145,12 +150,23 @@ static struct swapchain_support_details vk_query_swapchain_support(vulkan_state 
     } else {
         details.present_modes = NULL;
     }
-    details.present_mode_count = present_mode_count;
 
     return details;
 }
 
+static void free_swapchain_support_details(struct swapchain_support_details *self) {
+
+    if (self->format_count != 0) {
+        free(self->formats);
+    }
+
+    if (self->present_mode_count != 0) {
+        free(self->present_modes);
+    }
+}
+
 static bool vk_check_extension_support(VkPhysicalDevice device) {
+
     uint32_t extension_count;
     vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
 
@@ -172,8 +188,9 @@ static bool vk_check_extension_support(VkPhysicalDevice device) {
 
 static bool is_vk_physical_device_suitable(vulkan_state *vk_state, VkPhysicalDevice device) {
 
-    VkPhysicalDeviceProperties vk_device_properties;
-    VkPhysicalDeviceFeatures vk_device_features;
+    VkPhysicalDeviceProperties vk_device_properties = {0};
+    VkPhysicalDeviceFeatures vk_device_features = {0};
+
     vkGetPhysicalDeviceProperties(device, &vk_device_properties);
     vkGetPhysicalDeviceFeatures(device, &vk_device_features);
 
@@ -213,6 +230,7 @@ static bool is_vk_physical_device_suitable(vulkan_state *vk_state, VkPhysicalDev
         if (extension_support) {
             struct swapchain_support_details swapchain_details = vk_query_swapchain_support(vk_state, device);
             swapchain_good = swapchain_details.format_count > 0 && swapchain_details.present_mode_count > 0;
+            free_swapchain_support_details(&swapchain_details);
         }
 
         return present_family_found && graphics_family_found && extension_support && swapchain_good;
@@ -380,6 +398,8 @@ void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height
 
     vk_state->swapchain_images = swapchain_images;
     vk_state->swapchain_image_count = swapchain_image_count;
+
+    free_swapchain_support_details(&swapchain_details);
 }
 
 void vk_create_image_views(vulkan_state *vk_state) {
@@ -517,4 +537,18 @@ void vk_quit(vulkan_state *vk_state) {
 
     vkDestroySurfaceKHR(vk_state->vk_instance, vk_state->vk_surface, NULL);
     vkDestroyInstance(vk_state->vk_instance, NULL);
+
+    free(vk_state->swapchain_images);
+    free(vk_state->swapchain_image_views);
+    free(vk_state->vk_descriptor_sets);
+    free(vk_state->vk_framebuffers);
+    free(vk_state->vk_command_buffers);
+    free(vk_state->vk_uniform_buffers);
+    free(vk_state->vk_uniform_buffers_memory);
+    free(vk_state->vk_flight_fences);
+    free(vk_state->vk_images_in_flight);
+    free(vk_state->vk_image_available_semaphores);
+    free(vk_state->vk_render_finished_semaphores);
+    free(vk_state->vertices);
+    free(vk_state->indices);
 }

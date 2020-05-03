@@ -38,7 +38,7 @@ void vk_create_render_pass(vulkan_state *vk_state) {
     render_pass_info.dependencyCount = 1;
     render_pass_info.pDependencies = &dependency;
 
-    VkRenderPass render_pass;
+    VkRenderPass render_pass = {0};
 
     if (vkCreateRenderPass(vk_state->vk_device, &render_pass_info, NULL, &render_pass) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Render Pass\n");
@@ -55,7 +55,7 @@ VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_
     vk_shader_info.codeSize = size;
     vk_shader_info.pCode = (const uint32_t *)code;
 
-    VkShaderModule vk_shader_module;
+    VkShaderModule vk_shader_module = {0};
 
     if (vkCreateShaderModule(vk_state->vk_device, &vk_shader_info, NULL, &vk_shader_module) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Shader Module\n");
@@ -159,8 +159,10 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
 
     VkPipelineLayoutCreateInfo pipeline_layout_info = {0};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipeline_layout_info.setLayoutCount = 1;
+    pipeline_layout_info.pSetLayouts = &vk_state->vk_descriptor_set_layout;
 
-    VkPipelineLayout pipeline_layout;
+    VkPipelineLayout pipeline_layout = {0};
 
     if (vkCreatePipelineLayout(vk_state->vk_device, &pipeline_layout_info, NULL, &pipeline_layout) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Pipeline Layout\n");
@@ -184,7 +186,7 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     pipeline_info.subpass = 0;
     pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 
-    VkPipeline pipeline;
+    VkPipeline pipeline = {0};
 
     if (vkCreateGraphicsPipelines(vk_state->vk_device, VK_NULL_HANDLE, 1, &pipeline_info, NULL, &pipeline) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Pipeline\n");
@@ -195,4 +197,8 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
 
     vkDestroyShaderModule(vk_state->vk_device, vertex_module, NULL);
     vkDestroyShaderModule(vk_state->vk_device, fragment_module, NULL);
+
+    free(vertex_shader);
+    free(fragment_shader);
+    free(attribute_description);
 }
