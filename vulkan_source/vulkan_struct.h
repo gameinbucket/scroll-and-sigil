@@ -9,9 +9,9 @@
 #define MAX(x, y) (x > y ? x : y)
 #define MIN(x, y) (x < y ? x : y)
 
-#define vk_ok(call)                                                                                                                                                                                    \
-    if (call != VK_SUCCESS) {                                                                                                                                                                          \
-        fprintf(stderr, "Vulkan Error (line %d): %s\n", __LINE__, #call);                                                                                                                              \
+#define vk_ok(code)                                                                                                                                                                                    \
+    if (code != VK_SUCCESS) {                                                                                                                                                                          \
+        fprintf(stderr, "Vulkan Error: Line: %d, Code: %d\n", __LINE__, code);                                                                                                                         \
         exit(1);                                                                                                                                                                                       \
     }
 
@@ -30,7 +30,7 @@ typedef struct vulkan_state vulkan_state;
 struct vulkan_state {
     VkInstance vk_instance;
     VkSurfaceKHR vk_surface;
-    VkPhysicalDevice vk_physical;
+    VkPhysicalDevice vk_physical_device;
     VkDevice vk_device;
     VkQueue vk_present_queue;
     VkQueue vk_graphics_queue;
@@ -73,6 +73,14 @@ struct vulkan_state {
     int current_frame;
     bool framebuffer_resized;
     VkDebugUtilsMessengerEXT vk_debug_messenger;
+    VkImage vk_texture_image;
+    VkDeviceMemory vk_texture_image_memory;
+    VkImageView vk_texture_image_view;
+    VkSampler vk_texture_sampler;
+    VkImage vk_depth_image;
+    VkDeviceMemory vk_depth_image_memory;
+    VkImageView vk_depth_image_view;
+    VkFormat vk_depth_format;
 };
 
 struct uniform_buffer_object {

@@ -12,14 +12,29 @@ void vk_create_render_pass(vulkan_state *vk_state) {
     color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+    VkAttachmentDescription depth_attachment = {0};
+    depth_attachment.format = vk_state->vk_depth_format;
+    depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
     VkAttachmentReference color_attachment_ref = {0};
     color_attachment_ref.attachment = 0;
     color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkAttachmentReference depth_attachment_ref = {0};
+    depth_attachment_ref.attachment = 1;
+    depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     VkSubpassDescription subpass = {0};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &color_attachment_ref;
+    subpass.pDepthStencilAttachment = &depth_attachment_ref;
 
     VkSubpassDependency dependency = {0};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -29,10 +44,12 @@ void vk_create_render_pass(vulkan_state *vk_state) {
     dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+    VkAttachmentDescription attachments[2] = {color_attachment, depth_attachment};
+
     VkRenderPassCreateInfo render_pass_info = {0};
     render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    render_pass_info.attachmentCount = 1;
-    render_pass_info.pAttachments = &color_attachment;
+    render_pass_info.attachmentCount = 2;
+    render_pass_info.pAttachments = attachments;
     render_pass_info.subpassCount = 1;
     render_pass_info.pSubpasses = &subpass;
     render_pass_info.dependencyCount = 1;
@@ -147,6 +164,16 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     multisampling.sampleShadingEnable = VK_FALSE;
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
+    VkPipelineDepthStencilStateCreateInfo depth_stencil = {0};
+    depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depth_stencil.depthTestEnable = VK_TRUE;
+    depth_stencil.depthWriteEnable = VK_TRUE;
+    depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
+    depth_stencil.depthBoundsTestEnable = VK_FALSE;
+    depth_stencil.minDepthBounds = 0.0f;
+    depth_stencil.maxDepthBounds = 1.0f;
+    depth_stencil.stencilTestEnable = VK_FALSE;
+
     VkPipelineColorBlendAttachmentState color_blend_attachment = {0};
     color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     color_blend_attachment.blendEnable = VK_FALSE;
@@ -180,6 +207,7 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     pipeline_info.pViewportState = &viewport_state;
     pipeline_info.pRasterizationState = &rasterizer;
     pipeline_info.pMultisampleState = &multisampling;
+    pipeline_info.pDepthStencilState = &depth_stencil;
     pipeline_info.pColorBlendState = &color_blending;
     pipeline_info.layout = pipeline_layout;
     pipeline_info.renderPass = vk_state->vk_render_pass;

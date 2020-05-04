@@ -18,6 +18,7 @@
 #include "vulkan_framebuffer.h"
 #include "vulkan_pipeline.h"
 #include "vulkan_struct.h"
+#include "vulkan_texture.h"
 #include "vulkan_uniforms.h"
 #include "vulkan_vertex.h"
 
@@ -30,10 +31,10 @@ struct swapchain_support_details {
 };
 
 void vk_create_instance(SDL_Window *window, vulkan_state *vk_state);
-bool vk_get_physical_device(vulkan_state *vk_state);
+bool vk_choose_physical_device(vulkan_state *vk_state);
 void vk_create_logical_device(vulkan_state *vk_state);
 void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height);
-void vk_create_image_views(vulkan_state *vk_state);
+void vk_create_swapchain_image_views(vulkan_state *vk_state);
 void vk_recreate_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height);
 void vk_create(vulkan_state *vk_state, uint32_t width, uint32_t height);
 void vk_quit(vulkan_state *self);

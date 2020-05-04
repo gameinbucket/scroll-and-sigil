@@ -8,7 +8,7 @@ INCLUDE = -I$(VULKAN_SDK)/include
 
 CC = gcc
 COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 -Wno-unused $(INCLUDE)
-LINKER_FLAGS = -lSDL2 -lvulkan -L$(VULKAN_SDK)/lib
+LINKER_FLAGS = -lSDL2 -lvulkan -L$(VULKAN_SDK)/lib -lpng
 LIBS = -lm
 PREFIX =
 

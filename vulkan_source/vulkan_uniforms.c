@@ -8,10 +8,18 @@ void vk_create_descriptor_set_layout(vulkan_state *vk_state) {
     ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+    VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
+    sampler_layout_binding.binding = 1;
+    sampler_layout_binding.descriptorCount = 1;
+    sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutBinding bindings[2] = {ubo_layout_binding, sampler_layout_binding};
+
     VkDescriptorSetLayoutCreateInfo layout_info = {0};
     layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layout_info.bindingCount = 1;
-    layout_info.pBindings = &ubo_layout_binding;
+    layout_info.bindingCount = 2;
+    layout_info.pBindings = bindings;
 
     if (vkCreateDescriptorSetLayout(vk_state->vk_device, &layout_info, NULL, &vk_state->vk_descriptor_set_layout) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Descriptor Set Layout\n");
@@ -68,14 +76,20 @@ void vk_create_descriptor_pool(vulkan_state *vk_state) {
 
     uint32_t size = vk_state->swapchain_image_count;
 
-    VkDescriptorPoolSize pool_size = {0};
-    pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    pool_size.descriptorCount = size;
+    VkDescriptorPoolSize pool_size_uniform = {0};
+    pool_size_uniform.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    pool_size_uniform.descriptorCount = size;
+
+    VkDescriptorPoolSize pool_size_samppler = {0};
+    pool_size_samppler.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    pool_size_samppler.descriptorCount = size;
+
+    VkDescriptorPoolSize pool_sizes[2] = {pool_size_uniform, pool_size_samppler};
 
     VkDescriptorPoolCreateInfo pool_info = {0};
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    pool_info.poolSizeCount = 1;
-    pool_info.pPoolSizes = &pool_size;
+    pool_info.poolSizeCount = 2;
+    pool_info.pPoolSizes = pool_sizes;
     pool_info.maxSets = size;
 
     if (vkCreateDescriptorPool(vk_state->vk_device, &pool_info, NULL, &vk_state->vk_descriptor_pool) != VK_SUCCESS) {
@@ -103,7 +117,7 @@ void vk_create_descriptor_sets(vulkan_state *vk_state) {
     vk_state->vk_descriptor_sets = safe_calloc(size, sizeof(VkDescriptorSet));
 
     if (vkAllocateDescriptorSets(vk_state->vk_device, &alloc_info, vk_state->vk_descriptor_sets) != VK_SUCCESS) {
-        fprintf(stderr, "Error: Vulkan Allocate Descriptor Sets\n");
+        fprintf(stderr, "Error: Vulkan  Allocate Descriptor Sets\n");
         exit(1);
     }
 
@@ -116,15 +130,31 @@ void vk_create_descriptor_sets(vulkan_state *vk_state) {
         buffer_info.offset = 0;
         buffer_info.range = sizeof(struct uniform_buffer_object);
 
-        VkWriteDescriptorSet descriptor_write = {0};
-        descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptor_write.dstSet = vk_state->vk_descriptor_sets[i];
-        descriptor_write.dstBinding = 0;
-        descriptor_write.dstArrayElement = 0;
-        descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_write.descriptorCount = 1;
-        descriptor_write.pBufferInfo = &buffer_info;
+        VkDescriptorImageInfo image_info = {0};
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        image_info.imageView = vk_state->vk_texture_image_view;
+        image_info.sampler = vk_state->vk_texture_sampler;
 
-        vkUpdateDescriptorSets(vk_state->vk_device, 1, &descriptor_write, 0, NULL);
+        VkWriteDescriptorSet descriptor_write_uniform = {0};
+        descriptor_write_uniform.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptor_write_uniform.dstSet = vk_state->vk_descriptor_sets[i];
+        descriptor_write_uniform.dstBinding = 0;
+        descriptor_write_uniform.dstArrayElement = 0;
+        descriptor_write_uniform.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_write_uniform.descriptorCount = 1;
+        descriptor_write_uniform.pBufferInfo = &buffer_info;
+
+        VkWriteDescriptorSet descriptor_write_sampler = {0};
+        descriptor_write_sampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptor_write_sampler.dstSet = vk_state->vk_descriptor_sets[i];
+        descriptor_write_sampler.dstBinding = 1;
+        descriptor_write_sampler.dstArrayElement = 0;
+        descriptor_write_sampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptor_write_sampler.descriptorCount = 1;
+        descriptor_write_sampler.pImageInfo = &image_info;
+
+        VkWriteDescriptorSet descriptor_writes[2] = {descriptor_write_uniform, descriptor_write_sampler};
+
+        vkUpdateDescriptorSets(vk_state->vk_device, 2, descriptor_writes, 0, NULL);
     }
 }

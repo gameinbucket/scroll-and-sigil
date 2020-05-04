@@ -186,13 +186,17 @@ static bool vk_check_extension_support(VkPhysicalDevice device) {
     return good;
 }
 
-static bool is_vk_physical_device_suitable(vulkan_state *vk_state, VkPhysicalDevice device) {
+static bool is_vk_physical_device_device_suitable(vulkan_state *vk_state, VkPhysicalDevice device) {
 
     VkPhysicalDeviceProperties vk_device_properties = {0};
     VkPhysicalDeviceFeatures vk_device_features = {0};
 
     vkGetPhysicalDeviceProperties(device, &vk_device_properties);
     vkGetPhysicalDeviceFeatures(device, &vk_device_features);
+
+    if (!vk_device_features.samplerAnisotropy) {
+        return false;
+    }
 
     if (vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && vk_device_features.geometryShader) {
 
@@ -239,7 +243,7 @@ static bool is_vk_physical_device_suitable(vulkan_state *vk_state, VkPhysicalDev
     return false;
 }
 
-bool vk_get_physical_device(vulkan_state *vk_state) {
+bool vk_choose_physical_device(vulkan_state *vk_state) {
 
     uint32_t vk_device_count = 0;
     vkEnumeratePhysicalDevices(vk_state->vk_instance, &vk_device_count, NULL);
@@ -255,8 +259,8 @@ bool vk_get_physical_device(vulkan_state *vk_state) {
     for (uint32_t i = 0; i < vk_device_count; i++) {
         VkPhysicalDevice device = vk_devices[i];
 
-        if (is_vk_physical_device_suitable(vk_state, device)) {
-            vk_state->vk_physical = device;
+        if (is_vk_physical_device_device_suitable(vk_state, device)) {
+            vk_state->vk_physical_device = device;
             free(vk_devices);
             return true;
         }
@@ -288,6 +292,7 @@ void vk_create_logical_device(vulkan_state *vk_state) {
     }
 
     VkPhysicalDeviceFeatures vk_device_features = {0};
+    vk_device_features.samplerAnisotropy = VK_TRUE;
 
     VkDeviceCreateInfo vk_create_info = {0};
     vk_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -297,7 +302,7 @@ void vk_create_logical_device(vulkan_state *vk_state) {
     vk_create_info.enabledExtensionCount = VULKAN_DEVICE_EXTENSION_COUNT;
     vk_create_info.ppEnabledExtensionNames = VULKAN_DEVICE_EXTENSIONS;
 
-    if (vkCreateDevice(vk_state->vk_physical, &vk_create_info, NULL, &vk_state->vk_device) != VK_SUCCESS) {
+    if (vkCreateDevice(vk_state->vk_physical_device, &vk_create_info, NULL, &vk_state->vk_device) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Device\n");
         exit(1);
     }
@@ -344,7 +349,7 @@ static VkExtent2D vk_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, u
 
 void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height) {
 
-    struct swapchain_support_details swapchain_details = vk_query_swapchain_support(vk_state, vk_state->vk_physical);
+    struct swapchain_support_details swapchain_details = vk_query_swapchain_support(vk_state, vk_state->vk_physical_device);
 
     VkSurfaceFormatKHR surface_format = vk_choose_swap_surface_format(swapchain_details.formats, swapchain_details.format_count);
     VkPresentModeKHR present_mode = vk_choose_swap_present_mode(swapchain_details.present_modes, swapchain_details.present_mode_count);
@@ -402,48 +407,26 @@ void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height
     free_swapchain_support_details(&swapchain_details);
 }
 
-void vk_create_image_views(vulkan_state *vk_state) {
+void vk_create_swapchain_image_views(vulkan_state *vk_state) {
 
     uint32_t count = vk_state->swapchain_image_count;
 
-    VkImageView *swapchain_image_views = safe_calloc(count, sizeof(VkImageView));
+    VkFormat format = vk_state->swapchain_image_format;
+
+    vk_state->swapchain_image_views = safe_calloc(count, sizeof(VkImageView));
 
     for (uint32_t i = 0; i < count; i++) {
-
-        VkImageViewCreateInfo vk_image_view_info = {0};
-        vk_image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        vk_image_view_info.image = vk_state->swapchain_images[i];
-        vk_image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        vk_image_view_info.format = vk_state->swapchain_image_format;
-        vk_image_view_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        vk_image_view_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        vk_image_view_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        vk_image_view_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        vk_image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        vk_image_view_info.subresourceRange.baseMipLevel = 0;
-        vk_image_view_info.subresourceRange.levelCount = 1;
-        vk_image_view_info.subresourceRange.baseArrayLayer = 0;
-        vk_image_view_info.subresourceRange.layerCount = 1;
-
-        if (vkCreateImageView(vk_state->vk_device, &vk_image_view_info, NULL, &swapchain_image_views[i]) != VK_SUCCESS) {
-            fprintf(stderr, "Error: Vulkan Create Image View\n");
-            exit(1);
-        }
+        vk_state->swapchain_image_views[i] = vk_create_image_view(vk_state, vk_state->swapchain_images[i], format, VK_IMAGE_ASPECT_COLOR_BIT);
     }
-
-    vk_state->swapchain_image_views = swapchain_image_views;
 }
 
 void vk_clean_swapchain(vulkan_state *vk_state) {
 
     VkDevice device = vk_state->vk_device;
 
-    vkDestroyDescriptorPool(device, vk_state->vk_descriptor_pool, NULL);
-
-    for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
-        vkDestroyBuffer(device, vk_state->vk_uniform_buffers[i], NULL);
-        vkFreeMemory(device, vk_state->vk_uniform_buffers_memory[i], NULL);
-    }
+    vkDestroyImageView(device, vk_state->vk_depth_image_view, NULL);
+    vkDestroyImage(device, vk_state->vk_depth_image, NULL);
+    vkFreeMemory(device, vk_state->vk_depth_image_memory, NULL);
 
     for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
         vkDestroyFramebuffer(device, vk_state->vk_framebuffers[i], NULL);
@@ -460,18 +443,28 @@ void vk_clean_swapchain(vulkan_state *vk_state) {
     }
 
     vkDestroySwapchainKHR(device, vk_state->vk_swapchain, NULL);
+
+    for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
+        vkDestroyBuffer(device, vk_state->vk_uniform_buffers[i], NULL);
+        vkFreeMemory(device, vk_state->vk_uniform_buffers_memory[i], NULL);
+    }
+
+    vkDestroyDescriptorPool(device, vk_state->vk_descriptor_pool, NULL);
 }
 
 void vk_recreate_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height) {
 
-    vk_ok(vkDeviceWaitIdle(vk_state->vk_device));
+    VkResult vkres = vkDeviceWaitIdle(vk_state->vk_device);
+    vk_ok(vkres);
 
     vk_clean_swapchain(vk_state);
 
     vk_create_swapchain(vk_state, width, height);
-    vk_create_image_views(vk_state);
+    vk_create_swapchain_image_views(vk_state);
+    vk_choose_depth_format(vk_state);
     vk_create_render_pass(vk_state);
     vk_create_graphics_pipeline(vk_state);
+    vk_create_depth_resources(vk_state);
     vk_create_framebuffers(vk_state);
     vk_create_uniform_buffers(vk_state);
     vk_create_descriptor_pool(vk_state);
@@ -481,15 +474,20 @@ void vk_recreate_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t heig
 
 void vk_create(vulkan_state *vk_state, uint32_t width, uint32_t height) {
 
-    vk_get_physical_device(vk_state);
+    vk_choose_physical_device(vk_state);
     vk_create_logical_device(vk_state);
     vk_create_swapchain(vk_state, width, height);
-    vk_create_image_views(vk_state);
+    vk_create_swapchain_image_views(vk_state);
+    vk_choose_depth_format(vk_state);
     vk_create_render_pass(vk_state);
     vk_create_descriptor_set_layout(vk_state);
     vk_create_graphics_pipeline(vk_state);
-    vk_create_framebuffers(vk_state);
     vk_create_command_pool(vk_state);
+    vk_create_depth_resources(vk_state);
+    vk_create_framebuffers(vk_state);
+    vk_create_texture_image(vk_state);
+    vk_create_texture_image_view(vk_state);
+    vk_create_texture_image_sampler(vk_state);
     vk_create_vertex_buffer(vk_state);
     vk_create_index_buffer(vk_state);
     vk_create_uniform_buffers(vk_state);
@@ -512,6 +510,11 @@ void vk_quit(vulkan_state *vk_state) {
     vk_clean_swapchain(vk_state);
 
     VkDevice device = vk_state->vk_device;
+
+    vkDestroySampler(device, vk_state->vk_texture_sampler, NULL);
+    vkDestroyImageView(device, vk_state->vk_texture_image_view, NULL);
+    vkDestroyImage(device, vk_state->vk_texture_image, NULL);
+    vkFreeMemory(device, vk_state->vk_texture_image_memory, NULL);
 
     vkDestroyDescriptorSetLayout(device, vk_state->vk_descriptor_set_layout, NULL);
 

@@ -5,7 +5,7 @@ static const int SCREEN_HEIGHT = 800;
 
 static bool run = true;
 
-uint64_t VULKAN_TIMEOUT = 5; // UINT64_MAX;
+uint64_t VK_SYNC_TIMEOUT = UINT64_MAX;
 
 #define log(message)                                                                                                                                                                                   \
     printf(message);                                                                                                                                                                                   \
@@ -40,7 +40,8 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
 
     vk_state->position = 3;
     vk_state->color = 3;
-    vk_state->vertex_stride = vk_state->position + vk_state->color;
+    vk_state->texture = 2;
+    vk_state->vertex_stride = vk_state->position + vk_state->color + vk_state->texture + vk_state->normal;
 
     vk_state->vertices = safe_malloc(CUBE_VERTEX_FLOAT * sizeof(float));
     vk_state->vertex_count = CUBE_VERTEX_COUNT;
@@ -67,25 +68,32 @@ static void draw(SDL_Window *window, vulkan_state *vk_state) {
 
     int current_frame = vk_state->current_frame;
 
-    vk_ok(vkWaitForFences(vk_state->vk_device, 1, &vk_state->vk_flight_fences[current_frame], VK_TRUE, VULKAN_TIMEOUT));
+    printf("current frame: %d. ", current_frame);
+    fflush(stdout);
+
+    VkResult vkres;
+
+    vkres = vkWaitForFences(vk_state->vk_device, 1, &vk_state->vk_flight_fences[current_frame], VK_TRUE, VK_SYNC_TIMEOUT);
+    vk_ok(vkres);
 
     uint32_t image_index;
-    VkResult acquire_result = vkAcquireNextImageKHR(vk_state->vk_device, vk_state->vk_swapchain, VULKAN_TIMEOUT, vk_state->vk_image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
+    vkres = vkAcquireNextImageKHR(vk_state->vk_device, vk_state->vk_swapchain, VK_SYNC_TIMEOUT, vk_state->vk_image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
 
-    if (acquire_result == VK_ERROR_OUT_OF_DATE_KHR) {
+    if (vkres == VK_ERROR_OUT_OF_DATE_KHR) {
         int width;
         int height;
         SDL_Vulkan_GetDrawableSize(window, &width, &height);
         vk_recreate_swapchain(vk_state, width, height);
         return;
     } else {
-        vk_ok(acquire_result);
+        vk_ok(vkres);
     }
 
     vk_update_uniform_buffer(vk_state, image_index);
 
     if (vk_state->vk_images_in_flight[image_index] != VK_NULL_HANDLE) {
-        vk_ok(vkWaitForFences(vk_state->vk_device, 1, &vk_state->vk_images_in_flight[image_index], VK_TRUE, VULKAN_TIMEOUT));
+        vkres = vkWaitForFences(vk_state->vk_device, 1, &vk_state->vk_images_in_flight[image_index], VK_TRUE, VK_SYNC_TIMEOUT);
+        vk_ok(vkres);
     }
 
     vk_state->vk_images_in_flight[image_index] = vk_state->vk_flight_fences[current_frame];
@@ -107,9 +115,11 @@ static void draw(SDL_Window *window, vulkan_state *vk_state) {
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores = signal_semaphores;
 
-    vk_ok(vkResetFences(vk_state->vk_device, 1, &vk_state->vk_flight_fences[current_frame]));
+    vkres = vkResetFences(vk_state->vk_device, 1, &vk_state->vk_flight_fences[current_frame]);
+    vk_ok(vkres);
 
-    vk_ok(vkQueueSubmit(vk_state->vk_graphics_queue, 1, &submit_info, vk_state->vk_flight_fences[current_frame]));
+    vkres = vkQueueSubmit(vk_state->vk_graphics_queue, 1, &submit_info, vk_state->vk_flight_fences[current_frame]);
+    vk_ok(vkres);
 
     VkSwapchainKHR swapchains[1] = {vk_state->vk_swapchain};
 
@@ -121,16 +131,16 @@ static void draw(SDL_Window *window, vulkan_state *vk_state) {
     present_info.pSwapchains = swapchains;
     present_info.pImageIndices = &image_index;
 
-    VkResult present_result = vkQueuePresentKHR(vk_state->vk_present_queue, &present_info);
+    vkres = vkQueuePresentKHR(vk_state->vk_present_queue, &present_info);
 
-    if (present_result == VK_ERROR_OUT_OF_DATE_KHR || present_result == VK_SUBOPTIMAL_KHR || vk_state->framebuffer_resized) {
+    if (vkres == VK_ERROR_OUT_OF_DATE_KHR || vkres == VK_SUBOPTIMAL_KHR || vk_state->framebuffer_resized) {
         int width;
         int height;
         SDL_Vulkan_GetDrawableSize(window, &width, &height);
         vk_state->framebuffer_resized = false;
         vk_recreate_swapchain(vk_state, width, height);
     } else {
-        vk_ok(present_result);
+        vk_ok(vkres);
     }
 
     vk_state->current_frame = (current_frame + 1) % VULKAN_MAX_FRAMES_IN_FLIGHT;
@@ -152,16 +162,17 @@ static void main_loop(SDL_Window *window, vulkan_state *vk_state) {
         }
         log("draw. ");
         draw(window, vk_state);
-
-        sleep_ms(16);
+        log("sleep. ");
+        sleep_ms(2000);
         log("wait. ");
-        vk_ok(vkDeviceWaitIdle(vk_state->vk_device));
+        VkResult vkres = vkDeviceWaitIdle(vk_state->vk_device);
+        vk_ok(vkres);
         log("done. ");
-        sleep_ms(16);
 
         run = false;
     }
-    vk_ok(vkDeviceWaitIdle(vk_state->vk_device));
+    VkResult vkres = vkDeviceWaitIdle(vk_state->vk_device);
+    vk_ok(vkres);
 }
 
 int main() {
