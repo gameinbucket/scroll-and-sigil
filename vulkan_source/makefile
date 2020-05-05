@@ -24,6 +24,10 @@ analysis: all
 address: COMPILER_FLAGS += -fsanitize=address
 address: all
 
+gdb: COMPILER_FLAGS += -g
+gdb: all
+	@ ./gdb.sh
+
 valgrind: COMPILER_FLAGS += -g
 valgrind: all
 	@ ./valgrind.sh

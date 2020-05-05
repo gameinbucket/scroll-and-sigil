@@ -5,7 +5,7 @@ static const int SCREEN_HEIGHT = 800;
 
 static bool run = true;
 
-uint64_t VK_SYNC_TIMEOUT = UINT64_MAX;
+uint64_t VK_SYNC_TIMEOUT = 1000000000;
 
 #define log(message)                                                                                                                                                                                   \
     printf(message);                                                                                                                                                                                   \
@@ -67,9 +67,6 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
 static void draw(SDL_Window *window, vulkan_state *vk_state) {
 
     int current_frame = vk_state->current_frame;
-
-    printf("current frame: %d. ", current_frame);
-    fflush(stdout);
 
     VkResult vkres;
 
@@ -155,6 +152,7 @@ static void main_loop(SDL_Window *window, vulkan_state *vk_state) {
             case SDL_WINDOWEVENT_RESIZED: window_resize(vk_state); break;
             case SDL_KEYDOWN: {
                 switch (event.key.keysym.sym) {
+                case SDLK_q:
                 case SDLK_ESCAPE: run = false; break;
                 }
             }
@@ -162,14 +160,7 @@ static void main_loop(SDL_Window *window, vulkan_state *vk_state) {
         }
         log("draw. ");
         draw(window, vk_state);
-        log("sleep. ");
-        sleep_ms(2000);
-        log("wait. ");
-        VkResult vkres = vkDeviceWaitIdle(vk_state->vk_device);
-        vk_ok(vkres);
-        log("done. ");
-
-        run = false;
+        sleep_ms(16);
     }
     VkResult vkres = vkDeviceWaitIdle(vk_state->vk_device);
     vk_ok(vkres);

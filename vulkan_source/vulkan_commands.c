@@ -129,15 +129,14 @@ void vk_create_command_buffers(vulkan_state *vk_state) {
 
 void vk_create_semaphores(vulkan_state *vk_state) {
 
+    VkSemaphoreCreateInfo semaphore_info = {0};
+    semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
     VkFenceCreateInfo fence_info = {0};
     fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     VkFence *flight_fences = safe_calloc(VULKAN_MAX_FRAMES_IN_FLIGHT, sizeof(VkFence));
-
-    VkSemaphoreCreateInfo semaphore_info = {0};
-    semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
     VkSemaphore *image_available_semaphores = safe_calloc(VULKAN_MAX_FRAMES_IN_FLIGHT, sizeof(VkSemaphore));
     VkSemaphore *render_finished_semaphores = safe_calloc(VULKAN_MAX_FRAMES_IN_FLIGHT, sizeof(VkSemaphore));
 
