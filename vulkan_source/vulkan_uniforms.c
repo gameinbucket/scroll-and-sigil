@@ -44,27 +44,7 @@ void vk_create_uniform_buffers(vulkan_state *vk_state) {
     }
 }
 
-void vk_update_uniform_buffer(vulkan_state *vk_state, uint32_t current_image) {
-
-    struct uniform_buffer_object ubo = {0};
-
-    float view[16];
-    float perspective[16];
-
-    static float x = 0.0f;
-
-    x += 0.001f;
-
-    vec3 eye = {3 + x, 3, 5};
-    vec3 center = {0, 0, 0};
-    matrix_look_at(view, &eye, &center);
-    matrix_translate(view, -eye.x, -eye.y, -eye.z);
-
-    float ratio = (float)vk_state->swapchain_extent.width / (float)vk_state->swapchain_extent.height;
-
-    matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
-
-    matrix_multiply(ubo.mvp, perspective, view);
+void vk_update_uniform_buffer(vulkan_state *vk_state, uint32_t current_image, struct uniform_buffer_object ubo) {
 
     void *data;
     vkMapMemory(vk_state->vk_device, vk_state->vk_uniform_buffers_memory[current_image], 0, sizeof(ubo), 0, &data);

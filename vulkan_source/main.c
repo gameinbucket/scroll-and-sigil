@@ -86,7 +86,20 @@ static void draw(SDL_Window *window, vulkan_state *vk_state) {
         vk_ok(vkres);
     }
 
-    vk_update_uniform_buffer(vk_state, image_index);
+    struct uniform_buffer_object ubo = {0};
+    float view[16];
+    float perspective[16];
+    static float x = 0.0f;
+    x += 0.001f;
+    vec3 eye = {3 + x, 3, 5};
+    vec3 center = {0, 0, 0};
+    matrix_look_at(view, &eye, &center);
+    matrix_translate(view, -eye.x, -eye.y, -eye.z);
+    float ratio = (float)vk_state->swapchain_extent.width / (float)vk_state->swapchain_extent.height;
+    matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
+    matrix_multiply(ubo.mvp, perspective, view);
+
+    vk_update_uniform_buffer(vk_state, image_index, ubo);
 
     if (vk_state->vk_images_in_flight[image_index] != VK_NULL_HANDLE) {
         vkres = vkWaitForFences(vk_state->vk_device, 1, &vk_state->vk_images_in_flight[image_index], VK_TRUE, VK_SYNC_TIMEOUT);
