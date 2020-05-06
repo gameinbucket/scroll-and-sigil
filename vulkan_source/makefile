@@ -6,17 +6,16 @@ OBJECTS = $(patsubst %.c,objects/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
 INCLUDE = -I$(VULKAN_SDK)/include
 
-# -Wnullability-extension
-
-CC = clang
-
-# COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 -Wno-unused $(INCLUDE)
-# LINKER_FLAGS = -lSDL2 -lvulkan -L$(VULKAN_SDK)/lib -lpng
-
-COMPILER_FLAGS = -Wno-nullability-extension -pedantic -std=c11 $(INCLUDE)
+COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 -Wno-unused $(INCLUDE)
 LINKER_FLAGS =  -lSDL2 -lvulkan -L$(VULKAN_SDK)/lib -lpng
 LIBS = -lm
 PREFIX =
+CC = gcc
+
+ifneq ($(shell uname), Linux)
+	CC = clang
+	COMPILER_FLAGS += -Wno-nullability-extension
+endif
 
 .PHONY: all analysis address valgrind clean list-source list-objects test help
 
@@ -43,7 +42,7 @@ $(NAME): $(HEADERS) $(OBJECTS)
 
 objects/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) -c $< $(COMPILER_FLAGS) -MMD $(LINKER_FLAGS) -o $@ $(LIBS)
+	$(CC) -c $< $(COMPILER_FLAGS) -MMD -o $@
 
 clean:
 	rm -f ./$(NAME)

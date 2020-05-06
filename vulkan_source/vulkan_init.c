@@ -194,16 +194,15 @@ static bool is_vk_physical_device_device_suitable(vulkan_state *vk_state, VkPhys
     vkGetPhysicalDeviceProperties(device, &vk_device_properties);
     vkGetPhysicalDeviceFeatures(device, &vk_device_features);
 
-    // if (!vk_device_features.samplerAnisotropy) {
-    //     return false;
-    // }
+    if (!vk_device_features.samplerAnisotropy) {
+        return false;
+    }
 
     printf("vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: %s\n", (vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) ? "true" : "false");
     printf("vk_device_features.geometryShader: %s\n", vk_device_features.geometryShader ? "true" : "false");
     fflush(stdout);
 
-    // if (vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-    // if (vk_device_features.geometryShader) {
+    // if (vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && vk_device_features.geometryShader) {
 
     bool present_family_found = false;
     bool graphics_family_found = false;
@@ -247,9 +246,6 @@ static bool is_vk_physical_device_device_suitable(vulkan_state *vk_state, VkPhys
     }
 
     return present_family_found && graphics_family_found && extension_support && swapchain_good;
-    // }
-
-    // return false;
 }
 
 bool vk_choose_physical_device(vulkan_state *vk_state) {
