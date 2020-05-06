@@ -194,57 +194,62 @@ static bool is_vk_physical_device_device_suitable(vulkan_state *vk_state, VkPhys
     vkGetPhysicalDeviceProperties(device, &vk_device_properties);
     vkGetPhysicalDeviceFeatures(device, &vk_device_features);
 
-    if (!vk_device_features.samplerAnisotropy) {
-        return false;
-    }
+    // if (!vk_device_features.samplerAnisotropy) {
+    //     return false;
+    // }
 
-    if (vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && vk_device_features.geometryShader) {
+    printf("vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: %s\n", (vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) ? "true" : "false");
+    printf("vk_device_features.geometryShader: %s\n", vk_device_features.geometryShader ? "true" : "false");
+    fflush(stdout);
 
-        bool present_family_found = false;
-        bool graphics_family_found = false;
+    // if (vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+    // if (vk_device_features.geometryShader) {
 
-        uint32_t queue_family_count = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
+    bool present_family_found = false;
+    bool graphics_family_found = false;
 
-        VkQueueFamilyProperties *queue_families = safe_calloc(queue_family_count, sizeof(VkQueueFamilyProperties));
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families);
+    uint32_t queue_family_count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
 
-        for (uint32_t i = 0; i < queue_family_count; i++) {
+    VkQueueFamilyProperties *queue_families = safe_calloc(queue_family_count, sizeof(VkQueueFamilyProperties));
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families);
 
-            VkQueueFamilyProperties family = queue_families[i];
+    for (uint32_t i = 0; i < queue_family_count; i++) {
 
-            if (family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-                vk_state->graphics_family_index = i;
-                graphics_family_found = true;
-            }
+        VkQueueFamilyProperties family = queue_families[i];
 
-            VkBool32 present_support = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, vk_state->vk_surface, &present_support);
-
-            if (present_support) {
-                vk_state->present_family_index = i;
-                present_family_found = true;
-            }
-
-            if (graphics_family_found && present_family_found) {
-                break;
-            }
+        if (family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            vk_state->graphics_family_index = i;
+            graphics_family_found = true;
         }
 
-        free(queue_families);
+        VkBool32 present_support = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, vk_state->vk_surface, &present_support);
 
-        bool extension_support = vk_check_extension_support(device);
-        bool swapchain_good = false;
-        if (extension_support) {
-            struct swapchain_support_details swapchain_details = vk_query_swapchain_support(vk_state, device);
-            swapchain_good = swapchain_details.format_count > 0 && swapchain_details.present_mode_count > 0;
-            free_swapchain_support_details(&swapchain_details);
+        if (present_support) {
+            vk_state->present_family_index = i;
+            present_family_found = true;
         }
 
-        return present_family_found && graphics_family_found && extension_support && swapchain_good;
+        if (graphics_family_found && present_family_found) {
+            break;
+        }
     }
 
-    return false;
+    free(queue_families);
+
+    bool extension_support = vk_check_extension_support(device);
+    bool swapchain_good = false;
+    if (extension_support) {
+        struct swapchain_support_details swapchain_details = vk_query_swapchain_support(vk_state, device);
+        swapchain_good = swapchain_details.format_count > 0 && swapchain_details.present_mode_count > 0;
+        free_swapchain_support_details(&swapchain_details);
+    }
+
+    return present_family_found && graphics_family_found && extension_support && swapchain_good;
+    // }
+
+    // return false;
 }
 
 bool vk_choose_physical_device(vulkan_state *vk_state) {
