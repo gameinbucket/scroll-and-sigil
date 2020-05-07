@@ -38,9 +38,9 @@ void vk_create_image(vulkan_state *vk_state, struct create_image_details details
     vkBindImageMemory(vk_state->vk_device, *image, *image_memory, 0);
 }
 
-void vk_transition_image_layout(vulkan_state *vk_state, VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) {
+void vk_transition_image_layout(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) {
 
-    VkCommandBuffer command_buffer = vk_begin_single_time_commands(vk_state);
+    VkCommandBuffer command_buffer = vk_begin_single_time_commands(vk_state, vk_renderer);
 
     VkImageMemoryBarrier barrier = {0};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -81,12 +81,12 @@ void vk_transition_image_layout(vulkan_state *vk_state, VkImage image, VkFormat 
 
     vkCmdPipelineBarrier(command_buffer, source_stage, destination_stage, 0, 0, NULL, 0, NULL, 1, &barrier);
 
-    vk_end_single_time_commands(vk_state, command_buffer);
+    vk_end_single_time_commands(vk_state, vk_renderer, command_buffer);
 }
 
-void vk_copy_buffer_to_image(vulkan_state *vk_state, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
+void vk_copy_buffer_to_image(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
 
-    VkCommandBuffer command_buffer = vk_begin_single_time_commands(vk_state);
+    VkCommandBuffer command_buffer = vk_begin_single_time_commands(vk_state, vk_renderer);
 
     VkBufferImageCopy region = {0};
     region.bufferOffset = 0;
@@ -101,12 +101,12 @@ void vk_copy_buffer_to_image(vulkan_state *vk_state, VkBuffer buffer, VkImage im
 
     vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-    vk_end_single_time_commands(vk_state, command_buffer);
+    vk_end_single_time_commands(vk_state, vk_renderer, command_buffer);
 }
 
-void vk_create_texture_image(vulkan_state *vk_state) {
+void vk_create_texture_image(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, char *path) {
 
-    simple_image *png = read_png_file("../textures/tiles/grass.png");
+    simple_image *png = read_png_file(path);
 
     int width = png->width;
     int height = png->height;
@@ -139,17 +139,17 @@ void vk_create_texture_image(vulkan_state *vk_state) {
 
     vk_create_image(vk_state, image_details, &texture_image, &texture_image_memory);
 
-    vk_transition_image_layout(vk_state, texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    vk_transition_image_layout(vk_state, vk_renderer, texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-    vk_copy_buffer_to_image(vk_state, staging_buffer, texture_image, width, height);
+    vk_copy_buffer_to_image(vk_state, vk_renderer, staging_buffer, texture_image, width, height);
 
-    vk_transition_image_layout(vk_state, texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    vk_transition_image_layout(vk_state, vk_renderer, texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     vkDestroyBuffer(vk_state->vk_device, staging_buffer, NULL);
     vkFreeMemory(vk_state->vk_device, staging_buffer_memory, NULL);
 
-    vk_state->vk_texture_image = texture_image;
-    vk_state->vk_texture_image_memory = texture_image_memory;
+    vk_renderer->vk_texture_image = texture_image;
+    vk_renderer->vk_texture_image_memory = texture_image_memory;
 
     simple_image_free(png);
 }
@@ -181,13 +181,13 @@ VkImageView vk_create_image_view(vulkan_state *vk_state, VkImage image, VkFormat
     return view;
 }
 
-void vk_create_texture_image_view(vulkan_state *vk_state) {
+void vk_create_texture_image_view(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
     VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
-    vk_state->vk_texture_image_view = vk_create_image_view(vk_state, vk_state->vk_texture_image, format, VK_IMAGE_ASPECT_COLOR_BIT);
+    vk_renderer->vk_texture_image_view = vk_create_image_view(vk_state, vk_renderer->vk_texture_image, format, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
-void vk_create_texture_image_sampler(vulkan_state *vk_state) {
+void vk_create_texture_image_sampler(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
     VkSamplerCreateInfo sampler_info = {0};
     sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -204,7 +204,7 @@ void vk_create_texture_image_sampler(vulkan_state *vk_state) {
     sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
     sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-    if (vkCreateSampler(vk_state->vk_device, &sampler_info, NULL, &vk_state->vk_texture_sampler) != VK_SUCCESS) {
+    if (vkCreateSampler(vk_state->vk_device, &sampler_info, NULL, &vk_renderer->vk_texture_sampler) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Sampler\n");
         exit(1);
     }
@@ -242,21 +242,21 @@ bool vk_has_stencil_component(VkFormat format) {
     return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
-void vk_choose_depth_format(vulkan_state *vk_state) {
-    vk_state->vk_depth_format = vk_find_depth_format(vk_state);
+void vk_choose_depth_format(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
+    vk_renderer->vk_depth_format = vk_find_depth_format(vk_state);
 }
 
-void vk_create_depth_resources(vulkan_state *vk_state) {
+void vk_create_depth_resources(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
     struct create_image_details details = {0};
-    details.width = vk_state->swapchain_extent.width;
-    details.height = vk_state->swapchain_extent.height;
-    details.format = vk_state->vk_depth_format;
+    details.width = vk_renderer->swapchain->swapchain_extent.width;
+    details.height = vk_renderer->swapchain->swapchain_extent.height;
+    details.format = vk_renderer->vk_depth_format;
     details.tiling = VK_IMAGE_TILING_OPTIMAL;
     details.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
     details.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    vk_create_image(vk_state, details, &vk_state->vk_depth_image, &vk_state->vk_depth_image_memory);
+    vk_create_image(vk_state, details, &vk_renderer->vk_depth_image, &vk_renderer->vk_depth_image_memory);
 
-    vk_state->vk_depth_image_view = vk_create_image_view(vk_state, vk_state->vk_depth_image, vk_state->vk_depth_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+    vk_renderer->vk_depth_image_view = vk_create_image_view(vk_state, vk_renderer->vk_depth_image, vk_renderer->vk_depth_format, VK_IMAGE_ASPECT_DEPTH_BIT);
 }

@@ -1,9 +1,9 @@
 #include "vulkan_pipeline.h"
 
-void vk_create_render_pass(vulkan_state *vk_state) {
+void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
     VkAttachmentDescription color_attachment = {0};
-    color_attachment.format = vk_state->swapchain_image_format;
+    color_attachment.format = vk_renderer->swapchain->swapchain_image_format;
     color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
     color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -13,7 +13,7 @@ void vk_create_render_pass(vulkan_state *vk_state) {
     color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     VkAttachmentDescription depth_attachment = {0};
-    depth_attachment.format = vk_state->vk_depth_format;
+    depth_attachment.format = vk_renderer->vk_depth_format;
     depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
     depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -62,7 +62,7 @@ void vk_create_render_pass(vulkan_state *vk_state) {
         exit(1);
     }
 
-    vk_state->vk_render_pass = render_pass;
+    vk_renderer->vk_render_pass = render_pass;
 }
 
 VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_t size) {
@@ -82,13 +82,13 @@ VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_
     return vk_shader_module;
 }
 
-void vk_create_graphics_pipeline(vulkan_state *vk_state) {
+void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, struct vulkan_pipeline *pipeline) {
 
     size_t vertex_shader_size;
-    char *vertex_shader = read_binary("tri_vert.spv", &vertex_shader_size);
+    char *vertex_shader = read_binary(pipeline->vertex_shader_path, &vertex_shader_size);
 
     size_t fragment_shader_size;
-    char *fragment_shader = read_binary("tri_frag.spv", &fragment_shader_size);
+    char *fragment_shader = read_binary(pipeline->fragment_shader_path, &fragment_shader_size);
 
     VkShaderModule vertex_module = vk_create_shader_module(vk_state, vertex_shader, vertex_shader_size);
     VkShaderModule fragment_module = vk_create_shader_module(vk_state, fragment_shader, fragment_shader_size);
@@ -110,10 +110,10 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    int position = vk_state->position;
-    int color = vk_state->color;
-    int texture = vk_state->texture;
-    int normal = vk_state->normal;
+    int position = pipeline->rendering->position;
+    int color = pipeline->rendering->color;
+    int texture = pipeline->rendering->texture;
+    int normal = pipeline->rendering->normal;
 
     int attribute_count = vk_attribute_count(position, color, texture, normal);
 
@@ -133,14 +133,14 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     VkViewport viewport = {0};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float)vk_state->swapchain_extent.width;
-    viewport.height = (float)vk_state->swapchain_extent.height;
+    viewport.width = (float)vk_renderer->swapchain->swapchain_extent.width;
+    viewport.height = (float)vk_renderer->swapchain->swapchain_extent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor = {0};
     scissor.offset = (VkOffset2D){0, 0};
-    scissor.extent = vk_state->swapchain_extent;
+    scissor.extent = vk_renderer->swapchain->swapchain_extent;
 
     VkPipelineViewportStateCreateInfo viewport_state = {0};
     viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -149,15 +149,7 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     viewport_state.scissorCount = 1;
     viewport_state.pScissors = &scissor;
 
-    VkPipelineRasterizationStateCreateInfo rasterizer = {0};
-    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    rasterizer.depthClampEnable = VK_FALSE;
-    rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-    rasterizer.depthBiasEnable = VK_FALSE;
+    VkPipelineRasterizationStateCreateInfo rasterizer = vk_create_rasterization_info();
 
     VkPipelineMultisampleStateCreateInfo multisampling = {0};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -187,16 +179,16 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     VkPipelineLayoutCreateInfo pipeline_layout_info = {0};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_info.setLayoutCount = 1;
-    pipeline_layout_info.pSetLayouts = &vk_state->vk_descriptor_set_layout;
+    pipeline_layout_info.pSetLayouts = &vk_renderer->vk_descriptor_set_layout;
 
-    VkPipelineLayout pipeline_layout = {0};
+    VkPipelineLayout vk_pipeline_layout = {0};
 
-    if (vkCreatePipelineLayout(vk_state->vk_device, &pipeline_layout_info, NULL, &pipeline_layout) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(vk_state->vk_device, &pipeline_layout_info, NULL, &vk_pipeline_layout) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Pipeline Layout\n");
         exit(1);
     }
 
-    vk_state->vk_pipeline_layout = pipeline_layout;
+    vk_renderer->vk_pipeline_layout = vk_pipeline_layout;
 
     VkGraphicsPipelineCreateInfo pipeline_info = {0};
     pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -209,19 +201,19 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state) {
     pipeline_info.pMultisampleState = &multisampling;
     pipeline_info.pDepthStencilState = &depth_stencil;
     pipeline_info.pColorBlendState = &color_blending;
-    pipeline_info.layout = pipeline_layout;
-    pipeline_info.renderPass = vk_state->vk_render_pass;
+    pipeline_info.layout = vk_pipeline_layout;
+    pipeline_info.renderPass = vk_renderer->vk_render_pass;
     pipeline_info.subpass = 0;
     pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 
-    VkPipeline pipeline = {0};
+    VkPipeline vk_pipeline = {0};
 
-    if (vkCreateGraphicsPipelines(vk_state->vk_device, VK_NULL_HANDLE, 1, &pipeline_info, NULL, &pipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(vk_state->vk_device, VK_NULL_HANDLE, 1, &pipeline_info, NULL, &vk_pipeline) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Pipeline\n");
         exit(1);
     }
 
-    vk_state->vk_pipeline = pipeline;
+    vk_renderer->vk_pipeline = vk_pipeline;
 
     vkDestroyShaderModule(vk_state->vk_device, vertex_module, NULL);
     vkDestroyShaderModule(vk_state->vk_device, fragment_module, NULL);

@@ -198,11 +198,7 @@ static bool is_vk_physical_device_device_suitable(vulkan_state *vk_state, VkPhys
         return false;
     }
 
-    printf("vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: %s\n", (vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) ? "true" : "false");
-    printf("vk_device_features.geometryShader: %s\n", vk_device_features.geometryShader ? "true" : "false");
-    fflush(stdout);
-
-    // if (vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && vk_device_features.geometryShader) {
+    // bool primary = vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && vk_device_features.geometryShader;
 
     bool present_family_found = false;
     bool graphics_family_found = false;
@@ -358,7 +354,7 @@ static VkExtent2D vk_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, u
     return extent;
 }
 
-void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height) {
+void vk_create_swapchain(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, uint32_t width, uint32_t height) {
 
     struct swapchain_support_details swapchain_details = vk_query_swapchain_support(vk_state, vk_state->vk_physical_device);
 
@@ -366,8 +362,8 @@ void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height
     VkPresentModeKHR present_mode = vk_choose_swap_present_mode(swapchain_details.present_modes, swapchain_details.present_mode_count);
     VkExtent2D extent = vk_choose_swap_extent(swapchain_details.capabilities, width, height);
 
-    vk_state->swapchain_image_format = surface_format.format;
-    vk_state->swapchain_extent = extent;
+    vk_renderer->swapchain->swapchain_image_format = surface_format.format;
+    vk_renderer->swapchain->swapchain_extent = extent;
 
     uint32_t swapchain_image_count = swapchain_details.capabilities.minImageCount + 1;
 
@@ -379,7 +375,7 @@ void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height
         }
     }
 
-    vk_state->swapchain_image_count = swapchain_image_count;
+    vk_renderer->swapchain->swapchain_image_count = swapchain_image_count;
 
     VkSwapchainCreateInfoKHR vk_swapchain_info = {0};
     vk_swapchain_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -407,108 +403,114 @@ void vk_create_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height
     vk_swapchain_info.clipped = VK_TRUE;
     vk_swapchain_info.oldSwapchain = VK_NULL_HANDLE;
 
-    if (vkCreateSwapchainKHR(vk_state->vk_device, &vk_swapchain_info, NULL, &vk_state->vk_swapchain) != VK_SUCCESS) {
+    if (vkCreateSwapchainKHR(vk_state->vk_device, &vk_swapchain_info, NULL, &vk_renderer->swapchain->vk_swapchain) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Swapchain\n");
         exit(1);
     }
 
-    vkGetSwapchainImagesKHR(vk_state->vk_device, vk_state->vk_swapchain, &swapchain_image_count, NULL);
+    vkGetSwapchainImagesKHR(vk_state->vk_device, vk_renderer->swapchain->vk_swapchain, &swapchain_image_count, NULL);
 
-    vk_state->swapchain_images = safe_calloc(swapchain_image_count, sizeof(VkImage));
+    vk_renderer->swapchain->swapchain_images = safe_calloc(swapchain_image_count, sizeof(VkImage));
 
-    vkGetSwapchainImagesKHR(vk_state->vk_device, vk_state->vk_swapchain, &swapchain_image_count, vk_state->swapchain_images);
+    vkGetSwapchainImagesKHR(vk_state->vk_device, vk_renderer->swapchain->vk_swapchain, &swapchain_image_count, vk_renderer->swapchain->swapchain_images);
 
     free_swapchain_support_details(&swapchain_details);
 }
 
-void vk_create_swapchain_image_views(vulkan_state *vk_state) {
+void vk_create_swapchain_image_views(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
-    uint32_t count = vk_state->swapchain_image_count;
+    uint32_t count = vk_renderer->swapchain->swapchain_image_count;
 
-    VkFormat format = vk_state->swapchain_image_format;
+    VkFormat format = vk_renderer->swapchain->swapchain_image_format;
 
-    vk_state->swapchain_image_views = safe_calloc(count, sizeof(VkImageView));
+    vk_renderer->swapchain->swapchain_image_views = safe_calloc(count, sizeof(VkImageView));
 
     for (uint32_t i = 0; i < count; i++) {
-        vk_state->swapchain_image_views[i] = vk_create_image_view(vk_state, vk_state->swapchain_images[i], format, VK_IMAGE_ASPECT_COLOR_BIT);
+        vk_renderer->swapchain->swapchain_image_views[i] = vk_create_image_view(vk_state, vk_renderer->swapchain->swapchain_images[i], format, VK_IMAGE_ASPECT_COLOR_BIT);
     }
 }
 
-void vk_clean_swapchain(vulkan_state *vk_state) {
+void vk_clean_swapchain(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
     VkDevice device = vk_state->vk_device;
 
-    vkDestroyImageView(device, vk_state->vk_depth_image_view, NULL);
-    vkDestroyImage(device, vk_state->vk_depth_image, NULL);
-    vkFreeMemory(device, vk_state->vk_depth_image_memory, NULL);
+    vkDestroyImageView(device, vk_renderer->vk_depth_image_view, NULL);
+    vkDestroyImage(device, vk_renderer->vk_depth_image, NULL);
+    vkFreeMemory(device, vk_renderer->vk_depth_image_memory, NULL);
 
-    for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
-        vkDestroyFramebuffer(device, vk_state->vk_framebuffers[i], NULL);
+    for (uint32_t i = 0; i < vk_renderer->swapchain->swapchain_image_count; i++) {
+        vkDestroyFramebuffer(device, vk_renderer->vk_framebuffers[i], NULL);
     }
 
-    vkFreeCommandBuffers(device, vk_state->vk_command_pool, vk_state->swapchain_image_count, vk_state->vk_command_buffers);
+    vkFreeCommandBuffers(device, vk_renderer->vk_command_pool, vk_renderer->swapchain->swapchain_image_count, vk_renderer->vk_command_buffers);
 
-    vkDestroyPipeline(device, vk_state->vk_pipeline, NULL);
-    vkDestroyPipelineLayout(device, vk_state->vk_pipeline_layout, NULL);
-    vkDestroyRenderPass(device, vk_state->vk_render_pass, NULL);
+    vkDestroyPipeline(device, vk_renderer->vk_pipeline, NULL);
+    vkDestroyPipelineLayout(device, vk_renderer->vk_pipeline_layout, NULL);
+    vkDestroyRenderPass(device, vk_renderer->vk_render_pass, NULL);
 
-    for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
-        vkDestroyImageView(device, vk_state->swapchain_image_views[i], NULL);
+    for (uint32_t i = 0; i < vk_renderer->swapchain->swapchain_image_count; i++) {
+        vkDestroyImageView(device, vk_renderer->swapchain->swapchain_image_views[i], NULL);
     }
 
-    vkDestroySwapchainKHR(device, vk_state->vk_swapchain, NULL);
+    vkDestroySwapchainKHR(device, vk_renderer->swapchain->vk_swapchain, NULL);
 
-    for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
-        vkDestroyBuffer(device, vk_state->vk_uniform_buffers[i], NULL);
-        vkFreeMemory(device, vk_state->vk_uniform_buffers_memory[i], NULL);
+    for (uint32_t i = 0; i < vk_renderer->swapchain->swapchain_image_count; i++) {
+        vkDestroyBuffer(device, vk_renderer->uniforms->vk_uniform_buffers[i], NULL);
+        vkFreeMemory(device, vk_renderer->uniforms->vk_uniform_buffers_memory[i], NULL);
     }
 
-    vkDestroyDescriptorPool(device, vk_state->vk_descriptor_pool, NULL);
+    vkDestroyDescriptorPool(device, vk_renderer->vk_descriptor_pool, NULL);
 }
 
-void vk_recreate_swapchain(vulkan_state *vk_state, uint32_t width, uint32_t height) {
+void vk_recreate_swapchain(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, uint32_t width, uint32_t height) {
 
     VkResult vkres = vkDeviceWaitIdle(vk_state->vk_device);
     vk_ok(vkres);
 
-    vk_clean_swapchain(vk_state);
+    vk_clean_swapchain(vk_state, vk_renderer);
 
-    vk_create_swapchain(vk_state, width, height);
-    vk_create_swapchain_image_views(vk_state);
-    vk_choose_depth_format(vk_state);
-    vk_create_render_pass(vk_state);
-    vk_create_graphics_pipeline(vk_state);
-    vk_create_depth_resources(vk_state);
-    vk_create_framebuffers(vk_state);
-    vk_create_uniform_buffers(vk_state);
-    vk_create_descriptor_pool(vk_state);
-    vk_create_descriptor_sets(vk_state);
-    vk_create_command_buffers(vk_state);
+    vk_create_swapchain(vk_state, vk_renderer, width, height);
+    vk_create_swapchain_image_views(vk_state, vk_renderer);
+    vk_choose_depth_format(vk_state, vk_renderer);
+    vk_create_render_pass(vk_state, vk_renderer);
+    vk_create_graphics_pipeline(vk_state, vk_renderer, vk_renderer->pipeline);
+    vk_create_depth_resources(vk_state, vk_renderer);
+    vk_create_framebuffers(vk_state, vk_renderer);
+    vk_create_uniform_buffers(vk_state, vk_renderer);
+    vk_create_descriptor_pool(vk_state, vk_renderer);
+    vk_create_descriptor_sets(vk_state, vk_renderer);
+    vk_create_command_buffers(vk_state, vk_renderer, vk_renderer->pipeline);
 }
 
-void vk_create(vulkan_state *vk_state, uint32_t width, uint32_t height) {
+void vk_create_renderer(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, uint32_t width, uint32_t height) {
+
+    vk_renderer->swapchain = safe_calloc(1, sizeof(struct vulkan_swapchain));
+    vk_renderer->uniforms = safe_calloc(1, sizeof(struct vulkan_uniform_buffer));
+
+    vk_create_swapchain(vk_state, vk_renderer, width, height);
+    vk_create_swapchain_image_views(vk_state, vk_renderer);
+    vk_choose_depth_format(vk_state, vk_renderer);
+    vk_create_render_pass(vk_state, vk_renderer);
+    vk_create_descriptor_set_layout(vk_state, vk_renderer);
+    vk_create_graphics_pipeline(vk_state, vk_renderer, vk_renderer->pipeline);
+    vk_create_command_pool(vk_state, vk_renderer);
+    vk_create_depth_resources(vk_state, vk_renderer);
+    vk_create_framebuffers(vk_state, vk_renderer);
+    vk_create_texture_image(vk_state, vk_renderer, "../textures/tiles/grass.png");
+    vk_create_texture_image_view(vk_state, vk_renderer);
+    vk_create_texture_image_sampler(vk_state, vk_renderer);
+    vk_create_render_buffers(vk_state, vk_renderer, vk_renderer->pipeline->rendering);
+    vk_create_uniform_buffers(vk_state, vk_renderer);
+    vk_create_descriptor_pool(vk_state, vk_renderer);
+    vk_create_descriptor_sets(vk_state, vk_renderer);
+    vk_create_command_buffers(vk_state, vk_renderer, vk_renderer->pipeline);
+    vk_create_semaphores(vk_state, vk_renderer);
+}
+
+void vk_create_state(vulkan_state *vk_state) {
 
     vk_choose_physical_device(vk_state);
     vk_create_logical_device(vk_state);
-    vk_create_swapchain(vk_state, width, height);
-    vk_create_swapchain_image_views(vk_state);
-    vk_choose_depth_format(vk_state);
-    vk_create_render_pass(vk_state);
-    vk_create_descriptor_set_layout(vk_state);
-    vk_create_graphics_pipeline(vk_state);
-    vk_create_command_pool(vk_state);
-    vk_create_depth_resources(vk_state);
-    vk_create_framebuffers(vk_state);
-    vk_create_texture_image(vk_state);
-    vk_create_texture_image_view(vk_state);
-    vk_create_texture_image_sampler(vk_state);
-    vk_create_vertex_buffer(vk_state);
-    vk_create_index_buffer(vk_state);
-    vk_create_uniform_buffers(vk_state);
-    vk_create_descriptor_pool(vk_state);
-    vk_create_descriptor_sets(vk_state);
-    vk_create_command_buffers(vk_state);
-    vk_create_semaphores(vk_state);
 }
 
 void destroy_debug_utils_messennger(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks *allocator) {
@@ -519,34 +521,43 @@ void destroy_debug_utils_messennger(VkInstance instance, VkDebugUtilsMessengerEX
     }
 }
 
-void vk_quit(vulkan_state *vk_state) {
+void delete_vulkan_renderer(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
-    vk_clean_swapchain(vk_state);
+    vk_clean_swapchain(vk_state, vk_renderer);
 
-    VkDevice device = vk_state->vk_device;
+    vkDestroySampler(vk_state->vk_device, vk_renderer->vk_texture_sampler, NULL);
+    vkDestroyImageView(vk_state->vk_device, vk_renderer->vk_texture_image_view, NULL);
+    vkDestroyImage(vk_state->vk_device, vk_renderer->vk_texture_image, NULL);
+    vkFreeMemory(vk_state->vk_device, vk_renderer->vk_texture_image_memory, NULL);
 
-    vkDestroySampler(device, vk_state->vk_texture_sampler, NULL);
-    vkDestroyImageView(device, vk_state->vk_texture_image_view, NULL);
-    vkDestroyImage(device, vk_state->vk_texture_image, NULL);
-    vkFreeMemory(device, vk_state->vk_texture_image_memory, NULL);
-
-    vkDestroyDescriptorSetLayout(device, vk_state->vk_descriptor_set_layout, NULL);
-
-    vkDestroyBuffer(device, vk_state->vk_index_buffer, NULL);
-    vkFreeMemory(device, vk_state->vk_index_buffer_memory, NULL);
-
-    vkDestroyBuffer(device, vk_state->vk_vertex_buffer, NULL);
-    vkFreeMemory(device, vk_state->vk_vertex_buffer_memory, NULL);
+    vkDestroyDescriptorSetLayout(vk_state->vk_device, vk_renderer->vk_descriptor_set_layout, NULL);
 
     for (int i = 0; i < VULKAN_MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroySemaphore(device, vk_state->vk_render_finished_semaphores[i], NULL);
-        vkDestroySemaphore(device, vk_state->vk_image_available_semaphores[i], NULL);
-        vkDestroyFence(device, vk_state->vk_flight_fences[i], NULL);
+        vkDestroySemaphore(vk_state->vk_device, vk_renderer->vk_render_finished_semaphores[i], NULL);
+        vkDestroySemaphore(vk_state->vk_device, vk_renderer->vk_image_available_semaphores[i], NULL);
+        vkDestroyFence(vk_state->vk_device, vk_renderer->vk_flight_fences[i], NULL);
     }
 
-    vkDestroyCommandPool(device, vk_state->vk_command_pool, NULL);
+    vkDestroyCommandPool(vk_state->vk_device, vk_renderer->vk_command_pool, NULL);
 
-    vkDestroyDevice(device, NULL);
+    delete_vulkan_pipeline(vk_state, vk_renderer->pipeline);
+    delete_vulkan_swapchain(vk_renderer->swapchain);
+    delete_vulkan_uniform_buffer(vk_renderer->uniforms);
+
+    free(vk_renderer->vk_descriptor_sets);
+    free(vk_renderer->vk_framebuffers);
+    free(vk_renderer->vk_command_buffers);
+    free(vk_renderer->vk_flight_fences);
+    free(vk_renderer->vk_images_in_flight);
+    free(vk_renderer->vk_image_available_semaphores);
+    free(vk_renderer->vk_render_finished_semaphores);
+}
+
+void delete_vulkan_state(vulkan_state *vk_state) {
+
+    delete_vulkan_renderer(vk_state, vk_state->renderer);
+
+    vkDestroyDevice(vk_state->vk_device, NULL);
 
 #ifdef VULKAN_ENABLE_VALIDATION
     destroy_debug_utils_messennger(vk_state->vk_instance, vk_state->vk_debug_messenger, NULL);
@@ -554,18 +565,4 @@ void vk_quit(vulkan_state *vk_state) {
 
     vkDestroySurfaceKHR(vk_state->vk_instance, vk_state->vk_surface, NULL);
     vkDestroyInstance(vk_state->vk_instance, NULL);
-
-    free(vk_state->swapchain_images);
-    free(vk_state->swapchain_image_views);
-    free(vk_state->vk_descriptor_sets);
-    free(vk_state->vk_framebuffers);
-    free(vk_state->vk_command_buffers);
-    free(vk_state->vk_uniform_buffers);
-    free(vk_state->vk_uniform_buffers_memory);
-    free(vk_state->vk_flight_fences);
-    free(vk_state->vk_images_in_flight);
-    free(vk_state->vk_image_available_semaphores);
-    free(vk_state->vk_render_finished_semaphores);
-    free(vk_state->vertices);
-    free(vk_state->indices);
 }

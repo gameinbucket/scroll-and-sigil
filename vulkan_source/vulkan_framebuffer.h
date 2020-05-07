@@ -16,6 +16,6 @@
 #include "mem.h"
 #include "vulkan_struct.h"
 
-void vk_create_framebuffers(vulkan_state *vk_state);
+void vk_create_framebuffers(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer);
 
 #endif

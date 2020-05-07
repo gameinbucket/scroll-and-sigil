@@ -1,11 +1,11 @@
 #include "vulkan_commands.h"
 
-VkCommandBuffer vk_begin_single_time_commands(vulkan_state *vk_state) {
+VkCommandBuffer vk_begin_single_time_commands(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
     VkCommandBufferAllocateInfo alloc_info = {0};
     alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    alloc_info.commandPool = vk_state->vk_command_pool;
+    alloc_info.commandPool = vk_renderer->vk_command_pool;
     alloc_info.commandBufferCount = 1;
 
     VkCommandBuffer command_buffer;
@@ -27,7 +27,7 @@ VkCommandBuffer vk_begin_single_time_commands(vulkan_state *vk_state) {
     return command_buffer;
 }
 
-void vk_end_single_time_commands(vulkan_state *vk_state, VkCommandBuffer command_buffer) {
+void vk_end_single_time_commands(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, VkCommandBuffer command_buffer) {
 
     vkEndCommandBuffer(command_buffer);
 
@@ -39,10 +39,10 @@ void vk_end_single_time_commands(vulkan_state *vk_state, VkCommandBuffer command
     vkQueueSubmit(vk_state->vk_graphics_queue, 1, &submit_info, VK_NULL_HANDLE);
     vkQueueWaitIdle(vk_state->vk_graphics_queue);
 
-    vkFreeCommandBuffers(vk_state->vk_device, vk_state->vk_command_pool, 1, &command_buffer);
+    vkFreeCommandBuffers(vk_state->vk_device, vk_renderer->vk_command_pool, 1, &command_buffer);
 }
 
-void vk_create_command_pool(vulkan_state *vk_state) {
+void vk_create_command_pool(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
     VkCommandPoolCreateInfo pool_info = {0};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -55,18 +55,18 @@ void vk_create_command_pool(vulkan_state *vk_state) {
         exit(1);
     }
 
-    vk_state->vk_command_pool = command_pool;
+    vk_renderer->vk_command_pool = command_pool;
 }
 
-void vk_create_command_buffers(vulkan_state *vk_state) {
+void vk_create_command_buffers(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, struct vulkan_pipeline *vk_pipeline) {
 
-    uint32_t size = vk_state->swapchain_image_count;
+    uint32_t size = vk_renderer->swapchain->swapchain_image_count;
 
     VkCommandBuffer *command_buffers = safe_calloc(size, sizeof(VkCommandBuffer));
 
     VkCommandBufferAllocateInfo command_buffer_alloc_info = {0};
     command_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    command_buffer_alloc_info.commandPool = vk_state->vk_command_pool;
+    command_buffer_alloc_info.commandPool = vk_renderer->vk_command_pool;
     command_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     command_buffer_alloc_info.commandBufferCount = size;
 
@@ -89,10 +89,10 @@ void vk_create_command_buffers(vulkan_state *vk_state) {
 
         VkRenderPassBeginInfo render_pass_info = {0};
         render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        render_pass_info.renderPass = vk_state->vk_render_pass;
-        render_pass_info.framebuffer = vk_state->vk_framebuffers[i];
+        render_pass_info.renderPass = vk_renderer->vk_render_pass;
+        render_pass_info.framebuffer = vk_renderer->vk_framebuffers[i];
         render_pass_info.renderArea.offset = (VkOffset2D){0, 0};
-        render_pass_info.renderArea.extent = vk_state->swapchain_extent;
+        render_pass_info.renderArea.extent = vk_renderer->swapchain->swapchain_extent;
 
         VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
         VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
@@ -104,17 +104,17 @@ void vk_create_command_buffers(vulkan_state *vk_state) {
 
         vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->vk_pipeline);
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_renderer->vk_pipeline);
 
-        VkBuffer vertex_buffers[1] = {vk_state->vk_vertex_buffer};
+        VkBuffer vertex_buffers[1] = {vk_pipeline->rendering->vk_vertex_buffer};
         VkDeviceSize vertex_offsets[1] = {0};
         vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, vertex_offsets);
 
-        vkCmdBindIndexBuffer(command_buffer, vk_state->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(command_buffer, vk_pipeline->rendering->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
-        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_state->vk_pipeline_layout, 0, 1, &vk_state->vk_descriptor_sets[i], 0, NULL);
+        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_renderer->vk_pipeline_layout, 0, 1, &vk_renderer->vk_descriptor_sets[i], 0, NULL);
 
-        vkCmdDrawIndexed(command_buffer, vk_state->index_count, 1, 0, 0, 0);
+        vkCmdDrawIndexed(command_buffer, vk_pipeline->rendering->index_count, 1, 0, 0, 0);
 
         vkCmdEndRenderPass(command_buffer);
 
@@ -124,10 +124,10 @@ void vk_create_command_buffers(vulkan_state *vk_state) {
         }
     }
 
-    vk_state->vk_command_buffers = command_buffers;
+    vk_renderer->vk_command_buffers = command_buffers;
 }
 
-void vk_create_semaphores(vulkan_state *vk_state) {
+void vk_create_semaphores(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
     VkSemaphoreCreateInfo semaphore_info = {0};
     semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -158,15 +158,15 @@ void vk_create_semaphores(vulkan_state *vk_state) {
         }
     }
 
-    vk_state->vk_flight_fences = flight_fences;
-    vk_state->vk_image_available_semaphores = image_available_semaphores;
-    vk_state->vk_render_finished_semaphores = render_finished_semaphores;
+    vk_renderer->vk_flight_fences = flight_fences;
+    vk_renderer->vk_image_available_semaphores = image_available_semaphores;
+    vk_renderer->vk_render_finished_semaphores = render_finished_semaphores;
 
-    VkFence *images_in_flight = safe_calloc(vk_state->swapchain_image_count, sizeof(VkFence));
+    VkFence *images_in_flight = safe_calloc(vk_renderer->swapchain->swapchain_image_count, sizeof(VkFence));
 
-    for (uint32_t i = 0; i < vk_state->swapchain_image_count; i++) {
+    for (uint32_t i = 0; i < vk_renderer->swapchain->swapchain_image_count; i++) {
         images_in_flight[i] = VK_NULL_HANDLE;
     }
 
-    vk_state->vk_images_in_flight = images_in_flight;
+    vk_renderer->vk_images_in_flight = images_in_flight;
 }
