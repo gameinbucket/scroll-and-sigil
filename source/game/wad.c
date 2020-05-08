@@ -241,7 +241,10 @@ void wad_load_resources(renderstate *rs, soundstate *ss) {
     // soundstate_play_sound(ss, SOUND_BARON_SCREAM);
 
     dealloc_wad(wad);
-    zip_close(z);
+
+    if (use_zip) {
+        zip_close(z);
+    }
 }
 
 void wad_load_map(input *in, world *w) {
