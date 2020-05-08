@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd shaders
+
 rm *.spv
 
 glslc 3d.vert -o 3d.vert.spv

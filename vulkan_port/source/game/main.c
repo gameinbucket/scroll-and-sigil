@@ -45,8 +45,8 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
 
     {
         struct vulkan_pipeline *pipeline2d = safe_calloc(1, sizeof(struct vulkan_pipeline));
-        pipeline2d->vertex_shader_path = "2d.vert.spv";
-        pipeline2d->fragment_shader_path = "2d.frag.spv";
+        pipeline2d->vertex_shader_path = "shaders/2d.vert.spv";
+        pipeline2d->fragment_shader_path = "shaders/2d.frag.spv";
         struct vulkan_render_buffer *render2d = safe_calloc(1, sizeof(struct vulkan_render_buffer));
         render2d->position = 3;
         render2d->color = 3;
@@ -69,8 +69,8 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
 
     {
         struct vulkan_pipeline *pipeline3d = safe_calloc(1, sizeof(struct vulkan_pipeline));
-        pipeline3d->vertex_shader_path = "3d.vert.spv";
-        pipeline3d->fragment_shader_path = "3d.frag.spv";
+        pipeline3d->vertex_shader_path = "shaders/3d.vert.spv";
+        pipeline3d->fragment_shader_path = "shaders/3d.frag.spv";
         struct vulkan_render_buffer *render3d = safe_calloc(1, sizeof(struct vulkan_render_buffer));
         render3d->position = 3;
         render3d->color = 3;
