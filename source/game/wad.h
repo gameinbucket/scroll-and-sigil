@@ -5,8 +5,8 @@
 
 #include "assets/assets.h"
 #include "core/archive.h"
-#include "core/file.h"
-#include "core/string.h"
+#include "core/fileio.h"
+#include "core/string_util.h"
 #include "data/array.h"
 #include "data/table.h"
 #include "graphics/graphics.h"

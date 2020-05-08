@@ -6,11 +6,16 @@ OBJECTS = $(patsubst source/%.c,objects/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
 INCLUDE = -Isource/
 
-CC = gcc
 COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE)
 LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip -lGL -lGLEW 
 LIBS = -lm
 PREFIX =
+CC = gcc
+
+ifneq ($(shell uname), Linux)
+	CC = clang
+	COMPILER_FLAGS += -Wno-nullability-extension
+endif
 
 .PHONY: all analysis address valgrind clean list-source list-objects test help
 
@@ -24,6 +29,10 @@ analysis: all
 address: COMPILER_FLAGS += -fsanitize=address
 address: all
 
+gdb: COMPILER_FLAGS += -g
+gdb: all
+	@ ./gdb.sh
+
 valgrind: COMPILER_FLAGS += -g
 valgrind: all
 	@ ./valgrind.sh
@@ -33,7 +42,7 @@ $(NAME): $(HEADERS) $(OBJECTS)
 
 objects/%.o: source/%.c
 	@mkdir -p $(dir $@)
-	$(CC) -c $< $(COMPILER_FLAGS) -MMD $(LINKER_FLAGS) -o $@ $(LIBS)
+	$(CC) -c $< $(COMPILER_FLAGS) -MMD -o $@
 
 clean:
 	rm -f ./$(NAME)

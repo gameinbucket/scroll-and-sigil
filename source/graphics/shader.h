@@ -14,8 +14,8 @@
 #include <zip.h>
 
 #include "core/archive.h"
-#include "core/file.h"
-#include "core/string.h"
+#include "core/fileio.h"
+#include "core/string_util.h"
 
 struct shader {
     GLuint id;

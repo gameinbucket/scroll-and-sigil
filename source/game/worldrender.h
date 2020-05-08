@@ -13,7 +13,7 @@
 
 #include "assets/assets.h"
 #include "core/mem.h"
-#include "core/string.h"
+#include "core/string_util.h"
 #include "data/uint_table.h"
 #include "graphics/framebuffer.h"
 #include "graphics/graphics.h"
