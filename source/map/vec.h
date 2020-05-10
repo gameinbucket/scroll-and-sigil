@@ -3,8 +3,8 @@
 
 #include <stdbool.h>
 
-#include "core/math.h"
 #include "core/mem.h"
+#include "math/math_util.h"
 
 typedef struct vec vec;
 

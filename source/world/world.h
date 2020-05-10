@@ -4,12 +4,12 @@
 #include <assert.h>
 #include <float.h>
 
-#include "core/math.h"
 #include "core/mem.h"
 #include "data/set.h"
 #include "graphics/model.h"
 #include "graphics/sprite.h"
 #include "map/sector.h"
+#include "math/math_util.h"
 
 #define WORLD_SCALE 0.25f
 #define WORLD_CELL_SHIFT 5
@@ -26,13 +26,20 @@ typedef enum thing_type thing_type;
 typedef struct world world;
 typedef struct cell cell;
 typedef struct thing thing;
-typedef struct npc npc;
+typedef struct particle particle;
+typedef struct decal decal;
 
 struct world {
     char *name;
     thing **things;
     int thing_cap;
     int thing_count;
+    particle **particles;
+    int particle_cap;
+    int particle_count;
+    decal **decals;
+    int decal_cap;
+    int decal_count;
     sector **sectors;
     int sector_cap;
     int sector_count;
@@ -46,6 +53,10 @@ world *create_world();
 
 void world_add_thing(world *self, thing *t);
 void world_remove_thing(world *self, thing *t);
+void world_add_particle(world *self, particle *t);
+void world_remove_particle(world *self, particle *t);
+void world_add_decal(world *self, decal *t);
+void world_remove_decal(world *self, decal *t);
 void world_add_sector(world *self, sector *s);
 sector *world_find_sector(world *self, float x, float y);
 void world_load_map(world *self);
@@ -57,11 +68,21 @@ struct cell {
     thing **things;
     int thing_cap;
     int thing_count;
+    particle **particles;
+    int particle_cap;
+    int particle_count;
+    decal **decals;
+    int decal_cap;
+    int decal_count;
 };
 
 void cell_add_line(cell *self, line *ld);
 void cell_add_thing(cell *self, thing *t);
 void cell_remove_thing(cell *self, thing *t);
+void cell_add_particle(cell *self, particle *t);
+void cell_remove_particle(cell *self, particle *t);
+void cell_add_decal(cell *self, decal *t);
+void cell_remove_decal(cell *self, decal *t);
 
 struct thing {
     unsigned int id;
@@ -97,5 +118,51 @@ void thing_initialize(thing *self, world *map, float x, float y, float r, float 
 void thing_block_borders(thing *self);
 void thing_update(thing *self);
 void thing_standard_update(thing *self);
+
+struct particle {
+    float box;
+    float height;
+    float x;
+    float y;
+    float z;
+    float dx;
+    float dy;
+    float dz;
+    int texture;
+    sprite *sprite_data;
+    bool gc;
+};
+
+particle *create_particle(world *map, float x, float y, float z, float box, float height);
+bool particle_update(particle *self);
+
+struct decal {
+    float x1;
+    float y1;
+    float z1;
+    float u1;
+    float v1;
+    float x2;
+    float y2;
+    float z2;
+    float u2;
+    float v2;
+    float x3;
+    float y3;
+    float z3;
+    float u3;
+    float v3;
+    float x4;
+    float y4;
+    float z4;
+    float u4;
+    float v4;
+    float nx;
+    float ny;
+    float nz;
+    int texture;
+};
+
+decal *create_decal(world *map);
 
 #endif

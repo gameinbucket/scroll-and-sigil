@@ -193,11 +193,20 @@ static void sector_render(uint_table *cache, sector *s) {
     }
 }
 
-void world_render(worldrender *wr, camera *c, float view[16], float view_projection[16], float depth_bias_mvp[16], GLuint depth_texture) {
+// static void particle_render(uint_table *cache, particle *p, float sine, float cosine) {
+//     renderbuffer *b = uint_table_get(cache, p->texture);
+//     render_sprite(b, p->x, p->y, p->z, p->sprite_data, sine, cosine);
+// }
 
-    if (c->x < -999) {
-        printf("foobar\n");
-    }
+static void particle_render(uint_table *cache, particle *p, float *view) {
+    renderbuffer *b = uint_table_get(cache, p->texture);
+    render_aligned_sprite(b, p->x, p->y, p->z, p->sprite_data, view);
+}
+
+static void decal_render(__attribute__((unused)) uint_table *cache, __attribute__((unused)) decal *d) {
+}
+
+void world_render(worldrender *wr, camera *c, float view[16], float view_projection[16], float depth_bias_mvp[16], GLuint depth_texture) {
 
     renderstate *rs = wr->rs;
     world *w = wr->w;
@@ -227,6 +236,22 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
     int sector_count = w->sector_count;
     for (int i = 0; i < sector_count; i++) {
         sector_render(cache, sectors[i]);
+    }
+
+    float sine = sinf(-c->ry);
+    float cosine = cosf(-c->ry);
+
+    int particle_count = w->particle_count;
+    particle **particles = w->particles;
+    for (int i = 0; i < particle_count; i++) {
+        // particle_render(cache, particles[i], sine, cosine);
+        particle_render(cache, particles[i], view);
+    }
+
+    int decal_count = w->decal_count;
+    decal **decals = w->decals;
+    for (int i = 0; i < decal_count; i++) {
+        decal_render(cache, decals[i]);
     }
 
     iter = create_uint_table_iterator(cache);

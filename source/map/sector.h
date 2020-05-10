@@ -3,8 +3,8 @@
 
 #include <math.h>
 
-#include "core/math.h"
 #include "core/mem.h"
+#include "math/math_util.h"
 
 #include "triangle.h"
 #include "vec.h"

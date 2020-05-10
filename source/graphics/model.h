@@ -9,10 +9,10 @@
 #include <stdlib.h>
 
 #include "core/mem.h"
+#include "math/matrix.h"
 #include "wad/parser.h"
 
 #include "cube.h"
-#include "matrix.h"
 
 typedef struct animation animation;
 

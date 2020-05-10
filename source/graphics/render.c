@@ -100,7 +100,7 @@ void render_rectangle(renderbuffer *b, float x, float y, float width, float heig
     render_index4(b);
 }
 
-void render_sprite3d(renderbuffer *b, float x, float y, float z, float sine, float cosine, sprite *s) {
+void render_sprite(renderbuffer *b, float x, float y, float z, sprite *s, float sine, float cosine) {
     int pos = b->vertex_pos;
     GLfloat *vertices = b->vertices;
 
@@ -112,26 +112,97 @@ void render_sprite3d(renderbuffer *b, float x, float y, float z, float sine, flo
     vertices[pos + 2] = z + sine;
     vertices[pos + 3] = s->left;
     vertices[pos + 4] = s->bottom;
+    vertices[pos + 5] = sine;
+    vertices[pos + 6] = 0;
+    vertices[pos + 7] = cosine;
 
-    vertices[pos + 5] = x + cosine;
-    vertices[pos + 6] = y;
-    vertices[pos + 7] = z - sine;
-    vertices[pos + 8] = s->right;
-    vertices[pos + 9] = s->bottom;
+    vertices[pos + 8] = x + cosine;
+    vertices[pos + 9] = y;
+    vertices[pos + 10] = z - sine;
+    vertices[pos + 11] = s->right;
+    vertices[pos + 12] = s->bottom;
+    vertices[pos + 13] = sine;
+    vertices[pos + 14] = 0;
+    vertices[pos + 15] = cosine;
 
-    vertices[pos + 10] = x + cosine;
-    vertices[pos + 11] = y + s->height;
-    vertices[pos + 12] = z - sine;
-    vertices[pos + 13] = s->right;
-    vertices[pos + 14] = s->top;
+    vertices[pos + 16] = x + cosine;
+    vertices[pos + 17] = y + s->height;
+    vertices[pos + 18] = z - sine;
+    vertices[pos + 19] = s->right;
+    vertices[pos + 20] = s->top;
+    vertices[pos + 21] = sine;
+    vertices[pos + 22] = 0;
+    vertices[pos + 23] = cosine;
 
-    vertices[pos + 15] = x - cosine;
-    vertices[pos + 16] = y + s->height;
-    vertices[pos + 17] = z + sine;
-    vertices[pos + 18] = s->left;
-    vertices[pos + 19] = s->top;
+    vertices[pos + 24] = x - cosine;
+    vertices[pos + 25] = y + s->height;
+    vertices[pos + 26] = z + sine;
+    vertices[pos + 27] = s->left;
+    vertices[pos + 28] = s->top;
+    vertices[pos + 29] = sine;
+    vertices[pos + 30] = 0;
+    vertices[pos + 31] = cosine;
 
-    b->vertex_pos = pos + 20;
+    b->vertex_pos = pos + 32;
+    render_index4(b);
+}
+
+void render_aligned_sprite(renderbuffer *b, float x, float y, float z, sprite *s, float *view) {
+
+    int pos = b->vertex_pos;
+    GLfloat *vertices = b->vertices;
+
+    float sine = 0;
+    float cosine = 1;
+
+    float right[3] = {view[0], view[4], view[8]};
+    float up[3] = {view[1], view[5], view[9]};
+
+    float rpu_x = right[0] * s->width + up[0] * s->height;
+    float rpu_y = right[1] * s->width + up[1] * s->height;
+    float rpu_z = right[2] * s->width + up[2] * s->height;
+
+    float rmu_x = right[0] * s->width - up[0] * s->height;
+    float rmu_y = right[1] * s->width - up[1] * s->height;
+    float rmu_z = right[2] * s->width - up[2] * s->height;
+
+    vertices[pos] = x - rmu_x;
+    vertices[pos + 1] = y - rmu_y;
+    vertices[pos + 2] = z - rmu_z;
+    vertices[pos + 3] = s->left;
+    vertices[pos + 4] = s->bottom;
+    vertices[pos + 5] = sine;
+    vertices[pos + 6] = 0;
+    vertices[pos + 7] = cosine;
+
+    vertices[pos + 8] = x + cosine;
+    vertices[pos + 9] = y;
+    vertices[pos + 10] = z - sine;
+    vertices[pos + 11] = s->right;
+    vertices[pos + 12] = s->bottom;
+    vertices[pos + 13] = sine;
+    vertices[pos + 14] = 0;
+    vertices[pos + 15] = cosine;
+
+    vertices[pos + 16] = x + cosine;
+    vertices[pos + 17] = y + s->height;
+    vertices[pos + 18] = z - sine;
+    vertices[pos + 19] = s->right;
+    vertices[pos + 20] = s->top;
+    vertices[pos + 21] = sine;
+    vertices[pos + 22] = 0;
+    vertices[pos + 23] = cosine;
+
+    vertices[pos + 24] = x - cosine;
+    vertices[pos + 25] = y + s->height;
+    vertices[pos + 26] = z + sine;
+    vertices[pos + 27] = s->left;
+    vertices[pos + 28] = s->top;
+    vertices[pos + 29] = sine;
+    vertices[pos + 30] = 0;
+    vertices[pos + 31] = cosine;
+
+    b->vertex_pos = pos + 32;
     render_index4(b);
 }
 

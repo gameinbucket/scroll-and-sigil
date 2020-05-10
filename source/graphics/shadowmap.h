@@ -13,9 +13,8 @@
 #include <stdlib.h>
 
 #include "core/mem.h"
-
-#include "matrix.h"
-#include "vector.h"
+#include "math/matrix.h"
+#include "math/vector.h"
 
 struct shadowmap {
     int width;

@@ -10,8 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "math/matrix.h"
+
 #include "framebuffer.h"
-#include "matrix.h"
 #include "renderbuffer.h"
 #include "shadowmap.h"
 

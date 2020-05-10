@@ -15,12 +15,12 @@
 
 #include "graphics/framebuffer.h"
 #include "graphics/graphics.h"
-#include "graphics/matrix.h"
 #include "graphics/render.h"
 #include "graphics/renderbuffer.h"
 #include "graphics/shader.h"
 #include "graphics/shadowmap.h"
 #include "graphics/texture.h"
+#include "math/matrix.h"
 
 typedef struct renderstate renderstate;
 

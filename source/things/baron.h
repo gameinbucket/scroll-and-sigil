@@ -3,7 +3,6 @@
 
 #include "assets/assets.h"
 #include "core/mem.h"
-#include "input/input.h"
 #include "world/world.h"
 
 #include "npc.h"

@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "core/math.h"
+#include "math_util.h"
 
 #include "vector.h"
 

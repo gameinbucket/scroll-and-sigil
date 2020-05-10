@@ -21,7 +21,7 @@ void render_screen(renderbuffer *b, float x, float y, float width, float height)
 void render_image(renderbuffer *b, float x, float y, float width, float height, float left, float top, float right, float bottom);
 void render_rectangle(renderbuffer *b, float x, float y, float width, float height, float red, float green, float blue);
 
-void render_sprite3d(renderbuffer *b, float x, float y, float z, float sine, float cosine, sprite *s);
-void render_model_cpu(renderbuffer *b, model *m);
+void render_sprite(renderbuffer *b, float x, float y, float z, sprite *s, float sine, float cosine);
+void render_aligned_sprite(renderbuffer *b, float x, float y, float z, sprite *s, float *view);
 
 #endif

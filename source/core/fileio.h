@@ -1,5 +1,5 @@
-#ifndef FILE_H
-#define FILE_H
+#ifndef FILE_IO_H
+#define FILE_IO_H
 
 #include <stdarg.h>
 #include <stdbool.h>

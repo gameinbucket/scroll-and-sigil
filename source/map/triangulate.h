@@ -5,10 +5,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "core/math.h"
 #include "core/mem.h"
 #include "data/array.h"
 #include "data/list.h"
+#include "math/math_util.h"
 
 #include "sector.h"
 #include "vec.h"

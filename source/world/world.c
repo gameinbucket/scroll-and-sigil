@@ -34,6 +34,66 @@ void world_remove_thing(world *self, thing *t) {
     }
 }
 
+void world_add_particle(world *self, particle *t) {
+    if (self->particle_cap == 0) {
+        self->particles = safe_malloc(sizeof(particle *));
+        self->particles[0] = t;
+        self->particle_cap = 1;
+        self->particle_count = 1;
+        return;
+    }
+
+    if (self->particle_count == self->particle_cap) {
+        self->particle_cap += 8;
+        self->particles = safe_realloc(self->particles, self->particle_cap * sizeof(particle *));
+    }
+
+    self->particles[self->particle_count] = t;
+    self->particle_count++;
+}
+
+void world_remove_particle(world *self, particle *t) {
+    int len = self->particle_count;
+    particle **particles = self->particles;
+    for (int i = 0; i < len; i++) {
+        if (particles[i] == t) {
+            particles[i] = particles[len - 1];
+            self->particle_count--;
+            return;
+        }
+    }
+}
+
+void world_add_decal(world *self, decal *t) {
+    if (self->decal_cap == 0) {
+        self->decals = safe_malloc(sizeof(decal *));
+        self->decals[0] = t;
+        self->decal_cap = 1;
+        self->decal_count = 1;
+        return;
+    }
+
+    if (self->decal_count == self->decal_cap) {
+        self->decal_cap += 8;
+        self->decals = safe_realloc(self->decals, self->decal_cap * sizeof(decal *));
+    }
+
+    self->decals[self->decal_count] = t;
+    self->decal_count++;
+}
+
+void world_remove_decal(world *self, decal *t) {
+    int len = self->decal_count;
+    decal **decals = self->decals;
+    for (int i = 0; i < len; i++) {
+        if (decals[i] == t) {
+            decals[i] = decals[len - 1];
+            self->decal_count--;
+            return;
+        }
+    }
+}
+
 void world_add_sector(world *self, sector *s) {
     if (self->sector_cap == 0) {
         self->sectors = safe_malloc(sizeof(sector *));
@@ -64,9 +124,21 @@ sector *world_find_sector(world *self, float x, float y) {
 }
 
 void world_update(world *self) {
+
     int thing_count = self->thing_count;
     thing **things = self->things;
     for (int i = 0; i < thing_count; i++) {
         thing_update(things[i]);
+    }
+
+    int particle_count = self->particle_count;
+    particle **particles = self->particles;
+    for (int i = 0; i < particle_count; i++) {
+        if (particle_update(particles[i])) {
+            particles[i] = particles[particle_count - 1];
+            particles[particle_count - 1] = NULL;
+            particle_count--;
+            i--;
+        }
     }
 }

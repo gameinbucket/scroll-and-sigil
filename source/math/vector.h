@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "core/math.h"
+#include "math_util.h"
 
 typedef struct vec2 vec2;
 

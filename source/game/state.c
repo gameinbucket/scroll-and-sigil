@@ -155,6 +155,10 @@ void state_render(state *self) {
     matrix_look_at(shadow_view, &eye, &center);
     // matrix_translate(shadow_view, -eye.x, -eye.y, -eye.z);
 
+    camera shadow_camera = {0};
+    shadow_camera.rx = -shadow_view[12];
+    shadow_camera.ry = -shadow_view[14];
+
     shadow_map_view_projection(shadow_view_projection, shadow_view, view, view_projection);
 
     float shadow_bias[16] = {0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.5, 0, 0.5, 0.5, 0.5, 1};
@@ -167,7 +171,7 @@ void state_render(state *self) {
 
     graphics_cull_front();
 
-    world_render(self->wr, c, NULL, NULL, NULL, 0);
+    world_render(self->wr, &shadow_camera, NULL, NULL, NULL, 0);
 
     // ----------------------------------------
 

@@ -76,4 +76,6 @@ void wad_load_map(world *w, input *in, modelstate *ms) {
 
     create_hero(in, w, 10, 40, modelstate_get_model(ms, "human"));
     create_baron(w, 8, 45, modelstate_get_model(ms, "human"));
+
+    create_blood(w, 5, 1, 30);
 }
