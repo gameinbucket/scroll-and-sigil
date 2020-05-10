@@ -329,12 +329,12 @@ static VkSurfaceFormatKHR vk_choose_swap_surface_format(VkSurfaceFormatKHR *avai
 }
 
 static VkPresentModeKHR vk_choose_swap_present_mode(VkPresentModeKHR *available, uint32_t count) {
-    for (uint32_t i = 0; i < count; i++) {
-        VkPresentModeKHR this = available[i];
-        if (this == VK_PRESENT_MODE_MAILBOX_KHR) {
-            return this;
-        }
-    }
+    // for (uint32_t i = 0; i < count; i++) {
+    //     VkPresentModeKHR this = available[i];
+    //     if (this == VK_PRESENT_MODE_MAILBOX_KHR) {
+    //         return this;
+    //     }
+    // }
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 

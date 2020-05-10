@@ -3,8 +3,8 @@
 
 #include "assets/assets.h"
 #include "core/mem.h"
+#include "graphics/model.h"
 #include "input/input.h"
-#include "mesh/biped.h"
 #include "world/world.h"
 
 typedef struct hero hero;
@@ -16,6 +16,6 @@ struct hero {
 };
 
 void hero_update(void *void_self);
-hero *create_hero(input *in, world *map, float x, float z);
+hero *create_hero(input *in, world *map, float x, float z, model *m);
 
 #endif

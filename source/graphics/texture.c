@@ -1,7 +1,8 @@
 #include "texture.h"
 
-texture *texture_init(GLuint id, int width, int height) {
+static texture *texture_init(char *path, GLuint id, int width, int height) {
     texture *t = safe_malloc(sizeof(texture));
+    t->path = string_init(path);
     t->id = id;
     t->width = width;
     t->height = height;
@@ -30,5 +31,5 @@ texture *texture_make(struct zip *z, char *path, GLint clamp, GLint interpolate)
 
     simple_image_free(png);
 
-    return texture_init(id, width, height);
+    return texture_init(path, id, width, height);
 }

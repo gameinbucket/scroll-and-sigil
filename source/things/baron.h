@@ -4,7 +4,6 @@
 #include "assets/assets.h"
 #include "core/mem.h"
 #include "input/input.h"
-#include "mesh/biped.h"
 #include "world/world.h"
 
 #include "npc.h"
@@ -18,6 +17,6 @@ struct baron {
 };
 
 void baron_update(void *void_self);
-baron *create_baron(world *map, float x, float z);
+baron *create_baron(world *map, float x, float z, model *m);
 
 #endif

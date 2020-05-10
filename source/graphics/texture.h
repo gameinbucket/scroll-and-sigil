@@ -21,6 +21,7 @@
 typedef struct texture texture;
 
 struct texture {
+    string *path;
     GLuint id;
     int width;
     int height;

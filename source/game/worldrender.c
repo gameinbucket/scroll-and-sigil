@@ -138,20 +138,21 @@ static void thing_render(renderstate *rs, renderbuffer *b, thing *t) {
 
     model *m = t->model_data;
 
-    bone *body = &m->bones[BIPED_BODY];
-    matrix_identity(body->relative);
-    matrix_rotate_y(body->relative, sinf(t->rotation), cosf(t->rotation));
-    matrix_translate(body->relative, t->x, t->y + 0.8f, t->z);
+    bone *master = m->master;
+    matrix_identity(master->relative);
+    // matrix_rotate_y(master->relative, sinf(t->rotation), cosf(t->rotation));
+    matrix_translate(master->relative, t->x, t->y + 0.8f, t->z);
 
     // bone *head = &m->bones[BIPED_HEAD];
     // head->local_ry = t->rotation_target;
 
-    float bones[BIPED_BONES][16];
-    float absolute[BIPED_BONES][16];
-    recursive_skeleton(b, body, bones, absolute);
-    renderstate_set_uniform_matrices(rs, "u_bones", bones[0], BIPED_BONES);
+    float bones[SHADER_RENDER_MODEL_MAX_BONES][16];
+    float absolute[SHADER_RENDER_MODEL_MAX_BONES][16];
 
-    renderstate_set_texture(rs, t->sprite_id);
+    recursive_skeleton(b, master, bones, absolute);
+    renderstate_set_uniform_matrices(rs, "u_bones", bones[0], m->bone_count);
+
+    renderstate_set_texture(rs, m->texture_id);
     graphics_update_and_draw(b);
 }
 

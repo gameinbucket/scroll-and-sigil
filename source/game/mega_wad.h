@@ -23,8 +23,9 @@
 #include "modelstate.h"
 #include "renderstate.h"
 #include "soundstate.h"
+#include "state.h"
 
 void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms);
-void wad_load_map(input *in, world *w);
+void wad_load_map(world *w, input *in, modelstate *ms);
 
 #endif

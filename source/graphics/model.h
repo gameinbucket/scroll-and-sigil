@@ -23,6 +23,7 @@ struct animation {
 typedef struct bone bone;
 
 struct bone {
+    string *name;
     bone *parent;
     bone **child;
     int child_count;
@@ -57,15 +58,19 @@ struct bone {
 typedef struct model model;
 
 struct model {
+    string *texture;
+    int texture_id;
     bone *bones;
     int bone_count;
+    bone *master;
     animation *animations;
+    int animation_count;
 };
 
 void bone_recursive_join(bone *b, bone *parent);
 void bone_recursive_compute(bone *b);
 
-void bone_init(bone *bones, int index, float width, float height, float length, float scale);
+void bone_init(bone *bones, int index, float width, float height, float length);
 void bone_offset(bone *b, float x, float y, float z);
 void bone_plane_offset(bone *b, float x, float y, float z);
 void bone_attached(bone *b, int count);

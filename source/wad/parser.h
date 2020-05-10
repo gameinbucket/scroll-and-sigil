@@ -35,9 +35,16 @@ wad_element *create_wad_string(string *value);
 wad_object *wad_get_object(wad_element *element);
 wad_array *wad_get_array(wad_element *element);
 string *wad_get_string(wad_element *element);
+int wad_get_integer(wad_element *element);
+float wad_get_float(wad_element *element);
 
-void wad_object_add(wad_element *element, string *key, wad_element *value);
-wad_element *wad_object_get(wad_element *object, string *key);
+void wad_add_to_object(wad_element *element, char *key, wad_element *value);
+wad_element *wad_get_from_object(wad_element *object, char *key);
+wad_element *wad_get_required_from_object(wad_element *object, char *key);
+wad_element *wad_get_from_array(wad_element *array, unsigned int index);
+wad_element *wad_get_required_from_array(wad_element *array, unsigned int index);
+table_iterator wad_object_iterator(wad_element *object);
+unsigned int wad_get_size(wad_element *element);
 
 void delete_wad(wad_element *element);
 wad_element *parse_wad(string *str);

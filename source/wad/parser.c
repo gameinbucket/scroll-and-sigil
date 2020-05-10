@@ -1,17 +1,9 @@
 #include "parser.h"
 
-static bool wad_equal(void *a, void *b) {
-    return a == b;
-}
-
-static unsigned long wad_hash(void *key) {
-    return (unsigned long)key;
-}
-
 wad_element *create_wad_object() {
     wad_element *e = safe_calloc(1, sizeof(wad_element));
     e->type = WAD_OBJECT;
-    e->value.object = create_table(&wad_equal, &wad_hash);
+    e->value.object = create_table(&table_string_equal, &table_string_hashcode);
     return e;
 }
 
@@ -41,12 +33,57 @@ string *wad_get_string(wad_element *element) {
     return element->value.str;
 }
 
-void wad_object_add(wad_element *object, string *key, wad_element *value) {
-    table_put(wad_get_object(object), string_copy(key), value);
+int wad_get_integer(wad_element *element) {
+    string *str = element->value.str;
+    return string_to_int32(str);
 }
 
-wad_element *wad_object_get(wad_element *object, string *key) {
+float wad_get_float(wad_element *element) {
+    string *str = element->value.str;
+    return string_to_float(str);
+}
+
+void wad_add_to_object(wad_element *object, char *key, wad_element *value) {
+    table_put(wad_get_object(object), string_init(key), value);
+}
+
+wad_element *wad_get_from_object(wad_element *object, char *key) {
     return table_get(wad_get_object(object), key);
+}
+
+wad_element *wad_get_required_from_object(wad_element *object, char *key) {
+    wad_element *element = wad_get_from_object(object, key);
+    if (element == NULL) {
+        fprintf(stderr, "Error: Wad key %s not found: %s\n", key, wad_to_string(object));
+        exit(1);
+    }
+    return element;
+}
+
+wad_element *wad_get_from_array(wad_element *array, unsigned int index) {
+    return array_get(wad_get_array(array), index);
+}
+
+wad_element *wad_get_required_from_array(wad_element *array, unsigned int index) {
+    wad_element *element = wad_get_from_array(array, index);
+    if (element == NULL) {
+        fprintf(stderr, "Error: Wad index %d not found: %s\n", index, wad_to_string(array));
+        exit(1);
+    }
+    return element;
+}
+
+table_iterator wad_object_iterator(wad_element *object) {
+    return create_table_iterator(wad_get_object(object));
+}
+
+unsigned int wad_get_size(wad_element *element) {
+    switch (element->type) {
+    case WAD_OBJECT: return table_size(wad_get_object(element));
+    case WAD_ARRAY: return array_size(wad_get_array(element));
+    case WAD_STRING: return string_len(wad_get_string(element));
+    }
+    return 0;
 }
 
 void delete_wad(wad_element *element) {
@@ -93,22 +130,21 @@ wad_element *parse_wad(string *str) {
     for (size_t i = 0; i < len; i++) {
         char c = str[i];
         if (c == '\n') {
-            pc = c;
-            i = parse_wad_skip_whitespace(str, i);
             if (parsing_key) {
-                continue;
-            } else {
+            } else if (pc != '}' && pc != ']') {
                 wad_element *head = stack->items[0];
                 wad_element *child = create_wad_string(value);
                 if (head->type == WAD_ARRAY) {
                     array_push(wad_get_array(head), child);
                 } else {
-                    wad_object_add(head, key, child);
+                    wad_add_to_object(head, key, child);
                     string_zero(key);
                     parsing_key = true;
                 }
                 string_zero(value);
             }
+            pc = c;
+            i = parse_wad_skip_whitespace(str, i);
         } else if (c == ':') {
             parsing_key = false;
             pc = c;
@@ -120,7 +156,7 @@ wad_element *parse_wad(string *str) {
                 if (head->type == WAD_ARRAY) {
                     array_push(wad_get_array(head), child);
                 } else {
-                    wad_object_add(head, key, child);
+                    wad_add_to_object(head, key, child);
                     string_zero(key);
                     parsing_key = true;
                 }
@@ -135,7 +171,7 @@ wad_element *parse_wad(string *str) {
                 array_push(wad_get_array(head), map);
                 parsing_key = true;
             } else {
-                wad_object_add(head, key, map);
+                wad_add_to_object(head, key, map);
                 string_zero(key);
             }
             array_insert(stack, 0, map);
@@ -147,7 +183,7 @@ wad_element *parse_wad(string *str) {
             if (head->type == WAD_ARRAY) {
                 array_push(wad_get_array(head), ls);
             } else {
-                wad_object_add(head, key, ls);
+                wad_add_to_object(head, key, ls);
                 string_zero(key);
             }
             array_insert(stack, 0, ls);
@@ -155,9 +191,9 @@ wad_element *parse_wad(string *str) {
             pc = c;
             i = parse_wad_skip_whitespace(str, i);
         } else if (c == '}') {
-            if (pc != ',' && pc != ']' && pc != '{' && pc != '}') {
+            if (pc != ',' && pc != ']' && pc != '{' && pc != '}' && pc != '\n') {
                 wad_element *head = stack->items[0];
-                wad_object_add(head, key, create_wad_string(value));
+                wad_add_to_object(head, key, create_wad_string(value));
                 string_zero(key);
                 string_zero(value);
             }
@@ -171,7 +207,7 @@ wad_element *parse_wad(string *str) {
             pc = c;
             i = parse_wad_skip_whitespace(str, i);
         } else if (c == ']') {
-            if (pc != ',' && pc != '}' && pc != '[' && pc != ']') {
+            if (pc != ',' && pc != '}' && pc != '[' && pc != ']' && pc != '\n') {
                 wad_element *head = stack->items[0];
                 array_push(wad_get_array(head), create_wad_string(value));
                 string_zero(value);
@@ -196,7 +232,7 @@ wad_element *parse_wad(string *str) {
 
     if (pc != ',' && pc != ']' && pc != '}' && pc != '\n') {
         wad_element *head = stack->items[0];
-        wad_object_add(head, key, create_wad_string(value));
+        wad_add_to_object(head, key, create_wad_string(value));
     }
 
     string_free(key);

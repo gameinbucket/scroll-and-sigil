@@ -13,7 +13,7 @@ state *create_state(world *w, renderstate *rs, soundstate *ss) {
     wad_load_resources(rs, ss, self->ms);
     worldrender_create_buffers(self->wr);
 
-    wad_load_map(&self->in, w);
+    wad_load_map(w, &self->in, self->ms);
 
     int thing_count = w->thing_count;
     thing **things = w->things;

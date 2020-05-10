@@ -48,7 +48,14 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     string *human_str = wad_to_string(human_wad);
     printf("\nhuman %s\n", human_str);
     string_free(human_str);
-    modelstate_add_model(ms, "human", model_parse(human_wad, NULL));
+    model *human_model = model_parse(human_wad, NULL);
+    for (int i = 0; i < TEXTURE_COUNT; i++) {
+        if (string_equal(human_model->texture, rs->textures[i]->path)) {
+            human_model->texture_id = i;
+            break;
+        }
+    }
+    modelstate_add_model(ms, "human", human_model);
     delete_wad(human_wad);
 
     // soundstate_play_music(ss, MUSIC_VAMPIRE_KILLER);
@@ -59,7 +66,7 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     }
 }
 
-void wad_load_map(input *in, world *w) {
+void wad_load_map(world *w, input *in, modelstate *ms) {
 
     place_flat(w);
     place_house(w, 10, 10);
@@ -67,6 +74,6 @@ void wad_load_map(input *in, world *w) {
 
     world_build_map(w);
 
-    create_hero(in, w, 10, 40);
-    create_baron(w, 8, 45);
+    create_hero(in, w, 10, 40, modelstate_get_model(ms, "human"));
+    create_baron(w, 8, 45, modelstate_get_model(ms, "human"));
 }

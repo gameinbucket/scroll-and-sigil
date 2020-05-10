@@ -1,6 +1,6 @@
 #include "string_util.h"
 
-string_head *string_head_init(size_t length, size_t capacity) {
+static string_head *string_head_init(size_t length, size_t capacity) {
     size_t memory = sizeof(string_head) + length + 1;
     string_head *head = (string_head *)safe_malloc(memory);
     memset(head, 0, memory);
@@ -113,32 +113,48 @@ string *substring(string *a, size_t start, size_t end) {
     return (string *)s;
 }
 
-string *string_append(string *a, char *b) {
-    size_t len1 = string_len(a);
-    size_t len2 = strlen(b);
-    size_t len = len1 + len2;
-    string_head *head = string_head_init(len, len);
+static string_head *string_resize(string_head *head, size_t capacity) {
+    size_t memory = sizeof(string_head) + capacity + 1;
+    string_head *new = safe_realloc(head, memory);
+    new->capacity = capacity;
+    return new;
+}
+
+string *string_append(string *self, char *b) {
+    string_head *head = (string_head *)((char *)self - sizeof(string_head));
+    size_t len_a = head->length;
+    size_t len_b = strlen(b);
+    size_t len = len_a + len_b;
+    if (len > head->capacity) {
+        head = string_resize(head, len * 2);
+    }
+    head->length = len;
     char *s = (char *)(head + 1);
-    memcpy(s, a, len1);
-    memcpy(s + len1, b, len2 + 1);
+    memcpy(s + len_a, b, len_b + 1);
     s[len] = '\0';
     return (string *)s;
 }
 
-string *string_append_char(string *a, char b) {
-    size_t len1 = string_len(a);
-    size_t len2 = 1;
-    size_t len = len1 + len2;
-    string_head *head = string_head_init(len, len);
+string *string_append_char(string *self, char b) {
+    string_head *head = (string_head *)((char *)self - sizeof(string_head));
+    size_t len = head->length + 1;
+    if (len > head->capacity) {
+        head = string_resize(head, len * 2);
+    }
+    head->length = len;
     char *s = (char *)(head + 1);
-    memcpy(s, a, len1);
-    s[len1] = b;
+    s[len - 1] = b;
     s[len] = '\0';
     return (string *)s;
 }
 
 int string_compare(string *a, string *b) {
-    return strcmp(a, b);
+    size_t len_a = string_len(a);
+    size_t len_b = string_len(b);
+    if (len_a == len_b) {
+        return strcmp(a, b);
+    }
+    return len_a - len_b;
 }
 
 bool string_equal(string *a, string *b) {
@@ -149,6 +165,7 @@ bool string_equal(string *a, string *b) {
 void string_zero(string *self) {
     string_head *head = (string_head *)((char *)self - sizeof(string_head));
     head->length = 0;
+    self[0] = '\0';
 }
 
 string *char_to_string(char ch) {

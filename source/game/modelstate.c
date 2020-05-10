@@ -10,6 +10,10 @@ void modelstate_add_model(modelstate *self, char *name, model *data) {
     table_put(self->models, name, data);
 }
 
+model *modelstate_get_model(modelstate *self, char *name) {
+    return table_get(self->models, name);
+}
+
 void delete_modelstate(modelstate *self) {
     printf("delete modelstate %p\n", (void *)self);
 }
