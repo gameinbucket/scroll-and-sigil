@@ -135,53 +135,53 @@ void render_sprite3d(renderbuffer *b, float x, float y, float z, float sine, flo
     render_index4(b);
 }
 
-static void translate_vectors(float *vertices, unsigned int count, float x, float y, float z) {
-    for (unsigned int i = 0; i < count; i += STRIDE) {
-        vertices[i] += x;
-        vertices[i + 1] += y;
-        vertices[i + 2] += z;
-    }
-}
+// static void translate_vectors(float *vertices, unsigned int count, float x, float y, float z) {
+//     for (unsigned int i = 0; i < count; i += STRIDE) {
+//         vertices[i] += x;
+//         vertices[i + 1] += y;
+//         vertices[i + 2] += z;
+//     }
+// }
 
-static void rotate_vectors_x(float *vertices, unsigned int count, float sine, float cosine) {
-    for (unsigned int i = 0; i < count; i += STRIDE) {
-        float y = vertices[i + 1] * cosine - vertices[i + 2] * sine;
-        float z = vertices[i + 1] * sine + vertices[i + 2] * cosine;
-        vertices[i + 1] = y;
-        vertices[i + 2] = z;
-    }
-}
+// static void rotate_vectors_x(float *vertices, unsigned int count, float sine, float cosine) {
+//     for (unsigned int i = 0; i < count; i += STRIDE) {
+//         float y = vertices[i + 1] * cosine - vertices[i + 2] * sine;
+//         float z = vertices[i + 1] * sine + vertices[i + 2] * cosine;
+//         vertices[i + 1] = y;
+//         vertices[i + 2] = z;
+//     }
+// }
 
-static void rotate_vectors_y(float *vertices, unsigned int count, float sine, float cosine) {
-    for (unsigned int i = 0; i < count; i += STRIDE) {
-        float x = vertices[i] * cosine + vertices[i + 2] * sine;
-        float z = vertices[i + 2] * cosine - vertices[i] * sine;
-        vertices[i] = x;
-        vertices[i + 2] = z;
-    }
-}
+// static void rotate_vectors_y(float *vertices, unsigned int count, float sine, float cosine) {
+//     for (unsigned int i = 0; i < count; i += STRIDE) {
+//         float x = vertices[i] * cosine + vertices[i + 2] * sine;
+//         float z = vertices[i + 2] * cosine - vertices[i] * sine;
+//         vertices[i] = x;
+//         vertices[i + 2] = z;
+//     }
+// }
 
-void render_model_cpu(renderbuffer *b, model *m) {
-    for (int i = 0; i < m->bone_count; i++) {
-        bone *s = &m->bones[i];
+// void render_model_cpu(renderbuffer *b, model *m) {
+//     for (int i = 0; i < m->bone_count; i++) {
+//         bone *s = &m->bones[i];
 
-        float width = s->width;
-        float height = s->height;
-        float length = s->length;
+//         float width = s->width;
+//         float height = s->height;
+//         float length = s->length;
 
-        float cube[CUBE_VERTEX_COUNT] = RENDER_CUBE(width, height, length);
+//         float cube[CUBE_VERTEX_COUNT] = RENDER_CUBE(width, height, length);
 
-        translate_vectors(cube, CUBE_VERTEX_COUNT, s->plane_offset_x, s->plane_offset_y, s->plane_offset_z);
+//         translate_vectors(cube, CUBE_VERTEX_COUNT, s->plane_offset_x, s->plane_offset_y, s->plane_offset_z);
 
-        rotate_vectors_x(cube, CUBE_VERTEX_COUNT, s->sin_x, s->cos_x);
-        rotate_vectors_y(cube, CUBE_VERTEX_COUNT, s->sin_y, s->cos_y);
+//         rotate_vectors_x(cube, CUBE_VERTEX_COUNT, s->sin_x, s->cos_x);
+//         rotate_vectors_y(cube, CUBE_VERTEX_COUNT, s->sin_y, s->cos_y);
 
-        translate_vectors(cube, CUBE_VERTEX_COUNT, s->world_x, s->world_y, s->world_z);
+//         translate_vectors(cube, CUBE_VERTEX_COUNT, s->world_x, s->world_y, s->world_z);
 
-        memcpy(b->vertices + b->vertex_pos, cube, CUBE_VERTEX_COUNT * sizeof(float));
-        b->vertex_pos += CUBE_VERTEX_COUNT;
+//         memcpy(b->vertices + b->vertex_pos, cube, CUBE_VERTEX_COUNT * sizeof(float));
+//         b->vertex_pos += CUBE_VERTEX_COUNT;
 
-        for (int k = 0; k < 6; k++)
-            render_index4(b);
-    }
-}
+//         for (int k = 0; k < 6; k++)
+//             render_index4(b);
+//     }
+// }

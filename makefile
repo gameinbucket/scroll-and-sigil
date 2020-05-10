@@ -63,8 +63,8 @@ list-dependency:
 TEST_SOURCE = $(wildcard tests/*.c) $(wildcard source/core/*.c) $(wildcard source/data/*.c)
 
 test: $(TEST_SOURCE)
-	$(CC) $(TEST_SOURCE) $(COMPILER_FLAGS) -o testing $(LIBS)
-	@ ./testing
+	$(CC) $(TEST_SOURCE) $(COMPILER_FLAGS) -o unit-tests $(LIBS)
+	@ ./unit-tests
 
 help:
 	@echo Scroll & Sigil

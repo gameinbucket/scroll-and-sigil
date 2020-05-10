@@ -156,28 +156,6 @@ static void thing_render(renderstate *rs, renderbuffer *b, thing *t) {
     graphics_update_and_draw(b);
 }
 
-__attribute__((unused)) static void thing_render_cpu(renderstate *rs, renderbuffer *b, thing *t) {
-
-    renderbuffer_zero(b);
-
-    model *m = t->model_data;
-
-    bone *body = &m->bones[BIPED_BODY];
-    body->world_x = t->x;
-    body->world_y = t->y + 0.8;
-    body->world_z = t->z;
-    body->local_ry = t->rotation;
-
-    bone *head = &m->bones[BIPED_HEAD];
-    head->local_ry = t->rotation_target;
-
-    bone_recursive_compute(body);
-    render_model_cpu(b, m);
-
-    renderstate_set_texture(rs, t->sprite_id);
-    graphics_update_and_draw(b);
-}
-
 static void sector_render(uint_table *cache, sector *s) {
     line **lines = s->lines;
     int line_count = s->line_count;

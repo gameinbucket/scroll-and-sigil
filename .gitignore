@@ -3,6 +3,7 @@ certs/*
 
 scroll-and-sigil
 scroll-and-sigil-vk
+unit-tests
 
 *.app
 *.wasm
