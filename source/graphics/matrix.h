@@ -19,6 +19,7 @@ void matrix_rotate_x(float *matrix, float sine, float cosine);
 void matrix_rotate_y(float *matrix, float sine, float cosine);
 void matrix_rotate_z(float *matrix, float sine, float cosine);
 void matrix_inverse(float *matrix, float *from);
+void matrix_transpose(float *matrix, float *from);
 void matrix_multiply_vector4(vec4 *transform, float *matrix, vec4 *vec);
 void matrix_look_at(float *matrix, vec3 *eye, vec3 *center);
 void matrix_frustum_planes(float *frustum, float *matrix);

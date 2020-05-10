@@ -25,6 +25,6 @@
 #define BIPED_NECK 10
 #define BIPED_BONES 11
 
-model *alloc_biped();
+model *create_biped();
 
 #endif

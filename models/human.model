@@ -1,0 +1,57 @@
+texture:plank.png
+bones{
+    body{
+        size[8, 16, 8]
+    }
+    neck{
+        size[3, 1.2, 3]
+        offset[0, 17.2, 0]
+        parent:body
+    }
+    head{
+        size[6, 6, 6]
+        offset[0, 7.2, 0]
+        parent:body
+    }
+    left-arm{
+        size[3,8,3]
+        offset[0,0,0]
+        pivot[0, -8, 0]
+        parent:body
+    }
+    left-forearm{
+        size[3,8,3]
+        offset[0,0,0]
+        parent:body
+    }
+    right-arm{
+        size[3,8,3]
+        offset[0,0,0]
+        parent:body
+    }
+    right-forearm{
+        size[3,8,3]
+        offset[0,0,0]
+        parent:body
+    }
+    left-knee{
+        size[3,8,3]
+        offset[0,0,0]
+        parent:body
+    }
+    left-leg{
+        size[3,8,3]
+        offset[0,0,0]
+        parent:body
+    }
+    right-knee{
+        size[3,8,3]
+        offset[0,0,0]
+        parent:body
+    }
+    right-leg{
+        size[3,8,3]
+        offset[0,0,0]
+        parent:body
+    }
+}

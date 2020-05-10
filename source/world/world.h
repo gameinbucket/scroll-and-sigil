@@ -26,6 +26,7 @@ typedef enum thing_type thing_type;
 typedef struct world world;
 typedef struct cell cell;
 typedef struct thing thing;
+typedef struct npc npc;
 
 struct world {
     char *name;
@@ -41,7 +42,7 @@ struct world {
     int cell_count;
 };
 
-world *new_world();
+world *create_world();
 
 void world_add_thing(world *self, thing *t);
 void world_remove_thing(world *self, thing *t);
@@ -80,6 +81,7 @@ struct thing {
     float previous_x;
     float previous_z;
     float rotation;
+    float rotation_target;
     bool ground;
     int c_min;
     int r_min;

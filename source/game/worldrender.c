@@ -1,17 +1,17 @@
 #include "worldrender.h"
 
-worldrender *new_worldrender(renderstate *rs, world *w) {
+worldrender *create_worldrender(renderstate *rs, world *w) {
     worldrender *self = safe_calloc(1, sizeof(worldrender));
     self->rs = rs;
     self->w = w;
-    self->cache_a = new_uint_table();
-    self->cache_b = new_uint_table();
+    self->sector_cache_a = create_uint_table();
+    self->sector_cache_b = create_uint_table();
     return self;
 }
 
 static void create_cache(uint_table *cache) {
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        renderbuffer *b = create_renderbuffer(3, 0, 2, 3, 4 * 800, 36 * 800, true);
+        renderbuffer *b = create_renderbuffer(3, 0, 2, 3, 0, 4 * 800, 36 * 800, true);
         graphics_make_vao(b);
 
         uint_table_put(cache, i, b);
@@ -19,8 +19,11 @@ static void create_cache(uint_table *cache) {
 }
 
 void worldrender_create_buffers(worldrender *self) {
-    create_cache(self->cache_a);
-    create_cache(self->cache_b);
+    create_cache(self->sector_cache_a);
+    create_cache(self->sector_cache_b);
+
+    self->thing_buffer = create_renderbuffer(3, 0, 2, 3, 1, 4 * 800, 36 * 800, false);
+    graphics_make_vao(self->thing_buffer);
 }
 
 static void render_wall(renderbuffer *b, wall *w) {
@@ -63,8 +66,6 @@ static void render_wall(renderbuffer *b, wall *w) {
     vertices[pos + 30] = 0;
     vertices[pos + 31] = w->ld->normal.y;
 
-    // memcpy(vertices, w->vertices, 20 * sizeof(float));
-
     b->vertex_pos = pos + 32;
     render_index4(b);
 }
@@ -104,21 +105,76 @@ static void render_triangle(renderbuffer *b, triangle *t) {
     render_index3(b);
 }
 
-static void thing_render(uint_table *cache, thing *t) {
-    renderbuffer *b = uint_table_get(cache, t->sprite_id);
+static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], float absolute[][16]) {
+
+    memcpy(b->vertices + b->vertex_pos, s->cube, CUBE_MODEL_VERTEX_BYTES);
+    b->vertex_pos += CUBE_MODEL_VERTEX_COUNT;
+    for (int k = 0; k < 6; k++) {
+        render_index4(b);
+    }
+
+    int i = s->index;
+
+    bone *parent = s->parent;
+    if (parent != NULL) {
+        int parent_index = parent->index;
+        matrix_multiply(absolute[i], absolute[parent_index], s->relative);
+        matrix_multiply(bones[i], absolute[i], s->inverse_bind_pose);
+    } else {
+        memcpy(absolute[i], s->relative, 16 * sizeof(float));
+        matrix_multiply(bones[i], s->relative, s->inverse_bind_pose);
+    }
+
+    if (s->child != NULL) {
+        for (int i = 0; i < s->child_count; i++) {
+            recursive_skeleton(b, s->child[i], bones, absolute);
+        }
+    }
+}
+
+static void thing_render(renderstate *rs, renderbuffer *b, thing *t) {
+
+    renderbuffer_zero(b);
 
     model *m = t->model_data;
-    bone *body = &m->bones[BIPED_BODY];
 
+    bone *body = &m->bones[BIPED_BODY];
+    matrix_identity(body->relative);
+    matrix_rotate_y(body->relative, sinf(t->rotation), cosf(t->rotation));
+    matrix_translate(body->relative, t->x, t->y + 0.8f, t->z);
+
+    // bone *head = &m->bones[BIPED_HEAD];
+    // head->local_ry = t->rotation_target;
+
+    float bones[BIPED_BONES][16];
+    float absolute[BIPED_BONES][16];
+    recursive_skeleton(b, body, bones, absolute);
+    renderstate_set_uniform_matrices(rs, "u_bones", bones[0], BIPED_BONES);
+
+    renderstate_set_texture(rs, t->sprite_id);
+    graphics_update_and_draw(b);
+}
+
+__attribute__((unused)) static void thing_render_cpu(renderstate *rs, renderbuffer *b, thing *t) {
+
+    renderbuffer_zero(b);
+
+    model *m = t->model_data;
+
+    bone *body = &m->bones[BIPED_BODY];
     body->world_x = t->x;
     body->world_y = t->y + 0.8;
     body->world_z = t->z;
-
     body->local_ry = t->rotation;
 
-    bone_recursive_compute(body);
+    bone *head = &m->bones[BIPED_HEAD];
+    head->local_ry = t->rotation_target;
 
-    render_model(b, m);
+    bone_recursive_compute(body);
+    render_model_cpu(b, m);
+
+    renderstate_set_texture(rs, t->sprite_id);
+    graphics_update_and_draw(b);
 }
 
 static void sector_render(uint_table *cache, sector *s) {
@@ -158,31 +214,34 @@ static void sector_render(uint_table *cache, sector *s) {
     }
 }
 
-void world_render(worldrender *wr, camera *c) {
+void world_render(worldrender *wr, camera *c, float view[16], float view_projection[16], float depth_bias_mvp[16], GLuint depth_texture) {
 
     if (c->x < -999) {
         printf("foobar\n");
     }
 
-    // TODO: Store vertices in memory, then memcpy to gl mapped buffer per texture (or use glBufferSubData)
-
     renderstate *rs = wr->rs;
     world *w = wr->w;
 
     wr->current_cache = !wr->current_cache;
-    uint_table *cache = wr->current_cache ? wr->cache_a : wr->cache_b;
+    uint_table *cache = wr->current_cache ? wr->sector_cache_a : wr->sector_cache_b;
 
-    uint_table_iterator iter = new_uint_table_iterator(cache);
+    // sectors
+
+    if (view_projection != NULL) {
+        renderstate_set_program(rs, SHADER_TEXTURE_3D_SHADOWED);
+
+        renderstate_set_mvp(rs, view_projection);
+        renderstate_set_uniform_vector(rs, "u_camera_position", c->x, c->y, c->z);
+        renderstate_set_uniform_matrix(rs, "u_depth_bias_mvp", depth_bias_mvp);
+        graphics_bind_texture(GL_TEXTURE1, depth_texture);
+    }
+
+    uint_table_iterator iter = create_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
         uint_table_pair pair = uint_table_iterator_next(&iter);
         renderbuffer *b = pair.value;
         renderbuffer_zero(b);
-    }
-
-    thing **things = w->things;
-    int thing_count = w->thing_count;
-    for (int i = 0; i < thing_count; i++) {
-        thing_render(cache, things[i]);
     }
 
     sector **sectors = w->sectors;
@@ -191,16 +250,45 @@ void world_render(worldrender *wr, camera *c) {
         sector_render(cache, sectors[i]);
     }
 
-    iter = new_uint_table_iterator(cache);
+    iter = create_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
         uint_table_pair pair = uint_table_iterator_next(&iter);
         renderbuffer *b = pair.value;
         renderstate_set_texture(rs, pair.key);
         graphics_bind_and_draw(b);
     }
+
+    // things
+
+    if (view_projection != NULL) {
+        // renderstate_set_program(rs, SHADER_RENDER_MODEL_SHADOWED);
+        renderstate_set_program(rs, SHADER_RENDER_MODEL);
+
+        float inverse_view[16];
+        float inverse_transpose_view[16];
+        matrix_inverse(inverse_view, view);
+        matrix_transpose(inverse_transpose_view, inverse_view);
+
+        renderstate_set_mvp(rs, view_projection);
+        renderstate_set_uniform_matrix(rs, "u_inverse_transpose_view", inverse_transpose_view);
+        renderstate_set_uniform_vector(rs, "u_camera_position", c->x, c->y, c->z);
+        renderstate_set_uniform_matrix(rs, "u_depth_bias_mvp", depth_bias_mvp);
+        graphics_bind_texture(GL_TEXTURE1, depth_texture);
+
+    } else {
+        renderstate_set_program(rs, SHADER_RENDER_MODEL);
+    }
+
+    renderbuffer *thing_buffer = wr->thing_buffer;
+
+    thing **things = w->things;
+    int thing_count = w->thing_count;
+    for (int i = 0; i < thing_count; i++) {
+        thing_render(rs, thing_buffer, things[i]);
+    }
 }
 
-void destroy_worldrender(worldrender *self) {
-    destroy_uint_table(self->cache_a);
-    destroy_uint_table(self->cache_b);
+void delete_worldrender(worldrender *self) {
+    delete_uint_table(self->sector_cache_a);
+    delete_uint_table(self->sector_cache_b);
 }

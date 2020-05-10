@@ -28,7 +28,7 @@ unsigned long set_address_hashcode(void *key) {
     return (unsigned long)key;
 }
 
-set *new_set(bool (*equals_fn)(void *, void *), unsigned long (*hashcode_fn)(void *)) {
+set *create_set(bool (*equals_fn)(void *, void *), unsigned long (*hashcode_fn)(void *)) {
     set *self = safe_malloc(sizeof(set));
     self->equals_fn = equals_fn;
     self->hashcode_fn = hashcode_fn;
@@ -198,12 +198,12 @@ void release_set(set *self) {
     free(self->items);
 }
 
-void destroy_set(set *self) {
+void delete_set(set *self) {
     release_set(self);
     free(self);
 }
 
-set_iterator new_set_iterator(set *self) {
+set_iterator create_set_iterator(set *self) {
     set_iterator iter;
     iter.pointer = self;
     if (self->size == 0) {

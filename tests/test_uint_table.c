@@ -2,7 +2,7 @@
 
 static char *test_small() {
 
-    uint_table *tab = new_uint_table();
+    uint_table *tab = create_uint_table();
 
     uint_table_put(tab, 4, "foo");
     uint_table_put(tab, 6, "bar");

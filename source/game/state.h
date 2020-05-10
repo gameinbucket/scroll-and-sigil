@@ -15,9 +15,10 @@
 
 #include "camera.h"
 #include "input/input.h"
+#include "mega_wad.h"
+#include "modelstate.h"
 #include "renderstate.h"
 #include "soundstate.h"
-#include "wad.h"
 #include "worldrender.h"
 
 typedef struct state state;
@@ -26,16 +27,18 @@ struct state {
     input in;
     renderstate *rs;
     soundstate *ss;
+    modelstate *ms;
     world *w;
     camera *c;
+    thing *h;
     worldrender *wr;
 };
 
-state *new_state(world *w, renderstate *rs, soundstate *ss);
+state *create_state(world *w, renderstate *rs, soundstate *ss);
 
 void state_update(state *self);
 void state_render(state *self);
 
-void destroy_state(state *self);
+void delete_state(state *self);
 
 #endif

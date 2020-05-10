@@ -21,13 +21,13 @@ static char *test_iterator() {
     Integer k = {16};
     Integer n = {18};
 
-    table *tab = new_table(&table_string_equal, &table_string_hashcode);
+    table *tab = create_table(&table_string_equal, &table_string_hashcode);
 
     table_put(tab, x, &w);
     table_put(tab, y, &k);
     table_put(tab, z, &n);
 
-    table_iterator iter = new_table_iterator(tab);
+    table_iterator iter = create_table_iterator(tab);
 
     ASSERT("(1) has next == true", table_iterator_has_next(&iter));
     table_pair pair = table_iterator_next(&iter);
@@ -60,7 +60,7 @@ static char *test_remove() {
     Integer k = {16};
     Integer n = {18};
 
-    table *tab = new_table(&table_string_equal, &table_string_hashcode);
+    table *tab = create_table(&table_string_equal, &table_string_hashcode);
 
     table_put(tab, x, &w);
     table_put(tab, y, &k);
@@ -86,7 +86,7 @@ static char *test_stress() {
     Integer *keys = safe_calloc(size, sizeof(Integer));
     Integer *values = safe_calloc(size, sizeof(Integer));
 
-    table *tab = new_table(&integer_equal, &integer_hashcode);
+    table *tab = create_table(&integer_equal, &integer_hashcode);
 
     for (unsigned int i = 0; i < size; i++) {
         keys[i] = (Integer){i};
@@ -114,7 +114,7 @@ static char *test_string() {
     Integer k = {16};
     Integer n = {18};
 
-    table *tab = new_table(&table_string_equal, &table_string_hashcode);
+    table *tab = create_table(&table_string_equal, &table_string_hashcode);
 
     table_put(tab, x, &w);
     table_put(tab, y, &k);
@@ -138,7 +138,7 @@ static char *test_address() {
     Integer k = {16};
     Integer n = {18};
 
-    table *tab = new_table(&table_address_equal, &table_address_hashcode);
+    table *tab = create_table(&table_address_equal, &table_address_hashcode);
 
     table_put(tab, &x, &w);
     table_put(tab, &y, &k);

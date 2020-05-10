@@ -14,7 +14,7 @@ unsigned long uint_table_address_hashcode(unsigned int key) {
     return (unsigned long)key;
 }
 
-uint_table *new_uint_table() {
+uint_table *create_uint_table() {
     uint_table *self = safe_malloc(sizeof(uint_table));
     self->size = 0;
     self->bins = INITIAL_BINS;
@@ -189,12 +189,12 @@ void release_uint_table(uint_table *self) {
     free(self->items);
 }
 
-void destroy_uint_table(uint_table *self) {
+void delete_uint_table(uint_table *self) {
     release_uint_table(self);
     free(self);
 }
 
-uint_table_iterator new_uint_table_iterator(uint_table *self) {
+uint_table_iterator create_uint_table_iterator(uint_table *self) {
     uint_table_iterator iter;
     iter.pointer = self;
     if (self->size == 0) {

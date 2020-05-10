@@ -513,7 +513,7 @@ void vk_create_state(vulkan_state *vk_state) {
     vk_create_logical_device(vk_state);
 }
 
-void destroy_debug_utils_messennger(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks *allocator) {
+void delete_debug_utils_messennger(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks *allocator) {
 
     PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != NULL) {
@@ -558,7 +558,7 @@ void delete_vulkan_state(vulkan_state *vk_state) {
     vkDestroyDevice(vk_state->vk_device, NULL);
 
 #ifdef VULKAN_ENABLE_VALIDATION
-    destroy_debug_utils_messennger(vk_state->vk_instance, vk_state->vk_debug_messenger, NULL);
+    delete_debug_utils_messennger(vk_state->vk_instance, vk_state->vk_debug_messenger, NULL);
 #endif
 
     vkDestroySurfaceKHR(vk_state->vk_instance, vk_state->vk_surface, NULL);

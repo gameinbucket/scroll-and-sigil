@@ -150,11 +150,11 @@ int main() {
 
     opengl_settings();
 
-    renderstate *rs = new_renderstate();
+    renderstate *rs = create_renderstate();
     window_resize(rs);
-    soundstate *ss = new_soundstate();
-    world *w = new_world();
-    state *s = new_state(w, rs, ss);
+    soundstate *ss = create_soundstate();
+    world *w = create_world();
+    state *s = create_state(w, rs, ss);
 
     SDL_StartTextInput();
 
@@ -162,13 +162,13 @@ int main() {
 
     SDL_StopTextInput();
 
-    destroy_renderstate(rs);
+    delete_renderstate(rs);
     SDL_DestroyWindow(window);
 
-    destroy_soundstate(ss);
+    delete_soundstate(ss);
     Mix_CloseAudio();
 
-    destroy_state(s);
+    delete_state(s);
 
     SDL_Quit();
 

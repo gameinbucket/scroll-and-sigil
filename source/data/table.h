@@ -32,7 +32,7 @@ unsigned long table_string_hashcode(void *key);
 bool table_address_equal(void *a, void *b);
 unsigned long table_address_hashcode(void *key);
 
-table *new_table(bool (*equals_fn)(void *, void *), unsigned long (*hashcode_fn)(void *));
+table *create_table(bool (*equals_fn)(void *, void *), unsigned long (*hashcode_fn)(void *));
 
 void table_put(table *self, void *key, void *value);
 void *table_get(table *self, void *key);
@@ -46,7 +46,7 @@ bool table_not_empty(table *self);
 unsigned int table_size(table *self);
 
 void release_table(table *self);
-void destroy_table(table *self);
+void delete_table(table *self);
 
 typedef struct table_pair table_pair;
 
@@ -63,7 +63,7 @@ struct table_iterator {
     table_item *item;
 };
 
-table_iterator new_table_iterator(table *self);
+table_iterator create_table_iterator(table *self);
 bool table_iterator_has_next(table_iterator *iter);
 table_pair table_iterator_next(table_iterator *iter);
 

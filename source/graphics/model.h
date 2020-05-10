@@ -9,12 +9,15 @@
 #include <stdlib.h>
 
 #include "core/mem.h"
+#include "wad/parser.h"
+
+#include "cube.h"
+#include "matrix.h"
 
 typedef struct animation animation;
 
 struct animation {
-    float rx;
-    float ry;
+    float *transforms[16];
 };
 
 typedef struct bone bone;
@@ -23,9 +26,15 @@ struct bone {
     bone *parent;
     bone **child;
     int child_count;
+    int index;
     float width;
     float height;
     float length;
+    float relative[16];
+    float bind_pose[16];
+    float inverse_bind_pose[16];
+    float cube[CUBE_MODEL_VERTEX_COUNT];
+
     float plane_offset_x;
     float plane_offset_y;
     float plane_offset_z;
@@ -56,9 +65,11 @@ struct model {
 void bone_recursive_join(bone *b, bone *parent);
 void bone_recursive_compute(bone *b);
 
-void bone_init(bone *b, float width, float height, float length, float scale);
+void bone_init(bone *bones, int index, float width, float height, float length, float scale);
 void bone_offset(bone *b, float x, float y, float z);
 void bone_plane_offset(bone *b, float x, float y, float z);
 void bone_attached(bone *b, int count);
+
+model *model_parse(wad_element *model_wad, wad_element *animation_wad);
 
 #endif

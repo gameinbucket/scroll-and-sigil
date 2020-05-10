@@ -55,7 +55,7 @@ shader *shader_make(struct zip *z, char *vert, char *frag) {
 
     glGetProgramiv(program, GL_LINK_STATUS, &program_ok);
     if (!program_ok) {
-        fprintf(stderr, "Failed to link shader program:");
+        fprintf(stderr, "Failed to link shader program: %s, %s\n", vert, frag);
         show_info_log(program, glGetProgramiv, glGetProgramInfoLog);
         glDeleteProgram(program);
         exit(1);

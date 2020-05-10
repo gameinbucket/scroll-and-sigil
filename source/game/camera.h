@@ -23,7 +23,7 @@ struct camera {
     thing *target;
 };
 
-camera *camera_init(float radius);
+camera *create_camera(float radius);
 void camera_update(camera *self);
 
 #endif

@@ -20,12 +20,12 @@ bool find_address(void *item, void *has);
 void array_init_with_capacity(array *self, unsigned int length, unsigned int capacity);
 void array_init(array *self, unsigned int length);
 
-array *new_array_with_capacity(unsigned int length, unsigned int capacity);
-array *new_array(unsigned int length);
-array *new_array_with_items(unsigned int length, unsigned int capacity, void **items);
+array *create_array_with_capacity(unsigned int length, unsigned int capacity);
+array *create_array(unsigned int length);
+array *create_array_with_items(unsigned int length, unsigned int capacity, void **items);
 
 void **array_copy_items(array *self);
-array *new_array_copy(array *self);
+array *create_array_copy(array *self);
 
 void array_push(array *self, void *item);
 void array_insert(array *self, unsigned int index, void *item);
@@ -45,6 +45,6 @@ bool array_not_empty(array *self);
 unsigned int array_size(array *self);
 
 void release_array(array *self);
-void destroy_array(array *self);
+void delete_array(array *self);
 
 #endif

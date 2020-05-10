@@ -7,10 +7,13 @@
 #include "mesh/biped.h"
 #include "world/world.h"
 
+#include "npc.h"
+
 typedef struct baron baron;
 
 struct baron {
     thing super;
+    int status;
     int reaction;
 };
 

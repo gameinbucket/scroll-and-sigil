@@ -34,15 +34,16 @@ struct worldrender {
     renderstate *rs;
     world *w;
     bool current_cache;
-    uint_table *cache_a;
-    uint_table *cache_b;
+    uint_table *sector_cache_a;
+    uint_table *sector_cache_b;
+    renderbuffer *thing_buffer;
 };
 
-worldrender *new_worldrender(renderstate *rs, world *w);
+worldrender *create_worldrender(renderstate *rs, world *w);
 
 void worldrender_create_buffers(worldrender *self);
-void world_render(worldrender *self, camera *c);
+void world_render(worldrender *self, camera *c, float view[16], float view_projection[16], float depth_bias_mvp[16], GLuint depth_texture);
 
-void destroy_worldrender(worldrender *self);
+void delete_worldrender(worldrender *self);
 
 #endif

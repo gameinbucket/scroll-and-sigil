@@ -24,6 +24,6 @@ struct triangle {
     float normal;
 };
 
-triangle *new_triangle(float height, int texture, vec va, vec vb, vec vc, bool floor, float scale);
+triangle *create_triangle(float height, int texture, vec va, vec vb, vec vc, bool floor, float scale);
 
 #endif

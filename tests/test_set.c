@@ -17,13 +17,13 @@ static char *test_iterator() {
     char *y = "bar";
     char *z = "zoo";
 
-    set *tab = new_set(&set_string_equal, &set_string_hashcode);
+    set *tab = create_set(&set_string_equal, &set_string_hashcode);
 
     set_add(tab, x);
     set_add(tab, y);
     set_add(tab, z);
 
-    set_iterator iter = new_set_iterator(tab);
+    set_iterator iter = create_set_iterator(tab);
 
     ASSERT("(1) has next == true", set_iterator_has_next(&iter));
     void *key = set_iterator_next(&iter);
@@ -50,7 +50,7 @@ static char *test_stress() {
 
     Integer *keys = safe_calloc(size, sizeof(Integer));
 
-    set *tab = new_set(&integer_equal, &integer_hashcode);
+    set *tab = create_set(&integer_equal, &integer_hashcode);
 
     for (unsigned int i = 0; i < size; i++) {
         keys[i] = (Integer){i};
@@ -78,7 +78,7 @@ static char *test_string() {
     char *y = "bar";
     char *z = "zoo";
 
-    set *tab = new_set(&set_string_equal, &set_string_hashcode);
+    set *tab = create_set(&set_string_equal, &set_string_hashcode);
 
     set_add(tab, x);
     set_add(tab, y);
@@ -110,7 +110,7 @@ static char *test_address() {
     Integer y = {6};
     Integer z = {12};
 
-    set *tab = new_set(&set_address_equal, &set_address_hashcode);
+    set *tab = create_set(&set_address_equal, &set_address_hashcode);
 
     set_add(tab, &x);
     set_add(tab, &y);

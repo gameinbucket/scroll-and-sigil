@@ -24,7 +24,7 @@ struct uint_table {
     uint_table_item **items;
 };
 
-uint_table *new_uint_table();
+uint_table *create_uint_table();
 
 void uint_table_put(uint_table *self, unsigned int key, void *value);
 void *uint_table_get(uint_table *self, unsigned int key);
@@ -38,7 +38,7 @@ bool uint_table_not_empty(uint_table *self);
 unsigned int uint_table_size(uint_table *self);
 
 void release_uint_table(uint_table *self);
-void destroy_uint_table(uint_table *self);
+void delete_uint_table(uint_table *self);
 
 typedef struct uint_table_pair uint_table_pair;
 
@@ -55,7 +55,7 @@ struct uint_table_iterator {
     uint_table_item *item;
 };
 
-uint_table_iterator new_uint_table_iterator(uint_table *self);
+uint_table_iterator create_uint_table_iterator(uint_table *self);
 bool uint_table_iterator_has_next(uint_table_iterator *iter);
 uint_table_pair uint_table_iterator_next(uint_table_iterator *iter);
 

@@ -135,37 +135,6 @@ void render_sprite3d(renderbuffer *b, float x, float y, float z, float sine, flo
     render_index4(b);
 }
 
-#define STRIDE 8
-#define CUBE_VERTEX_COUNT 24 * STRIDE
-
-#define RENDER_CUBE(x, y, z)                                                                                                                                                                           \
-    {                                                                                                                                                                                                  \
-        x, -y, -z, 0, 0, 1, 0, 0,       /* pos x 0 */                                                                                                                                                  \
-            x, y, -z, 1, 0, 1, 0, 0,    /* pos x 1 */                                                                                                                                                  \
-            x, y, z, 1, 1, 1, 0, 0,     /* pos x 2 */                                                                                                                                                  \
-            x, -y, z, 0, 1, 1, 0, 0,    /* pos x 3 */                                                                                                                                                  \
-            -x, -y, -z, 0, 0, -1, 0, 0, /* neg x 0 */                                                                                                                                                  \
-            -x, -y, z, 0, 1, -1, 0, 0,  /* neg x 1 */                                                                                                                                                  \
-            -x, y, z, 1, 1, -1, 0, 0,   /* neg x 2 */                                                                                                                                                  \
-            -x, y, -z, 1, 0, -1, 0, 0,  /* neg x 3 */                                                                                                                                                  \
-            -x, y, -z, 0, 0, 0, 1, 0,   /* pos y 0 */                                                                                                                                                  \
-            -x, y, z, 0, 1, 0, 1, 0,    /* pos y 1 */                                                                                                                                                  \
-            x, y, z, 1, 1, 0, 1, 0,     /* pos y 2 */                                                                                                                                                  \
-            x, y, -z, 1, 0, 0, 1, 0,    /* pos y 3 */                                                                                                                                                  \
-            -x, -y, -z, 0, 0, 0, -1, 0, /* neg y 0 */                                                                                                                                                  \
-            x, -y, -z, 1, 0, 0, -1, 0,  /* neg y 1 */                                                                                                                                                  \
-            x, -y, z, 1, 1, 0, -1, 0,   /* neg y 2 */                                                                                                                                                  \
-            -x, -y, z, 0, 1, 0, -1, 0,  /* neg y 3 */                                                                                                                                                  \
-            x, -y, z, 1, 0, 0, 0, 1,    /* pos z 0 */                                                                                                                                                  \
-            x, y, z, 1, 1, 0, 0, 1,     /* pos z 1 */                                                                                                                                                  \
-            -x, y, z, 0, 1, 0, 0, 1,    /* pos z 2 */                                                                                                                                                  \
-            -x, -y, z, 0, 0, 0, 0, 1,   /* pos z 3 */                                                                                                                                                  \
-            -x, -y, -z, 0, 0, 0, 0, -1, /* neg z 0 */                                                                                                                                                  \
-            -x, y, -z, 0, 1, 0, 0, -1,  /* neg z 1 */                                                                                                                                                  \
-            x, y, -z, 1, 1, 0, 0, -1,   /* neg z 2 */                                                                                                                                                  \
-            x, -y, -z, 1, 0, 0, 0, -1,  /* neg z 3 */                                                                                                                                                  \
-    }
-
 static void translate_vectors(float *vertices, unsigned int count, float x, float y, float z) {
     for (unsigned int i = 0; i < count; i += STRIDE) {
         vertices[i] += x;
@@ -192,7 +161,7 @@ static void rotate_vectors_y(float *vertices, unsigned int count, float sine, fl
     }
 }
 
-void render_model(renderbuffer *b, model *m) {
+void render_model_cpu(renderbuffer *b, model *m) {
     for (int i = 0; i < m->bone_count; i++) {
         bone *s = &m->bones[i];
 

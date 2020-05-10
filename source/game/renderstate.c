@@ -1,6 +1,6 @@
 #include "renderstate.h"
 
-renderstate *new_renderstate() {
+renderstate *create_renderstate() {
     return safe_calloc(1, sizeof(renderstate));
 }
 
@@ -24,10 +24,10 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
 
     if (self->frame == NULL) {
 
-        self->draw_frame = create_renderbuffer(2, 0, 0, 0, 4, 6, false);
-        self->draw_canvas = create_renderbuffer(2, 0, 0, 0, 4, 6, false);
-        self->draw_images = create_renderbuffer(2, 0, 2, 0, 40, 60, true);
-        self->draw_colors = create_renderbuffer(2, 3, 0, 0, 40, 60, true);
+        self->draw_frame = create_renderbuffer(2, 0, 0, 0, 0, 4, 6, false);
+        self->draw_canvas = create_renderbuffer(2, 0, 0, 0, 0, 4, 6, false);
+        self->draw_images = create_renderbuffer(2, 0, 2, 0, 0, 40, 60, true);
+        self->draw_colors = create_renderbuffer(2, 3, 0, 0, 0, 40, 60, true);
 
         graphics_make_vao(self->draw_frame);
         graphics_make_vao(self->draw_canvas);
@@ -72,9 +72,19 @@ void renderstate_set_mvp(renderstate *self, float *mvp) {
     glUniformMatrix4fv(self->active_shader->u_mvp, 1, GL_FALSE, mvp);
 }
 
-void renderstate_set_uniform_matrix(renderstate *self, char *name, float *mvp) {
+void renderstate_set_uniform_matrix(renderstate *self, char *name, float *matrix) {
     GLint location = glGetUniformLocation(self->active_shader->id, name);
-    glUniformMatrix4fv(location, 1, GL_FALSE, mvp);
+    glUniformMatrix4fv(location, 1, GL_FALSE, matrix);
+}
+
+void renderstate_set_uniform_matrices(renderstate *self, char *name, float *matrices, size_t count) {
+    GLint location = glGetUniformLocation(self->active_shader->id, name);
+    glUniformMatrix4fv(location, count, GL_FALSE, matrices);
+}
+
+void renderstate_set_uniform_vector(renderstate *self, char *name, float x, float y, float z) {
+    GLint location = glGetUniformLocation(self->active_shader->id, name);
+    glUniform3f(location, x, y, z);
 }
 
 void renderstate_set_program(renderstate *self, int shader_index) {
@@ -87,6 +97,6 @@ void renderstate_set_texture(renderstate *self, int texture_index) {
     graphics_bind_texture(GL_TEXTURE0, self->textures[texture_index]->id);
 }
 
-void destroy_renderstate(renderstate *self) {
-    printf("destroy renderstate %p\n", (void *)self);
+void delete_renderstate(renderstate *self) {
+    printf("delete renderstate %p\n", (void *)self);
 }

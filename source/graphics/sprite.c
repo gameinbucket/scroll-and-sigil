@@ -7,7 +7,7 @@ void simple_sprite(float *out, float left, float top, float width, float height,
     out[3] = (top + height) * atlas_inverse_height;
 }
 
-sprite *new_sprite(int left, int top, int width, int height, int offset_x, int offset_y, float atlas_inverse_width, float atlas_inverse_height, float scale) {
+sprite *create_sprite(int left, int top, int width, int height, int offset_x, int offset_y, float atlas_inverse_width, float atlas_inverse_height, float scale) {
     sprite *s = safe_malloc(sizeof(sprite));
 
     s->left = (float)left * atlas_inverse_width;

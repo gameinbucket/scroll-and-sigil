@@ -158,8 +158,8 @@ void thing_standard_update(thing *self) {
         int r_min = (int)(self->z - box) >> WORLD_CELL_SHIFT;
         int r_max = (int)(self->z + box) >> WORLD_CELL_SHIFT;
 
-        set *collided = new_set(set_address_equal, set_address_hashcode);
-        set *collisions = new_set(set_address_equal, set_address_hashcode);
+        set *collided = create_set(set_address_equal, set_address_hashcode);
+        set *collisions = create_set(set_address_equal, set_address_hashcode);
 
         for (int r = r_min; r <= r_max; r++) {
             for (int c = c_min; c <= c_max; c++) {
@@ -178,13 +178,13 @@ void thing_standard_update(thing *self) {
             }
         }
 
-        destroy_set(collisions);
+        delete_set(collisions);
 
         while (set_not_empty(collided)) {
             thing *closest = NULL;
             float manhattan = FLT_MAX;
 
-            set_iterator iter = new_set_iterator(collided);
+            set_iterator iter = create_set_iterator(collided);
             while (set_iterator_has_next(&iter)) {
                 thing *b = set_iterator_next(&iter);
                 float distance = fabs(self->previous_x - b->x) + fabs(self->previous_z - b->z);
@@ -199,7 +199,7 @@ void thing_standard_update(thing *self) {
             set_remove(collided, closest);
         }
 
-        destroy_set(collided);
+        delete_set(collided);
 
         for (int r = r_min; r <= r_max; r++) {
             for (int c = c_min; c <= c_max; c++) {
@@ -238,6 +238,7 @@ void thing_initialize(thing *self, world *map, float x, float z, float r, float 
     self->y = self->sec->floor;
     self->z = z;
     self->rotation = r;
+    self->rotation_target = r;
     self->ground = true;
 
     self->box = box;

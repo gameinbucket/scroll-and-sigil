@@ -1,6 +1,6 @@
 #include "world.h"
 
-world *new_world() {
+world *create_world() {
     return safe_calloc(1, sizeof(world));
 }
 

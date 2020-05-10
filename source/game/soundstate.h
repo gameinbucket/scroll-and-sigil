@@ -24,7 +24,7 @@ struct soundstate {
     Mix_Chunk **sound;
 };
 
-soundstate *new_soundstate();
+soundstate *create_soundstate();
 
 void soundstate_load_music(soundstate *self, struct zip *z, int id, char *path);
 void soundstate_load_sound(soundstate *self, struct zip *z, int id, char *path);
@@ -32,6 +32,6 @@ void soundstate_load_sound(soundstate *self, struct zip *z, int id, char *path);
 void soundstate_play_music(soundstate *self, int id);
 void soundstate_play_sound(soundstate *self, int id);
 
-void destroy_soundstate(soundstate *self);
+void delete_soundstate(soundstate *self);
 
 #endif

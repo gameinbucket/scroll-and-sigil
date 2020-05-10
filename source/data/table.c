@@ -28,7 +28,7 @@ unsigned long table_address_hashcode(void *key) {
     return (unsigned long)key;
 }
 
-table *new_table(bool (*equals_fn)(void *, void *), unsigned long (*hashcode_fn)(void *)) {
+table *create_table(bool (*equals_fn)(void *, void *), unsigned long (*hashcode_fn)(void *)) {
     table *self = safe_malloc(sizeof(table));
     self->equals_fn = equals_fn;
     self->hashcode_fn = hashcode_fn;
@@ -205,12 +205,12 @@ void release_table(table *self) {
     free(self->items);
 }
 
-void destroy_table(table *self) {
+void delete_table(table *self) {
     release_table(self);
     free(self);
 }
 
-table_iterator new_table_iterator(table *self) {
+table_iterator create_table_iterator(table *self) {
     table_iterator iter;
     iter.pointer = self;
     if (self->size == 0) {

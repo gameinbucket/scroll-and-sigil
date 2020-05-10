@@ -303,6 +303,29 @@ void matrix_inverse(float *matrix, float *from) {
     }
 }
 
+void matrix_transpose(float *matrix, float *from) {
+
+    matrix[0] = from[0];
+    matrix[4] = from[1];
+    matrix[8] = from[2];
+    matrix[12] = from[3];
+
+    matrix[1] = from[4];
+    matrix[5] = from[5];
+    matrix[9] = from[6];
+    matrix[13] = from[7];
+
+    matrix[2] = from[8];
+    matrix[6] = from[9];
+    matrix[10] = from[10];
+    matrix[14] = from[11];
+
+    matrix[3] = from[12];
+    matrix[7] = from[13];
+    matrix[11] = from[14];
+    matrix[15] = from[15];
+}
+
 void matrix_multiply_vector4(vec4 *transform, float *matrix, vec4 *vec) {
     transform->x = vec->x * matrix[0] + vec->y * matrix[1] + vec->z * matrix[2] + vec->w * matrix[3];
     transform->y = vec->x * matrix[4] + vec->y * matrix[5] + vec->z * matrix[6] + vec->w * matrix[7];

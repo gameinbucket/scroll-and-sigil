@@ -13,7 +13,7 @@ static char *test_capacity() {
     Integer y = {8};
     Integer z = {6};
 
-    array *ls = new_array_with_capacity(2, 3);
+    array *ls = create_array_with_capacity(2, 3);
 
     ASSERT("length == 2", ls->length == 2);
     ASSERT("capacity == 3", ls->capacity == 3);
@@ -25,7 +25,7 @@ static char *test_capacity() {
     ASSERT("length == 5", ls->length == 5);
     ASSERT("capacity >= 5", ls->capacity >= 5);
 
-    destroy_array(ls);
+    delete_array(ls);
 
     return 0;
 }
@@ -35,14 +35,14 @@ static char *test_copy() {
     Integer y = {8};
     Integer z = {6};
 
-    array *ls = new_array(0);
+    array *ls = create_array(0);
     array_push(ls, &x);
     array_push(ls, &y);
     array_push(ls, &z);
 
     Integer **integers = (Integer **)array_copy_items(ls);
 
-    destroy_array(ls);
+    delete_array(ls);
 
     ASSERT("integers[0] == 4", ((Integer *)integers[0])->value == 4);
     ASSERT("integers[1] == 8", ((Integer *)integers[1])->value == 8);
@@ -53,7 +53,7 @@ static char *test_copy() {
 
 static char *test_is_empty_clear() {
 
-    array *ls = new_array(0);
+    array *ls = create_array(0);
     ASSERT("is empty", array_is_empty(ls));
 
     Integer x = {4};
@@ -63,7 +63,7 @@ static char *test_is_empty_clear() {
     array_clear(ls);
     ASSERT("is empty", array_is_empty(ls));
 
-    destroy_array(ls);
+    delete_array(ls);
 
     return 0;
 }
@@ -74,7 +74,7 @@ static char *test_find() {
     Integer z = {6};
     Integer w = {0};
 
-    array *ls = new_array(0);
+    array *ls = create_array(0);
     array_push(ls, &x);
     array_push(ls, &y);
     array_push(ls, &z);
@@ -84,7 +84,7 @@ static char *test_find() {
 
     ASSERT("find(9) == NULL", array_find(ls, int_find, &n) == NULL);
 
-    destroy_array(ls);
+    delete_array(ls);
 
     return 0;
 }
@@ -99,7 +99,7 @@ static char *test_sort() {
     Integer z = {6};
     Integer w = {0};
 
-    array *ls = new_array(0);
+    array *ls = create_array(0);
     array_insert_sort(ls, int_sort, &x);
     array_insert_sort(ls, int_sort, &y);
     array_insert_sort(ls, int_sort, &z);
@@ -113,7 +113,7 @@ static char *test_sort() {
     ASSERT("get(2) == 6", ((Integer *)array_get(ls, 2))->value == 6);
     ASSERT("get(3) == 8", ((Integer *)array_get(ls, 3))->value == 8);
 
-    destroy_array(ls);
+    delete_array(ls);
 
     return 0;
 }
@@ -123,7 +123,7 @@ static char *test_insert_remove() {
     Integer y = {6};
     Integer z = {12};
 
-    array *ls = new_array(0);
+    array *ls = create_array(0);
     array_insert(ls, 0, &x);
     array_insert(ls, 0, &y);
     array_insert(ls, 0, &z);
@@ -144,7 +144,7 @@ static char *test_insert_remove() {
     ASSERT("size == 0", array_size(ls) == 0);
     ASSERT("capacity >= length", ls->capacity >= ls->length);
 
-    destroy_array(ls);
+    delete_array(ls);
 
     return 0;
 }
@@ -154,7 +154,7 @@ static char *test_push_pop() {
     Integer y = {6};
     Integer z = {12};
 
-    array *ls = new_array(0);
+    array *ls = create_array(0);
     array_push(ls, &x);
     array_push(ls, &y);
     array_push(ls, &z);
@@ -173,7 +173,7 @@ static char *test_push_pop() {
     ASSERT("size == 0", array_size(ls) == 0);
     ASSERT("capacity >= length", ls->capacity >= ls->length);
 
-    destroy_array(ls);
+    delete_array(ls);
 
     return 0;
 }

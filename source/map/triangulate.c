@@ -14,8 +14,8 @@ struct polygon_vertex {
 static polygon_vertex *polygon_vertex_init(vec *v) {
     polygon_vertex *p = safe_calloc(1, sizeof(polygon_vertex));
     p->point = v;
-    p->last = new_array(0);
-    p->next = new_array(0);
+    p->last = create_array(0);
+    p->next = create_array(0);
     return p;
 }
 
@@ -54,16 +54,16 @@ static int compare_vertex(void *item, void *existing) {
 
 static void clean_population(array *points) {
 
-    array *remaining = new_array_copy(points);
+    array *remaining = create_array_copy(points);
 
     while (array_not_empty(remaining)) {
 
         polygon_vertex *start = remaining->items[0];
         polygon_vertex *current = start;
 
-        array *temp = new_array(0);
-        array *dead = new_array(0);
-        array *pending = new_array(0);
+        array *temp = create_array(0);
+        array *dead = create_array(0);
+        array *pending = create_array(0);
 
         do {
             current->perimeter = true;
@@ -206,7 +206,7 @@ static void populate_with_vectors(array *points, sector *sec) {
 
 static array *populate(sector *sec, bool floor) {
 
-    array *points = new_array(0);
+    array *points = create_array(0);
 
     sector **inside = sec->inside;
     int inside_count = sec->inside_count;
@@ -330,12 +330,12 @@ static void clip(array *vecs, sector *sec, bool floor, array *triangles, float s
                 vec a = vec_of(last);
                 vec b = vec_of(pos);
                 vec c = vec_of(next);
-                tri = new_triangle(sec->floor, sec->floor_texture, a, b, c, floor, scale);
+                tri = create_triangle(sec->floor, sec->floor_texture, a, b, c, floor, scale);
             } else {
                 vec a = vec_of(next);
                 vec b = vec_of(pos);
                 vec c = vec_of(last);
-                tri = new_triangle(sec->ceiling, sec->ceiling_texture, a, b, c, floor, scale);
+                tri = create_triangle(sec->ceiling, sec->ceiling_texture, a, b, c, floor, scale);
             }
 
             array_push(triangles, tri);
@@ -357,20 +357,20 @@ static void clip(array *vecs, sector *sec, bool floor, array *triangles, float s
         vec a = vec_of(vecs->items[0]);
         vec b = vec_of(vecs->items[1]);
         vec c = vec_of(vecs->items[2]);
-        tri = new_triangle(sec->floor, sec->floor_texture, a, b, c, floor, scale);
+        tri = create_triangle(sec->floor, sec->floor_texture, a, b, c, floor, scale);
     } else {
         vec a = vec_of(vecs->items[2]);
         vec b = vec_of(vecs->items[1]);
         vec c = vec_of(vecs->items[0]);
-        tri = new_triangle(sec->ceiling, sec->ceiling_texture, a, b, c, floor, scale);
+        tri = create_triangle(sec->ceiling, sec->ceiling_texture, a, b, c, floor, scale);
     }
     array_push(triangles, tri);
 }
 
 static array *classify(array *points) {
-    array *start = new_array(0);
-    array *merge = new_array(0);
-    array *split = new_array(0);
+    array *start = create_array(0);
+    array *merge = create_array(0);
+    array *split = create_array(0);
 
     for (unsigned int i = 0; i < points->length; i++) {
         polygon_vertex *pos = points->items[i];
@@ -463,15 +463,15 @@ static array *classify(array *points) {
         array_push(diagonal->last, p);
     }
 
-    destroy_array(merge);
-    destroy_array(split);
+    delete_array(merge);
+    delete_array(split);
 
     return start;
 }
 
 static void iterate_clip(array *monotone, sector *sec, bool floor, array *triangles, float scale) {
     for (unsigned int i = 0; i < monotone->length; i++) {
-        array *vecs = new_array(0);
+        array *vecs = create_array(0);
         polygon_vertex *ini = monotone->items[i];
         polygon_vertex *nex = ini->next->items[0];
         polygon_vertex *pos = ini;
@@ -552,15 +552,15 @@ static void build(sector *sec, bool floor, array *triangles, float scale) {
     printf("triangle count %d\n", array_size(triangles));
 #endif
 
-    destroy_array(points);
-    destroy_array(monotone);
+    delete_array(points);
+    delete_array(monotone);
 }
 
 void triangulate_sector(sector *sec, float scale) {
-    array *ls = new_array(0);
+    array *ls = create_array(0);
     build(sec, true, ls, scale);
     build(sec, false, ls, scale);
     sec->triangles = (triangle **)array_copy_items(ls);
     sec->triangle_count = ls->length;
-    destroy_array(ls);
+    delete_array(ls);
 }

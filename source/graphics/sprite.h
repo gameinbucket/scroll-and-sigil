@@ -25,6 +25,6 @@ struct sprite {
 };
 
 void simple_sprite(float *out, float left, float top, float width, float height, float atlas_inverse_width, float atlas_inverse_height);
-sprite *new_sprite(int left, int top, int width, int height, int offset_x, int offset_y, float atlas_inverse_width, float atlas_inverse_height, float scale);
+sprite *create_sprite(int left, int top, int width, int height, int offset_x, int offset_y, float atlas_inverse_width, float atlas_inverse_height, float scale);
 
 #endif

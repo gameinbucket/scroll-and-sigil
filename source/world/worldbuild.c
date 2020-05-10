@@ -189,7 +189,7 @@ void world_build_map(world *self) {
         array *s_temp_inside_list = &sector_inside_lists[i];
         unsigned int s_inside_count = s_temp_inside_list->length;
 
-        array *dead = new_array(0);
+        array *dead = create_array(0);
 
         for (unsigned int k = 0; k < s_inside_count; k++) {
             sector *o = s_temp_inside_list->items[k];
@@ -214,7 +214,7 @@ void world_build_map(world *self) {
             ((sector *)s_temp_inside_list->items[k])->outside = s;
         }
 
-        destroy_array(dead);
+        delete_array(dead);
 
         s->inside = (sector **)array_copy_items(s_temp_inside_list);
         s->inside_count = s_temp_inside_list->length;

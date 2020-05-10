@@ -1,9 +1,18 @@
 #include "baron.h"
 
-void baron_update(void *void_self) {
-    baron *self = void_self;
+const unsigned char baron_sleep = 0;
+const unsigned char baron_dead = 1;
+const unsigned char baron_look = 2;
+const unsigned char baron_chase = 3;
+const unsigned char baron_melee = 4;
+const unsigned char baron_missile = 5;
 
+void baron_update(void *void_self) {
+
+    baron *self = void_self;
     self->super.rotation += 0.001;
+
+    npc_move(&self->super);
 
     thing_standard_update(&self->super);
 }
@@ -25,11 +34,11 @@ baron *create_baron(world *map, float x, float z) {
     int width = 110;
     int height = 128;
 
-    self->super.type = THING_TYPE_HERO;
+    self->super.type = THING_TYPE_BARON;
     self->super.update = baron_update;
     self->super.sprite_id = TEXTURE_PLANKS;
-    self->super.sprite_data = new_sprite(left, top, width, height, 0, 0, atlas_inverse_width, atlas_inverse_height, scale);
-    self->super.model_data = alloc_biped();
+    self->super.sprite_data = create_sprite(left, top, width, height, 0, 0, atlas_inverse_width, atlas_inverse_height, scale);
+    self->super.model_data = create_biped();
 
     return self;
 }

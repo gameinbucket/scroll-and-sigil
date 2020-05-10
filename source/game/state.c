@@ -1,17 +1,16 @@
 #include "state.h"
 
-state *new_state(world *w, renderstate *rs, soundstate *ss) {
+state *create_state(world *w, renderstate *rs, soundstate *ss) {
+
     state *self = safe_calloc(1, sizeof(state));
     self->w = w;
     self->rs = rs;
     self->ss = ss;
-    self->c = camera_init(8);
-    self->c->x = 10;
-    self->c->y = 1;
-    self->c->z = 40;
-    self->wr = new_worldrender(rs, w);
+    self->ms = create_modelstate();
+    self->c = create_camera(6);
+    self->wr = create_worldrender(rs, w);
 
-    wad_load_resources(rs, ss);
+    wad_load_resources(rs, ss, self->ms);
     worldrender_create_buffers(self->wr);
 
     wad_load_map(&self->in, w);
@@ -20,7 +19,8 @@ state *new_state(world *w, renderstate *rs, soundstate *ss) {
     thing **things = w->things;
     for (int i = 0; i < thing_count; i++) {
         if (things[i]->type == THING_TYPE_HERO) {
-            self->c->target = things[i];
+            self->h = things[i];
+            self->c->target = self->h;
             break;
         }
     }
@@ -116,6 +116,8 @@ void state_update(state *self) {
     }
 
     camera_update(self->c);
+
+    self->h->rotation_target = -self->c->ry;
 }
 
 void state_render(state *self) {
@@ -149,7 +151,7 @@ void state_render(state *self) {
     float shadow_view_projection[16];
 
     vec3 eye = {0, 10, 0};
-    vec3 center = {10, 0, 40};
+    vec3 center = {2, 0, 10};
     matrix_look_at(shadow_view, &eye, &center);
     // matrix_translate(shadow_view, -eye.x, -eye.y, -eye.z);
 
@@ -165,7 +167,7 @@ void state_render(state *self) {
 
     graphics_cull_front();
 
-    world_render(self->wr, c);
+    world_render(self->wr, c, NULL, NULL, NULL, 0);
 
     // ----------------------------------------
 
@@ -177,16 +179,7 @@ void state_render(state *self) {
     graphics_set_view(0, 0, f->width, f->height);
     graphics_clear_color_and_depth();
 
-    // render scene
-
-    renderstate_set_program(rs, SHADER_TEXTURE_3D_SHADOW);
-    renderstate_set_mvp(rs, view_projection);
-
-    renderstate_set_uniform_matrix(rs, "u_depth_bias_mvp", depth_bias_mvp);
-
-    graphics_bind_texture(GL_TEXTURE1, s->depth_texture);
-
-    world_render(self->wr, c);
+    world_render(self->wr, c, view, view_projection, depth_bias_mvp, s->depth_texture);
 
     graphics_disable_cull();
     graphics_disable_depth();
@@ -213,6 +206,6 @@ void state_render(state *self) {
     graphics_bind_and_draw(rs->draw_canvas);
 }
 
-void destroy_state(state *self) {
-    destroy_worldrender(self->wr);
+void delete_state(state *self) {
+    delete_worldrender(self->wr);
 }

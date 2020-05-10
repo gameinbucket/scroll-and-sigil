@@ -18,17 +18,17 @@ void array_init(array *self, unsigned int length) {
     array_init_with_capacity(self, length, length);
 }
 
-array *new_array_with_capacity(unsigned int length, unsigned int capacity) {
+array *create_array_with_capacity(unsigned int length, unsigned int capacity) {
     array *self = safe_malloc(sizeof(array));
     array_init_with_capacity(self, length, capacity);
     return self;
 }
 
-array *new_array(unsigned int length) {
-    return new_array_with_capacity(length, length);
+array *create_array(unsigned int length) {
+    return create_array_with_capacity(length, length);
 }
 
-array *new_array_with_items(unsigned int length, unsigned int capacity, void **items) {
+array *create_array_with_items(unsigned int length, unsigned int capacity, void **items) {
     array *self = safe_malloc(sizeof(array));
     self->items = items;
     self->length = length;
@@ -43,7 +43,7 @@ void **array_copy_items(array *self) {
     return copy;
 }
 
-array *new_array_copy(array *from) {
+array *create_array_copy(array *from) {
     array *self = safe_malloc(sizeof(array));
     self->items = array_copy_items(from);
     self->length = from->length;
@@ -168,7 +168,7 @@ void release_array(array *self) {
     free(self->items);
 }
 
-void destroy_array(array *self) {
+void delete_array(array *self) {
     release_array(self);
     free(self);
 }
