@@ -38,7 +38,8 @@ void vk_create_image(vulkan_state *vk_state, struct create_image_details details
     vkBindImageMemory(vk_state->vk_device, *image, *image_memory, 0);
 }
 
-void vk_transition_image_layout(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) {
+void vk_transition_image_layout(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, VkImage image, __attribute__((unused)) VkFormat format, VkImageLayout old_layout,
+                                VkImageLayout new_layout) {
 
     VkCommandBuffer command_buffer = vk_begin_single_time_commands(vk_state, vk_renderer);
 

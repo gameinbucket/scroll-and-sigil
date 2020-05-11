@@ -126,7 +126,7 @@ void vk_create_instance(SDL_Window *window, vulkan_state *vk_state) {
 
 static struct swapchain_support_details vk_query_swapchain_support(vulkan_state *vk_state, VkPhysicalDevice device) {
 
-    struct swapchain_support_details details = {0};
+    struct swapchain_support_details details;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, vk_state->vk_surface, &details.capabilities);
 
     uint32_t format_count;
@@ -328,7 +328,7 @@ static VkSurfaceFormatKHR vk_choose_swap_surface_format(VkSurfaceFormatKHR *avai
     return available[0];
 }
 
-static VkPresentModeKHR vk_choose_swap_present_mode(VkPresentModeKHR *available, uint32_t count) {
+static VkPresentModeKHR vk_choose_swap_present_mode(__attribute__((unused)) VkPresentModeKHR *available, __attribute__((unused)) uint32_t count) {
     // for (uint32_t i = 0; i < count; i++) {
     //     VkPresentModeKHR this = available[i];
     //     if (this == VK_PRESENT_MODE_MAILBOX_KHR) {

@@ -65,7 +65,7 @@ state *create_state(SDL_Window *window, renderstate *rs, vulkan_state *vk_state)
     return self;
 }
 
-void state_update(state *self) {
+void state_update(__attribute__((unused)) state *self) {
 }
 
 static void draw3d(SDL_Window *window, vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {

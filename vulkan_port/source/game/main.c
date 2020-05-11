@@ -37,7 +37,7 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
     *win = window;
 }
 
-static void main_loop(SDL_Window *window, state *s) {
+static void main_loop(state *s) {
     SDL_Event event = {0};
     while (run) {
         while (SDL_PollEvent(&event) != 0) {
@@ -73,7 +73,7 @@ int main() {
 
     SDL_StartTextInput();
 
-    main_loop(window, s);
+    main_loop(s);
 
     SDL_StopTextInput();
     delete_vulkan_renderer(&vk_state, &s->vk_renderers[0]);
