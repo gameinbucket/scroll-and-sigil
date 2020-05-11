@@ -3,7 +3,8 @@
 
 #include <GL/glew.h>
 
-#include <GL/gl.h>
+#include "x-gl.h"
+
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>

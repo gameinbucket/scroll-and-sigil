@@ -49,7 +49,7 @@ string *int8_to_string(int8_t number);
 string *int16_to_string(int16_t number);
 string *int32_to_string(int32_t number);
 string *int64_to_string(int64_t number);
-string *size_t_to_string(int64_t number);
+string *size_t_to_string(size_t number);
 
 string *uint_to_string(unsigned int number);
 string *uint8_to_string(uint8_t number);

@@ -193,15 +193,15 @@ static void sector_render(uint_table *cache, sector *s) {
     }
 }
 
-// static void particle_render(uint_table *cache, particle *p, float sine, float cosine) {
-//     renderbuffer *b = uint_table_get(cache, p->texture);
-//     render_sprite(b, p->x, p->y, p->z, p->sprite_data, sine, cosine);
-// }
-
-static void particle_render(uint_table *cache, particle *p, float *view) {
+static void particle_render(uint_table *cache, particle *p, float sine, float cosine) {
     renderbuffer *b = uint_table_get(cache, p->texture);
-    render_aligned_sprite(b, p->x, p->y, p->z, p->sprite_data, view);
+    render_sprite(b, p->x, p->y, p->z, p->sprite_data, sine, cosine);
 }
+
+// static void particle_render(uint_table *cache, particle *p, float *view) {
+//     renderbuffer *b = uint_table_get(cache, p->texture);
+//     render_aligned_sprite(b, p->x, p->y, p->z, p->sprite_data, view);
+// }
 
 static void decal_render(__attribute__((unused)) uint_table *cache, __attribute__((unused)) decal *d) {
 }
@@ -244,8 +244,8 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
     int particle_count = w->particle_count;
     particle **particles = w->particles;
     for (int i = 0; i < particle_count; i++) {
-        // particle_render(cache, particles[i], sine, cosine);
-        particle_render(cache, particles[i], view);
+        particle_render(cache, particles[i], sine, cosine);
+        // particle_render(cache, particles[i], view);
     }
 
     int decal_count = w->decal_count;

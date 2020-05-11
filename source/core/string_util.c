@@ -222,7 +222,7 @@ string *int64_to_string(int64_t number) {
     return s;
 }
 
-string *size_t_to_string(int64_t number) {
+string *size_t_to_string(size_t number) {
     int len = snprintf(NULL, 0, "%zu", number);
     char *str = safe_malloc(len + 1);
     snprintf(str, len + 1, "%zu", number);

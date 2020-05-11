@@ -7,15 +7,20 @@ DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
 INCLUDE = -Isource/
 
 COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE)
-LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip -lGL -lGLEW 
+LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip
 LIBS = -lm
 PREFIX =
 CC = gcc
 
 ifneq ($(shell uname), Linux)
 	CC = clang
-	COMPILER_FLAGS += -Wno-nullability-extension
+	COMPILER_FLAGS += -Wno-nullability-extension -Wno-deprecated-declarations
+	LINKER_FLAGS += -framework OpenGL
+else
+	LINKER_FLAGS += -lGL 
 endif
+
+LINKER_FLAGS += -lGLEW
 
 .PHONY: all analysis address valgrind clean list-source list-objects test help
 

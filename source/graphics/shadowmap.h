@@ -3,7 +3,8 @@
 
 #include <GL/glew.h>
 
-#include <GL/gl.h>
+#include "x-gl.h"
+
 #include <float.h>
 #include <inttypes.h>
 #include <math.h>

@@ -175,27 +175,27 @@ void render_aligned_sprite(renderbuffer *b, float x, float y, float z, sprite *s
     vertices[pos + 6] = 0;
     vertices[pos + 7] = cosine;
 
-    vertices[pos + 8] = x + cosine;
-    vertices[pos + 9] = y;
-    vertices[pos + 10] = z - sine;
+    vertices[pos + 8] = x - rpu_x;
+    vertices[pos + 9] = y - rpu_y;
+    vertices[pos + 10] = z - rpu_z;
     vertices[pos + 11] = s->right;
     vertices[pos + 12] = s->bottom;
     vertices[pos + 13] = sine;
     vertices[pos + 14] = 0;
     vertices[pos + 15] = cosine;
 
-    vertices[pos + 16] = x + cosine;
-    vertices[pos + 17] = y + s->height;
-    vertices[pos + 18] = z - sine;
+    vertices[pos + 16] = x + rmu_x;
+    vertices[pos + 17] = y + rmu_y;
+    vertices[pos + 18] = z + rmu_z;
     vertices[pos + 19] = s->right;
     vertices[pos + 20] = s->top;
     vertices[pos + 21] = sine;
     vertices[pos + 22] = 0;
     vertices[pos + 23] = cosine;
 
-    vertices[pos + 24] = x - cosine;
-    vertices[pos + 25] = y + s->height;
-    vertices[pos + 26] = z + sine;
+    vertices[pos + 24] = x + rpu_x;
+    vertices[pos + 25] = y + rpu_y;
+    vertices[pos + 26] = z + rpu_z;
     vertices[pos + 27] = s->left;
     vertices[pos + 28] = s->top;
     vertices[pos + 29] = sine;
