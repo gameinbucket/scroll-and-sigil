@@ -130,6 +130,8 @@ struct particle {
     float dz;
     int texture;
     sprite *sprite_data;
+    world *map;
+    sector *sec;
     bool gc;
 };
 

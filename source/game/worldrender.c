@@ -105,6 +105,50 @@ static void render_triangle(renderbuffer *b, triangle *t) {
     render_index3(b);
 }
 
+static void render_decal(renderbuffer *b, decal *d) {
+    int pos = b->vertex_pos;
+    GLfloat *vertices = b->vertices;
+
+    vertices[pos] = d->x1;
+    vertices[pos + 1] = d->z1;
+    vertices[pos + 2] = d->y1;
+    vertices[pos + 3] = d->u1;
+    vertices[pos + 4] = d->v1;
+    vertices[pos + 5] = d->nx;
+    vertices[pos + 6] = d->nz;
+    vertices[pos + 7] = d->ny;
+
+    vertices[pos + 8] = d->x2;
+    vertices[pos + 9] = d->z2;
+    vertices[pos + 10] = d->y2;
+    vertices[pos + 11] = d->u2;
+    vertices[pos + 12] = d->v2;
+    vertices[pos + 13] = d->nx;
+    vertices[pos + 14] = d->nz;
+    vertices[pos + 15] = d->ny;
+
+    vertices[pos + 16] = d->x3;
+    vertices[pos + 17] = d->z3;
+    vertices[pos + 18] = d->y3;
+    vertices[pos + 19] = d->u3;
+    vertices[pos + 20] = d->v3;
+    vertices[pos + 21] = d->nx;
+    vertices[pos + 22] = d->nz;
+    vertices[pos + 23] = d->ny;
+
+    vertices[pos + 24] = d->x4;
+    vertices[pos + 25] = d->z4;
+    vertices[pos + 26] = d->y4;
+    vertices[pos + 27] = d->u4;
+    vertices[pos + 28] = d->v4;
+    vertices[pos + 29] = d->nx;
+    vertices[pos + 30] = d->nz;
+    vertices[pos + 31] = d->ny;
+
+    b->vertex_pos = pos + 32;
+    render_index4(b);
+}
+
 static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], float absolute[][16]) {
 
     memcpy(b->vertices + b->vertex_pos, s->cube, CUBE_MODEL_VERTEX_BYTES);
@@ -193,17 +237,19 @@ static void sector_render(uint_table *cache, sector *s) {
     }
 }
 
-static void particle_render(uint_table *cache, particle *p, float sine, float cosine) {
-    renderbuffer *b = uint_table_get(cache, p->texture);
-    render_sprite(b, p->x, p->y, p->z, p->sprite_data, sine, cosine);
-}
-
-// static void particle_render(uint_table *cache, particle *p, float *view) {
+// static void particle_render(uint_table *cache, particle *p, float sine, float cosine) {
 //     renderbuffer *b = uint_table_get(cache, p->texture);
-//     render_aligned_sprite(b, p->x, p->y, p->z, p->sprite_data, view);
+//     render_sprite(b, p->x, p->y, p->z, p->sprite_data, sine, cosine);
 // }
 
-static void decal_render(__attribute__((unused)) uint_table *cache, __attribute__((unused)) decal *d) {
+static void particle_render(uint_table *cache, particle *p, float *view) {
+    renderbuffer *b = uint_table_get(cache, p->texture);
+    render_aligned_sprite(b, p->x, p->y, p->z, p->sprite_data, view);
+}
+
+static void decal_render(uint_table *cache, decal *d) {
+    renderbuffer *b = uint_table_get(cache, d->texture);
+    render_decal(b, d);
 }
 
 void world_render(worldrender *wr, camera *c, float view[16], float view_projection[16], float depth_bias_mvp[16], GLuint depth_texture) {
@@ -244,8 +290,8 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
     int particle_count = w->particle_count;
     particle **particles = w->particles;
     for (int i = 0; i < particle_count; i++) {
-        particle_render(cache, particles[i], sine, cosine);
-        // particle_render(cache, particles[i], view);
+        // particle_render(cache, particles[i], sine, cosine);
+        particle_render(cache, particles[i], view);
     }
 
     int decal_count = w->decal_count;

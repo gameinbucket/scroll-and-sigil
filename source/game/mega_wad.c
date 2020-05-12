@@ -58,6 +58,15 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     modelstate_add_model(ms, "human", human_model);
     delete_wad(human_wad);
 
+    string baron_data = cat("entities/npc/baron.thing");
+    wad_element *baron_wad = parse_wad(human_data);
+    string_free(baron_data);
+    string *baron_str = wad_to_string(baron_wad);
+    printf("\baron %s\n", baron_str);
+    string_free(baron_str);
+    npc_parse(baron_wad);
+    delete_wad(baron_wad);
+
     // soundstate_play_music(ss, MUSIC_VAMPIRE_KILLER);
     // soundstate_play_sound(ss, SOUND_BARON_SCREAM);
 

@@ -7,6 +7,8 @@ particle *create_particle(world *map, float x, float y, float z, float box, floa
     self->z = z;
     self->box = box;
     self->height = height;
+    self->map = map;
+    self->sec = world_find_sector(map, x, z);
     world_add_particle(map, self);
     return self;
 }
