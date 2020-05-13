@@ -49,6 +49,7 @@ struct model {
     int animation_count;
 };
 
+int model_bone_index_of_name(model *self, string *name);
 model *model_parse(wad_element *model_wad, wad_element *animation_wad);
 
 #endif

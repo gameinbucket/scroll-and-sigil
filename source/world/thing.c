@@ -133,10 +133,6 @@ void thing_line_collision(thing *self, line *ld) {
     }
 }
 
-void thing_update(thing *self) {
-    self->update((void *)self);
-}
-
 void thing_standard_update(thing *self) {
     if (self->ground) {
         self->dx *= wind_resistance;
@@ -161,9 +157,11 @@ void thing_standard_update(thing *self) {
         set *collided = create_set(set_address_equal, set_address_hashcode);
         set *collisions = create_set(set_address_equal, set_address_hashcode);
 
+        world *map = self->map;
+
         for (int r = r_min; r <= r_max; r++) {
             for (int c = c_min; c <= c_max; c++) {
-                cell *current_cell = &self->map->cells[c + r * self->map->cell_columns];
+                cell *current_cell = &map->cells[c + r * map->cell_columns];
                 for (int i = 0; i < current_cell->thing_count; i++) {
                     thing *t = current_cell->things[i];
 
@@ -228,6 +226,7 @@ void thing_standard_update(thing *self) {
 }
 
 void thing_initialize(thing *self, world *map, float x, float z, float r, float box, float height) {
+
     self->id = thing_unique_id++;
     self->map = map;
     self->sec = world_find_sector(map, x, z);

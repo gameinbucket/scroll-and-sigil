@@ -128,15 +128,18 @@ void world_update(world *self) {
     int thing_count = self->thing_count;
     thing **things = self->things;
     for (int i = 0; i < thing_count; i++) {
-        thing_update(things[i]);
+        thing *t = things[i];
+        t->update(t);
     }
 
     int particle_count = self->particle_count;
     particle **particles = self->particles;
     for (int i = 0; i < particle_count; i++) {
-        if (particle_update(particles[i])) {
+        particle *p = particles[i];
+        if (p->update(p)) {
             particles[i] = particles[particle_count - 1];
             particles[particle_count - 1] = NULL;
+            self->particle_count--;
             particle_count--;
             i--;
         }

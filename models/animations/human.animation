@@ -1,12 +1,28 @@
 walk[
     {
-        left-arm{
-            offset[0,0,0]
-            rotate[0,180,0]
-        }
-        right-arm{
-            offset[0,0,0]
-            rotate[0,-180,0]
-        }
+        left-arm[0,180,0]
+        right-arm[0,-180,0]
+        left-leg[0,-180,0]
+        right-leg[0,180,0]
+    }
+    {
+        left-arm[0,180,0]
+        right-arm[0,-180,0]
+        left-leg[0,-180,0]
+        right-leg[0,180,0]
+    }
+]
+run[
+    {
+        left-arm[0,180,0]
+        right-arm[0,-180,0]
+        left-leg[0,-180,0]
+        right-leg[0,180,0]
+    }
+    {
+        left-arm[0,180,0]
+        right-arm[0,-180,0]
+        left-leg[0,-180,0]
+        right-leg[0,180,0]
     }
 ]

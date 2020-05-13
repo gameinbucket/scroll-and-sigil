@@ -110,40 +110,40 @@ static void render_decal(renderbuffer *b, decal *d) {
     GLfloat *vertices = b->vertices;
 
     vertices[pos] = d->x1;
-    vertices[pos + 1] = d->z1;
-    vertices[pos + 2] = d->y1;
+    vertices[pos + 1] = d->y1;
+    vertices[pos + 2] = d->z1;
     vertices[pos + 3] = d->u1;
     vertices[pos + 4] = d->v1;
     vertices[pos + 5] = d->nx;
-    vertices[pos + 6] = d->nz;
-    vertices[pos + 7] = d->ny;
+    vertices[pos + 6] = d->ny;
+    vertices[pos + 7] = d->nz;
 
     vertices[pos + 8] = d->x2;
-    vertices[pos + 9] = d->z2;
-    vertices[pos + 10] = d->y2;
+    vertices[pos + 9] = d->y2;
+    vertices[pos + 10] = d->z2;
     vertices[pos + 11] = d->u2;
     vertices[pos + 12] = d->v2;
     vertices[pos + 13] = d->nx;
-    vertices[pos + 14] = d->nz;
-    vertices[pos + 15] = d->ny;
+    vertices[pos + 14] = d->ny;
+    vertices[pos + 15] = d->nz;
 
     vertices[pos + 16] = d->x3;
-    vertices[pos + 17] = d->z3;
-    vertices[pos + 18] = d->y3;
+    vertices[pos + 17] = d->y3;
+    vertices[pos + 18] = d->z3;
     vertices[pos + 19] = d->u3;
     vertices[pos + 20] = d->v3;
     vertices[pos + 21] = d->nx;
-    vertices[pos + 22] = d->nz;
-    vertices[pos + 23] = d->ny;
+    vertices[pos + 22] = d->ny;
+    vertices[pos + 23] = d->nz;
 
     vertices[pos + 24] = d->x4;
-    vertices[pos + 25] = d->z4;
-    vertices[pos + 26] = d->y4;
+    vertices[pos + 25] = d->y4;
+    vertices[pos + 26] = d->z4;
     vertices[pos + 27] = d->u4;
     vertices[pos + 28] = d->v4;
     vertices[pos + 29] = d->nx;
-    vertices[pos + 30] = d->nz;
-    vertices[pos + 31] = d->ny;
+    vertices[pos + 30] = d->ny;
+    vertices[pos + 31] = d->nz;
 
     b->vertex_pos = pos + 32;
     render_index4(b);
@@ -184,7 +184,7 @@ static void thing_render(renderstate *rs, renderbuffer *b, thing *t) {
 
     bone *master = m->master;
     matrix_identity(master->relative);
-    // matrix_rotate_y(master->relative, sinf(t->rotation), cosf(t->rotation));
+    matrix_rotate_y(master->relative, sinf(t->rotation), cosf(t->rotation));
     matrix_translate(master->relative, t->x, t->y + 0.8f, t->z);
 
     // bone *head = &m->bones[BIPED_HEAD];
@@ -284,8 +284,8 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
         sector_render(cache, sectors[i]);
     }
 
-    float sine = sinf(-c->ry);
-    float cosine = cosf(-c->ry);
+    // float sine = sinf(-c->ry);
+    // float cosine = cosf(-c->ry);
 
     int particle_count = w->particle_count;
     particle **particles = w->particles;

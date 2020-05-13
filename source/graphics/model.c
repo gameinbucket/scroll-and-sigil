@@ -1,5 +1,15 @@
 #include "model.h"
 
+int model_bone_index_of_name(model *self, string *name) {
+    int count = self->bone_count;
+    for (int i = 0; i < count; i++) {
+        if (string_equal(name, self->bones[i].name)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 static void bone_init(bone *bones, int index, float width, float height, float length) {
     bone *b = &bones[index];
     b->index = index;
@@ -99,6 +109,7 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
                 continue;
             }
             if (string_equal(name, parent_name)) {
+                bones[k].parent = &bones[i];
                 count++;
             }
         }
@@ -116,7 +127,6 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
                 continue;
             }
             if (string_equal(name, parent_name)) {
-                bones[k].parent = &bones[i];
                 bones[i].child[c] = &bones[k];
                 c++;
             }
@@ -129,7 +139,51 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
         return m;
     }
 
-    printf("todo: model animation");
+    unsigned int animation_count = wad_get_size(animation_wad);
+
+    m->animation_count = animation_count;
+    m->animations = safe_calloc(animation_count, sizeof(animation));
+
+    // unsigned int i = 0;
+    table_iterator animation_iter = wad_object_iterator(animation_wad);
+    while (table_iterator_has_next(&animation_iter)) {
+        table_pair pair = table_iterator_next(&animation_iter);
+
+        string *animation_name = string_copy((string *)pair.key);
+        wad_element *frame_data = (wad_element *)pair.value;
+        printf("animate: %s\n", animation_name);
+
+        unsigned int frame_count = wad_get_size(frame_data);
+        for (unsigned int f = 0; f < frame_count; f++) {
+
+            table_iterator frame_iter = wad_object_iterator(wad_get_from_array(frame_data, f));
+            while (table_iterator_has_next(&frame_iter)) {
+                table_pair pair = table_iterator_next(&frame_iter);
+
+                string *bone_name = string_copy((string *)pair.key);
+                wad_element *bone_rotation = (wad_element *)pair.value;
+
+                int index = model_bone_index_of_name(m, bone_name);
+                if (index == -1) {
+                    fprintf(stdout, "Bone %s does not exist in animation %s\n", bone_name, wad_to_string(frame_data));
+                    exit(1);
+                }
+
+                float x = wad_get_float(wad_get_from_array(bone_rotation, 0));
+                float y = wad_get_float(wad_get_from_array(bone_rotation, 1));
+                float z = wad_get_float(wad_get_from_array(bone_rotation, 2));
+
+                printf("%s | %d | %f, %f, %f\n", bone_name, index, x, y, z);
+            }
+        }
+
+        // ()pair.value;
+
+        // wad_element *size = wad_get_required_from_object(, "size");
+
+        // m->animations[i].transforms = safe_calloc(bone_count, sizeof(float *));
+        // i++;
+    }
 
     return m;
 }

@@ -29,6 +29,7 @@ state *create_state(world *w, renderstate *rs, soundstate *ss) {
 }
 
 void state_update(state *self) {
+
     world_update(self->w);
 
     input *in = &self->in;
@@ -171,7 +172,7 @@ void state_render(state *self) {
 
     graphics_cull_front();
 
-    world_render(self->wr, &shadow_camera, NULL, NULL, NULL, 0);
+    world_render(self->wr, &shadow_camera, shadow_view, NULL, NULL, 0);
 
     // ----------------------------------------
 

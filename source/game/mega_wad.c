@@ -35,6 +35,8 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     rs->textures[TEXTURE_PLANKS] = texture_make(z, "textures/tiles/planks.png", GL_REPEAT, GL_NEAREST);
     rs->textures[TEXTURE_STONE] = texture_make(z, "textures/tiles/stone.png", GL_REPEAT, GL_NEAREST);
     rs->textures[TEXTURE_STONE_FLOOR] = texture_make(z, "textures/tiles/stone-floor.png", GL_REPEAT, GL_NEAREST);
+    rs->textures[TEXTURE_PARTICLES] = texture_make(z, "textures/particles.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
+    rs->textures[TEXTURE_SCENERY] = texture_make(z, "textures/scenery.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
 
     ss->music = safe_malloc(MUSIC_COUNT * sizeof(Mix_Music *));
     soundstate_load_music(ss, z, MUSIC_VAMPIRE_KILLER, "music/vampire-killer.wav");
@@ -48,7 +50,15 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     string *human_str = wad_to_string(human_wad);
     printf("\nhuman %s\n", human_str);
     string_free(human_str);
-    model *human_model = model_parse(human_wad, NULL);
+
+    string *human_animation_data = cat("models/animations/human.animation");
+    wad_element *human_animation_wad = parse_wad(human_animation_data);
+    string_free(human_animation_data);
+    string *human_animation_str = wad_to_string(human_animation_wad);
+    printf("\nhuman animation %s\n", human_animation_str);
+    string_free(human_animation_str);
+
+    model *human_model = model_parse(human_wad, human_animation_wad);
     for (int i = 0; i < TEXTURE_COUNT; i++) {
         if (string_equal(human_model->texture, rs->textures[i]->path)) {
             human_model->texture_id = i;
@@ -58,11 +68,11 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     modelstate_add_model(ms, "human", human_model);
     delete_wad(human_wad);
 
-    string baron_data = cat("entities/npc/baron.thing");
-    wad_element *baron_wad = parse_wad(human_data);
+    string *baron_data = cat("entities/npc/baron.thing");
+    wad_element *baron_wad = parse_wad(baron_data);
     string_free(baron_data);
     string *baron_str = wad_to_string(baron_wad);
-    printf("\baron %s\n", baron_str);
+    printf("\nbaron %s\n", baron_str);
     string_free(baron_str);
     npc_parse(baron_wad);
     delete_wad(baron_wad);
@@ -73,6 +83,8 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     if (use_zip) {
         zip_close(z);
     }
+
+    printf("\n");
 }
 
 void wad_load_map(world *w, input *in, modelstate *ms) {

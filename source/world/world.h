@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <float.h>
+#include <math.h>
 
 #include "core/mem.h"
 #include "data/set.h"
@@ -116,7 +117,6 @@ struct thing {
 
 void thing_initialize(thing *self, world *map, float x, float y, float r, float box, float height);
 void thing_block_borders(thing *self);
-void thing_update(thing *self);
 void thing_standard_update(thing *self);
 
 struct particle {
@@ -132,11 +132,14 @@ struct particle {
     sprite *sprite_data;
     world *map;
     sector *sec;
-    bool gc;
+    bool (*update)(void *);
 };
 
 particle *create_particle(world *map, float x, float y, float z, float box, float height);
-bool particle_update(particle *self);
+void particle_hit_floor(particle *self);
+void particle_hit_ceiling(particle *self);
+bool particle_line_collision(particle *self, line *ld);
+bool particle_map_collision(particle *self);
 
 struct decal {
     float x1;

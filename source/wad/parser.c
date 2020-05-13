@@ -22,23 +22,38 @@ wad_element *create_wad_string(string *value) {
 }
 
 wad_object *wad_get_object(wad_element *element) {
+    if (element == NULL) {
+        return NULL;
+    }
     return element->value.object;
 }
 
 wad_array *wad_get_array(wad_element *element) {
+    if (element == NULL) {
+        return NULL;
+    }
     return element->value.array;
 }
 
 string *wad_get_string(wad_element *element) {
+    if (element == NULL) {
+        return NULL;
+    }
     return element->value.str;
 }
 
 int wad_get_integer(wad_element *element) {
+    if (element == NULL) {
+        return 0;
+    }
     string *str = element->value.str;
     return string_to_int32(str);
 }
 
 float wad_get_float(wad_element *element) {
+    if (element == NULL) {
+        return 0.0f;
+    }
     string *str = element->value.str;
     return string_to_float(str);
 }
@@ -54,7 +69,7 @@ wad_element *wad_get_from_object(wad_element *object, char *key) {
 wad_element *wad_get_required_from_object(wad_element *object, char *key) {
     wad_element *element = wad_get_from_object(object, key);
     if (element == NULL) {
-        fprintf(stderr, "Error: Wad key %s not found: %s\n", key, wad_to_string(object));
+        fprintf(stderr, "Error: Wad key \"%s\" not found: %s\n", key, wad_to_string(object));
         exit(1);
     }
     return element;
@@ -251,7 +266,9 @@ string *wad_to_string(wad_element *element) {
             table_pair pair = table_iterator_next(&iter);
             string *in = wad_to_string(pair.value);
             str = string_append(str, pair.key);
-            str = string_append(str, ":");
+            if (in[0] != '[' && in[0] != '{') {
+                str = string_append(str, ":");
+            }
             str = string_append(str, in);
             if (table_iterator_has_next(&iter)) {
                 str = string_append(str, ",");

@@ -13,8 +13,13 @@ npc_info *npc_parse(wad_element *npc_wad) {
 
     float box = wad_get_float(wad_get_required_from_object(npc_wad, "box"));
     float height = wad_get_float(wad_get_required_from_object(npc_wad, "height"));
-    string *model_name = wad_get_string(wad_get_required_from_object(npc_wad, "model"));
-    string *sprite_name = wad_get_string(wad_get_required_from_object(npc_wad, "sprite"));
+    string *model_name = wad_get_string(wad_get_from_object(npc_wad, "model"));
+    string *sprite_name = wad_get_string(wad_get_from_object(npc_wad, "sprite"));
+
+    info->box = box;
+    info->height = height;
+    info->model_name = model_name;
+    info->sprite_name = sprite_name;
 
     return info;
 }

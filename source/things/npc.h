@@ -8,7 +8,12 @@ typedef struct npc_info npc_info;
 struct npc_info {
     int status;
     int reaction;
+    float box;
+    float height;
+    string *model_name;
+    string *sprite_name;
     model *m;
+    sprite *s;
 };
 
 typedef struct npc npc;
