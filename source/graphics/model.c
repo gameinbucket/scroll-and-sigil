@@ -10,6 +10,16 @@ int model_bone_index_of_name(model *self, string *name) {
     return -1;
 }
 
+int model_animation_index_of_name(model *self, char *name) {
+    int count = self->animation_count;
+    for (int i = 0; i < count; i++) {
+        if (strcmp(name, self->animations[i].name) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 static void bone_init(bone *bones, int index, float width, float height, float length) {
     bone *b = &bones[index];
     b->index = index;
@@ -53,7 +63,7 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
     m->bones = bones;
     m->bone_count = bone_count;
 
-    unsigned int i = 0;
+    unsigned int b_i = 0;
     table_iterator bone_iter = wad_object_iterator(bones_table);
     while (table_iterator_has_next(&bone_iter)) {
         table_pair pair = table_iterator_next(&bone_iter);
@@ -70,8 +80,8 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
         float height = wad_get_float(wad_get_from_array(size, 1)) * scale;
         float length = wad_get_float(wad_get_from_array(size, 2)) * scale;
 
-        bone_init(bones, i, width, height, length);
-        bone *b = &bones[i];
+        bone_init(bones, b_i, width, height, length);
+        bone *b = &bones[b_i];
         b->name = name;
 
         if (offset != NULL) {
@@ -89,15 +99,15 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
         }
 
         if (parent != NULL) {
-            parent_names[i] = wad_get_string(parent);
+            parent_names[b_i] = wad_get_string(parent);
         } else {
             m->master = b;
         }
 
-        i++;
+        b_i++;
     }
 
-    for (i = 0; i < bone_count; i++) {
+    for (unsigned int i = 0; i < bone_count; i++) {
         string *name = bones[i].name;
         unsigned int count = 0;
         for (unsigned int k = 0; k < bone_count; k++) {
@@ -144,7 +154,7 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
     m->animation_count = animation_count;
     m->animations = safe_calloc(animation_count, sizeof(animation));
 
-    // unsigned int i = 0;
+    unsigned int a_i = 0;
     table_iterator animation_iter = wad_object_iterator(animation_wad);
     while (table_iterator_has_next(&animation_iter)) {
         table_pair pair = table_iterator_next(&animation_iter);
@@ -154,7 +164,19 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
         printf("animate: %s\n", animation_name);
 
         unsigned int frame_count = wad_get_size(frame_data);
+
+        animation *animate = &m->animations[a_i];
+
+        animate->name = animation_name;
+        animate->frame_count = frame_count;
+        animate->frames = safe_calloc(frame_count * bone_count * 16, sizeof(float));
+
         for (unsigned int f = 0; f < frame_count; f++) {
+
+            for (unsigned int b = 0; b < bone_count; b++) {
+                float *matrix = &animate->frames[(f * bone_count) + (b * 16)];
+                matrix_identity(matrix);
+            }
 
             table_iterator frame_iter = wad_object_iterator(wad_get_from_array(frame_data, f));
             while (table_iterator_has_next(&frame_iter)) {
@@ -169,20 +191,18 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
                     exit(1);
                 }
 
-                float x = wad_get_float(wad_get_from_array(bone_rotation, 0));
-                float y = wad_get_float(wad_get_from_array(bone_rotation, 1));
-                float z = wad_get_float(wad_get_from_array(bone_rotation, 2));
+                float x = DEGREE_TO_RADIAN(wad_get_float(wad_get_from_array(bone_rotation, 0)));
+                float y = DEGREE_TO_RADIAN(wad_get_float(wad_get_from_array(bone_rotation, 1)));
+                float z = DEGREE_TO_RADIAN(wad_get_float(wad_get_from_array(bone_rotation, 2)));
 
-                printf("%s | %d | %f, %f, %f\n", bone_name, index, x, y, z);
+                float *matrix = &animate->frames[(f * bone_count) + (index * 16)];
+                matrix_rotate_x(matrix, sinf(x), cosf(x));
+                matrix_rotate_y(matrix, sinf(y), cosf(y));
+                matrix_rotate_z(matrix, sinf(z), cosf(z));
             }
         }
 
-        // ()pair.value;
-
-        // wad_element *size = wad_get_required_from_object(, "size");
-
-        // m->animations[i].transforms = safe_calloc(bone_count, sizeof(float *));
-        // i++;
+        a_i++;
     }
 
     return m;

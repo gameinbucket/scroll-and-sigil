@@ -149,7 +149,7 @@ static void render_decal(renderbuffer *b, decal *d) {
     render_index4(b);
 }
 
-static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], float absolute[][16]) {
+static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], float absolute[][16], float *animate) {
 
     memcpy(b->vertices + b->vertex_pos, s->cube, CUBE_MODEL_VERTEX_BYTES);
     b->vertex_pos += CUBE_MODEL_VERTEX_COUNT;
@@ -162,16 +162,20 @@ static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], floa
     bone *parent = s->parent;
     if (parent != NULL) {
         int parent_index = parent->index;
-        matrix_multiply(absolute[i], absolute[parent_index], s->relative);
+        // matrix_multiply(absolute[i], absolute[parent_index], s->relative);
+        float temp[16];
+        matrix_multiply(temp, s->relative, &animate[i * 16]);
+        matrix_multiply(absolute[i], absolute[parent_index], temp);
         matrix_multiply(bones[i], absolute[i], s->inverse_bind_pose);
     } else {
-        memcpy(absolute[i], s->relative, 16 * sizeof(float));
+        // memcpy(absolute[i], s->relative, 16 * sizeof(float));
+        matrix_multiply(absolute[i], s->relative, &animate[i * 16]);
         matrix_multiply(bones[i], s->relative, s->inverse_bind_pose);
     }
 
     if (s->child != NULL) {
         for (int i = 0; i < s->child_count; i++) {
-            recursive_skeleton(b, s->child[i], bones, absolute);
+            recursive_skeleton(b, s->child[i], bones, absolute, animate);
         }
     }
 }
@@ -190,11 +194,16 @@ static void thing_render(renderstate *rs, renderbuffer *b, thing *t) {
     // bone *head = &m->bones[BIPED_HEAD];
     // head->local_ry = t->rotation_target;
 
+    int frame = 0;
+    int bone_count = m->bone_count;
+
+    float *animate = &m->animations[model_animation_index_of_name(m, "walk")].frames[frame * bone_count];
+
     float bones[SHADER_RENDER_MODEL_MAX_BONES][16];
     float absolute[SHADER_RENDER_MODEL_MAX_BONES][16];
 
-    recursive_skeleton(b, master, bones, absolute);
-    renderstate_set_uniform_matrices(rs, "u_bones", bones[0], m->bone_count);
+    recursive_skeleton(b, master, bones, absolute, animate);
+    renderstate_set_uniform_matrices(rs, "u_bones", bones[0], bone_count);
 
     renderstate_set_texture(rs, m->texture_id);
     graphics_update_and_draw(b);

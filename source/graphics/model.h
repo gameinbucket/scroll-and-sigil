@@ -17,7 +17,9 @@
 typedef struct animation animation;
 
 struct animation {
-    float *transforms[16];
+    string *name;
+    float *frames;
+    int frame_count;
 };
 
 typedef struct bone bone;
@@ -50,6 +52,7 @@ struct model {
 };
 
 int model_bone_index_of_name(model *self, string *name);
+int model_animation_index_of_name(model *self, char *name);
 model *model_parse(wad_element *model_wad, wad_element *animation_wad);
 
 #endif
