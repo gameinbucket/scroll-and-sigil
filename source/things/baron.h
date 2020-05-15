@@ -16,6 +16,6 @@ struct baron {
 };
 
 void baron_update(void *void_self);
-baron *create_baron(world *map, float x, float z, model *m);
+baron *create_baron(world *map, float x, float z, model_info *m);
 
 #endif

@@ -149,7 +149,7 @@ static void render_decal(renderbuffer *b, decal *d) {
     render_index4(b);
 }
 
-static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], float absolute[][16], float *animate) {
+static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], transform *absolute, float *animate) {
 
     memcpy(b->vertices + b->vertex_pos, s->cube, CUBE_MODEL_VERTEX_BYTES);
     b->vertex_pos += CUBE_MODEL_VERTEX_COUNT;
@@ -159,18 +159,47 @@ static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], floa
 
     int i = s->index;
 
+    transform *relative = &s->relative;
+    transform *abs_transform = &absolute[i];
+
     bone *parent = s->parent;
     if (parent != NULL) {
+
+        // float temp[4];
+        // quaternion_multiply(temp, relative->quaternion, &animate[i * 4]);
+
         int parent_index = parent->index;
-        // matrix_multiply(absolute[i], absolute[parent_index], s->relative);
-        float temp[16];
-        matrix_multiply(temp, s->relative, &animate[i * 16]);
-        matrix_multiply(absolute[i], absolute[parent_index], temp);
-        matrix_multiply(bones[i], absolute[i], s->inverse_bind_pose);
+        transform *parent_transform = &absolute[parent_index];
+
+        quaternion_multiply(abs_transform->quaternion, relative->quaternion, parent_transform->quaternion); // no animation
+
+        // quaternion_multiply(abs_transform->quaternion, temp, parent_transform->quaternion);
+
+        abs_transform->position.x = relative->position.x + parent_transform->position.x;
+        abs_transform->position.y = relative->position.y + parent_transform->position.y;
+        abs_transform->position.z = relative->position.z + parent_transform->position.z;
+
+        quaternion_to_matrix(bones[i], abs_transform->quaternion);
+        matrix_translate(bones[i], abs_transform->position.x, abs_transform->position.y, abs_transform->position.z);
+
+        // float temp[16];
+        // matrix_multiply(temp, s->relative, &animate[i * 16]);
+        // matrix_multiply(absolute[i], absolute[parent_index], temp);
+        // matrix_multiply(bones[i], absolute[i], s->inverse_bind_pose);
     } else {
-        // memcpy(absolute[i], s->relative, 16 * sizeof(float));
-        matrix_multiply(absolute[i], s->relative, &animate[i * 16]);
-        matrix_multiply(bones[i], s->relative, s->inverse_bind_pose);
+
+        memcpy(abs_transform, relative, sizeof(transform)); // no animation
+
+        // quaternion_multiply(abs_transform->quaternion, relative->quaternion, &animate[i * 4]);
+        // abs_transform->position.x = relative->position.x;
+        // abs_transform->position.y = relative->position.y;
+        // abs_transform->position.z = relative->position.z;
+
+        quaternion_to_matrix(bones[i], abs_transform->quaternion);
+        matrix_translate(bones[i], abs_transform->position.x, abs_transform->position.y, abs_transform->position.z);
+
+        // matrix_multiply(absolute[i], s->relative, &animate[i * 16]);
+        // matrix_multiply(bones[i], absolute[i], s->inverse_bind_pose);
     }
 
     if (s->child != NULL) {
@@ -180,32 +209,35 @@ static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], floa
     }
 }
 
-static void thing_render(renderstate *rs, renderbuffer *b, thing *t) {
+static void thing_render(renderstate *rs, float *view_projection, renderbuffer *b, thing *t) {
 
     renderbuffer_zero(b);
 
+    float mvp[16];
+    memcpy(mvp, view_projection, 16 * sizeof(float));
+    matrix_translate(mvp, t->x, t->y + (16 + 16) * 0.03f, t->z);
+    renderstate_set_mvp(rs, mvp);
+
     model *m = t->model_data;
+    model_info *info = m->info;
 
-    bone *master = m->master;
-    matrix_identity(master->relative);
-    matrix_rotate_y(master->relative, sinf(t->rotation), cosf(t->rotation));
-    matrix_translate(master->relative, t->x, t->y + 0.8f, t->z);
+    bone *master = info->master;
+    euler_to_quaternion(master->relative.quaternion, 0.0f, t->rotation, 0.0f);
 
-    // bone *head = &m->bones[BIPED_HEAD];
-    // head->local_ry = t->rotation_target;
+    m->current_animation = model_animation_index_of_name(info, "walk");
 
-    int frame = 0;
-    int bone_count = m->bone_count;
+    int frame = m->current_frame;
+    int bone_count = info->bone_count;
 
-    float *animate = &m->animations[model_animation_index_of_name(m, "walk")].frames[frame * bone_count];
+    float *animate = &info->animations[m->current_animation].frames[frame * bone_count];
 
+    transform absolute[SHADER_RENDER_MODEL_MAX_BONES];
     float bones[SHADER_RENDER_MODEL_MAX_BONES][16];
-    float absolute[SHADER_RENDER_MODEL_MAX_BONES][16];
 
     recursive_skeleton(b, master, bones, absolute, animate);
     renderstate_set_uniform_matrices(rs, "u_bones", bones[0], bone_count);
 
-    renderstate_set_texture(rs, m->texture_id);
+    renderstate_set_texture(rs, info->texture_id);
     graphics_update_and_draw(b);
 }
 
@@ -261,7 +293,13 @@ static void decal_render(uint_table *cache, decal *d) {
     render_decal(b, d);
 }
 
-void world_render(worldrender *wr, camera *c, float view[16], float view_projection[16], float depth_bias_mvp[16], GLuint depth_texture) {
+void world_render(worldrender *wr, camera *c, float view[16], float view_projection[16], vec3 *light_direction, float depth_bias_mvp[16], GLuint depth_texture) {
+
+    float temp[16];
+    float normal_matrix[16];
+    matrix_identity(normal_matrix);
+    matrix_inverse(temp, normal_matrix);
+    matrix_transpose(normal_matrix, temp);
 
     renderstate *rs = wr->rs;
     world *w = wr->w;
@@ -271,11 +309,13 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
 
     // sectors
 
-    if (view_projection != NULL) {
+    if (depth_bias_mvp != NULL) {
         renderstate_set_program(rs, SHADER_TEXTURE_3D_SHADOWED);
 
         renderstate_set_mvp(rs, view_projection);
+        renderstate_set_uniform_matrix(rs, "u_normal", normal_matrix);
         renderstate_set_uniform_vector(rs, "u_camera_position", c->x, c->y, c->z);
+        renderstate_set_uniform_vector(rs, "u_light_direction", light_direction->x, light_direction->y, light_direction->z);
         renderstate_set_uniform_matrix(rs, "u_depth_bias_mvp", depth_bias_mvp);
         graphics_bind_texture(GL_TEXTURE1, depth_texture);
     }
@@ -319,18 +359,15 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
 
     // things
 
-    if (view_projection != NULL) {
-        // renderstate_set_program(rs, SHADER_RENDER_MODEL_SHADOWED);
-        renderstate_set_program(rs, SHADER_RENDER_MODEL);
+    if (depth_bias_mvp != NULL) {
+        renderstate_set_program(rs, SHADER_RENDER_MODEL_SHADOWED);
 
-        float inverse_view[16];
-        float inverse_transpose_view[16];
-        matrix_inverse(inverse_view, view);
-        matrix_transpose(inverse_transpose_view, inverse_view);
+        // FIXME: using a different model matrix for rendering things messes up u_depth_bias_mvp
 
         renderstate_set_mvp(rs, view_projection);
-        renderstate_set_uniform_matrix(rs, "u_inverse_transpose_view", inverse_transpose_view);
+        renderstate_set_uniform_matrix(rs, "u_normal", normal_matrix);
         renderstate_set_uniform_vector(rs, "u_camera_position", c->x, c->y, c->z);
+        renderstate_set_uniform_vector(rs, "u_light_direction", light_direction->x, light_direction->y, light_direction->z);
         renderstate_set_uniform_matrix(rs, "u_depth_bias_mvp", depth_bias_mvp);
         graphics_bind_texture(GL_TEXTURE1, depth_texture);
 
@@ -343,7 +380,7 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
     thing **things = w->things;
     int thing_count = w->thing_count;
     for (int i = 0; i < thing_count; i++) {
-        thing_render(rs, thing_buffer, things[i]);
+        thing_render(rs, view_projection, thing_buffer, things[i]);
     }
 }
 

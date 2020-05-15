@@ -1,6 +1,6 @@
 #version 330
 uniform mat4 u_mvp;
-uniform mat4 u_inverse_transpose_view;
+uniform mat4 u_normal;
 uniform mat4 u_bones[11];
 layout (location = 0) in vec3 a_position;
 layout (location = 1) in vec2 a_texture;
@@ -15,6 +15,6 @@ void main() {
   vec4 normal = u_bones[index] * vec4(a_normal, 0.0);
   v_position = vertex.xyz;
   v_texture = a_texture;
-  v_normal = (u_inverse_transpose_view * normal).xyz;
+  v_normal = (u_normal * normal).xyz;
   gl_Position = u_mvp * vertex;
 }

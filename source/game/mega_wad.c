@@ -58,7 +58,7 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     printf("\nhuman animation %s\n", human_animation_str);
     string_free(human_animation_str);
 
-    model *human_model = model_parse(human_wad, human_animation_wad);
+    model_info *human_model = model_parse(human_wad, human_animation_wad);
     for (int i = 0; i < TEXTURE_COUNT; i++) {
         if (string_equal(human_model->texture, rs->textures[i]->path)) {
             human_model->texture_id = i;

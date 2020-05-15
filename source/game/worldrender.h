@@ -42,7 +42,7 @@ struct worldrender {
 worldrender *create_worldrender(renderstate *rs, world *w);
 
 void worldrender_create_buffers(worldrender *self);
-void world_render(worldrender *self, camera *c, float view[16], float view_projection[16], float depth_bias_mvp[16], GLuint depth_texture);
+void world_render(worldrender *self, camera *c, float view[16], float view_projection[16], vec3 *light_direction, float depth_bias_mvp[16], GLuint depth_texture);
 
 void delete_worldrender(worldrender *self);
 

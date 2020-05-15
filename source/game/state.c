@@ -156,6 +156,9 @@ void state_render(state *self) {
     matrix_look_at(shadow_view, &eye, &center);
     // matrix_translate(shadow_view, -eye.x, -eye.y, -eye.z);
 
+    vec3 light_direction = {eye.x - center.x, eye.y - center.y, eye.z - center.z};
+    vector3_normalize(&light_direction);
+
     camera shadow_camera = {0};
     shadow_camera.rx = -shadow_view[12];
     shadow_camera.ry = -shadow_view[14];
@@ -172,7 +175,7 @@ void state_render(state *self) {
 
     graphics_cull_front();
 
-    world_render(self->wr, &shadow_camera, shadow_view, NULL, NULL, 0);
+    world_render(self->wr, &shadow_camera, shadow_view, shadow_view_projection, NULL, NULL, 0);
 
     // ----------------------------------------
 
@@ -184,7 +187,7 @@ void state_render(state *self) {
     graphics_set_view(0, 0, f->width, f->height);
     graphics_clear_color_and_depth();
 
-    world_render(self->wr, c, view, view_projection, depth_bias_mvp, s->depth_texture);
+    world_render(self->wr, c, view, view_projection, &light_direction, depth_bias_mvp, s->depth_texture);
 
     graphics_disable_cull();
     graphics_disable_depth();

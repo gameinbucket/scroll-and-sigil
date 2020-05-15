@@ -10,9 +10,17 @@
 
 #include "core/mem.h"
 #include "math/matrix.h"
+#include "math/quaternion.h"
 #include "wad/parser.h"
 
 #include "cube.h"
+
+typedef struct transform transform;
+
+struct transform {
+    vec3 position;
+    float quaternion[4];
+};
 
 typedef struct animation animation;
 
@@ -33,15 +41,15 @@ struct bone {
     float width;
     float height;
     float length;
-    float relative[16];
-    float bind_pose[16];
-    float inverse_bind_pose[16];
+    transform relative;
+    transform bind_pose;
+    transform inverse_bind_pose;
     float cube[CUBE_MODEL_VERTEX_COUNT];
 };
 
-typedef struct model model;
+typedef struct model_info model_info;
 
-struct model {
+struct model_info {
     string *texture;
     int texture_id;
     bone *bones;
@@ -51,8 +59,19 @@ struct model {
     int animation_count;
 };
 
-int model_bone_index_of_name(model *self, string *name);
-int model_animation_index_of_name(model *self, char *name);
-model *model_parse(wad_element *model_wad, wad_element *animation_wad);
+typedef struct model model;
+
+struct model {
+    model_info *info;
+    int current_animation;
+    int previous_animation;
+    int current_frame;
+    int previous_frame;
+};
+
+int model_bone_index_of_name(model_info *self, string *name);
+int model_animation_index_of_name(model_info *self, char *name);
+model_info *model_parse(wad_element *model_wad, wad_element *animation_wad);
+model *create_model(model_info *info);
 
 #endif

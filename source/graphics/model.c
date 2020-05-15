@@ -1,6 +1,6 @@
 #include "model.h"
 
-int model_bone_index_of_name(model *self, string *name) {
+int model_bone_index_of_name(model_info *self, string *name) {
     int count = self->bone_count;
     for (int i = 0; i < count; i++) {
         if (string_equal(name, self->bones[i].name)) {
@@ -10,7 +10,7 @@ int model_bone_index_of_name(model *self, string *name) {
     return -1;
 }
 
-int model_animation_index_of_name(model *self, char *name) {
+int model_animation_index_of_name(model_info *self, char *name) {
     int count = self->animation_count;
     for (int i = 0; i < count; i++) {
         if (strcmp(name, self->animations[i].name) == 0) {
@@ -28,18 +28,24 @@ static void bone_init(bone *bones, int index, float width, float height, float l
     b->length = length;
     float cube[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width, height, length, index);
     memcpy(b->cube, cube, CUBE_MODEL_VERTEX_BYTES);
-    matrix_identity(b->relative);
-    matrix_identity(b->bind_pose);
-    matrix_inverse(b->inverse_bind_pose, b->bind_pose);
+    quaternion_identity(b->relative.quaternion);
+    quaternion_identity(b->bind_pose.quaternion);
+    // quaternion_identity(b->inverse_bind_pose.quaternion);
 }
 
 static void bone_offset(bone *b, float x, float y, float z) {
-    matrix_translate(b->relative, x, y, z);
+    vec3 *position = &b->relative.position;
+    position->x = x;
+    position->y = y;
+    position->z = z;
 }
 
 static void bone_pivot(bone *b, float x, float y, float z) {
-    matrix_translate(b->bind_pose, x, y, z);
-    matrix_inverse(b->inverse_bind_pose, b->bind_pose);
+    vec3 *position = &b->bind_pose.position;
+    position->x = x;
+    position->y = y;
+    position->z = z;
+    // matrix_inverse(b->inverse_bind_pose, b->bind_pose);
 }
 
 static void bone_attachements(bone *b, int count) {
@@ -47,7 +53,7 @@ static void bone_attachements(bone *b, int count) {
     b->child_count = count;
 }
 
-model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
+model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
 
     const float scale = 0.03f;
 
@@ -58,10 +64,10 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
     bone *bones = safe_calloc(bone_count, sizeof(bone));
     string **parent_names = safe_calloc(bone_count, sizeof(string *));
 
-    model *m = safe_calloc(1, sizeof(model));
-    m->texture = texture;
-    m->bones = bones;
-    m->bone_count = bone_count;
+    model_info *info = safe_calloc(1, sizeof(model_info));
+    info->texture = texture;
+    info->bones = bones;
+    info->bone_count = bone_count;
 
     unsigned int b_i = 0;
     table_iterator bone_iter = wad_object_iterator(bones_table);
@@ -101,7 +107,7 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
         if (parent != NULL) {
             parent_names[b_i] = wad_get_string(parent);
         } else {
-            m->master = b;
+            info->master = b;
         }
 
         b_i++;
@@ -146,13 +152,13 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
     free(parent_names);
 
     if (animation_wad == NULL) {
-        return m;
+        return info;
     }
 
     unsigned int animation_count = wad_get_size(animation_wad);
 
-    m->animation_count = animation_count;
-    m->animations = safe_calloc(animation_count, sizeof(animation));
+    info->animation_count = animation_count;
+    info->animations = safe_calloc(animation_count, sizeof(animation));
 
     unsigned int a_i = 0;
     table_iterator animation_iter = wad_object_iterator(animation_wad);
@@ -165,17 +171,17 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
 
         unsigned int frame_count = wad_get_size(frame_data);
 
-        animation *animate = &m->animations[a_i];
+        animation *animate = &info->animations[a_i];
 
         animate->name = animation_name;
         animate->frame_count = frame_count;
-        animate->frames = safe_calloc(frame_count * bone_count * 16, sizeof(float));
+        animate->frames = safe_calloc(frame_count * bone_count * 4, sizeof(float));
 
         for (unsigned int f = 0; f < frame_count; f++) {
 
             for (unsigned int b = 0; b < bone_count; b++) {
-                float *matrix = &animate->frames[(f * bone_count) + (b * 16)];
-                matrix_identity(matrix);
+                float *qu = &animate->frames[(f * bone_count) + (b * 4)];
+                quaternion_identity(qu);
             }
 
             table_iterator frame_iter = wad_object_iterator(wad_get_from_array(frame_data, f));
@@ -185,7 +191,7 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
                 string *bone_name = string_copy((string *)pair.key);
                 wad_element *bone_rotation = (wad_element *)pair.value;
 
-                int index = model_bone_index_of_name(m, bone_name);
+                int index = model_bone_index_of_name(info, bone_name);
                 if (index == -1) {
                     fprintf(stdout, "Bone %s does not exist in animation %s\n", bone_name, wad_to_string(frame_data));
                     exit(1);
@@ -195,15 +201,19 @@ model *model_parse(wad_element *model_wad, wad_element *animation_wad) {
                 float y = DEGREE_TO_RADIAN(wad_get_float(wad_get_from_array(bone_rotation, 1)));
                 float z = DEGREE_TO_RADIAN(wad_get_float(wad_get_from_array(bone_rotation, 2)));
 
-                float *matrix = &animate->frames[(f * bone_count) + (index * 16)];
-                matrix_rotate_x(matrix, sinf(x), cosf(x));
-                matrix_rotate_y(matrix, sinf(y), cosf(y));
-                matrix_rotate_z(matrix, sinf(z), cosf(z));
+                float *qu = &animate->frames[(f * bone_count) + (index * 4)];
+                euler_to_quaternion(qu, x, y, z);
             }
         }
 
         a_i++;
     }
 
+    return info;
+}
+
+model *create_model(model_info *info) {
+    model *m = safe_calloc(1, sizeof(model));
+    m->info = info;
     return m;
 }

@@ -20,8 +20,8 @@ struct modelstate {
 };
 
 modelstate *create_modelstate();
-void modelstate_add_model(modelstate *self, char *name, model *data);
-model *modelstate_get_model(modelstate *self, char *name);
+void modelstate_add_model(modelstate *self, char *name, model_info *info);
+model_info *modelstate_get_model(modelstate *self, char *name);
 void delete_modelstate(modelstate *self);
 
 #endif

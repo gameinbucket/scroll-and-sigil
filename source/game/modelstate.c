@@ -6,11 +6,11 @@ modelstate *create_modelstate() {
     return self;
 }
 
-void modelstate_add_model(modelstate *self, char *name, model *data) {
-    table_put(self->models, name, data);
+void modelstate_add_model(modelstate *self, char *name, model_info *info) {
+    table_put(self->models, name, info);
 }
 
-model *modelstate_get_model(modelstate *self, char *name) {
+model_info *modelstate_get_model(modelstate *self, char *name) {
     return table_get(self->models, name);
 }
 
