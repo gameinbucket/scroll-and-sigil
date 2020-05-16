@@ -2,11 +2,11 @@
 uniform sampler2D u_texture0;
 uniform vec2 texel;
 in vec2 v_texture;
-layout (location = 0) out vec4 color;
 const vec3 luminosity = vec3(0.2126, 0.7152, 0.0722);
 const float reduce_min = 1.0 / 128.0;
 const float reduce_mul = 1.0 / 8.0;
 const float span_max = 8.0;
+layout (location = 0) out vec4 color;
 void main() {
   vec3 middile = texture(u_texture0, v_texture).rgb;
   vec3 top_left = texture(u_texture0, v_texture + vec2(-1.0, -1.0) * texel).rgb;

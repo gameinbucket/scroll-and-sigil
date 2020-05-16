@@ -16,6 +16,10 @@ void quaternion_multiply(quaternion *out, quaternion *a, quaternion *b);
 float quaternion_dot(quaternion *a, quaternion *b);
 float quaternion_magnitude(quaternion *out);
 void quaternion_normalize(quaternion *out);
+void quaternion_negate(quaternion *out, quaternion *in);
+void quaternion_scale(quaternion *out, quaternion *in, float scale);
+void quaternion_conjugate(quaternion *out, quaternion *in);
+void quaternion_inverse(quaternion *out, quaternion *in);
 void quaternion_to_matrix(float *matrix, quaternion *in);
 
 #endif

@@ -208,6 +208,13 @@ void matrix_rotate_z(float *matrix, float sine, float cosine) {
     matrix_multiply(matrix, copy, temp);
 }
 
+void matrix_set_translation(float *matrix, float x, float y, float z) {
+
+    matrix[12] = x;
+    matrix[13] = y;
+    matrix[14] = z;
+}
+
 void matrix_inverse(float *matrix, float *from) {
 
     float src[16];

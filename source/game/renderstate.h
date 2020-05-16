@@ -29,6 +29,7 @@ struct renderstate {
     int canvas_width;
     int canvas_height;
     renderbuffer *draw_frame;
+    renderbuffer *draw_frame_half;
     renderbuffer *draw_canvas;
     renderbuffer *draw_images;
     renderbuffer *draw_colors;
@@ -36,10 +37,14 @@ struct renderstate {
     renderbuffer *draw_sprites;
     float canvas_orthographic[16];
     float draw_orthographic[16];
+    float draw_orthographic_half[16];
     float draw_perspective[16];
     float mv[16];
     float mvp[16];
     framebuffer *frame;
+    framebuffer *gbuffer;
+    framebuffer *frame_ping;
+    framebuffer *frame_pong;
     shadowmap *shadow_map;
     shader **shaders;
     texture **textures;

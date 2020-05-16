@@ -165,41 +165,34 @@ static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], tran
     bone *parent = s->parent;
     if (parent != NULL) {
 
-        // float temp[4];
-        // quaternion_multiply(temp, relative->quaternion, &animate[i * 4]);
+        // quaternion_multiply(abs_transform->quaternion, relative->quaternion, parent_transform->quaternion); // no animation
+
+        float temp[4];
+        quaternion_multiply(temp, relative->quaternion, &animate[i * 4]);
 
         int parent_index = parent->index;
         transform *parent_transform = &absolute[parent_index];
 
-        quaternion_multiply(abs_transform->quaternion, relative->quaternion, parent_transform->quaternion); // no animation
-
-        // quaternion_multiply(abs_transform->quaternion, temp, parent_transform->quaternion);
+        quaternion_multiply(abs_transform->quaternion, temp, parent_transform->quaternion);
 
         abs_transform->position.x = relative->position.x + parent_transform->position.x;
         abs_transform->position.y = relative->position.y + parent_transform->position.y;
         abs_transform->position.z = relative->position.z + parent_transform->position.z;
 
         quaternion_to_matrix(bones[i], abs_transform->quaternion);
-        matrix_translate(bones[i], abs_transform->position.x, abs_transform->position.y, abs_transform->position.z);
+        matrix_set_translation(bones[i], abs_transform->position.x, abs_transform->position.y, abs_transform->position.z);
 
-        // float temp[16];
-        // matrix_multiply(temp, s->relative, &animate[i * 16]);
-        // matrix_multiply(absolute[i], absolute[parent_index], temp);
-        // matrix_multiply(bones[i], absolute[i], s->inverse_bind_pose);
     } else {
 
-        memcpy(abs_transform, relative, sizeof(transform)); // no animation
+        // memcpy(abs_transform, relative, sizeof(transform)); // no animation
 
-        // quaternion_multiply(abs_transform->quaternion, relative->quaternion, &animate[i * 4]);
-        // abs_transform->position.x = relative->position.x;
-        // abs_transform->position.y = relative->position.y;
-        // abs_transform->position.z = relative->position.z;
+        quaternion_multiply(abs_transform->quaternion, relative->quaternion, &animate[i * 4]);
+        abs_transform->position.x = relative->position.x;
+        abs_transform->position.y = relative->position.y;
+        abs_transform->position.z = relative->position.z;
 
         quaternion_to_matrix(bones[i], abs_transform->quaternion);
-        matrix_translate(bones[i], abs_transform->position.x, abs_transform->position.y, abs_transform->position.z);
-
-        // matrix_multiply(absolute[i], s->relative, &animate[i * 16]);
-        // matrix_multiply(bones[i], absolute[i], s->inverse_bind_pose);
+        matrix_set_translation(bones[i], abs_transform->position.x, abs_transform->position.y, abs_transform->position.z);
     }
 
     if (s->child != NULL) {
@@ -209,20 +202,24 @@ static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], tran
     }
 }
 
-static void thing_render(renderstate *rs, float *view_projection, renderbuffer *b, thing *t) {
+static void thing_render(renderstate *rs, __attribute__((unused)) float *view_projection, renderbuffer *b, thing *t) {
 
     renderbuffer_zero(b);
 
-    float mvp[16];
-    memcpy(mvp, view_projection, 16 * sizeof(float));
-    matrix_translate(mvp, t->x, t->y + (16 + 16) * 0.03f, t->z);
-    renderstate_set_mvp(rs, mvp);
+    // float mvp[16];
+    // memcpy(mvp, view_projection, 16 * sizeof(float));
+    // matrix_translate(mvp, t->x, t->y + 48 * 0.03f, t->z);
+    // renderstate_set_mvp(rs, mvp);
 
     model *m = t->model_data;
     model_info *info = m->info;
 
     bone *master = info->master;
     euler_to_quaternion(master->relative.quaternion, 0.0f, t->rotation, 0.0f);
+
+    master->relative.position.x = t->x;
+    master->relative.position.y = t->y + 48 * 0.03f;
+    master->relative.position.z = t->z;
 
     m->current_animation = model_animation_index_of_name(info, "walk");
 

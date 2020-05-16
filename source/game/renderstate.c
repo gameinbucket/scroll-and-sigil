@@ -19,35 +19,62 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
 
     matrix_orthographic(self->canvas_orthographic, 0, screen_width, 0, screen_height, 0, 1);
     matrix_orthographic(self->draw_orthographic, 0, draw_width, 0, draw_height, 0, 1);
+    matrix_orthographic(self->draw_orthographic_half, 0, draw_width * 0.5f, 0, draw_height * 0.5f, 0, 1);
 
     matrix_perspective(self->draw_perspective, fov, 0.01, 100, ratio);
 
     if (self->frame == NULL) {
 
-        self->draw_frame = create_renderbuffer(2, 0, 0, 0, 0, 4, 6, false);
         self->draw_canvas = create_renderbuffer(2, 0, 0, 0, 0, 4, 6, false);
+        self->draw_frame = create_renderbuffer(2, 0, 0, 0, 0, 4, 6, false);
+        self->draw_frame_half = create_renderbuffer(2, 0, 0, 0, 0, 4, 6, false);
         self->draw_images = create_renderbuffer(2, 0, 2, 0, 0, 40, 60, true);
         self->draw_colors = create_renderbuffer(2, 3, 0, 0, 0, 40, 60, true);
 
-        graphics_make_vao(self->draw_frame);
         graphics_make_vao(self->draw_canvas);
+        graphics_make_vao(self->draw_frame);
+        graphics_make_vao(self->draw_frame_half);
         graphics_make_vao(self->draw_images);
         graphics_make_vao(self->draw_colors);
 
         int texture_count = 1;
-
         GLint *internal = safe_malloc(sizeof(GLint) * texture_count);
         GLint *format = safe_malloc(sizeof(GLint) * texture_count);
         GLint *texture_type = safe_malloc(sizeof(GLint) * texture_count);
-
         internal[0] = GL_RGB;
         format[0] = GL_RGB;
         texture_type[0] = GL_UNSIGNED_BYTE;
 
-        framebuffer *frame = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, true);
-        graphics_make_fbo(frame);
+        self->frame = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, true);
 
-        self->frame = frame;
+        texture_count = 2;
+        internal = safe_malloc(sizeof(GLint) * texture_count);
+        format = safe_malloc(sizeof(GLint) * texture_count);
+        texture_type = safe_malloc(sizeof(GLint) * texture_count);
+        internal[0] = GL_RGB;
+        internal[1] = GL_RG16F;
+        format[0] = GL_RGB;
+        format[1] = GL_RG;
+        texture_type[0] = GL_UNSIGNED_INT;
+        texture_type[1] = GL_FLOAT;
+
+        self->gbuffer = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, true);
+
+        texture_count = 1;
+        internal = safe_malloc(sizeof(GLint) * texture_count);
+        format = safe_malloc(sizeof(GLint) * texture_count);
+        texture_type = safe_malloc(sizeof(GLint) * texture_count);
+        internal[0] = GL_RGB16F;
+        format[0] = GL_RGB;
+        texture_type[0] = GL_FLOAT;
+
+        self->frame_ping = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, false);
+        self->frame_pong = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, false);
+
+        graphics_make_fbo(self->frame);
+        graphics_make_fbo(self->gbuffer);
+        graphics_make_fbo(self->frame_ping);
+        graphics_make_fbo(self->frame_pong);
 
         shadowmap *shadow_map = alloc_shadowmap(1024, 1024);
         graphics_make_shadow_map(shadow_map);
@@ -58,14 +85,17 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
         graphics_framebuffer_resize(self->frame, draw_width, draw_height);
     }
 
-    renderbuffer_zero(self->draw_frame);
     renderbuffer_zero(self->draw_canvas);
+    renderbuffer_zero(self->draw_frame);
+    renderbuffer_zero(self->draw_frame_half);
 
-    render_screen(self->draw_frame, 0, 0, draw_width, draw_height);
     render_screen(self->draw_canvas, 0, 0, screen_width, screen_height);
+    render_screen(self->draw_frame, 0, 0, draw_width, draw_height);
+    render_screen(self->draw_frame_half, 0, 0, draw_width * 0.5f, draw_height * 0.5f);
 
-    graphics_update_vao(self->draw_frame, GL_STATIC_DRAW);
     graphics_update_vao(self->draw_canvas, GL_STATIC_DRAW);
+    graphics_update_vao(self->draw_frame, GL_STATIC_DRAW);
+    graphics_update_vao(self->draw_frame_half, GL_STATIC_DRAW);
 }
 
 void renderstate_set_mvp(renderstate *self, float *mvp) {

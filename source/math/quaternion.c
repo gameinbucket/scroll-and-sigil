@@ -72,6 +72,34 @@ void quaternion_normalize(quaternion *out) {
     out[4] *= multiple;
 }
 
+void quaternion_negate(quaternion *out, quaternion *in) {
+    out[0] = -in[0];
+    out[1] = -in[1];
+    out[2] = -in[2];
+    out[3] = -in[3];
+}
+
+void quaternion_conjugate(quaternion *out, quaternion *in) {
+    out[0] = -in[0];
+    out[1] = -in[1];
+    out[2] = -in[2];
+    out[3] = in[3];
+}
+
+void quaternion_scale(quaternion *out, quaternion *in, float scale) {
+    out[0] = in[0] * scale;
+    out[1] = in[1] * scale;
+    out[2] = in[2] * scale;
+    out[3] = in[3] * scale;
+}
+
+void quaternion_inverse(quaternion *out, quaternion *in) {
+    float conjugate[4];
+    quaternion_conjugate(conjugate, in);
+    float magnitude_squared = in[0] * in[0] + in[1] * in[1] + in[2] * in[2] + in[3] * in[3];
+    quaternion_scale(out, conjugate, 1.0f / magnitude_squared);
+}
+
 void quaternion_lerp(quaternion *out, quaternion *a, quaternion *b, float lerp) {
 
     out[0] = a[0] + lerp * (b[0] - a[0]);

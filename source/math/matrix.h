@@ -18,6 +18,7 @@ void matrix_multiply(float *matrix, float *a, float *b);
 void matrix_rotate_x(float *matrix, float sine, float cosine);
 void matrix_rotate_y(float *matrix, float sine, float cosine);
 void matrix_rotate_z(float *matrix, float sine, float cosine);
+void matrix_set_translation(float *matrix, float x, float y, float z);
 void matrix_inverse(float *matrix, float *from);
 void matrix_transpose(float *matrix, float *from);
 void matrix_multiply_vector4(vec4 *transform, float *matrix, vec4 *vec);

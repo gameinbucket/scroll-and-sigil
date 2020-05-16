@@ -27,6 +27,9 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     rs->shaders[SHADER_VISUALIZE_DEPTH] = shader_make(z, "shaders/visualize-depth.vert", "shaders/visualize-depth.frag");
     rs->shaders[SHADER_RENDER_MODEL] = shader_make(z, "shaders/model.vert", "shaders/model.frag");
     rs->shaders[SHADER_RENDER_MODEL_SHADOWED] = shader_make(z, "shaders/model-shadowed.vert", "shaders/model-shadowed.frag");
+    rs->shaders[SHADER_HORIZONTAL_BLUR] = shader_make(z, "shaders/screen.vert", "shaders/horizontal-blur.frag");
+    rs->shaders[SHADER_VERTICAL_BLUR] = shader_make(z, "shaders/screen.vert", "shaders/vertical-blur.frag");
+    rs->shaders[SHADER_SSAO] = shader_make(z, "shaders/screen.vert", "shaders/ssao.frag");
 
     rs->textures = safe_malloc(TEXTURE_COUNT * sizeof(texture *));
     rs->textures[TEXTURE_BARON] = texture_make(z, "textures/baron.png", GL_CLAMP_TO_EDGE, GL_NEAREST);

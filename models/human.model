@@ -16,13 +16,13 @@ bones{
     left-arm{
         size[3, 8, 3]
         offset[11, 15.2, 0]
-        pivot[0, -8, 0]
+        pivot[0, 0, 0]
         parent:body
     }
     left-forearm{
         size[3, 8, 3]
         offset[0, -16, 0]
-        pivot[0, -8, 0]
+        pivot[0, 0, 0]
         parent:left-arm
     }
     right-arm{
@@ -39,7 +39,7 @@ bones{
     }
     left-leg{
         size[3, 8, 3]
-        offset[5, -16, 0]
+        offset[5, -24, 0]
         pivot[0, -8, 0]
         parent:body
     }
@@ -51,7 +51,7 @@ bones{
     }
     right-leg{
         size[3, 8, 3]
-        offset[-5, -16, 0]
+        offset[-5, -24, 0]
         pivot[0, -8, 0]
         parent:body
     }
