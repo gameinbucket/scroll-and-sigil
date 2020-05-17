@@ -29,5 +29,6 @@ struct texture {
 };
 
 texture *texture_make(struct zip *z, char *path, GLint clamp, GLint interpolate);
+texture *create_texture_pixels(int width, int height, GLint clamp, GLint interpolate, GLint internal_format, GLint format, GLint type, const void *pixels);
 
 #endif

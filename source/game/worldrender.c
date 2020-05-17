@@ -202,14 +202,9 @@ static void recursive_skeleton(renderbuffer *b, bone *s, float bones[][16], tran
     }
 }
 
-static void thing_render(renderstate *rs, __attribute__((unused)) float *view_projection, renderbuffer *b, thing *t) {
+static void thing_render(renderstate *rs, renderbuffer *b, thing *t) {
 
     renderbuffer_zero(b);
-
-    // float mvp[16];
-    // memcpy(mvp, view_projection, 16 * sizeof(float));
-    // matrix_translate(mvp, t->x, t->y + 48 * 0.03f, t->z);
-    // renderstate_set_mvp(rs, mvp);
 
     model *m = t->model_data;
     model_info *info = m->info;
@@ -307,13 +302,18 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
     // sectors
 
     if (depth_bias_mvp != NULL) {
-        renderstate_set_program(rs, SHADER_TEXTURE_3D_SHADOWED);
+        if (rs->ssao_on) {
+            renderstate_set_program(rs, SHADER_GBUFFER);
+        } else {
+            renderstate_set_program(rs, SHADER_TEXTURE_3D_SHADOWED);
+        }
 
         renderstate_set_mvp(rs, view_projection);
         renderstate_set_uniform_matrix(rs, "u_normal", normal_matrix);
         renderstate_set_uniform_vector(rs, "u_camera_position", c->x, c->y, c->z);
         renderstate_set_uniform_vector(rs, "u_light_direction", light_direction->x, light_direction->y, light_direction->z);
         renderstate_set_uniform_matrix(rs, "u_depth_bias_mvp", depth_bias_mvp);
+        renderstate_set_uniform_matrix(rs, "u_view", view);
         graphics_bind_texture(GL_TEXTURE1, depth_texture);
     }
 
@@ -340,6 +340,10 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
         particle_render(cache, particles[i], view);
     }
 
+    // opengl.depth_mask_off();
+    // glEnable(GL_POLYGON_OFFSET_FILL);
+    // glPolygonOffset(-1, -1);
+
     int decal_count = w->decal_count;
     decal **decals = w->decals;
     for (int i = 0; i < decal_count; i++) {
@@ -357,15 +361,18 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
     // things
 
     if (depth_bias_mvp != NULL) {
-        renderstate_set_program(rs, SHADER_RENDER_MODEL_SHADOWED);
-
-        // FIXME: using a different model matrix for rendering things messes up u_depth_bias_mvp
+        if (rs->ssao_on) {
+            renderstate_set_program(rs, SHADER_RENDER_MODEL_GBUFFER);
+        } else {
+            renderstate_set_program(rs, SHADER_RENDER_MODEL_SHADOWED);
+        }
 
         renderstate_set_mvp(rs, view_projection);
         renderstate_set_uniform_matrix(rs, "u_normal", normal_matrix);
         renderstate_set_uniform_vector(rs, "u_camera_position", c->x, c->y, c->z);
         renderstate_set_uniform_vector(rs, "u_light_direction", light_direction->x, light_direction->y, light_direction->z);
         renderstate_set_uniform_matrix(rs, "u_depth_bias_mvp", depth_bias_mvp);
+        renderstate_set_uniform_matrix(rs, "u_view", view);
         graphics_bind_texture(GL_TEXTURE1, depth_texture);
 
     } else {
@@ -377,7 +384,7 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
     thing **things = w->things;
     int thing_count = w->thing_count;
     for (int i = 0; i < thing_count; i++) {
-        thing_render(rs, view_projection, thing_buffer, things[i]);
+        thing_render(rs, thing_buffer, things[i]);
     }
 }
 

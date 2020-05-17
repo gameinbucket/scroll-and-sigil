@@ -119,7 +119,7 @@ void hero_update(void *void_self) {
 hero *create_hero(input *in, world *map, float x, float z, model_info *m) {
     hero *self = safe_calloc(1, sizeof(hero));
 
-    thing_initialize(&self->super, map, x, z, 0, 0.5, 1.76);
+    thing_initialize(&self->super, map, x, z, 0, 0.25, 1.76);
 
     self->super.speed = 0.1;
 

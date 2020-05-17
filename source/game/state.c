@@ -177,11 +177,16 @@ void state_render(state *self) {
 
     world_render(self->wr, &shadow_camera, shadow_view, shadow_view_projection, NULL, NULL, 0);
 
-    // ----------------------------------------
+    // geometry & gbuffer ----------------------------------------
 
     graphics_cull_back();
 
-    framebuffer *f = rs->frame;
+    // framebuffer *frame = rs->frame;
+    framebuffer *gbuffer = rs->gbuffer;
+    framebuffer *fping = rs->frame_ping;
+    framebuffer *fpong = rs->frame_pong;
+    framebuffer *f = gbuffer;
+    framebuffer *fp = NULL;
 
     graphics_bind_fbo(f->fbo);
     graphics_set_view(0, 0, f->width, f->height);
@@ -192,7 +197,55 @@ void state_render(state *self) {
     graphics_disable_cull();
     graphics_disable_depth();
 
-    // ----------------------------------------
+    if (rs->ssao_on) {
+        // ssao ----------------------------------------
+
+        matrix_orthographic_projection(rs->mvp, rs->draw_orthographic, rs->mv, 0, 0);
+
+        fp = f;
+        f = fping;
+        graphics_bind_fbo(f->fbo);
+        renderstate_set_program(rs, SHADER_SSAO);
+        graphics_set_view(0, 0, f->width, f->height);
+        renderstate_set_uniform_vector2(rs, "texel", 1.0f / (float)fp->width, 1.0f / (float)fp->height);
+        renderstate_set_uniform_vector2(rs, "noise_scale", (float)fp->width / 4.0f, (float)fp->height / 4.0f);
+        renderstate_set_uniform_matrix(rs, "projection", rs->draw_perspective);
+        renderstate_set_uniform_vectors(rs, "samples", rs->ssao_samples, 64);
+        renderstate_set_mvp(rs, rs->mvp);
+        graphics_bind_texture(GL_TEXTURE0, fp->textures[1]);
+        graphics_bind_texture(GL_TEXTURE1, fp->textures[2]);
+        graphics_bind_texture(GL_TEXTURE2, rs->ssao_noise->id);
+        graphics_bind_and_draw(rs->draw_frame);
+
+        // blur ssao ----------------------------------------
+
+        fp = f;
+        f = fpong;
+        graphics_bind_fbo(f->fbo);
+        renderstate_set_program(rs, SHADER_SSAO_BLUR);
+        graphics_set_view(0, 0, f->width, f->height);
+        renderstate_set_uniform_vector2(rs, "texel", 1.0f / (float)fp->width, 1.0f / (float)fp->height);
+        renderstate_set_mvp(rs, rs->mvp);
+        graphics_bind_texture(GL_TEXTURE0, fp->textures[0]);
+        graphics_bind_and_draw(rs->draw_frame);
+
+        // lighting ----------------------------------------
+
+        fp = f;
+        f = fping;
+        graphics_bind_fbo(f->fbo);
+        renderstate_set_program(rs, SHADER_LIGHTING);
+        graphics_set_view(0, 0, f->width, f->height);
+        renderstate_set_uniform_vector(rs, "u_light_direction", light_direction.x, light_direction.y, light_direction.z);
+        renderstate_set_mvp(rs, rs->mvp);
+        graphics_bind_texture(GL_TEXTURE0, gbuffer->textures[0]);
+        graphics_bind_texture(GL_TEXTURE1, gbuffer->textures[1]);
+        graphics_bind_texture(GL_TEXTURE2, gbuffer->textures[2]);
+        graphics_bind_texture(GL_TEXTURE3, fp->textures[0]);
+        graphics_bind_and_draw(rs->draw_frame);
+    }
+
+    // canvas render ----------------------------------------
 
     renderstate_set_program(rs, SHADER_TEXTURE_2D);
     matrix_orthographic_projection(rs->mvp, rs->draw_orthographic, rs->mv, 0, 0);

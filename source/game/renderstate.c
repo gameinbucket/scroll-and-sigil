@@ -37,39 +37,30 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
         graphics_make_vao(self->draw_images);
         graphics_make_vao(self->draw_colors);
 
-        int texture_count = 1;
-        GLint *internal = safe_malloc(sizeof(GLint) * texture_count);
-        GLint *format = safe_malloc(sizeof(GLint) * texture_count);
-        GLint *texture_type = safe_malloc(sizeof(GLint) * texture_count);
-        internal[0] = GL_RGB;
-        format[0] = GL_RGB;
-        texture_type[0] = GL_UNSIGNED_BYTE;
+        {
+            int texture_count = 1;
+            GLint internal[1] = {GL_RGB};
+            GLint format[1] = {GL_RGB};
+            GLint texture_type[1] = {GL_UNSIGNED_BYTE};
+            self->frame = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, true);
+        }
 
-        self->frame = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, true);
+        {
+            int texture_count = 3;
+            GLint internal[3] = {GL_RGB, GL_RG16F, GL_RGB16F};
+            GLint format[3] = {GL_RGB, GL_RG, GL_RGB};
+            GLint texture_type[3] = {GL_UNSIGNED_BYTE, GL_FLOAT, GL_FLOAT};
+            self->gbuffer = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, true);
+        }
 
-        texture_count = 2;
-        internal = safe_malloc(sizeof(GLint) * texture_count);
-        format = safe_malloc(sizeof(GLint) * texture_count);
-        texture_type = safe_malloc(sizeof(GLint) * texture_count);
-        internal[0] = GL_RGB;
-        internal[1] = GL_RG16F;
-        format[0] = GL_RGB;
-        format[1] = GL_RG;
-        texture_type[0] = GL_UNSIGNED_INT;
-        texture_type[1] = GL_FLOAT;
-
-        self->gbuffer = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, true);
-
-        texture_count = 1;
-        internal = safe_malloc(sizeof(GLint) * texture_count);
-        format = safe_malloc(sizeof(GLint) * texture_count);
-        texture_type = safe_malloc(sizeof(GLint) * texture_count);
-        internal[0] = GL_RGB16F;
-        format[0] = GL_RGB;
-        texture_type[0] = GL_FLOAT;
-
-        self->frame_ping = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, false);
-        self->frame_pong = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, false);
+        {
+            int texture_count = 1;
+            GLint internal[1] = {GL_RGB16F};
+            GLint format[1] = {GL_RGB};
+            GLint texture_type[1] = {GL_FLOAT};
+            self->frame_ping = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, false);
+            self->frame_pong = framebuffer_init(draw_width, draw_height, texture_count, internal, format, texture_type, GL_NEAREST, false);
+        }
 
         graphics_make_fbo(self->frame);
         graphics_make_fbo(self->gbuffer);
@@ -80,6 +71,38 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
         graphics_make_shadow_map(shadow_map);
 
         self->shadow_map = shadow_map;
+
+        self->ssao_on = true;
+
+        if (self->ssao_on) {
+            const int sample_size = 64 * 3;
+            self->ssao_samples = safe_malloc(sample_size * sizeof(float));
+            for (int i = 0; i < sample_size; i += 3) {
+                self->ssao_samples[i] = 2.0f * rand_float() - 1.0f;
+                self->ssao_samples[i + 1] = 2.0f * rand_float() - 1.0f;
+                self->ssao_samples[i + 2] = (float)rand() / (float)RAND_MAX;
+                vec3_normalize(&self->ssao_samples[i]);
+                float multiple = (float)rand() / (float)RAND_MAX;
+                self->ssao_samples[i] *= multiple;
+                self->ssao_samples[i + 1] *= multiple;
+                self->ssao_samples[i + 2] *= multiple;
+                float scale = (float)i / 64.0f;
+                scale = lerp(0.1f, 1.0f, scale * scale);
+                self->ssao_samples[i] *= scale;
+                self->ssao_samples[i + 1] *= scale;
+                self->ssao_samples[i + 2] *= scale;
+            }
+
+            const int noise_size = 16 * 3;
+            float noise_pixels[noise_size];
+            for (int i = 0; i < noise_size; i += 3) {
+                noise_pixels[i] = 2.0f * rand_float() - 1.0f;
+                noise_pixels[i + 1] = 2.0f * rand_float() - 1.0f;
+                noise_pixels[i + 2] = 0.0f;
+            }
+
+            self->ssao_noise = create_texture_pixels(4, 4, GL_REPEAT, GL_NEAREST, GL_RGB32F, GL_RGB, GL_FLOAT, noise_pixels);
+        }
 
     } else {
         graphics_framebuffer_resize(self->frame, draw_width, draw_height);
@@ -112,9 +135,19 @@ void renderstate_set_uniform_matrices(renderstate *self, char *name, float *matr
     glUniformMatrix4fv(location, count, GL_FALSE, matrices);
 }
 
+void renderstate_set_uniform_vector2(renderstate *self, char *name, float x, float y) {
+    GLint location = glGetUniformLocation(self->active_shader->id, name);
+    glUniform2f(location, x, y);
+}
+
 void renderstate_set_uniform_vector(renderstate *self, char *name, float x, float y, float z) {
     GLint location = glGetUniformLocation(self->active_shader->id, name);
     glUniform3f(location, x, y, z);
+}
+
+void renderstate_set_uniform_vectors(renderstate *self, char *name, float *vectors, size_t count) {
+    GLint location = glGetUniformLocation(self->active_shader->id, name);
+    glUniform3fv(location, count, vectors);
 }
 
 void renderstate_set_program(renderstate *self, int shader_index) {

@@ -4,23 +4,27 @@ uniform sampler2D u_texture0;
 uniform sampler2D u_texture1;
 uniform vec3 u_camera_position;
 uniform vec3 u_light_direction;
+uniform mat4 u_view;
 
 const float bias = 0.005;
 const vec3 light_color = vec3(1.0, 1.0, 1.0);
 const vec3 light_ambient = vec3(1.2, 1.2, 1.2);
 const float specular_strength = 0.5;
 const float shine = 32.0;
-const bool use_pcf = true;
+const bool use_pcf = false;
 
-in vec4 v_shadow;
+in vec3 v_shadow;
 in vec3 v_position;
+in vec3 v_fragment_position;
 in vec2 v_texture;
 in vec3 v_normal;
 
 layout (location = 0) out vec3 color;
+layout (location = 1) out vec2 normal_out;
+layout (location = 2) out vec3 position_out;
 
 void main() {
-
+  
   vec4 pixel = texture(u_texture0, v_texture);
   if (pixel.a == 0.0) {
     discard;
@@ -62,4 +66,9 @@ void main() {
   // pixel.rgb *= (light_ambient + (diffuse + specular) * shadow);
 
   color = pixel.rgb * (light_ambient + diffuse * shadow);
+  // color = pixel.rgb;
+  // color = pixel.rgb * (light_ambient + shadow);
+
+  normal_out = normalize(u_view * vec4(normal, 0.0)).xy;
+  position_out = v_fragment_position;
 }

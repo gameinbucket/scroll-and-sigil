@@ -2,6 +2,7 @@
 #define MATH_UTIL_H
 
 #include <math.h>
+#include <stdlib.h>
 
 #define MATH_PI 3.14159265358979323846
 #define MATH_TAU (MATH_PI * 2.0)
@@ -19,5 +20,8 @@
 
 #define DEGREE_TO_RADIAN(D) (D * (MATH_PI / 180.0))
 #define RADIAN_TO_DEGREE(R) (R * (180.0 / MATH_PI))
+
+float rand_float();
+float lerp(float x, float y, float t);
 
 #endif

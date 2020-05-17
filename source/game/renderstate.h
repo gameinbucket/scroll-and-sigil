@@ -22,6 +22,7 @@
 #include "graphics/shadowmap.h"
 #include "graphics/texture.h"
 #include "math/matrix.h"
+#include "math/vector.h"
 
 typedef struct renderstate renderstate;
 
@@ -49,6 +50,9 @@ struct renderstate {
     shader **shaders;
     texture **textures;
     shader *active_shader;
+    bool ssao_on;
+    float *ssao_samples;
+    texture *ssao_noise;
 };
 
 renderstate *create_renderstate();
@@ -57,7 +61,9 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height);
 void renderstate_set_mvp(renderstate *self, float *mvp);
 void renderstate_set_uniform_matrix(renderstate *self, char *name, float *matrix);
 void renderstate_set_uniform_matrices(renderstate *self, char *name, float *matrices, size_t count);
+void renderstate_set_uniform_vector2(renderstate *self, char *name, float x, float y);
 void renderstate_set_uniform_vector(renderstate *self, char *name, float x, float y, float z);
+void renderstate_set_uniform_vectors(renderstate *self, char *name, float *vectors, size_t count);
 void renderstate_set_program(renderstate *self, int shader_index);
 void renderstate_set_texture(renderstate *self, int texture_index);
 

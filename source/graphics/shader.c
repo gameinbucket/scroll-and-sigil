@@ -31,7 +31,7 @@ GLint shader_compile_source(struct zip *z, char *path, GLint type) {
 
     glGetShaderiv(shader, GL_COMPILE_STATUS, &shader_ok);
     if (shader_ok != GL_TRUE) {
-        fprintf(stderr, "Failed to compile shader: %s\n", code);
+        fprintf(stderr, "Failed to compile shader \"%s\": %s\n", path, code);
         show_info_log(shader, glGetShaderiv, glGetShaderInfoLog);
         glDeleteShader(shader);
         exit(1);
