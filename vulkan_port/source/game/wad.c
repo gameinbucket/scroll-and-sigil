@@ -6,7 +6,7 @@ void wad_load_resources(renderstate *rs) {
     const bool use_zip = false;
 
     if (use_zip) {
-        z = open_zip_archive("scroll-and-sigil.wad");
+        z = open_zip_archive("scroll-and-sigil.pack");
     }
 
     rs->shaders = safe_malloc(SHADER_COUNT * sizeof(shader *));

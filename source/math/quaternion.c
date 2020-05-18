@@ -69,7 +69,6 @@ void quaternion_normalize(quaternion *out) {
     out[1] *= multiple;
     out[2] *= multiple;
     out[3] *= multiple;
-    out[4] *= multiple;
 }
 
 void quaternion_negate(quaternion *out, quaternion *in) {
@@ -110,16 +109,16 @@ void quaternion_lerp(quaternion *out, quaternion *a, quaternion *b, float lerp) 
     quaternion_normalize(out);
 }
 
-void quaternion_to_matrix(float *matrix, quaternion *in) {
+void rotation_and_position_to_matrix(float *matrix, quaternion *rotation, float *position) {
 
-    float magnitude = quaternion_magnitude(in);
+    float magnitude = quaternion_magnitude(rotation);
 
     float s = magnitude > 0.0f ? 2.0f / magnitude : 0.0f;
 
-    float x = in[0];
-    float y = in[1];
-    float z = in[2];
-    float w = in[3];
+    float x = rotation[0];
+    float y = rotation[1];
+    float z = rotation[2];
+    float w = rotation[3];
 
     float xx = s * x * x;
     float xy = s * x * y;
@@ -132,22 +131,22 @@ void quaternion_to_matrix(float *matrix, quaternion *in) {
     float wz = s * w * z;
 
     matrix[0] = 1.0f - yy - zz;
-    matrix[4] = xy - wz;
-    matrix[8] = xz + wy;
-    matrix[12] = 0.0f;
-
-    matrix[1] = xy + wz;
-    matrix[5] = 1.0f - xx - zz;
-    matrix[9] = yz - wx;
-    matrix[13] = 0.0f;
-
-    matrix[2] = xz - wy;
-    matrix[6] = yz + wx;
-    matrix[10] = 1.0f - xx - yy;
-    matrix[14] = 0.0f;
-
+    matrix[1] = xy - wz;
+    matrix[2] = xz + wy;
     matrix[3] = 0.0f;
+
+    matrix[4] = xy + wz;
+    matrix[5] = 1.0f - xx - zz;
+    matrix[6] = yz - wx;
     matrix[7] = 0.0f;
+
+    matrix[8] = xz - wy;
+    matrix[9] = yz + wx;
+    matrix[10] = 1.0f - xx - yy;
     matrix[11] = 0.0f;
+
+    matrix[12] = position[0];
+    matrix[13] = position[1];
+    matrix[14] = position[2];
     matrix[15] = 1.0f;
 }

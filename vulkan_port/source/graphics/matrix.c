@@ -310,11 +310,17 @@ void matrix_inverse(float *matrix, float *from) {
     }
 }
 
-void matrix_multiply_vector4(vec4 *transform, float *matrix, vec4 *vec) {
-    transform->x = vec->x * matrix[0] + vec->y * matrix[1] + vec->z * matrix[2] + vec->w * matrix[3];
-    transform->y = vec->x * matrix[4] + vec->y * matrix[5] + vec->z * matrix[6] + vec->w * matrix[7];
-    transform->z = vec->x * matrix[8] + vec->y * matrix[9] + vec->z * matrix[10] + vec->w * matrix[11];
-    transform->w = vec->x * matrix[12] + vec->y * matrix[13] + vec->z * matrix[14] + vec->w * matrix[15];
+void matrix_multiply_vector3(float *out, float *matrix, float *vec) {
+    out[0] = vec[0] * matrix[0] + vec[1] * matrix[1] + vec[2] * matrix[2] + matrix[3];
+    out[1] = vec[0] * matrix[4] + vec[1] * matrix[5] + vec[2] * matrix[6] + matrix[7];
+    out[2] = vec[0] * matrix[8] + vec[1] * matrix[9] + vec[2] * matrix[10] + matrix[11];
+}
+
+void matrix_multiply_vector4(vec4 *out, float *matrix, vec4 *vec) {
+    out->x = vec->x * matrix[0] + vec->y * matrix[1] + vec->z * matrix[2] + vec->w * matrix[3];
+    out->y = vec->x * matrix[4] + vec->y * matrix[5] + vec->z * matrix[6] + vec->w * matrix[7];
+    out->z = vec->x * matrix[8] + vec->y * matrix[9] + vec->z * matrix[10] + vec->w * matrix[11];
+    out->w = vec->x * matrix[12] + vec->y * matrix[13] + vec->z * matrix[14] + vec->w * matrix[15];
 }
 
 void matrix_look_at(float *matrix, vec3 *eye, vec3 *center) {

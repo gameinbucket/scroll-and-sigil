@@ -5,36 +5,96 @@ world *create_world() {
 }
 
 void world_add_thing(world *self, thing *t) {
+
     if (self->thing_cap == 0) {
         self->things = safe_malloc(sizeof(thing *));
         self->things[0] = t;
         self->thing_cap = 1;
         self->thing_count = 1;
-        return;
+    } else {
+
+        if (self->thing_count == self->thing_cap) {
+            self->thing_cap += 8;
+            self->things = safe_realloc(self->things, self->thing_cap * sizeof(thing *));
+        }
+        self->things[self->thing_count] = t;
+        self->thing_count++;
     }
 
-    if (self->thing_count == self->thing_cap) {
-        self->thing_cap += 8;
-        self->things = safe_realloc(self->things, self->thing_cap * sizeof(thing *));
-    }
+    if (t->model_data == NULL) {
 
-    self->things[self->thing_count] = t;
-    self->thing_count++;
+        if (self->thing_sprites_cap == 0) {
+            self->thing_sprites = safe_malloc(sizeof(thing *));
+            self->thing_sprites[0] = t;
+            self->thing_sprites_cap = 1;
+            self->thing_sprites_count = 1;
+        } else {
+
+            if (self->thing_sprites_count == self->thing_sprites_cap) {
+                self->thing_sprites_cap += 8;
+                self->thing_sprites = safe_realloc(self->things, self->thing_sprites_cap * sizeof(thing *));
+            }
+            self->thing_sprites[self->thing_sprites_count] = t;
+            self->thing_sprites_count++;
+        }
+    } else {
+
+        if (self->thing_models_cap == 0) {
+            self->thing_models = safe_malloc(sizeof(thing *));
+            self->thing_models[0] = t;
+            self->thing_models_cap = 1;
+            self->thing_models_count = 1;
+        } else {
+
+            if (self->thing_models_count == self->thing_models_cap) {
+                self->thing_models_cap += 8;
+                self->thing_models = safe_realloc(self->things, self->thing_models_cap * sizeof(thing *));
+            }
+            self->thing_models[self->thing_models_count] = t;
+            self->thing_models_count++;
+        }
+    }
 }
 
 void world_remove_thing(world *self, thing *t) {
+
     int len = self->thing_count;
     thing **things = self->things;
     for (int i = 0; i < len; i++) {
         if (things[i] == t) {
             things[i] = things[len - 1];
             self->thing_count--;
-            return;
+            break;
+        }
+    }
+
+    if (t->model_data == NULL) {
+
+        len = self->thing_sprites_count;
+        things = self->thing_sprites;
+        for (int i = 0; i < len; i++) {
+            if (things[i] == t) {
+                things[i] = things[len - 1];
+                self->thing_sprites_count--;
+                break;
+            }
+        }
+    } else {
+
+        len = self->thing_models_count;
+        things = self->thing_models;
+        for (int i = 0; i < len; i++) {
+            if (things[i] == t) {
+                things[i] = things[len - 1];
+                self->thing_models_count--;
+                break;
+            }
         }
     }
 }
 
 void world_add_particle(world *self, particle *t) {
+
     if (self->particle_cap == 0) {
         self->particles = safe_malloc(sizeof(particle *));
         self->particles[0] = t;
@@ -53,6 +113,7 @@ void world_add_particle(world *self, particle *t) {
 }
 
 void world_remove_particle(world *self, particle *t) {
+
     int len = self->particle_count;
     particle **particles = self->particles;
     for (int i = 0; i < len; i++) {
@@ -65,6 +126,7 @@ void world_remove_particle(world *self, particle *t) {
 }
 
 void world_add_decal(world *self, decal *t) {
+
     if (self->decal_cap == 0) {
         self->decals = safe_malloc(sizeof(decal *));
         self->decals[0] = t;
@@ -83,6 +145,7 @@ void world_add_decal(world *self, decal *t) {
 }
 
 void world_remove_decal(world *self, decal *t) {
+
     int len = self->decal_count;
     decal **decals = self->decals;
     for (int i = 0; i < len; i++) {
@@ -95,6 +158,7 @@ void world_remove_decal(world *self, decal *t) {
 }
 
 void world_add_sector(world *self, sector *s) {
+
     if (self->sector_cap == 0) {
         self->sectors = safe_malloc(sizeof(sector *));
         self->sectors[0] = s;

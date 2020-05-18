@@ -6,7 +6,7 @@ OBJECTS = $(patsubst source/%.c,objects/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
 INCLUDE = -Isource/
 
-COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE)
+COMPILER_FLAGS = -Wall -Wextra -Werror -Wno-unused -pedantic -std=c11 $(INCLUDE)
 LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip
 LIBS = -lm
 PREFIX =

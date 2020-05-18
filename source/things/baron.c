@@ -18,11 +18,8 @@ void baron_update(void *void_self) {
 }
 
 baron *create_baron(world *map, float x, float z, model_info *m) {
+
     baron *self = safe_calloc(1, sizeof(baron));
-
-    thing_initialize(&self->super, map, x, z, 0, 0.25, 1.76);
-
-    self->super.speed = 0.1;
 
     float scale = 1.0 / 64.0;
 
@@ -39,6 +36,9 @@ baron *create_baron(world *map, float x, float z, model_info *m) {
     self->super.sprite_id = TEXTURE_PLANKS;
     self->super.sprite_data = create_sprite(left, top, width, height, 0, 0, atlas_inverse_width, atlas_inverse_height, scale);
     self->super.model_data = create_model(m);
+    self->super.speed = 0.1;
+
+    thing_initialize(&self->super, map, x, z, 0, 0.25, 1.76);
 
     return self;
 }

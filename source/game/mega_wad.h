@@ -17,6 +17,7 @@
 #include "things/baron.h"
 #include "things/blood.h"
 #include "things/hero.h"
+#include "things/scenery.h"
 #include "wad/parser.h"
 #include "world/world.h"
 #include "world/worldbuild.h"

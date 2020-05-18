@@ -24,4 +24,8 @@ void render_rectangle(renderbuffer *b, float x, float y, float width, float heig
 void render_sprite(renderbuffer *b, float x, float y, float z, sprite *s, float sine, float cosine);
 void render_aligned_sprite(renderbuffer *b, float x, float y, float z, sprite *s, float *view);
 
+void translate_vertices(float *vertices, unsigned int count, unsigned int stride, float x, float y, float z);
+void rotate_vertices_x(float *vertices, unsigned int count, unsigned int stride, float sine, float cosine);
+void rotate_vertices_y(float *vertices, unsigned int count, unsigned int stride, float sine, float cosine);
+
 #endif

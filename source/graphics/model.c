@@ -28,24 +28,83 @@ static void bone_init(bone *bones, int index, float width, float height, float l
     b->length = length;
     float cube[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width, height, length, index);
     memcpy(b->cube, cube, CUBE_MODEL_VERTEX_BYTES);
-    quaternion_identity(b->relative.quaternion);
-    quaternion_identity(b->bind_pose.quaternion);
-    // quaternion_identity(b->inverse_bind_pose.quaternion);
+    quaternion_identity(b->local.rotation);
 }
 
 static void bone_offset(bone *b, float x, float y, float z) {
-    vec3 *position = &b->relative.position;
-    position->x = x;
-    position->y = y;
-    position->z = z;
+    b->bind_pose.position[0] = -x;
+    b->bind_pose.position[1] = -y;
+    b->bind_pose.position[2] = -z;
+}
+
+static void bone_rotation(bone *b, float x, float y, float z) {
+    x = DEGREE_TO_RADIAN(x);
+    y = DEGREE_TO_RADIAN(y);
+    z = DEGREE_TO_RADIAN(z);
+    euler_to_quaternion(b->bind_pose.rotation, -x, -y, -z);
 }
 
 static void bone_pivot(bone *b, float x, float y, float z) {
-    vec3 *position = &b->bind_pose.position;
-    position->x = x;
-    position->y = y;
-    position->z = z;
-    // matrix_inverse(b->inverse_bind_pose, b->bind_pose);
+    float *cube = b->cube;
+    for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+        cube[i] += x;
+        cube[i + 1] += y;
+        cube[i + 2] += z;
+    }
+
+    // b->pivot[0] = x;
+    // b->pivot[1] = y;
+    // b->pivot[2] = z;
+
+    // b->local.position[0] = x;
+    // b->local.position[1] = y;
+    // b->local.position[2] = z;
+}
+
+static void bone_animation(animation *a, unsigned int frame, unsigned int bone_count, int index, float x, float y, float z) {
+    x = DEGREE_TO_RADIAN(x);
+    y = DEGREE_TO_RADIAN(y);
+    z = DEGREE_TO_RADIAN(z);
+    float *rotation = &a->frames[frame * bone_count + index * 4];
+    euler_to_quaternion(rotation, -x, -y, -z);
+}
+
+static void bone_calculate_bind_pose(bone *b) {
+
+    bone *parent = b->parent;
+
+    if (parent == NULL) {
+        rotation_and_position_to_matrix(b->bind_pose_matrix, b->bind_pose.rotation, b->bind_pose.position);
+    } else {
+
+        float bind[16];
+        rotation_and_position_to_matrix(bind, b->bind_pose.rotation, b->bind_pose.position);
+        matrix_multiply(b->bind_pose_matrix, b->parent->bind_pose_matrix, bind);
+    }
+
+    float *bind_pose = b->bind_pose_matrix;
+
+    // float *cube = b->cube;
+    // for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+    //     float out[3];
+    //     matrix_multiply_vector3(out, bind_pose, &cube[i]);
+    //     memcpy(&cube[i], out, 3 * sizeof(float));
+    // }
+
+    // float *cube = b->cube;
+    // float pivot[3];
+    // matrix_multiply_vector3(pivot, bind_pose, b->pivot);
+    // for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+    //     cube[i] += pivot[0];
+    //     cube[i + 1] += pivot[1];
+    //     cube[i + 2] += pivot[2];
+    // }
+
+    matrix_inverse(b->inverse_bind_pose_matrix, bind_pose);
+
+    for (int i = 0; i < b->child_count; i++) {
+        bone_calculate_bind_pose(b->child[i]);
+    }
 }
 
 static void bone_attachements(bone *b, int count) {
@@ -78,8 +137,9 @@ model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
         wad_element *data = (wad_element *)pair.value;
 
         wad_element *size = wad_get_required_from_object(data, "size");
-        wad_element *offset = wad_get_from_object(data, "offset");
         wad_element *pivot = wad_get_from_object(data, "pivot");
+        wad_element *offset = wad_get_from_object(data, "offset");
+        wad_element *rotation = wad_get_from_object(data, "rotation");
         wad_element *parent = wad_get_from_object(data, "parent");
 
         float width = wad_get_float(wad_get_from_array(size, 0)) * scale;
@@ -90,13 +150,6 @@ model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
         bone *b = &bones[b_i];
         b->name = name;
 
-        if (offset != NULL) {
-            float x = wad_get_float(wad_get_from_array(offset, 0)) * scale;
-            float y = wad_get_float(wad_get_from_array(offset, 1)) * scale;
-            float z = wad_get_float(wad_get_from_array(offset, 2)) * scale;
-            bone_offset(b, x, y, z);
-        }
-
         if (pivot != NULL) {
             float x = wad_get_float(wad_get_from_array(pivot, 0)) * scale;
             float y = wad_get_float(wad_get_from_array(pivot, 1)) * scale;
@@ -104,10 +157,26 @@ model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
             bone_pivot(b, x, y, z);
         }
 
-        if (parent != NULL) {
-            parent_names[b_i] = wad_get_string(parent);
+        if (offset != NULL) {
+            float x = wad_get_float(wad_get_from_array(offset, 0)) * scale;
+            float y = wad_get_float(wad_get_from_array(offset, 1)) * scale;
+            float z = wad_get_float(wad_get_from_array(offset, 2)) * scale;
+            bone_offset(b, x, y, z);
+        }
+
+        if (rotation != NULL) {
+            float x = wad_get_float(wad_get_from_array(rotation, 0));
+            float y = wad_get_float(wad_get_from_array(rotation, 1));
+            float z = wad_get_float(wad_get_from_array(rotation, 2));
+            bone_rotation(b, x, y, z);
         } else {
+            quaternion_identity(b->bind_pose.rotation);
+        }
+
+        if (parent == NULL) {
             info->master = b;
+        } else {
+            parent_names[b_i] = wad_get_string(parent);
         }
 
         b_i++;
@@ -150,6 +219,8 @@ model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
     }
 
     free(parent_names);
+
+    bone_calculate_bind_pose(info->master);
 
     if (animation_wad == NULL) {
         return info;
@@ -197,12 +268,11 @@ model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
                     exit(1);
                 }
 
-                float x = DEGREE_TO_RADIAN(wad_get_float(wad_get_from_array(bone_rotation, 0)));
-                float y = DEGREE_TO_RADIAN(wad_get_float(wad_get_from_array(bone_rotation, 1)));
-                float z = DEGREE_TO_RADIAN(wad_get_float(wad_get_from_array(bone_rotation, 2)));
+                float x = wad_get_float(wad_get_from_array(bone_rotation, 0));
+                float y = wad_get_float(wad_get_from_array(bone_rotation, 1));
+                float z = wad_get_float(wad_get_from_array(bone_rotation, 2));
 
-                float *qu = &animate->frames[(f * bone_count) + (index * 4)];
-                euler_to_quaternion(qu, x, y, z);
+                bone_animation(animate, f, bone_count, index, x, y, z);
             }
         }
 

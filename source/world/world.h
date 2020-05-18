@@ -20,7 +20,7 @@ extern const float wind_resistance;
 
 extern unsigned int thing_unique_id;
 
-enum thing_type { THING_TYPE_HERO, THING_TYPE_BARON };
+enum thing_type { THING_TYPE_HERO, THING_TYPE_BARON, THING_TYPE_SCENERY };
 
 typedef enum thing_type thing_type;
 
@@ -35,6 +35,12 @@ struct world {
     thing **things;
     int thing_cap;
     int thing_count;
+    thing **thing_sprites;
+    int thing_sprites_cap;
+    int thing_sprites_count;
+    thing **thing_models;
+    int thing_models_cap;
+    int thing_models_count;
     particle **particles;
     int particle_cap;
     int particle_count;
@@ -117,6 +123,7 @@ struct thing {
 
 void thing_initialize(thing *self, world *map, float x, float y, float r, float box, float height);
 void thing_block_borders(thing *self);
+void thing_nop_update(void *self);
 void thing_standard_update(thing *self);
 
 struct particle {

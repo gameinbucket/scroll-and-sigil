@@ -20,6 +20,6 @@ void quaternion_negate(quaternion *out, quaternion *in);
 void quaternion_scale(quaternion *out, quaternion *in, float scale);
 void quaternion_conjugate(quaternion *out, quaternion *in);
 void quaternion_inverse(quaternion *out, quaternion *in);
-void quaternion_to_matrix(float *matrix, quaternion *in);
+void rotation_and_position_to_matrix(float *matrix, quaternion *rotation, float *position);
 
 #endif

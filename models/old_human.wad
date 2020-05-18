@@ -1,0 +1,66 @@
+texture:textures/tiles/stone-floor.png
+bones{
+    body{
+        size[8, 16, 6]
+    }
+    neck{
+        size[3, 1.2, 3]
+        offset[0, 17.2, 0]
+        parent:body
+    }
+    head{
+        size[6, 6, 6]
+        offset[0, 7.2, 0]
+        parent:neck
+    }
+    left-arm{
+        size[3, 8, 3]
+        pivot[0, 0, 0]
+        offset[11, 40, 0]
+        rotation[45, 0, 0]
+        parent:body
+    }
+    left-forearm{
+        size[3, 8, 3]
+        pivot[0, 0, 0]
+        offset[0, 0, 0]
+        rotation[0, 0, 0]
+        parent:left-arm
+    }
+    right-arm{
+        size[3, 8, 3]
+        offset[-11, 15.2, 0]
+        rotation[90, 0, 0]
+        parent:body
+    }
+    right-forearm{
+        size[3, 8, 3]
+        offset[0, -16, 0]
+        rotation[-90, 0, 0]
+        parent:right-arm
+    }
+    left-leg{
+        size[3, 8, 3]
+        pivot[0, -8, 0]
+        offset[5, -16, 0]
+        parent:body
+    }
+    left-knee{
+        size[3, 8, 3]
+        pivot[0, -8, 0]
+        offset[0, -16, 0]
+        parent:left-leg
+    }
+    right-leg{
+        size[3, 8, 3]
+        pivot[0, -8, 0]
+        offset[-5, -16, 0]
+        parent:body
+    }
+    right-knee{
+        size[3, 8, 3]
+        pivot[0, -8, 0]
+        offset[0, -16, 0]
+        parent:right-leg
+    }
+}

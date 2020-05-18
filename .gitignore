@@ -9,5 +9,5 @@ unit-tests
 *.wasm
 *.o
 *.d
-*.wad
+*.pack
 *.spv

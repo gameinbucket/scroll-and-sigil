@@ -18,8 +18,8 @@
 typedef struct transform transform;
 
 struct transform {
-    vec3 position;
-    float quaternion[4];
+    float position[3];
+    float rotation[4];
 };
 
 typedef struct animation animation;
@@ -41,9 +41,11 @@ struct bone {
     float width;
     float height;
     float length;
-    transform relative;
+    float pivot[3];
+    transform local;
     transform bind_pose;
-    transform inverse_bind_pose;
+    float bind_pose_matrix[16];
+    float inverse_bind_pose_matrix[16];
     float cube[CUBE_MODEL_VERTEX_COUNT];
 };
 

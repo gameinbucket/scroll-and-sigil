@@ -152,107 +152,80 @@ void render_aligned_sprite(renderbuffer *b, float x, float y, float z, sprite *s
     int pos = b->vertex_pos;
     GLfloat *vertices = b->vertices;
 
-    float sine = 0;
-    float cosine = 1;
+    float rpu_x = view[0] * s->width + view[1] * s->height;
+    float rpu_y = view[4] * s->width + view[5] * s->height;
+    float rpu_z = view[8] * s->width + view[9] * s->height;
 
-    float right[3] = {view[0], view[4], view[8]};
-    float up[3] = {view[1], view[5], view[9]};
+    float rmu_x = view[0] * s->width - view[1] * s->height;
+    float rmu_y = view[4] * s->width - view[5] * s->height;
+    float rmu_z = view[8] * s->width - view[9] * s->height;
 
-    float rpu_x = right[0] * s->width + up[0] * s->height;
-    float rpu_y = right[1] * s->width + up[1] * s->height;
-    float rpu_z = right[2] * s->width + up[2] * s->height;
-
-    float rmu_x = right[0] * s->width - up[0] * s->height;
-    float rmu_y = right[1] * s->width - up[1] * s->height;
-    float rmu_z = right[2] * s->width - up[2] * s->height;
+    float normal_x = 0.0f;
+    float normal_y = 0.0f;
+    float normal_z = 1.0f;
 
     vertices[pos] = x - rmu_x;
     vertices[pos + 1] = y - rmu_y;
     vertices[pos + 2] = z - rmu_z;
     vertices[pos + 3] = s->left;
     vertices[pos + 4] = s->bottom;
-    vertices[pos + 5] = sine;
-    vertices[pos + 6] = 0;
-    vertices[pos + 7] = cosine;
+    vertices[pos + 5] = normal_x;
+    vertices[pos + 6] = normal_y;
+    vertices[pos + 7] = normal_z;
 
     vertices[pos + 8] = x - rpu_x;
     vertices[pos + 9] = y - rpu_y;
     vertices[pos + 10] = z - rpu_z;
     vertices[pos + 11] = s->right;
     vertices[pos + 12] = s->bottom;
-    vertices[pos + 13] = sine;
-    vertices[pos + 14] = 0;
-    vertices[pos + 15] = cosine;
+    vertices[pos + 13] = normal_x;
+    vertices[pos + 14] = normal_y;
+    vertices[pos + 15] = normal_z;
 
     vertices[pos + 16] = x + rmu_x;
     vertices[pos + 17] = y + rmu_y;
     vertices[pos + 18] = z + rmu_z;
     vertices[pos + 19] = s->right;
     vertices[pos + 20] = s->top;
-    vertices[pos + 21] = sine;
-    vertices[pos + 22] = 0;
-    vertices[pos + 23] = cosine;
+    vertices[pos + 21] = normal_x;
+    vertices[pos + 22] = normal_y;
+    vertices[pos + 23] = normal_z;
 
     vertices[pos + 24] = x + rpu_x;
     vertices[pos + 25] = y + rpu_y;
     vertices[pos + 26] = z + rpu_z;
     vertices[pos + 27] = s->left;
     vertices[pos + 28] = s->top;
-    vertices[pos + 29] = sine;
-    vertices[pos + 30] = 0;
-    vertices[pos + 31] = cosine;
+    vertices[pos + 29] = normal_x;
+    vertices[pos + 30] = normal_y;
+    vertices[pos + 31] = normal_z;
 
     b->vertex_pos = pos + 32;
     render_index4(b);
 }
 
-// static void translate_vectors(float *vertices, unsigned int count, float x, float y, float z) {
-//     for (unsigned int i = 0; i < count; i += STRIDE) {
-//         vertices[i] += x;
-//         vertices[i + 1] += y;
-//         vertices[i + 2] += z;
-//     }
-// }
+void translate_vectors(float *vertices, unsigned int count, unsigned int stride, float x, float y, float z) {
+    for (unsigned int i = 0; i < count; i += stride) {
+        vertices[i] += x;
+        vertices[i + 1] += y;
+        vertices[i + 2] += z;
+    }
+}
 
-// static void rotate_vectors_x(float *vertices, unsigned int count, float sine, float cosine) {
-//     for (unsigned int i = 0; i < count; i += STRIDE) {
-//         float y = vertices[i + 1] * cosine - vertices[i + 2] * sine;
-//         float z = vertices[i + 1] * sine + vertices[i + 2] * cosine;
-//         vertices[i + 1] = y;
-//         vertices[i + 2] = z;
-//     }
-// }
+void rotate_vectors_x(float *vertices, unsigned int count, unsigned int stride, float sine, float cosine) {
+    for (unsigned int i = 0; i < count; i += stride) {
+        float y = vertices[i + 1] * cosine - vertices[i + 2] * sine;
+        float z = vertices[i + 1] * sine + vertices[i + 2] * cosine;
+        vertices[i + 1] = y;
+        vertices[i + 2] = z;
+    }
+}
 
-// static void rotate_vectors_y(float *vertices, unsigned int count, float sine, float cosine) {
-//     for (unsigned int i = 0; i < count; i += STRIDE) {
-//         float x = vertices[i] * cosine + vertices[i + 2] * sine;
-//         float z = vertices[i + 2] * cosine - vertices[i] * sine;
-//         vertices[i] = x;
-//         vertices[i + 2] = z;
-//     }
-// }
-
-// void render_model_cpu(renderbuffer *b, model *m) {
-//     for (int i = 0; i < m->bone_count; i++) {
-//         bone *s = &m->bones[i];
-
-//         float width = s->width;
-//         float height = s->height;
-//         float length = s->length;
-
-//         float cube[CUBE_VERTEX_COUNT] = RENDER_CUBE(width, height, length);
-
-//         translate_vectors(cube, CUBE_VERTEX_COUNT, s->plane_offset_x, s->plane_offset_y, s->plane_offset_z);
-
-//         rotate_vectors_x(cube, CUBE_VERTEX_COUNT, s->sin_x, s->cos_x);
-//         rotate_vectors_y(cube, CUBE_VERTEX_COUNT, s->sin_y, s->cos_y);
-
-//         translate_vectors(cube, CUBE_VERTEX_COUNT, s->world_x, s->world_y, s->world_z);
-
-//         memcpy(b->vertices + b->vertex_pos, cube, CUBE_VERTEX_COUNT * sizeof(float));
-//         b->vertex_pos += CUBE_VERTEX_COUNT;
-
-//         for (int k = 0; k < 6; k++)
-//             render_index4(b);
-//     }
-// }
+void rotate_vectors_y(float *vertices, unsigned int count, unsigned int stride, float sine, float cosine) {
+    for (unsigned int i = 0; i < count; i += stride) {
+        float x = vertices[i] * cosine + vertices[i + 2] * sine;
+        float z = vertices[i + 2] * cosine - vertices[i] * sine;
+        vertices[i] = x;
+        vertices[i + 2] = z;
+    }
+}

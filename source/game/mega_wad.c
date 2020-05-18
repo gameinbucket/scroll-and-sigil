@@ -6,7 +6,7 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     const bool use_zip = false;
 
     if (use_zip) {
-        z = open_zip_archive("scroll-and-sigil.wad");
+        z = open_zip_archive("scroll-and-sigil.pack");
     }
 
     string *wad_data = cat("wads/wad");
@@ -106,4 +106,5 @@ void wad_load_map(world *w, input *in, modelstate *ms) {
     create_baron(w, 8, 45, modelstate_get_model(ms, "human"));
 
     create_blood(w, 5, 1, 30);
+    create_tree(w, 14, 42);
 }

@@ -133,6 +133,9 @@ void thing_line_collision(thing *self, line *ld) {
     }
 }
 
+void thing_nop_update(void *self) {
+}
+
 void thing_standard_update(thing *self) {
     if (self->ground) {
         self->dx *= wind_resistance;
