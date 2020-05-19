@@ -151,10 +151,13 @@ static void render_decal(renderbuffer *b, decal *d) {
 
 static void recursive_skeleton(renderbuffer *rb, bone *b, float bones[][16], float absolute[][16], float *animate) {
 
-    memcpy(rb->vertices + rb->vertex_pos, b->cube, CUBE_MODEL_VERTEX_BYTES);
-    rb->vertex_pos += CUBE_MODEL_VERTEX_COUNT;
-    for (int k = 0; k < 6; k++) {
-        render_index4(rb);
+    int cube_count = b->cube_count;
+    memcpy(rb->vertices + rb->vertex_pos, b->cubes, cube_count * CUBE_MODEL_VERTEX_BYTES);
+    rb->vertex_pos += cube_count * CUBE_MODEL_VERTEX_COUNT;
+    for (int c = 0; c < cube_count; c++) {
+        for (int k = 0; k < 6; k++) {
+            render_index4(rb);
+        }
     }
 
     int index = b->index;
@@ -166,7 +169,6 @@ static void recursive_skeleton(renderbuffer *rb, bone *b, float bones[][16], flo
     if (parent == NULL) {
         rotation_and_position_to_matrix(world, local->rotation, local->position);
     } else {
-
         float local_matrix[16];
         rotation_and_position_to_matrix(local_matrix, local->rotation, local->position);
         matrix_multiply(world, absolute[parent->index], local_matrix);

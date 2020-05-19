@@ -2,7 +2,7 @@
 #define CUBE_H
 
 #define STRIDE 8
-#define CUBE_VERTEX_COUNT 24 * STRIDE
+#define CUBE_VERTEX_COUNT (24 * STRIDE)
 
 #define RENDER_CUBE(x, y, z)                                                                                                                                                                           \
     {                                                                                                                                                                                                  \
@@ -33,8 +33,8 @@
     }
 
 #define CUBE_MODEL_STRIDE 9
-#define CUBE_MODEL_VERTEX_COUNT 24 * CUBE_MODEL_STRIDE
-#define CUBE_MODEL_VERTEX_BYTES CUBE_MODEL_VERTEX_COUNT * sizeof(float)
+#define CUBE_MODEL_VERTEX_COUNT (24 * CUBE_MODEL_STRIDE)
+#define CUBE_MODEL_VERTEX_BYTES (CUBE_MODEL_VERTEX_COUNT * sizeof(float))
 
 #define RENDER_CUBE_MODEL(x, y, z, i)                                                                                                                                                                  \
     {                                                                                                                                                                                                  \

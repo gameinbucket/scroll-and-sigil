@@ -51,14 +51,14 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     ss->sound = safe_malloc(SOUND_COUNT * sizeof(Mix_Chunk *));
     soundstate_load_sound(ss, z, SOUND_BARON_SCREAM, "sounds/baron-scream.wav");
 
-    string *human_data = cat("models/human.model");
+    string *human_data = cat("models/human.wad");
     wad_element *human_wad = parse_wad(human_data);
     string_free(human_data);
     string *human_str = wad_to_string(human_wad);
     printf("\nhuman %s\n", human_str);
     string_free(human_str);
 
-    string *human_animation_data = cat("models/animations/human.animation");
+    string *human_animation_data = cat("models/animations/human.wad");
     wad_element *human_animation_wad = parse_wad(human_animation_data);
     string_free(human_animation_data);
     string *human_animation_str = wad_to_string(human_animation_wad);
@@ -75,7 +75,7 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     modelstate_add_model(ms, "human", human_model);
     delete_wad(human_wad);
 
-    string *baron_data = cat("entities/npc/baron.thing");
+    string *baron_data = cat("entities/npc/baron.wad");
     wad_element *baron_wad = parse_wad(baron_data);
     string_free(baron_data);
     string *baron_str = wad_to_string(baron_wad);

@@ -30,6 +30,13 @@ struct animation {
     int frame_count;
 };
 
+struct model_cube {
+    float size[3];
+    float pivot[3];
+    float origin[3];
+    float rotation[4];
+};
+
 typedef struct bone bone;
 
 struct bone {
@@ -38,15 +45,14 @@ struct bone {
     bone **child;
     int child_count;
     int index;
-    float width;
-    float height;
-    float length;
     float pivot[3];
     transform local;
     transform bind_pose;
     float bind_pose_matrix[16];
     float inverse_bind_pose_matrix[16];
-    float cube[CUBE_MODEL_VERTEX_COUNT];
+    float *cubes;
+    struct model_cube *cube_info;
+    int cube_count;
 };
 
 typedef struct model_info model_info;
