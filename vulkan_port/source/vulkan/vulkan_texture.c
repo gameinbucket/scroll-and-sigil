@@ -38,8 +38,7 @@ void vk_create_image(vulkan_state *vk_state, struct create_image_details details
     vkBindImageMemory(vk_state->vk_device, *image, *image_memory, 0);
 }
 
-void vk_transition_image_layout(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, VkImage image, __attribute__((unused)) VkFormat format, VkImageLayout old_layout,
-                                VkImageLayout new_layout) {
+void vk_transition_image_layout(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, VkImage image, VkImageLayout old_layout, VkImageLayout new_layout) {
 
     VkCommandBuffer command_buffer = vk_begin_single_time_commands(vk_state, vk_renderer);
 
@@ -140,11 +139,11 @@ void vk_create_texture_image(vulkan_state *vk_state, struct vulkan_renderer *vk_
 
     vk_create_image(vk_state, image_details, &texture_image, &texture_image_memory);
 
-    vk_transition_image_layout(vk_state, vk_renderer, texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    vk_transition_image_layout(vk_state, vk_renderer, texture_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
     vk_copy_buffer_to_image(vk_state, vk_renderer, staging_buffer, texture_image, width, height);
 
-    vk_transition_image_layout(vk_state, vk_renderer, texture_image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    vk_transition_image_layout(vk_state, vk_renderer, texture_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     vkDestroyBuffer(vk_state->vk_device, staging_buffer, NULL);
     vkFreeMemory(vk_state->vk_device, staging_buffer_memory, NULL);

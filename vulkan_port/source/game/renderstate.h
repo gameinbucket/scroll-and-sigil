@@ -9,14 +9,12 @@
 #include <stdlib.h>
 
 #include "core/mem.h"
-#include "rendering/shader.h"
 
 typedef struct renderstate renderstate;
 
 struct renderstate {
     int canvas_width;
     int canvas_height;
-    shader **shaders;
 };
 
 renderstate *create_renderstate();

@@ -10,7 +10,6 @@
 #include "data/array.h"
 #include "data/table.h"
 #include "graphics/matrix.h"
-#include "rendering/shader.h"
 
 #include "renderstate.h"
 

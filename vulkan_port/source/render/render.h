@@ -2,14 +2,12 @@
 #define RENDER_H
 
 #include <inttypes.h>
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-void render_index4(uint32_t *position_pointer, uint32_t *offset_pointer, uint32_t *indices);
+#include "vulkan/vulkan_renderbuffer.h"
 
 #define CUBE_STRIDE 8
 #define CUBE_VERTEX_COUNT 24
@@ -43,5 +41,8 @@ void render_index4(uint32_t *position_pointer, uint32_t *offset_pointer, uint32_
             x, y, -z, 1, 1, 1, 1, 1,   /* neg z 2 */                                                                                                                                                   \
             x, -y, -z, 1, 1, 1, 1, 0   /* neg z 3 */                                                                                                                                                   \
     }
+
+void render_index4(struct vulkan_renderbuffer *vk_renderbuffer);
+void render_cube(struct vulkan_renderbuffer *vk_renderbuffer);
 
 #endif

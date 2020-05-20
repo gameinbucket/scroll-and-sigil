@@ -198,8 +198,6 @@ static bool is_vk_physical_device_device_suitable(vulkan_state *vk_state, VkPhys
         return false;
     }
 
-    // bool primary = vk_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && vk_device_features.geometryShader;
-
     bool present_family_found = false;
     bool graphics_family_found = false;
 
@@ -328,13 +326,16 @@ static VkSurfaceFormatKHR vk_choose_swap_surface_format(VkSurfaceFormatKHR *avai
     return available[0];
 }
 
-static VkPresentModeKHR vk_choose_swap_present_mode(__attribute__((unused)) VkPresentModeKHR *available, __attribute__((unused)) uint32_t count) {
-    // for (uint32_t i = 0; i < count; i++) {
-    //     VkPresentModeKHR this = available[i];
-    //     if (this == VK_PRESENT_MODE_MAILBOX_KHR) {
-    //         return this;
-    //     }
-    // }
+static VkPresentModeKHR vk_choose_swap_present_mode(VkPresentModeKHR *available, uint32_t count) {
+    const bool mailbox = false;
+    if (mailbox) {
+        for (uint32_t i = 0; i < count; i++) {
+            VkPresentModeKHR this = available[i];
+            if (this == VK_PRESENT_MODE_MAILBOX_KHR) {
+                return this;
+            }
+        }
+    }
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
@@ -499,7 +500,7 @@ void vk_create_renderer(vulkan_state *vk_state, struct vulkan_renderer *vk_rende
     vk_create_texture_image(vk_state, vk_renderer, "../textures/tiles/grass.png");
     vk_create_texture_image_view(vk_state, vk_renderer);
     vk_create_texture_image_sampler(vk_state, vk_renderer);
-    vk_create_render_buffers(vk_state, vk_renderer, vk_renderer->pipeline->rendering);
+    vk_renderbuffer_update_data(vk_state, vk_renderer, vk_renderer->pipeline->rendering);
     vk_create_uniform_buffers(vk_state, vk_renderer);
     vk_create_descriptor_pool(vk_state, vk_renderer);
     vk_create_descriptor_sets(vk_state, vk_renderer);
@@ -551,16 +552,4 @@ void delete_vulkan_renderer(vulkan_state *vk_state, struct vulkan_renderer *vk_r
     free(vk_renderer->vk_images_in_flight);
     free(vk_renderer->vk_image_available_semaphores);
     free(vk_renderer->vk_render_finished_semaphores);
-}
-
-void delete_vulkan_state(vulkan_state *vk_state) {
-
-    vkDestroyDevice(vk_state->vk_device, NULL);
-
-#ifdef VULKAN_ENABLE_VALIDATION
-    delete_debug_utils_messennger(vk_state->vk_instance, vk_state->vk_debug_messenger, NULL);
-#endif
-
-    vkDestroySurfaceKHR(vk_state->vk_instance, vk_state->vk_surface, NULL);
-    vkDestroyInstance(vk_state->vk_instance, NULL);
 }

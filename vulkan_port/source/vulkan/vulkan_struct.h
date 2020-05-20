@@ -7,6 +7,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include "vulkan_state.h"
+
 #define MAX(x, y) (x > y ? x : y)
 #define MIN(x, y) (x < y ? x : y)
 
@@ -35,23 +37,6 @@ struct vulkan_uniform_buffer {
     VkDeviceMemory *vk_uniform_buffers_memory;
 };
 
-struct vulkan_render_buffer {
-    int position;
-    int color;
-    int texture;
-    int normal;
-    uint32_t vertex_stride;
-    float *vertices;
-    uint32_t *indices;
-    uint32_t vertex_count;
-    uint32_t index_count;
-    uint32_t index_offset;
-    VkBuffer vk_vertex_buffer;
-    VkDeviceMemory vk_vertex_buffer_memory;
-    VkBuffer vk_index_buffer;
-    VkDeviceMemory vk_index_buffer_memory;
-};
-
 struct vulkan_swapchain {
     VkSwapchainKHR vk_swapchain;
     VkFormat swapchain_image_format;
@@ -64,7 +49,7 @@ struct vulkan_swapchain {
 struct vulkan_pipeline {
     char *vertex_shader_path;
     char *fragment_shader_path;
-    struct vulkan_render_buffer *rendering;
+    struct vulkan_renderbuffer *rendering;
 };
 
 struct vulkan_renderer {
@@ -94,27 +79,8 @@ struct vulkan_renderer {
     VkFormat vk_depth_format;
 };
 
-typedef struct vulkan_state vulkan_state;
-
-struct vulkan_state {
-    VkInstance vk_instance;
-    VkSurfaceKHR vk_surface;
-    VkPhysicalDevice vk_physical_device;
-    VkDevice vk_device;
-    VkQueue vk_present_queue;
-    VkQueue vk_graphics_queue;
-    uint32_t present_family_index;
-    uint32_t graphics_family_index;
-    VkDebugUtilsMessengerEXT vk_debug_messenger;
-    int current_frame;
-    bool framebuffer_resized;
-};
-
-void delete_vulkan_render_buffer(vulkan_state *vk_state, struct vulkan_render_buffer *self);
-void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *self);
 void delete_vulkan_swapchain(struct vulkan_swapchain *self);
 void delete_vulkan_uniform_buffer(struct vulkan_uniform_buffer *self);
 void delete_vulkan_renderer(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer);
-void delete_vulkan_state(vulkan_state *self);
 
 #endif

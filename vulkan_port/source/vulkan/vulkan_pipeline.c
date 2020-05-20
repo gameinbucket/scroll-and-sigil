@@ -1,5 +1,12 @@
 #include "vulkan_pipeline.h"
 
+struct vulkan_pipeline *vk_create_pipeline(char *vertex, char *fragment) {
+    struct vulkan_pipeline *self = safe_calloc(1, sizeof(struct vulkan_pipeline));
+    self->vertex_shader_path = vertex;
+    self->fragment_shader_path = fragment;
+    return self;
+}
+
 void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
 
     VkAttachmentDescription color_attachment = {0};
@@ -225,4 +232,9 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_renderer 
     free(vertex_shader);
     free(fragment_shader);
     free(attribute_description);
+}
+
+void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *self) {
+    delete_vulkan_renderbuffer(vk_state, self->rendering);
+    free(self);
 }

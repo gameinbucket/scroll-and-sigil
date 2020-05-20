@@ -39,6 +39,5 @@ void vk_create_swapchain_image_views(vulkan_state *vk_state, struct vulkan_rende
 void vk_recreate_swapchain(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, uint32_t width, uint32_t height);
 void vk_create_renderer(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, uint32_t width, uint32_t height);
 void vk_create_state(vulkan_state *vk_state);
-void delete_vulkan_state(vulkan_state *self);
 
 #endif

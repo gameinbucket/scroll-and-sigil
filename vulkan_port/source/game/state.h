@@ -8,12 +8,13 @@
 #include <stdlib.h>
 
 #include "core/mem.h"
+#include "render/render.h"
 #include "vulkan/vulkan_init.h"
+#include "vulkan/vulkan_renderbuffer.h"
 #include "vulkan/vulkan_struct.h"
 #include "vulkan/vulkan_uniforms.h"
 
 #include "log.h"
-#include "render.h"
 #include "renderstate.h"
 #include "wad.h"
 

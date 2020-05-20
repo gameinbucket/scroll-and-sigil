@@ -16,7 +16,6 @@
 #include "vulkan/vulkan_uniforms.h"
 
 #include "log.h"
-#include "render.h"
 #include "renderstate.h"
 #include "state.h"
 

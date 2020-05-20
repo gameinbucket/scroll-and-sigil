@@ -18,7 +18,9 @@
 #include "vulkan_struct.h"
 #include "vulkan_vertex.h"
 
+struct vulkan_pipeline *vk_create_pipeline(char *vertex, char *fragment);
 void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer);
 void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, struct vulkan_pipeline *pipeline);
+void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *self);
 
 #endif

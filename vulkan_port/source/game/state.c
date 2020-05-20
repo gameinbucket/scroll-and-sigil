@@ -10,55 +10,22 @@ state *create_state(SDL_Window *window, renderstate *rs, vulkan_state *vk_state)
     SDL_Vulkan_GetDrawableSize(window, &self->canvas_width, &self->canvas_height);
 
     {
-        struct vulkan_pipeline *pipeline2d = safe_calloc(1, sizeof(struct vulkan_pipeline));
-        pipeline2d->vertex_shader_path = "shaders/spv/texture2d.vert.spv";
-        pipeline2d->fragment_shader_path = "shaders/spv/texture2d.frag.spv";
-        struct vulkan_render_buffer *render2d = safe_calloc(1, sizeof(struct vulkan_render_buffer));
-        render2d->position = 3;
-        render2d->color = 3;
-        render2d->texture = 2;
-        render2d->vertex_stride = render2d->position + render2d->color + render2d->texture + render2d->normal;
-        render2d->vertices = safe_malloc(CUBE_VERTEX_FLOAT * sizeof(float));
-        render2d->vertex_count = CUBE_VERTEX_COUNT;
-        render2d->indices = safe_malloc(CUBE_INDICE_COUNT * sizeof(uint32_t));
-        render2d->index_count = CUBE_INDICE_COUNT;
-        float cube[CUBE_VERTEX_FLOAT] = RENDER_CUBE(1, 1, 1);
-        memcpy(render2d->vertices, cube, CUBE_VERTEX_FLOAT * sizeof(float));
-        uint32_t index_position = 0;
-        uint32_t index_offset = 0;
-        for (int k = 0; k < 6; k++)
-            render_index4(&index_position, &index_offset, render2d->indices);
-        pipeline2d->rendering = render2d;
-
-        self->vk_renderers[1].pipeline = pipeline2d;
+        struct vulkan_renderbuffer *render3d = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
+        struct vulkan_pipeline *pipeline3d = vk_create_pipeline("shaders/spv/texture3d.vert.spv", "shaders/spv/texture3d.frag.spv");
+        render_cube(render3d);
+        pipeline3d->rendering = render3d;
+        self->vk_renderers[0].pipeline = pipeline3d;
+        vk_create_renderer(vk_state, &self->vk_renderers[0], self->canvas_width, self->canvas_height);
     }
 
     {
-        struct vulkan_pipeline *pipeline3d = safe_calloc(1, sizeof(struct vulkan_pipeline));
-        pipeline3d->vertex_shader_path = "shaders/spv/texture3d.vert.spv";
-        pipeline3d->fragment_shader_path = "shaders/spv/texture3d.frag.spv";
-        struct vulkan_render_buffer *render3d = safe_calloc(1, sizeof(struct vulkan_render_buffer));
-        render3d->position = 3;
-        render3d->color = 3;
-        render3d->texture = 2;
-        render3d->vertex_stride = render3d->position + render3d->color + render3d->texture + render3d->normal;
-        render3d->vertices = safe_malloc(CUBE_VERTEX_FLOAT * sizeof(float));
-        render3d->vertex_count = CUBE_VERTEX_COUNT;
-        render3d->indices = safe_malloc(CUBE_INDICE_COUNT * sizeof(uint32_t));
-        render3d->index_count = CUBE_INDICE_COUNT;
-        float cube[CUBE_VERTEX_FLOAT] = RENDER_CUBE(1, 1, 1);
-        memcpy(render3d->vertices, cube, CUBE_VERTEX_FLOAT * sizeof(float));
-        uint32_t index_position = 0;
-        uint32_t index_offset = 0;
-        for (int k = 0; k < 6; k++)
-            render_index4(&index_position, &index_offset, render3d->indices);
-        pipeline3d->rendering = render3d;
-
-        self->vk_renderers[0].pipeline = pipeline3d;
+        struct vulkan_renderbuffer *render2d = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
+        struct vulkan_pipeline *pipeline2d = vk_create_pipeline("shaders/spv/texture2d.vert.spv", "shaders/spv/texture2d.frag.spv");
+        render_cube(render2d);
+        pipeline2d->rendering = render2d;
+        self->vk_renderers[1].pipeline = pipeline2d;
+        vk_create_renderer(vk_state, &self->vk_renderers[1], self->canvas_width, self->canvas_height);
     }
-
-    vk_create_renderer(vk_state, &self->vk_renderers[0], self->canvas_width, self->canvas_height);
-    vk_create_renderer(vk_state, &self->vk_renderers[1], self->canvas_width, self->canvas_height);
 
     wad_load_resources(rs);
 

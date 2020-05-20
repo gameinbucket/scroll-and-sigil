@@ -15,6 +15,7 @@
 #include "core/fileio.h"
 #include "core/mem.h"
 
+#include "vulkan_renderbuffer.h"
 #include "vulkan_struct.h"
 
 VkCommandBuffer vk_begin_single_time_commands(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer);
