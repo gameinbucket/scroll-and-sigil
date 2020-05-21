@@ -106,13 +106,13 @@ void shadow_map_view_projection(float *matrix, float *shadow_view, float *view, 
 
     float shadow_projection[16];
 
-    // matrix_orthographic(shadow_projection, min_x, max_x, min_y, max_y, min_z, max_z);
+    matrix_orthographic(shadow_projection, min_x, max_x, min_y, max_y, min_z, max_z);
 
     // matrix_orthographic(shadow_projection, min_x, max_x, min_y, max_y, 0.001, z_distance);
 
     // matrix_orthographic(shadow_projection, -(max_x - min_x) * 0.5, (max_x - min_x) * 0.5, -(max_y - min_y) * 0.5, (max_y - min_y) * 0.5, -(max_z - min_z) * 0.5, (max_z - min_z) * 0.5);
 
-    matrix_orthographic(shadow_projection, -50, 50, -50, 50, 0.01, 100);
+    // matrix_orthographic(shadow_projection, -50, 50, -50, 50, 0.01, 100); // temporary work around
 
     // matrix_orthographic(shadow_projection, -50, 50, -50, 50, 0.01, z_distance);
 

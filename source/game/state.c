@@ -257,13 +257,13 @@ void state_render(state *self) {
     graphics_bind_and_draw(draw_images);
 
     graphics_bind_fbo(0);
-    renderstate_set_program(rs, SHADER_SCREEN);
-    // renderstate_set_program(rs, SHADER_VISUALIZE_DEPTH);
+    // renderstate_set_program(rs, SHADER_SCREEN);
+    renderstate_set_program(rs, SHADER_VISUALIZE_DEPTH);
     graphics_set_view(0, 0, rs->canvas_width, rs->canvas_height);
     matrix_orthographic_projection(rs->mvp, rs->canvas_orthographic, rs->mv, 0, 0);
     renderstate_set_mvp(rs, rs->mvp);
-    graphics_bind_texture(GL_TEXTURE0, f->textures[0]);
-    // graphics_bind_texture(GL_TEXTURE0, s->depth_texture);
+    // graphics_bind_texture(GL_TEXTURE0, f->textures[0]);
+    graphics_bind_texture(GL_TEXTURE0, s->depth_texture);
     graphics_bind_and_draw(rs->draw_canvas);
 }
 

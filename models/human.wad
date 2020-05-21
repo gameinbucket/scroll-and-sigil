@@ -27,7 +27,7 @@ bones{
         cubes[{
             size[6, 6, 6]
             pivot[0, 0, 0]
-            origin[0, 0, 0]
+            origin[0, 23.2, 0]
             rotation[0, 0, 0]
         }]
         parent:neck
@@ -37,87 +37,10 @@ bones{
         rotation[0, 0, 0]
         cubes[{
             size[3, 8, 3]
-            pivot[0, 0, 0]
-            origin[0, 0, 0]
-            rotation[0, 0, 0]
+            pivot[0, -8, 0]
+            origin[11, 16, 0]
+            rotation[45, 0, 0]
         }]
         parent:body
-    }
-    left-forearm{
-        pivot[0, 0, 0]
-        rotation[0, 0, 0]
-        cubes[{
-            size[3, 8, 3]
-            pivot[0, 0, 0]
-            origin[0, 0, 0]
-            rotation[0, 0, 0]
-        }]
-        parent:left-arm
-    }
-    right-arm{
-        pivot[0, 0, 0]
-        rotation[0, 0, 0]
-        cubes[{
-            size[3, 8, 3]
-            pivot[0, 0, 0]
-            origin[0, 0, 0]
-            rotation[0, 0, 0]
-        }]
-        parent:body
-    }
-    right-forearm{
-        pivot[0, 0, 0]
-        rotation[0, 0, 0]
-        cubes[{
-            size[3, 8, 3]
-            pivot[0, 0, 0]
-            origin[0, -16, 0]
-            rotation[0, 0, 0]
-        }]
-        parent:right-arm
-    }
-    left-leg{
-        pivot[0, 0, 0]
-        rotation[0, 0, 0]
-        cubes[{
-            size[3, 8, 3]
-            pivot[0, -8, 0]
-            origin[5, -16, 0]
-            rotation[0, 0, 0]
-        }]
-        parent:body
-    }
-    left-knee{
-        pivot[0, 0, 0]
-        rotation[0, 0, 0]
-        cubes[{
-            size[3, 8, 3]
-            pivot[0, -8, 0]
-            origin[0, -16, 0]
-            rotation[0, 0, 0]
-        }]
-        parent:left-leg
-    }
-    right-leg{
-        pivot[0, 0, 0]
-        rotation[0, 0, 0]
-        cubes[{
-            size[3, 8, 3]
-            pivot[0, -8, 0]
-            origin[-5, -16, 0]
-            rotation[0, 0, 0]
-        }]
-        parent:body
-    }
-    right-knee{
-        pivot[0, 0, 0]
-        rotation[0, 0, 0]
-        cubes[{
-            size[3, 8, 3]
-            pivot[0, -8, 0]
-            origin[0, -16, 0]
-            rotation[0, 0, 0]
-        }]
-        parent:right-leg
     }
 }

@@ -26,6 +26,7 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
     float height = wad_get_float(wad_get_from_array(size, 1)) * scale;
     float length = wad_get_float(wad_get_from_array(size, 2)) * scale;
     float cube[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width, height, length, bone_index);
+    memcpy(&b->cubes[cube_index * CUBE_MODEL_VERTEX_COUNT], cube, CUBE_MODEL_VERTEX_BYTES);
     struct model_cube *info = &b->cube_info[cube_index];
     if (pivot != NULL) {
         float x = wad_get_float(wad_get_from_array(pivot, 0)) * scale;
@@ -54,12 +55,6 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
     } else {
         quaternion_identity(info->rotation);
     }
-    for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
-        cube[i] += info->origin[0];
-        cube[i + 1] += info->origin[1];
-        cube[i + 2] += info->origin[2];
-    }
-    memcpy(&b->cubes[cube_index * CUBE_MODEL_VERTEX_COUNT], cube, CUBE_MODEL_VERTEX_BYTES);
 }
 
 static void bone_offset(bone *b, float x, float y, float z) {
@@ -83,13 +78,17 @@ static void bone_pivot(bone *b, float x, float y, float z) {
     //     cube[i + 2] += z;
     // }
 
-    b->pivot[0] = x;
-    b->pivot[1] = y;
-    b->pivot[2] = z;
+    // b->pivot[0] = x;
+    // b->pivot[1] = y;
+    // b->pivot[2] = z;
 
     // b->local.position[0] = x;
     // b->local.position[1] = y;
     // b->local.position[2] = z;
+
+    b->bind_pose.position[0] = -x;
+    b->bind_pose.position[1] = -y;
+    b->bind_pose.position[2] = -z;
 }
 
 static void bone_attachements(bone *b, int count) {
@@ -112,14 +111,12 @@ static void bone_init(bone *bones, int index, string *name, wad_element *pivot, 
     b->cubes = safe_malloc(cube_count * CUBE_MODEL_VERTEX_BYTES);
     b->cube_info = safe_calloc(cube_count, sizeof(struct model_cube));
     b->cube_count = cube_count;
-
     if (pivot != NULL) {
         float x = wad_get_float(wad_get_from_array(pivot, 0)) * scale;
         float y = wad_get_float(wad_get_from_array(pivot, 1)) * scale;
         float z = wad_get_float(wad_get_from_array(pivot, 2)) * scale;
         bone_pivot(b, x, y, z);
     }
-
     if (rotation != NULL) {
         float x = wad_get_float(wad_get_from_array(rotation, 0));
         float y = wad_get_float(wad_get_from_array(rotation, 1));
@@ -128,7 +125,6 @@ static void bone_init(bone *bones, int index, string *name, wad_element *pivot, 
     } else {
         quaternion_identity(b->bind_pose.rotation);
     }
-
     quaternion_identity(b->local.rotation);
 }
 
@@ -146,13 +142,7 @@ static void bone_calculate_bind_pose(bone *b) {
     }
 
     float *bind_pose = b->bind_pose_matrix;
-
-    // float *cube = b->cube;
-    // for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
-    //     float out[3];
-    //     matrix_multiply_vector3(out, bind_pose, &cube[i]);
-    //     memcpy(&cube[i], out, 3 * sizeof(float));
-    // }
+    float *inverse_bind_pose = b->inverse_bind_pose_matrix;
 
     // float *cube = b->cube;
     // float pivot[3];
@@ -163,7 +153,36 @@ static void bone_calculate_bind_pose(bone *b) {
     //     cube[i + 2] += pivot[2];
     // }
 
-    matrix_inverse(b->inverse_bind_pose_matrix, bind_pose);
+    matrix_inverse(inverse_bind_pose, bind_pose);
+
+    for (int c = 0; c < b->cube_count; c++) {
+        struct model_cube *info = &b->cube_info[c];
+        float *cube = &b->cubes[c * CUBE_MODEL_VERTEX_COUNT];
+
+        // for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+        //     float out[3];
+        //     matrix_multiply_vector3(out, inverse_bind_pose, &cube[i]);
+        //     cube[i] = out[0];
+        //     cube[i + 1] = out[1];
+        //     cube[i + 2] = out[2];
+        // }
+
+        for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+            cube[i] += info->pivot[0];
+            cube[i + 1] += info->pivot[1];
+            cube[i + 2] += info->pivot[2];
+        }
+
+        float matrix[16];
+        rotation_and_position_to_matrix(matrix, info->rotation, info->origin);
+        for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+            float out[3];
+            matrix_multiply_vector3(out, matrix, &cube[i]);
+            cube[i] = out[0];
+            cube[i + 1] = out[1];
+            cube[i + 2] = out[2];
+        }
+    }
 
     for (int i = 0; i < b->child_count; i++) {
         bone_calculate_bind_pose(b->child[i]);
