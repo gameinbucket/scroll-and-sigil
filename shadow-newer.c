@@ -34,15 +34,7 @@ void shadow_map_view_projection(float *out, float *shadow_view, float *view, flo
     vec4 corners[8];
     matrix_frustum_corners(corners, inverse_view_projection);
 
-    vec3 center = {0};
-    for (int i = 0; i < 8; i++) {
-        vec4 *c = &corners[i];
-        center.x += c->x;
-        center.y += c->y;
-        center.z += c->z;
-    }
-
-    VECTOR_3_DIVIDE(center, 8);
+    vec3 center = {0, 0, 0};
 
     vec3 any = {0, 1, 0};
     vec3 side;
@@ -63,7 +55,7 @@ void shadow_map_view_projection(float *out, float *shadow_view, float *view, flo
 
         // float x = VECTOR_3_DOT(side, c);
         // float y = VECTOR_3_DOT(up, c);
-        // float z = VECTOR_3_DOT(shadow_direction, c);
+        float z = VECTOR_3_DOT(shadow_direction, c);
 
         // min_x = fmin(min_x, x);
         // max_x = fmax(max_x, x);
@@ -71,23 +63,29 @@ void shadow_map_view_projection(float *out, float *shadow_view, float *view, flo
         // min_y = fmin(min_y, y);
         // max_y = fmax(max_y, y);
 
-        // min_z = fmin(min_z, z);
-        // max_z = fmax(max_z, z);
+        min_z = fmin(min_z, z);
+        max_z = fmax(max_z, z);
 
-        min_z = fmin(min_z, c.z);
-        max_z = fmax(max_z, c.z);
+        // min_z = fmin(min_z, c.z);
+        // max_z = fmax(max_z, c.z);
+
+        center.x += c.x;
+        center.y += c.y;
+        center.z += c.z;
     }
+
+    VECTOR_3_DIVIDE(center, 8);
 
     float z_distance = max_z - min_z;
     printf("camera view: %f, %f, %f | z distance: %f, %f, %f\n", -view[2], -view[6], -view[10], z_distance, min_z, max_z);
 
-    float x = center.x - shadow_direction.x * z_distance;
-    float y = center.y - shadow_direction.y * z_distance;
-    float z = center.z - shadow_direction.z * z_distance;
+    float x = center.x + shadow_direction.x * z_distance;
+    float y = center.y + shadow_direction.y * z_distance;
+    float z = center.z + shadow_direction.z * z_distance;
     // matrix_set_translation(shadow_view, -x, -y, -z);
     matrix_translate(shadow_view, -x, -y, -z);
 
-    const bool ortho = true;
+    const bool ortho = false;
 
     float shadow_projection[16];
 
@@ -103,6 +101,7 @@ void shadow_map_view_projection(float *out, float *shadow_view, float *view, flo
             vec4 *corner = &corners[i];
             vec4 c;
             matrix_multiply_vector4(&c, shadow_view, corner);
+            // matrix_multiply_vector4(&c, inverse_view_projection, corner);
 
             min_x = fmin(min_x, c.x);
             max_x = fmax(max_x, c.x);
@@ -116,10 +115,9 @@ void shadow_map_view_projection(float *out, float *shadow_view, float *view, flo
 
         z_distance = max_z - min_z;
 
-        // matrix_orthographic(shadow_projection, min_x, max_x, min_y, max_y, min_z, max_z);
-        matrix_orthographic(shadow_projection, min_x, max_x, min_y, max_y, 0.001, z_distance);
+        matrix_orthographic(shadow_projection, min_x, max_x, min_y, max_y, min_z, max_z);
+        // matrix_orthographic(shadow_projection, min_x, max_x, min_y, max_y, 0.001, z_distance);
         // matrix_orthographic(shadow_projection, -(max_x - min_x) * 0.5, (max_x - min_x) * 0.5, -(max_y - min_y) * 0.5, (max_y - min_y) * 0.5, -(max_z - min_z) * 0.5, (max_z - min_z) * 0.5);
-        // matrix_orthographic(shadow_projection, -(max_x - min_x) * 0.5, (max_x - min_x) * 0.5, -(max_y - min_y) * 0.5, (max_y - min_y) * 0.5, 0.001, z_distance);
         // matrix_orthographic(shadow_projection, -50, 50, -50, 50, 0.01, 100); // temporary work around
     } else {
         float fov = 60.0;

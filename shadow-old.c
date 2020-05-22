@@ -45,10 +45,16 @@ void shadow_map_view_projection(float *out, float *shadow_view, float *view, flo
     VECTOR_3_DIVIDE(center, 8);
 
     vec3 any = {0, 1, 0};
+
     vec3 side;
-    vec3 up;
     VECTOR_3_CROSS(side, shadow_direction, any);
+
+    vec3 up;
     VECTOR_3_CROSS(up, side, shadow_direction);
+
+    if (up.x == -999) {
+        printf("foobaz\n");
+    }
 
     float min_x = FLT_MAX;
     float max_x = FLT_MIN;
@@ -61,21 +67,18 @@ void shadow_map_view_projection(float *out, float *shadow_view, float *view, flo
         vec4 *corner = &corners[i];
         vec3 c = {corner->x, corner->y, corner->z};
 
-        // float x = VECTOR_3_DOT(side, c);
-        // float y = VECTOR_3_DOT(up, c);
-        // float z = VECTOR_3_DOT(shadow_direction, c);
+        float x = VECTOR_3_DOT(side, c);
+        float y = VECTOR_3_DOT(up, c);
+        float z = VECTOR_3_DOT(shadow_direction, c);
 
-        // min_x = fmin(min_x, x);
-        // max_x = fmax(max_x, x);
+        min_x = fmin(min_x, x);
+        max_x = fmax(max_x, x);
 
-        // min_y = fmin(min_y, y);
-        // max_y = fmax(max_y, y);
+        min_y = fmin(min_y, y);
+        max_y = fmax(max_y, y);
 
-        // min_z = fmin(min_z, z);
-        // max_z = fmax(max_z, z);
-
-        min_z = fmin(min_z, c.z);
-        max_z = fmax(max_z, c.z);
+        min_z = fmin(min_z, z);
+        max_z = fmax(max_z, z);
     }
 
     float z_distance = max_z - min_z;
@@ -87,7 +90,7 @@ void shadow_map_view_projection(float *out, float *shadow_view, float *view, flo
     // matrix_set_translation(shadow_view, -x, -y, -z);
     matrix_translate(shadow_view, -x, -y, -z);
 
-    const bool ortho = true;
+    const bool ortho = false;
 
     float shadow_projection[16];
 
@@ -119,7 +122,6 @@ void shadow_map_view_projection(float *out, float *shadow_view, float *view, flo
         // matrix_orthographic(shadow_projection, min_x, max_x, min_y, max_y, min_z, max_z);
         matrix_orthographic(shadow_projection, min_x, max_x, min_y, max_y, 0.001, z_distance);
         // matrix_orthographic(shadow_projection, -(max_x - min_x) * 0.5, (max_x - min_x) * 0.5, -(max_y - min_y) * 0.5, (max_y - min_y) * 0.5, -(max_z - min_z) * 0.5, (max_z - min_z) * 0.5);
-        // matrix_orthographic(shadow_projection, -(max_x - min_x) * 0.5, (max_x - min_x) * 0.5, -(max_y - min_y) * 0.5, (max_y - min_y) * 0.5, 0.001, z_distance);
         // matrix_orthographic(shadow_projection, -50, 50, -50, 50, 0.01, 100); // temporary work around
     } else {
         float fov = 60.0;

@@ -17,6 +17,7 @@ struct input {
     bool look_down;
     bool look_left;
     bool look_right;
+    bool debugger;
 };
 
 typedef struct input input;

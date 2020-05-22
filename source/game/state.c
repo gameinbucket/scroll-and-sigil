@@ -1,5 +1,7 @@
 #include "state.h"
 
+float debug_shadow = false;
+
 state *create_state(world *w, renderstate *rs, soundstate *ss) {
 
     state *self = safe_calloc(1, sizeof(state));
@@ -119,6 +121,11 @@ void state_update(state *self) {
     camera_update(self->c);
 
     self->h->rotation_target = -self->c->ry;
+
+    if (in->debugger) {
+        in->debugger = false;
+        debug_shadow = !debug_shadow;
+    }
 }
 
 void state_render(state *self) {
@@ -140,7 +147,7 @@ void state_render(state *self) {
     matrix_translate(view, -c->x, -c->y, -c->z);
     matrix_multiply(view_projection, rs->draw_perspective, view);
 
-    // shadow map
+    // shadow map ----------------------------------------
 
     shadowmap *s = rs->shadow_map;
 
@@ -154,7 +161,6 @@ void state_render(state *self) {
     vec3 eye = {0, 10, 0};
     vec3 center = {2, 0, 10};
     matrix_look_at(shadow_view, &eye, &center);
-    // matrix_translate(shadow_view, -eye.x, -eye.y, -eye.z);
 
     vec3 light_direction = {eye.x - center.x, eye.y - center.y, eye.z - center.z};
     vector3_normalize(&light_direction);
@@ -257,13 +263,19 @@ void state_render(state *self) {
     graphics_bind_and_draw(draw_images);
 
     graphics_bind_fbo(0);
-    // renderstate_set_program(rs, SHADER_SCREEN);
-    renderstate_set_program(rs, SHADER_VISUALIZE_DEPTH);
+    if (debug_shadow) {
+        renderstate_set_program(rs, SHADER_VISUALIZE_DEPTH);
+    } else {
+        renderstate_set_program(rs, SHADER_SCREEN);
+    }
     graphics_set_view(0, 0, rs->canvas_width, rs->canvas_height);
     matrix_orthographic_projection(rs->mvp, rs->canvas_orthographic, rs->mv, 0, 0);
     renderstate_set_mvp(rs, rs->mvp);
-    // graphics_bind_texture(GL_TEXTURE0, f->textures[0]);
-    graphics_bind_texture(GL_TEXTURE0, s->depth_texture);
+    if (debug_shadow) {
+        graphics_bind_texture(GL_TEXTURE0, s->depth_texture);
+    } else {
+        graphics_bind_texture(GL_TEXTURE0, f->textures[0]);
+    }
     graphics_bind_and_draw(rs->draw_canvas);
 }
 

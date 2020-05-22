@@ -14,11 +14,11 @@ void matrix_orthographic(float *matrix, float left, float right, float bottom, f
 void matrix_frustum(float *matrix, float left, float right, float bottom, float top, float near, float far);
 void matrix_perspective(float *matrix, float fov, float near, float far, float aspect);
 void matrix_translate(float *matrix, float x, float y, float z);
+void matrix_set_translation(float *matrix, float x, float y, float z);
 void matrix_multiply(float *matrix, float *a, float *b);
 void matrix_rotate_x(float *matrix, float sine, float cosine);
 void matrix_rotate_y(float *matrix, float sine, float cosine);
 void matrix_rotate_z(float *matrix, float sine, float cosine);
-void matrix_set_translation(float *matrix, float x, float y, float z);
 void matrix_inverse(float *matrix, float *from);
 void matrix_transpose(float *matrix, float *from);
 void matrix_multiply_vector3(float *out, float *matrix, float *vec);

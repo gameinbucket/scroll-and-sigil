@@ -95,6 +95,13 @@ void matrix_translate(float *matrix, float x, float y, float z) {
     matrix[15] = x * matrix[3] + y * matrix[7] + z * matrix[11] + matrix[15];
 }
 
+void matrix_set_translation(float *matrix, float x, float y, float z) {
+
+    matrix[12] = x;
+    matrix[13] = y;
+    matrix[14] = z;
+}
+
 void matrix_multiply(float *matrix, float *a, float *b) {
 
     matrix[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3];
@@ -206,13 +213,6 @@ void matrix_rotate_z(float *matrix, float sine, float cosine) {
     memcpy(copy, matrix, 16 * sizeof(float));
 
     matrix_multiply(matrix, copy, temp);
-}
-
-void matrix_set_translation(float *matrix, float x, float y, float z) {
-
-    matrix[12] = x;
-    matrix[13] = y;
-    matrix[14] = z;
 }
 
 void matrix_inverse(float *matrix, float *from) {
