@@ -1,16 +1,9 @@
 #include "vulkan_pipeline.h"
 
-struct vulkan_pipeline *vk_create_pipeline(char *vertex, char *fragment) {
-    struct vulkan_pipeline *self = safe_calloc(1, sizeof(struct vulkan_pipeline));
-    self->vertex_shader_path = vertex;
-    self->fragment_shader_path = fragment;
-    return self;
-}
-
-void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer) {
+void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
 
     VkAttachmentDescription color_attachment = {0};
-    color_attachment.format = vk_renderer->swapchain->swapchain_image_format;
+    color_attachment.format = pipeline->swapchain->swapchain_image_format;
     color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
     color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -20,7 +13,7 @@ void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_renderer *vk_re
     color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     VkAttachmentDescription depth_attachment = {0};
-    depth_attachment.format = vk_renderer->vk_depth_format;
+    depth_attachment.format = pipeline->depth.vk_depth_format;
     depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
     depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -69,7 +62,41 @@ void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_renderer *vk_re
         exit(1);
     }
 
-    vk_renderer->vk_render_pass = render_pass;
+    pipeline->vk_render_pass = render_pass;
+}
+
+struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment) {
+    struct vulkan_pipeline *self = safe_calloc(1, sizeof(struct vulkan_pipeline));
+    self->vertex_shader_path = vertex;
+    self->fragment_shader_path = fragment;
+    return self;
+}
+
+void vk_create_descriptor_set_layout(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
+
+    VkDescriptorSetLayoutBinding ubo_layout_binding = {0};
+    ubo_layout_binding.binding = 0;
+    ubo_layout_binding.descriptorCount = 1;
+    ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
+    sampler_layout_binding.binding = 1;
+    sampler_layout_binding.descriptorCount = 1;
+    sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutBinding bindings[2] = {ubo_layout_binding, sampler_layout_binding};
+
+    VkDescriptorSetLayoutCreateInfo layout_info = {0};
+    layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layout_info.bindingCount = 2;
+    layout_info.pBindings = bindings;
+
+    if (vkCreateDescriptorSetLayout(vk_state->vk_device, &layout_info, NULL, &pipeline->vk_descriptor_set_layout) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan Create Descriptor Set Layout\n");
+        exit(1);
+    }
 }
 
 VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_t size) {
@@ -89,13 +116,13 @@ VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_
     return vk_shader_module;
 }
 
-void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, struct vulkan_pipeline *vk_pipeline) {
+void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *pipeline, struct vulkan_swapchain *swapchain) {
 
     size_t vertex_shader_size;
-    char *vertex_shader = read_binary(vk_pipeline->vertex_shader_path, &vertex_shader_size);
+    char *vertex_shader = read_binary(pipeline->vertex_shader_path, &vertex_shader_size);
 
     size_t fragment_shader_size;
-    char *fragment_shader = read_binary(vk_pipeline->fragment_shader_path, &fragment_shader_size);
+    char *fragment_shader = read_binary(pipeline->fragment_shader_path, &fragment_shader_size);
 
     VkShaderModule vertex_module = vk_create_shader_module(vk_state, vertex_shader, vertex_shader_size);
     VkShaderModule fragment_module = vk_create_shader_module(vk_state, fragment_shader, fragment_shader_size);
@@ -117,10 +144,10 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_renderer 
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    int position = vk_pipeline->rendering->position;
-    int color = vk_pipeline->rendering->color;
-    int texture = vk_pipeline->rendering->texture;
-    int normal = vk_pipeline->rendering->normal;
+    int position = pipeline->renderbuffer->position;
+    int color = pipeline->renderbuffer->color;
+    int texture = pipeline->renderbuffer->texture;
+    int normal = pipeline->renderbuffer->normal;
 
     int attribute_count = vk_attribute_count(position, color, texture, normal);
 
@@ -140,14 +167,14 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_renderer 
     VkViewport viewport = {0};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float)vk_renderer->swapchain->swapchain_extent.width;
-    viewport.height = (float)vk_renderer->swapchain->swapchain_extent.height;
+    viewport.width = (float)swapchain->swapchain_extent.width;
+    viewport.height = (float)swapchain->swapchain_extent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor = {0};
     scissor.offset = (VkOffset2D){0, 0};
-    scissor.extent = vk_renderer->swapchain->swapchain_extent;
+    scissor.extent = swapchain->swapchain_extent;
 
     VkPipelineViewportStateCreateInfo viewport_state = {0};
     viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -194,7 +221,7 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_renderer 
     VkPipelineLayoutCreateInfo pipeline_layout_info = {0};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_info.setLayoutCount = 1;
-    pipeline_layout_info.pSetLayouts = &vk_renderer->vk_descriptor_set_layout;
+    pipeline_layout_info.pSetLayouts = &pipeline->vk_descriptor_set_layout;
 
     VkPipelineLayout vk_pipeline_layout = {0};
 
@@ -203,7 +230,7 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_renderer 
         exit(1);
     }
 
-    vk_renderer->vk_pipeline_layout = vk_pipeline_layout;
+    pipeline->vk_pipeline_layout = vk_pipeline_layout;
 
     VkGraphicsPipelineCreateInfo pipeline_info = {0};
     pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -217,11 +244,11 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_renderer 
     pipeline_info.pDepthStencilState = &depth_stencil;
     pipeline_info.pColorBlendState = &color_blending;
     pipeline_info.layout = vk_pipeline_layout;
-    pipeline_info.renderPass = vk_renderer->vk_render_pass;
+    pipeline_info.renderPass = pipeline->vk_render_pass;
     pipeline_info.subpass = 0;
     pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(vk_state->vk_device, VK_NULL_HANDLE, 1, &pipeline_info, NULL, &vk_renderer->vk_pipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(vk_state->vk_device, VK_NULL_HANDLE, 1, &pipeline_info, NULL, &pipeline->vk_pipeline) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Pipeline\n");
         exit(1);
     }
@@ -232,9 +259,4 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_renderer 
     free(vertex_shader);
     free(fragment_shader);
     free(attribute_description);
-}
-
-void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *self) {
-    delete_vulkan_renderbuffer(vk_state, self->rendering);
-    free(self);
 }

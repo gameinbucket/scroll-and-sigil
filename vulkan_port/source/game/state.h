@@ -1,6 +1,9 @@
 #ifndef STATE_H
 #define STATE_H
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_vulkan.h>
+
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -9,9 +12,10 @@
 
 #include "core/mem.h"
 #include "render/render.h"
-#include "vulkan/vulkan_init.h"
+#include "vulkan/vulkan_pipeline.h"
+#include "vulkan/vulkan_pipeline_util.h"
 #include "vulkan/vulkan_renderbuffer.h"
-#include "vulkan/vulkan_struct.h"
+#include "vulkan/vulkan_state.h"
 #include "vulkan/vulkan_uniforms.h"
 
 #include "log.h"
@@ -30,7 +34,7 @@ struct state {
     int canvas_height;
     renderstate *rs;
     vulkan_state *vk_state;
-    struct vulkan_renderer vk_renderers[VULKAN_RENDERERS_COUNT];
+    struct vulkan_pipeline *pipelines[VULKAN_RENDERERS_COUNT];
 };
 
 state *create_state(SDL_Window *window, renderstate *rs, vulkan_state *vk_state);

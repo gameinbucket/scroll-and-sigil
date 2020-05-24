@@ -25,14 +25,14 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
         exit(1);
     }
 
-    vk_create_instance(window, vk_state);
+    initialize_vulkan_instance(window, vk_state);
 
     if (!SDL_Vulkan_CreateSurface(window, vk_state->vk_instance, &vk_state->vk_surface)) {
         fprintf(stderr, "SDL Vulkan Create Surface: %s\n", SDL_GetError());
         exit(1);
     }
 
-    vk_create_state(vk_state);
+    initialize_vulkan_state(vk_state);
 
     *win = window;
 }
@@ -76,8 +76,7 @@ int main() {
     main_loop(s);
 
     SDL_StopTextInput();
-    delete_vulkan_renderer(&vk_state, &s->vk_renderers[0]);
-    delete_vulkan_renderer(&vk_state, &s->vk_renderers[1]);
+    delete_state(s);
     delete_vulkan_state(&vk_state);
     SDL_Quit();
 

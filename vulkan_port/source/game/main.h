@@ -11,9 +11,8 @@
 #include <stdlib.h>
 
 #include "core/mem.h"
-#include "vulkan/vulkan_init.h"
-#include "vulkan/vulkan_struct.h"
-#include "vulkan/vulkan_uniforms.h"
+#include "vulkan/vulkan_instance.h"
+#include "vulkan/vulkan_state.h"
 
 #include "log.h"
 #include "renderstate.h"

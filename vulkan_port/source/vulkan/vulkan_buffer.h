@@ -9,10 +9,10 @@
 #include "core/mem.h"
 
 #include "vulkan_commands.h"
-#include "vulkan_struct.h"
+#include "vulkan_state.h"
 
 uint32_t vk_memory_type(vulkan_state *vk_state, uint32_t filter, VkMemoryPropertyFlags properties);
 void vk_create_buffer(vulkan_state *vk_state, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer *buffer, VkDeviceMemory *buffer_memory);
-void vk_copy_buffer(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, VkBuffer source, VkBuffer destination, VkDeviceSize size);
+void vk_copy_buffer(vulkan_state *vk_state, VkCommandPool command_pool, VkBuffer source, VkBuffer destination, VkDeviceSize size);
 
 #endif

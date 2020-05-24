@@ -44,14 +44,14 @@ void vk_create_buffer(vulkan_state *vk_state, VkDeviceSize size, VkBufferUsageFl
     vkBindBufferMemory(vk_state->vk_device, (*buffer), (*buffer_memory), 0);
 }
 
-void vk_copy_buffer(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, VkBuffer source, VkBuffer destination, VkDeviceSize size) {
+void vk_copy_buffer(vulkan_state *vk_state, VkCommandPool command_pool, VkBuffer source, VkBuffer destination, VkDeviceSize size) {
 
-    VkCommandBuffer command_buffer = vk_begin_single_time_commands(vk_state, vk_renderer);
+    VkCommandBuffer command_buffer = vk_begin_single_time_commands(vk_state, command_pool);
 
     VkBufferCopy copy_region = {0};
     copy_region.size = size;
 
     vkCmdCopyBuffer(command_buffer, source, destination, 1, &copy_region);
 
-    vk_end_single_time_commands(vk_state, vk_renderer, command_buffer);
+    vk_end_single_time_commands(vk_state, command_pool, command_buffer);
 }

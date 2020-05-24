@@ -10,12 +10,12 @@
 #include "graphics/matrix.h"
 
 #include "vulkan_buffer.h"
-#include "vulkan_struct.h"
+#include "vulkan_pipeline.h"
+#include "vulkan_uniformbuffer.h"
 
-void vk_create_descriptor_set_layout(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer);
-void vk_create_uniform_buffers(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer);
-void vk_update_uniform_buffer(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer, uint32_t current_image, struct uniform_buffer_object ubo);
-void vk_create_descriptor_pool(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer);
-void vk_create_descriptor_sets(vulkan_state *vk_state, struct vulkan_renderer *vk_renderer);
+void vk_create_uniform_buffers(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
+void vk_update_uniform_buffer(vulkan_state *vk_state, struct vulkan_pipeline *pipeline, uint32_t current_image, struct uniform_buffer_object ubo);
+void vk_create_descriptor_pool(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
+void vk_create_descriptor_sets(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
 
 #endif
