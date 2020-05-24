@@ -16,20 +16,22 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
 
     float fov = 60.0;
     float ratio = (float)draw_width / (float)draw_height;
+    float near = 0.01;
+    float far = 50.0;
 
     matrix_orthographic(self->canvas_orthographic, 0, screen_width, 0, screen_height, 0, 1);
     matrix_orthographic(self->draw_orthographic, 0, draw_width, 0, draw_height, 0, 1);
     matrix_orthographic(self->draw_orthographic_half, 0, draw_width * 0.5f, 0, draw_height * 0.5f, 0, 1);
 
-    matrix_perspective(self->draw_perspective, fov, 0.01, 100, ratio);
+    matrix_perspective(self->draw_perspective, fov, near, far, ratio);
 
     if (self->frame == NULL) {
 
         self->draw_canvas = create_renderbuffer(2, 0, 0, 0, 0, 4, 6, false);
         self->draw_frame = create_renderbuffer(2, 0, 0, 0, 0, 4, 6, false);
         self->draw_frame_half = create_renderbuffer(2, 0, 0, 0, 0, 4, 6, false);
-        self->draw_images = create_renderbuffer(2, 0, 2, 0, 0, 40, 60, true);
-        self->draw_colors = create_renderbuffer(2, 3, 0, 0, 0, 40, 60, true);
+        self->draw_images = create_renderbuffer(2, 3, 2, 0, 0, 80, 120, false);
+        self->draw_colors = create_renderbuffer(2, 4, 0, 0, 0, 40, 60, false);
 
         graphics_make_vao(self->draw_canvas);
         graphics_make_vao(self->draw_frame);
@@ -67,7 +69,7 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
         graphics_make_fbo(self->frame_ping);
         graphics_make_fbo(self->frame_pong);
 
-        shadowmap *shadow_map = alloc_shadowmap(1024, 1024);
+        shadowmap *shadow_map = create_shadowmap(1024);
         graphics_make_shadow_map(shadow_map);
 
         self->shadow_map = shadow_map;
@@ -81,7 +83,7 @@ void renderstate_resize(renderstate *self, int screen_width, int screen_height) 
                 self->ssao_samples[i] = 2.0f * rand_float() - 1.0f;
                 self->ssao_samples[i + 1] = 2.0f * rand_float() - 1.0f;
                 self->ssao_samples[i + 2] = (float)rand() / (float)RAND_MAX;
-                vec3_normalize(&self->ssao_samples[i]);
+                vector3f_normalize(&self->ssao_samples[i]);
                 float multiple = (float)rand() / (float)RAND_MAX;
                 self->ssao_samples[i] *= multiple;
                 self->ssao_samples[i + 1] *= multiple;

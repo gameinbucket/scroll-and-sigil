@@ -18,8 +18,7 @@
 #include "math/vector.h"
 
 struct shadowmap {
-    int width;
-    int height;
+    int size;
     GLuint fbo;
     GLuint *draw_buffers;
     GLint depth_texture;
@@ -27,7 +26,7 @@ struct shadowmap {
 
 typedef struct shadowmap shadowmap;
 
-shadowmap *alloc_shadowmap(int width, int height);
-void shadow_map_view_projection(float *out, float *shadow_view, float *view, float *view_projection);
+shadowmap *create_shadowmap(int size);
+void shadow_map_view_projection(shadowmap *shadow, float *out, float *shadow_view, float *view_projection);
 
 #endif

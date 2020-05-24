@@ -34,6 +34,8 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     rs->shaders[SHADER_RENDER_MODEL_GBUFFER] = shader_make(z, "shaders/model-gbuffer.vert", "shaders/gbuffer.frag");
     rs->shaders[SHADER_SSAO_BLUR] = shader_make(z, "shaders/screen.vert", "shaders/ssao-blur.frag");
     rs->shaders[SHADER_LIGHTING] = shader_make(z, "shaders/screen.vert", "shaders/lighting.frag");
+    rs->shaders[SHADER_MODEL_SHADOW_PASS] = shader_make(z, "shaders/model-shadow-pass.vert", "shaders/model-shadow-pass.frag");
+    rs->shaders[SHADER_TEXTURE_2D_COLOR] = shader_make(z, "shaders/texture2d-color.vert", "shaders/texture2d-color.frag");
 
     rs->textures = safe_malloc(TEXTURE_COUNT * sizeof(texture *));
     rs->textures[TEXTURE_BARON] = texture_make(z, "textures/baron.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
@@ -44,6 +46,7 @@ void wad_load_resources(renderstate *rs, soundstate *ss, modelstate *ms) {
     rs->textures[TEXTURE_STONE_FLOOR] = texture_make(z, "textures/tiles/stone-floor.png", GL_REPEAT, GL_NEAREST);
     rs->textures[TEXTURE_PARTICLES] = texture_make(z, "textures/particles.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
     rs->textures[TEXTURE_SCENERY] = texture_make(z, "textures/scenery.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
+    rs->textures[TEXTURE_FONT] = texture_make(z, "textures/font.png", GL_CLAMP_TO_EDGE, GL_NEAREST);
 
     ss->music = safe_malloc(MUSIC_COUNT * sizeof(Mix_Music *));
     soundstate_load_music(ss, z, MUSIC_VAMPIRE_KILLER, "music/vampire-killer.wav");

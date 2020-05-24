@@ -18,9 +18,12 @@ void vector3_normalize(vec3 *vec) {
     vec->z *= multiple;
 }
 
-void vec3_normalize(float *vec) {
-    float magnitude = sqrtf(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
-    float multiple = 1.0f / magnitude;
+float vector3f_magnitude(float *vec) {
+    return sqrtf(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
+}
+
+void vector3f_normalize(float *vec) {
+    float multiple = 1.0f / vector3f_magnitude(vec);
     vec[0] *= multiple;
     vec[1] *= multiple;
     vec[2] *= multiple;

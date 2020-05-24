@@ -1,5 +1,7 @@
 #include "state.h"
 
+float console_on = false;
+string *console_type;
 float debug_shadow = false;
 
 state *create_state(world *w, renderstate *rs, soundstate *ss) {
@@ -26,6 +28,8 @@ state *create_state(world *w, renderstate *rs, soundstate *ss) {
             break;
         }
     }
+
+    console_type = string_init("");
 
     return self;
 }
@@ -122,9 +126,13 @@ void state_update(state *self) {
 
     self->h->rotation_target = -self->c->ry;
 
-    if (in->debugger) {
-        in->debugger = false;
-        debug_shadow = !debug_shadow;
+    if (in->console) {
+        in->console = false;
+        console_on = !console_on;
+    }
+
+    if (console_on) {
+        printf("type?");
     }
 }
 
@@ -149,10 +157,10 @@ void state_render(state *self) {
 
     // shadow map ----------------------------------------
 
-    shadowmap *s = rs->shadow_map;
+    shadowmap *shadow = rs->shadow_map;
 
-    graphics_bind_fbo(s->fbo);
-    graphics_set_view(0, 0, s->width, s->height);
+    graphics_bind_fbo(shadow->fbo);
+    graphics_set_view(0, 0, shadow->size, shadow->size);
     graphics_clear_depth();
 
     float shadow_view[16];
@@ -169,15 +177,12 @@ void state_render(state *self) {
     shadow_camera.rx = -shadow_view[12];
     shadow_camera.ry = -shadow_view[14];
 
-    shadow_map_view_projection(shadow_view_projection, shadow_view, view, view_projection);
+    shadow_map_view_projection(shadow, shadow_view_projection, shadow_view, view_projection);
 
     float shadow_bias[16] = {0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.5, 0, 0.5, 0.5, 0.5, 1};
 
     float depth_bias_mvp[16];
     matrix_multiply(depth_bias_mvp, shadow_bias, shadow_view_projection);
-
-    renderstate_set_program(rs, SHADER_SHADOW_PASS);
-    renderstate_set_mvp(rs, shadow_view_projection);
 
     graphics_cull_front();
 
@@ -198,7 +203,7 @@ void state_render(state *self) {
     graphics_set_view(0, 0, f->width, f->height);
     graphics_clear_color_and_depth();
 
-    world_render(self->wr, c, view, view_projection, &light_direction, depth_bias_mvp, s->depth_texture);
+    world_render(self->wr, c, view, view_projection, &light_direction, depth_bias_mvp, shadow->depth_texture);
 
     graphics_disable_cull();
     graphics_disable_depth();
@@ -251,16 +256,31 @@ void state_render(state *self) {
         graphics_bind_and_draw(rs->draw_frame);
     }
 
-    // canvas render ----------------------------------------
+    // hud ----------------------------------------
 
-    renderstate_set_program(rs, SHADER_TEXTURE_2D);
+    renderstate_set_program(rs, SHADER_TEXTURE_2D_COLOR);
     matrix_orthographic_projection(rs->mvp, rs->draw_orthographic, rs->mv, 0, 0);
-    renderbuffer *draw_images = rs->draw_images;
-    renderbuffer_zero(draw_images);
-    render_image(draw_images, 0, 0, 110, 128, 0, 0, 1, 1);
     renderstate_set_mvp(rs, rs->mvp);
+
+    renderbuffer *draw_images = rs->draw_images;
+
+    renderbuffer_zero(draw_images);
+    render_colored_image(draw_images, 0.0f, 0.0f, 110.0f, 128.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
     renderstate_set_texture(rs, TEXTURE_BARON);
-    graphics_bind_and_draw(draw_images);
+    graphics_update_and_draw(draw_images);
+
+    if (console_on) {
+        renderbuffer_zero(draw_images);
+        string *message = string_init("console:");
+        message = string_append(message, console_type);
+        render_text(draw_images, 51, 399, message, 1, 0.0f, 0.0f, 0.0f);
+        render_text(draw_images, 50, 400, message, 1, 1.0f, 0.0f, 1.0f);
+        renderstate_set_texture(rs, TEXTURE_FONT);
+        graphics_update_and_draw(draw_images);
+        string_free(message);
+    }
+
+    // canvas render ----------------------------------------
 
     graphics_bind_fbo(0);
     if (debug_shadow) {
@@ -272,7 +292,7 @@ void state_render(state *self) {
     matrix_orthographic_projection(rs->mvp, rs->canvas_orthographic, rs->mv, 0, 0);
     renderstate_set_mvp(rs, rs->mvp);
     if (debug_shadow) {
-        graphics_bind_texture(GL_TEXTURE0, s->depth_texture);
+        graphics_bind_texture(GL_TEXTURE0, shadow->depth_texture);
     } else {
         graphics_bind_texture(GL_TEXTURE0, f->textures[0]);
     }

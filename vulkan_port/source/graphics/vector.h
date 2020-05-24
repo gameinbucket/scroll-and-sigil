@@ -47,6 +47,6 @@ float vector3_dot(vec3 *a, vec3 *b);
 void vector3_cross(vec3 *cross, vec3 *a, vec3 *b);
 void vector3_normalize(vec3 *vec);
 
-void vec3_normalize(float *vec);
+void vector3f_normalize(float *vec);
 
 #endif

@@ -268,9 +268,6 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
 
     float temp[16];
     float normal_matrix[16];
-    matrix_identity(normal_matrix);
-    matrix_inverse(temp, normal_matrix);
-    matrix_transpose(normal_matrix, temp);
 
     renderstate *rs = wr->rs;
     world *w = wr->w;
@@ -281,20 +278,29 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
     // sectors
 
     if (depth_bias_mvp != NULL) {
+
+        matrix_identity(normal_matrix);
+        matrix_inverse(temp, normal_matrix);
+        matrix_transpose(normal_matrix, temp);
+
         if (rs->ssao_on) {
             renderstate_set_program(rs, SHADER_GBUFFER);
         } else {
             renderstate_set_program(rs, SHADER_TEXTURE_3D_SHADOWED);
         }
 
-        renderstate_set_mvp(rs, view_projection);
         renderstate_set_uniform_matrix(rs, "u_normal", normal_matrix);
         renderstate_set_uniform_vector(rs, "u_camera_position", c->x, c->y, c->z);
         renderstate_set_uniform_vector(rs, "u_light_direction", light_direction->x, light_direction->y, light_direction->z);
         renderstate_set_uniform_matrix(rs, "u_depth_bias_mvp", depth_bias_mvp);
         renderstate_set_uniform_matrix(rs, "u_view", view);
         graphics_bind_texture(GL_TEXTURE1, depth_texture);
+
+    } else {
+        renderstate_set_program(rs, SHADER_SHADOW_PASS);
     }
+
+    renderstate_set_mvp(rs, view_projection);
 
     uint_table_iterator iter = create_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
@@ -345,13 +351,13 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
     // things
 
     if (depth_bias_mvp != NULL) {
+
         if (rs->ssao_on) {
             renderstate_set_program(rs, SHADER_RENDER_MODEL_GBUFFER);
         } else {
             renderstate_set_program(rs, SHADER_RENDER_MODEL_SHADOWED);
         }
 
-        renderstate_set_mvp(rs, view_projection);
         renderstate_set_uniform_matrix(rs, "u_normal", normal_matrix);
         renderstate_set_uniform_vector(rs, "u_camera_position", c->x, c->y, c->z);
         renderstate_set_uniform_vector(rs, "u_light_direction", light_direction->x, light_direction->y, light_direction->z);
@@ -360,8 +366,10 @@ void world_render(worldrender *wr, camera *c, float view[16], float view_project
         graphics_bind_texture(GL_TEXTURE1, depth_texture);
 
     } else {
-        renderstate_set_program(rs, SHADER_RENDER_MODEL);
+        renderstate_set_program(rs, SHADER_MODEL_SHADOW_PASS);
     }
+
+    renderstate_set_mvp(rs, view_projection);
 
     renderbuffer *thing_buffer = wr->thing_buffer;
 

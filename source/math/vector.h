@@ -31,6 +31,11 @@ struct vec4 {
     float w;
 };
 
+#define VECTOR_3_ADD(a, b)                                                                                                                                                                             \
+    a.x += b.x;                                                                                                                                                                                        \
+    a.y += b.y;                                                                                                                                                                                        \
+    a.x += b.z
+
 #define VECTOR_3_DOT(a, b) (a.x * b.x + a.y * b.y + a.z * b.z)
 
 #define VECTOR_3_DIVIDE(v, d)                                                                                                                                                                          \
@@ -45,8 +50,20 @@ struct vec4 {
 
 float vector3_dot(vec3 *a, vec3 *b);
 void vector3_cross(vec3 *cross, vec3 *a, vec3 *b);
+void vector3_magnitude(vec3 *vec);
 void vector3_normalize(vec3 *vec);
 
-void vec3_normalize(float *vec);
+#define VECTOR_3F_ADD(a, b)                                                                                                                                                                            \
+    a[0] += b[0];                                                                                                                                                                                      \
+    a[1] += b[1];                                                                                                                                                                                      \
+    a[2] += b[2]
+
+#define VECTOR_3F_SUB(a, b)                                                                                                                                                                            \
+    a[0] -= b[0];                                                                                                                                                                                      \
+    a[1] -= b[1];                                                                                                                                                                                      \
+    a[2] -= b[2]
+
+float vector3f_magnitude(float *vec);
+void vector3f_normalize(float *vec);
 
 #endif

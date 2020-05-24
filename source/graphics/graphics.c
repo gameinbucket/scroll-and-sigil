@@ -106,7 +106,7 @@ void graphics_make_shadow_map(shadowmap *s) {
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, map, 0);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s->width, s->height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, s->size, s->size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);

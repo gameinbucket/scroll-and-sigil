@@ -134,7 +134,7 @@ static void main_loop(SDL_Window *window, state *s) {
                 case SDLK_DOWN: s->in.look_down = true; break;
                 case SDLK_LEFT: s->in.look_left = true; break;
                 case SDLK_RIGHT: s->in.look_right = true; break;
-                case SDLK_TAB: s->in.debugger = true; break;
+                case SDLK_TAB: s->in.console = true; break;
                 }
                 break;
             }
