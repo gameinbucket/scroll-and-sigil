@@ -134,8 +134,6 @@ void initialize_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *
     vk_create_depth_resources(vk_state, pipeline->swapchain, &pipeline->depth);
     vk_create_framebuffers(vk_state, pipeline);
     vk_create_texture_image(vk_state, pipeline->vk_command_pool, &pipeline->image, "../textures/tiles/grass.png");
-    vk_create_texture_image_view(vk_state, &pipeline->image);
-    vk_create_texture_image_sampler(vk_state, &pipeline->image);
     vulkan_renderbuffer_update_data(vk_state, pipeline->vk_command_pool, pipeline->renderbuffer);
     vk_create_uniform_buffers(vk_state, pipeline);
     vk_create_descriptor_pool(vk_state, pipeline);

@@ -1,5 +1,34 @@
 #include "vulkan_texture.h"
 
+void vk_create_texture_image_view(vulkan_state *vk_state, struct vulkan_image *image) {
+
+    VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
+    image->vk_texture_image_view = vk_create_image_view(vk_state, image->vk_texture_image, format, VK_IMAGE_ASPECT_COLOR_BIT);
+}
+
+void vk_create_texture_image_sampler(vulkan_state *vk_state, struct vulkan_image *image) {
+
+    VkSamplerCreateInfo sampler_info = {0};
+    sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    sampler_info.magFilter = VK_FILTER_LINEAR;
+    sampler_info.minFilter = VK_FILTER_LINEAR;
+    sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_info.anisotropyEnable = VK_TRUE;
+    sampler_info.maxAnisotropy = 16;
+    sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    sampler_info.unnormalizedCoordinates = VK_FALSE;
+    sampler_info.compareEnable = VK_FALSE;
+    sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+    sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+    if (vkCreateSampler(vk_state->vk_device, &sampler_info, NULL, &image->vk_texture_sampler) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan Create Sampler\n");
+        exit(1);
+    }
+}
+
 void vk_create_texture_image(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path) {
 
     simple_image *png = read_png_file(NULL, path);
@@ -48,33 +77,7 @@ void vk_create_texture_image(vulkan_state *vk_state, VkCommandPool command_pool,
     image->vk_texture_image_memory = texture_image_memory;
 
     simple_image_free(png);
-}
 
-void vk_create_texture_image_view(vulkan_state *vk_state, struct vulkan_image *image) {
-
-    VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
-    image->vk_texture_image_view = vk_create_image_view(vk_state, image->vk_texture_image, format, VK_IMAGE_ASPECT_COLOR_BIT);
-}
-
-void vk_create_texture_image_sampler(vulkan_state *vk_state, struct vulkan_image *image) {
-
-    VkSamplerCreateInfo sampler_info = {0};
-    sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    sampler_info.magFilter = VK_FILTER_LINEAR;
-    sampler_info.minFilter = VK_FILTER_LINEAR;
-    sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_info.anisotropyEnable = VK_TRUE;
-    sampler_info.maxAnisotropy = 16;
-    sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    sampler_info.unnormalizedCoordinates = VK_FALSE;
-    sampler_info.compareEnable = VK_FALSE;
-    sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
-    sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-
-    if (vkCreateSampler(vk_state->vk_device, &sampler_info, NULL, &image->vk_texture_sampler) != VK_SUCCESS) {
-        fprintf(stderr, "Error: Vulkan Create Sampler\n");
-        exit(1);
-    }
+    vk_create_texture_image_view(vk_state, image);
+    vk_create_texture_image_sampler(vk_state, image);
 }

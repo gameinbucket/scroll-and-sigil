@@ -83,11 +83,6 @@ void vk_create_descriptor_sets(vulkan_state *vk_state, struct vulkan_pipeline *p
         buffer_info.offset = 0;
         buffer_info.range = sizeof(struct uniform_buffer_object);
 
-        VkDescriptorImageInfo image_info = {0};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = pipeline->image.vk_texture_image_view;
-        image_info.sampler = pipeline->image.vk_texture_sampler;
-
         VkWriteDescriptorSet descriptor_write_uniform = {0};
         descriptor_write_uniform.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptor_write_uniform.dstSet = pipeline->vk_descriptor_sets[i];
@@ -96,6 +91,11 @@ void vk_create_descriptor_sets(vulkan_state *vk_state, struct vulkan_pipeline *p
         descriptor_write_uniform.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptor_write_uniform.descriptorCount = 1;
         descriptor_write_uniform.pBufferInfo = &buffer_info;
+
+        VkDescriptorImageInfo image_info = {0};
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        image_info.imageView = pipeline->image.vk_texture_image_view;
+        image_info.sampler = pipeline->image.vk_texture_sampler;
 
         VkWriteDescriptorSet descriptor_write_sampler = {0};
         descriptor_write_sampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

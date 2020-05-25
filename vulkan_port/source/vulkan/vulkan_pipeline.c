@@ -55,14 +55,10 @@ void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_pipeline *pipel
     render_pass_info.dependencyCount = 1;
     render_pass_info.pDependencies = &dependency;
 
-    VkRenderPass render_pass = {0};
-
-    if (vkCreateRenderPass(vk_state->vk_device, &render_pass_info, NULL, &render_pass) != VK_SUCCESS) {
+    if (vkCreateRenderPass(vk_state->vk_device, &render_pass_info, NULL, &pipeline->vk_render_pass) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Render Pass\n");
         exit(1);
     }
-
-    pipeline->vk_render_pass = render_pass;
 }
 
 struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment) {
