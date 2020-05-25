@@ -11,7 +11,7 @@ state *create_state(SDL_Window *window, renderstate *rs, vulkan_state *vk_state)
 
     {
         struct vulkan_renderbuffer *render3d = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
-        struct vulkan_pipeline *pipeline3d = create_vulkan_pipeline("shaders/spv/texture3d.vert.spv", "shaders/spv/texture3d.frag.spv");
+        struct vulkan_pipeline *pipeline3d = create_vulkan_pipeline("../vulkan-shaders/spv/texture3d.vert.spv", "../vulkan-shaders/spv/texture3d.frag.spv");
         render_cube(render3d);
         pipeline3d->renderbuffer = render3d;
         initialize_vulkan_pipeline(vk_state, pipeline3d, self->canvas_width, self->canvas_height);
@@ -20,11 +20,16 @@ state *create_state(SDL_Window *window, renderstate *rs, vulkan_state *vk_state)
 
     {
         struct vulkan_renderbuffer *render2d = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
-        struct vulkan_pipeline *pipeline2d = create_vulkan_pipeline("shaders/spv/texture2d.vert.spv", "shaders/spv/texture2d.frag.spv");
+        struct vulkan_pipeline *pipeline2d = create_vulkan_pipeline("../vulkan-shaders/spv/texture2d.vert.spv", "../vulkan-shaders/spv/texture2d.frag.spv");
         render_cube(render2d);
         pipeline2d->renderbuffer = render2d;
         initialize_vulkan_pipeline(vk_state, pipeline2d, self->canvas_width, self->canvas_height);
         self->pipelines[1] = pipeline2d;
+    }
+
+    {
+        struct vulkan_renderbuffer *gbuffer = vk_create_renderbuffer(2, 0, 0, 0, 4, 6);
+        render_screen(gbuffer, 0, 0, self->canvas_width, self->canvas_height);
     }
 
     wad_load_resources(rs);

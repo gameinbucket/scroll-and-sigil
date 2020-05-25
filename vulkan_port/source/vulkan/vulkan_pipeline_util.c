@@ -30,7 +30,7 @@ static void vulkan_pipeline_clean_swapchain(vulkan_state *vk_state, struct vulka
     vkDestroyDescriptorPool(device, pipeline->vk_descriptor_pool, NULL);
 }
 
-void vulkan_pipeline_create_command_buffers(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
+void vulkan_pipeline_build_command_buffers(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
 
     uint32_t size = pipeline->swapchain->swapchain_image_count;
 
@@ -138,7 +138,7 @@ void initialize_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *
     vk_create_uniform_buffers(vk_state, pipeline);
     vk_create_descriptor_pool(vk_state, pipeline);
     vk_create_descriptor_sets(vk_state, pipeline);
-    vulkan_pipeline_create_command_buffers(vk_state, pipeline);
+    vulkan_pipeline_build_command_buffers(vk_state, pipeline);
     vk_create_semaphores(vk_state, pipeline);
 }
 

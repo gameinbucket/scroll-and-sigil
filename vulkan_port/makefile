@@ -31,11 +31,11 @@ address: all
 
 gdb: COMPILER_FLAGS += -g
 gdb: all
-	@ ./gdb.sh
+	@ gdb ./scroll-and-sigil-vk
 
 valgrind: COMPILER_FLAGS += -g
 valgrind: all
-	@ ./valgrind.sh
+	@ ./valgrind.sh ./scroll-and-sigil-vk
 
 $(NAME): $(HEADERS) $(OBJECTS)
 	$(PREFIX) $(CC) $(OBJECTS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(NAME) $(LIBS)

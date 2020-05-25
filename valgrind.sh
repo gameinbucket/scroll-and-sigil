@@ -1,3 +1,9 @@
 #!/bin/bash
 
-valgrind --track-origins=yes ./scroll-and-sigil
+check=""
+
+if [ "$2" == "--full" ]; then
+  check="--leak-check=full"
+fi
+
+valgrind --track-origins=yes $check "$1"

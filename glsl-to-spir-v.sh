@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-cd shaders
+cd vulkan-shaders
 
 mkdir -p spv
 

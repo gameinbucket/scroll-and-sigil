@@ -42,7 +42,8 @@
             x, -y, -z, 1, 1, 1, 1, 0   /* neg z 3 */                                                                                                                                                   \
     }
 
-void render_index4(struct vulkan_renderbuffer *vk_renderbuffer);
-void render_cube(struct vulkan_renderbuffer *vk_renderbuffer);
+void render_index4(struct vulkan_renderbuffer *renderbuffer);
+void render_screen(struct vulkan_renderbuffer *renderbuffer, float x, float y, float width, float height);
+void render_cube(struct vulkan_renderbuffer *renderbuffer);
 
 #endif
