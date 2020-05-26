@@ -107,7 +107,6 @@ void *array_find(array *self, bool(find)(void *, void *), void *has) {
 
 void *array_get(array *self, unsigned int index) {
     if (index >= self->length) {
-        fprintf(stderr, "ARRAY OUT OF BOUNDS (%d of %d)\n", index, self->length);
         return NULL;
     }
     return self->items[index];

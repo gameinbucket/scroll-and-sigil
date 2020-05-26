@@ -1,7 +1,7 @@
 #include "fileio.h"
 
-size_t file_binary_size(char *path) {
-    FILE *fp = fopen(path, "rb");
+size_t file_size(char *path) {
+    FILE *fp = fopen(path, "r");
     if (fp == NULL) {
         fprintf(stderr, "Could not open file: %s", path);
         exit(1);
@@ -15,24 +15,8 @@ size_t file_binary_size(char *path) {
     return num;
 }
 
-char *read_binary(char *path, size_t *size_pointer) {
-    size_t size = file_binary_size(path);
+size_t file_binary_size(char *path) {
     FILE *fp = fopen(path, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "Could not open file: %s", path);
-        exit(1);
-    }
-    char *content = safe_malloc(size * sizeof(char));
-    for (size_t i = 0; i < size; i++) {
-        content[i] = fgetc(fp);
-    }
-    fclose(fp);
-    *size_pointer = size;
-    return content;
-}
-
-size_t file_size(char *path) {
-    FILE *fp = fopen(path, "r");
     if (fp == NULL) {
         fprintf(stderr, "Could not open file: %s", path);
         exit(1);
@@ -71,4 +55,20 @@ void core_write(char *path, char *content) {
     }
     fputs(content, fp);
     fclose(fp);
+}
+
+char *read_binary(char *path, size_t *size_pointer) {
+    size_t size = file_binary_size(path);
+    FILE *fp = fopen(path, "rb");
+    if (fp == NULL) {
+        fprintf(stderr, "Could not open file: %s", path);
+        exit(1);
+    }
+    char *content = safe_malloc(size * sizeof(char));
+    for (size_t i = 0; i < size; i++) {
+        content[i] = fgetc(fp);
+    }
+    fclose(fp);
+    *size_pointer = size;
+    return content;
 }

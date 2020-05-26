@@ -7,7 +7,7 @@
 #include <vulkan/vulkan.h>
 
 #include "core/mem.h"
-#include "graphics/matrix.h"
+#include "math/matrix.h"
 
 #include "vulkan_buffer.h"
 #include "vulkan_pipeline.h"

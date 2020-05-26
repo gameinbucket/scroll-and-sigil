@@ -1,5 +1,5 @@
-#ifndef STRING_H
-#define STRING_H
+#ifndef STRING_UTIL_H
+#define STRING_UTIL_H
 
 #include <inttypes.h>
 #include <stdarg.h>
@@ -35,8 +35,8 @@ string *string_concat_varg(int size, ...);
 
 string *substring(string *s, size_t start, size_t end);
 
-string *string_append(string *a, char *b);
-string *string_append_char(string *a, char b);
+string *string_append(string *self, char *b);
+string *string_append_char(string *self, char b);
 
 int string_compare(string *a, string *b);
 bool string_equal(string *a, string *b);

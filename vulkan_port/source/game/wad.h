@@ -9,7 +9,7 @@
 #include "core/string_util.h"
 #include "data/array.h"
 #include "data/table.h"
-#include "graphics/matrix.h"
+#include "math/matrix.h"
 
 #include "renderstate.h"
 

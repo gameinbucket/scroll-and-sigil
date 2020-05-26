@@ -4,12 +4,12 @@
 #include <math.h>
 
 #include "data/uint_table.h"
-#include "graphics/graphics.h"
-#include "graphics/render.h"
 #include "graphics/sprite.h"
-#include "graphics/texture.h"
 #include "math/matrix.h"
 #include "math/vector.h"
+#include "opengl/graphics.h"
+#include "opengl/render.h"
+#include "opengl/texture.h"
 #include "world/world.h"
 #include "world/worldbuild.h"
 

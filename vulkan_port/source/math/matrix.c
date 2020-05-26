@@ -95,13 +95,6 @@ void matrix_translate(float *matrix, float x, float y, float z) {
     matrix[15] = x * matrix[3] + y * matrix[7] + z * matrix[11] + matrix[15];
 }
 
-void matrix_set_translation(float *matrix, float x, float y, float z) {
-
-    matrix[12] = x;
-    matrix[13] = y;
-    matrix[14] = z;
-}
-
 void matrix_multiply(float *matrix, float *a, float *b) {
 
     matrix[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3];
@@ -215,6 +208,13 @@ void matrix_rotate_z(float *matrix, float sine, float cosine) {
     matrix_multiply(matrix, copy, temp);
 }
 
+void matrix_set_translation(float *matrix, float x, float y, float z) {
+
+    matrix[12] = x;
+    matrix[13] = y;
+    matrix[14] = z;
+}
+
 void matrix_inverse(float *matrix, float *from) {
 
     float src[16];
@@ -310,17 +310,42 @@ void matrix_inverse(float *matrix, float *from) {
     }
 }
 
+void matrix_transpose(float *matrix, float *from) {
+
+    matrix[0] = from[0];
+    matrix[4] = from[1];
+    matrix[8] = from[2];
+    matrix[12] = from[3];
+
+    matrix[1] = from[4];
+    matrix[5] = from[5];
+    matrix[9] = from[6];
+    matrix[13] = from[7];
+
+    matrix[2] = from[8];
+    matrix[6] = from[9];
+    matrix[10] = from[10];
+    matrix[14] = from[11];
+
+    matrix[3] = from[12];
+    matrix[7] = from[13];
+    matrix[11] = from[14];
+    matrix[15] = from[15];
+}
+
 void matrix_multiply_vector3(float *out, float *matrix, float *vec) {
-    out[0] = vec[0] * matrix[0] + vec[1] * matrix[1] + vec[2] * matrix[2] + matrix[3];
-    out[1] = vec[0] * matrix[4] + vec[1] * matrix[5] + vec[2] * matrix[6] + matrix[7];
-    out[2] = vec[0] * matrix[8] + vec[1] * matrix[9] + vec[2] * matrix[10] + matrix[11];
+
+    out[0] = vec[0] * matrix[0] + vec[1] * matrix[4] + vec[2] * matrix[8] + matrix[12];
+    out[1] = vec[0] * matrix[1] + vec[1] * matrix[5] + vec[2] * matrix[9] + matrix[13];
+    out[2] = vec[0] * matrix[2] + vec[1] * matrix[6] + vec[2] * matrix[10] + matrix[14];
 }
 
 void matrix_multiply_vector4(vec4 *out, float *matrix, vec4 *vec) {
-    out->x = vec->x * matrix[0] + vec->y * matrix[1] + vec->z * matrix[2] + vec->w * matrix[3];
-    out->y = vec->x * matrix[4] + vec->y * matrix[5] + vec->z * matrix[6] + vec->w * matrix[7];
-    out->z = vec->x * matrix[8] + vec->y * matrix[9] + vec->z * matrix[10] + vec->w * matrix[11];
-    out->w = vec->x * matrix[12] + vec->y * matrix[13] + vec->z * matrix[14] + vec->w * matrix[15];
+
+    out->x = vec->x * matrix[0] + vec->y * matrix[4] + vec->z * matrix[8] + vec->w * matrix[12];
+    out->y = vec->x * matrix[1] + vec->y * matrix[5] + vec->z * matrix[9] + vec->w * matrix[13];
+    out->z = vec->x * matrix[2] + vec->y * matrix[6] + vec->z * matrix[10] + vec->w * matrix[14];
+    out->w = vec->x * matrix[3] + vec->y * matrix[7] + vec->z * matrix[11] + vec->w * matrix[15];
 }
 
 void matrix_look_at(float *matrix, vec3 *eye, vec3 *center) {

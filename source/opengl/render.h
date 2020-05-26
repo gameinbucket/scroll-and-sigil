@@ -9,10 +9,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cube.h"
-#include "model.h"
+#include "graphics/cube.h"
+#include "graphics/model.h"
+#include "graphics/sprite.h"
+
 #include "renderbuffer.h"
-#include "sprite.h"
 
 void render_index3(renderbuffer *b);
 void render_index4(renderbuffer *b);

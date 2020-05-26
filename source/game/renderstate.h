@@ -14,15 +14,15 @@
 
 #include "core/mem.h"
 
-#include "graphics/framebuffer.h"
-#include "graphics/graphics.h"
-#include "graphics/render.h"
-#include "graphics/renderbuffer.h"
-#include "graphics/shader.h"
-#include "graphics/shadowmap.h"
-#include "graphics/texture.h"
 #include "math/matrix.h"
 #include "math/vector.h"
+#include "opengl/framebuffer.h"
+#include "opengl/graphics.h"
+#include "opengl/render.h"
+#include "opengl/renderbuffer.h"
+#include "opengl/shader.h"
+#include "opengl/shadowmap.h"
+#include "opengl/texture.h"
 
 typedef struct renderstate renderstate;
 

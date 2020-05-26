@@ -30,6 +30,7 @@ state *create_state(SDL_Window *window, renderstate *rs, vulkan_state *vk_state)
     {
         struct vulkan_renderbuffer *gbuffer = vk_create_renderbuffer(2, 0, 0, 0, 4, 6);
         render_screen(gbuffer, 0, 0, self->canvas_width, self->canvas_height);
+        delete_vulkan_renderbuffer(vk_state, gbuffer);
     }
 
     wad_load_resources(rs);

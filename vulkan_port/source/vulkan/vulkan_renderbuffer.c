@@ -140,7 +140,7 @@ static void create_vertex_buffer(vulkan_state *vk_state, VkCommandPool command_p
 
 static void create_index_buffer(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_renderbuffer *renderbuffer) {
 
-    VkDeviceSize size = renderbuffer->index_count * sizeof(renderbuffer->indices[0]);
+    VkDeviceSize size = renderbuffer->index_count * sizeof(uint32_t);
 
     VkBuffer staging_buffer = {0};
     VkDeviceMemory staging_buffer_memory = {0};

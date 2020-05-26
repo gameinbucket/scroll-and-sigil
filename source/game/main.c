@@ -11,11 +11,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "graphics/graphics.h"
-#include "graphics/renderbuffer.h"
-#include "graphics/shader.h"
-#include "graphics/texture.h"
 #include "math/matrix.h"
+#include "opengl/graphics.h"
+#include "opengl/renderbuffer.h"
+#include "opengl/shader.h"
+#include "opengl/texture.h"
 #include "world/world.h"
 
 #include "renderstate.h"

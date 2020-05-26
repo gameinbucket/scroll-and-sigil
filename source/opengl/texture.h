@@ -17,7 +17,7 @@
 #include "core/archive.h"
 #include "core/mem.h"
 
-#include "image.h"
+#include "graphics/image.h"
 
 typedef struct texture texture;
 
