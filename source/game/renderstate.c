@@ -1,7 +1,9 @@
 #include "renderstate.h"
 
-renderstate *create_renderstate() {
-    return safe_calloc(1, sizeof(renderstate));
+renderstate *create_renderstate(wad_element *settings) {
+    renderstate *self = safe_calloc(1, sizeof(renderstate));
+    self->ssao_on = wad_get_bool(wad_get_from_object(settings, "ssao"));
+    return self;
 }
 
 void renderstate_resize(renderstate *self, int screen_width, int screen_height) {

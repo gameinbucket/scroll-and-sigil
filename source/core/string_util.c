@@ -298,6 +298,10 @@ string *float64_to_string(double number) {
     return s;
 }
 
+bool string_to_bool(string *str) {
+    return strcmp(str, "true") == 0;
+}
+
 int string_to_int(string *str) {
     return (int)strtol(str, NULL, 10);
 }

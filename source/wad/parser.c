@@ -58,6 +58,14 @@ float wad_get_float(wad_element *element) {
     return string_to_float(str);
 }
 
+bool wad_get_bool(wad_element *element) {
+    if (element == NULL) {
+        return false;
+    }
+    string *str = element->value.str;
+    return string_to_bool(str);
+}
+
 void wad_add_to_object(wad_element *object, char *key, wad_element *value) {
     table_put(wad_get_object(object), string_init(key), value);
 }

@@ -1,26 +1,4 @@
-#include <GL/glew.h>
-
-#include "x-gl.h"
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
-
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "math/matrix.h"
-#include "opengl/graphics.h"
-#include "opengl/renderbuffer.h"
-#include "opengl/shader.h"
-#include "opengl/texture.h"
-#include "world/world.h"
-
-#include "renderstate.h"
-#include "soundstate.h"
-#include "state.h"
+#include "main.h"
 
 static const int SCREEN_WIDTH = 1000;
 static const int SCREEN_HEIGHT = 800;
@@ -152,11 +130,17 @@ int main() {
 
     opengl_settings();
 
-    renderstate *rs = create_renderstate();
+    string *settings_string = cat("settings.wad");
+    wad_element *settings = parse_wad(settings_string);
+    string_free(settings_string);
+
+    renderstate *rs = create_renderstate(settings);
     window_resize(rs);
     soundstate *ss = create_soundstate();
     world *w = create_world();
     state *s = create_state(w, rs, ss);
+
+    delete_wad(settings);
 
     SDL_StartTextInput();
 

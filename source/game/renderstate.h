@@ -23,6 +23,7 @@
 #include "opengl/shader.h"
 #include "opengl/shadowmap.h"
 #include "opengl/texture.h"
+#include "wad/parser.h"
 
 typedef struct renderstate renderstate;
 
@@ -55,7 +56,7 @@ struct renderstate {
     texture *ssao_noise;
 };
 
-renderstate *create_renderstate();
+renderstate *create_renderstate(wad_element *settings);
 
 void renderstate_resize(renderstate *self, int screen_width, int screen_height);
 void renderstate_set_mvp(renderstate *self, float *mvp);
