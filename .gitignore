@@ -1,6 +1,7 @@
 certs/*
 .vscode/
 
+main
 scroll-and-sigil
 scroll-and-sigil-vk
 unit-tests
