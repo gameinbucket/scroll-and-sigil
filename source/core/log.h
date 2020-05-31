@@ -1,7 +1,7 @@
 #ifndef LOG_H
 #define LOG_H
 
-#define log(message)                                                                                                                                                                                   \
+#define LOG(message)                                                                                                                                                                                   \
     printf(message);                                                                                                                                                                                   \
     fflush(stdout)
 

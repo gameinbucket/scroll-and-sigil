@@ -38,8 +38,8 @@ void vk_create_texture_image(vulkan_state *vk_state, VkCommandPool command_pool,
 
     VkDeviceSize image_byte_size = width * height * 4;
 
-    VkBuffer staging_buffer;
-    VkDeviceMemory staging_buffer_memory;
+    VkBuffer staging_buffer = {0};
+    VkDeviceMemory staging_buffer_memory = {0};
 
     VkBufferUsageFlagBits staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     VkMemoryPropertyFlagBits staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
@@ -59,8 +59,8 @@ void vk_create_texture_image(vulkan_state *vk_state, VkCommandPool command_pool,
     image_details.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     image_details.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    VkImage texture_image;
-    VkDeviceMemory texture_image_memory;
+    VkImage texture_image = {0};
+    VkDeviceMemory texture_image_memory = {0};
 
     vk_create_image(vk_state, image_details, &texture_image, &texture_image_memory);
 

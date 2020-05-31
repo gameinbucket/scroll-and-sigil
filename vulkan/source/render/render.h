@@ -44,6 +44,7 @@
 
 void render_index4(struct vulkan_renderbuffer *renderbuffer);
 void render_screen(struct vulkan_renderbuffer *renderbuffer, float x, float y, float width, float height);
+void render_rectangle(struct vulkan_renderbuffer *b, float x, float y, float width, float height, float red, float green, float blue, float alpha);
 void render_cube(struct vulkan_renderbuffer *renderbuffer);
 
 #endif

@@ -34,6 +34,6 @@ VkImageView vk_create_image_view(vulkan_state *vk_state, VkImage image, VkFormat
 VkFormat vk_find_supported_image_format(vulkan_state *vk_state, VkFormat *candidates, int candidate_count, VkImageTiling tiling, VkFormatFeatureFlags features);
 void vk_transition_image_layout(vulkan_state *vk_state, VkCommandPool command_pool, VkImage image, VkImageLayout old_layout, VkImageLayout new_layout);
 void vk_copy_buffer_to_image(vulkan_state *vk_state, VkCommandPool command_pool, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-void destroy_vulkan_image(VkDevice vk_device, struct vulkan_image *image);
+void delete_vulkan_image(VkDevice vk_device, struct vulkan_image *image);
 
 #endif

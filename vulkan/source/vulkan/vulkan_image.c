@@ -22,7 +22,7 @@ void vk_create_image(vulkan_state *vk_state, struct vulkan_image_details details
         exit(1);
     }
 
-    VkMemoryRequirements mem_requirements;
+    VkMemoryRequirements mem_requirements = {0};
     vkGetImageMemoryRequirements(vk_state->vk_device, *image, &mem_requirements);
 
     VkMemoryAllocateInfo alloc_info = {0};
@@ -55,8 +55,8 @@ void vk_transition_image_layout(vulkan_state *vk_state, VkCommandPool command_po
     barrier.subresourceRange.baseArrayLayer = 0;
     barrier.subresourceRange.layerCount = 1;
 
-    VkPipelineStageFlags source_stage;
-    VkPipelineStageFlags destination_stage;
+    VkPipelineStageFlags source_stage = {0};
+    VkPipelineStageFlags destination_stage = {0};
 
     if (old_layout == VK_IMAGE_LAYOUT_UNDEFINED && new_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
 
@@ -121,7 +121,7 @@ VkImageView vk_create_image_view(vulkan_state *vk_state, VkImage image, VkFormat
     info.subresourceRange.baseArrayLayer = 0;
     info.subresourceRange.layerCount = 1;
 
-    VkImageView view;
+    VkImageView view = {0};
 
     if (vkCreateImageView(vk_state->vk_device, &info, NULL, &view) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Image View\n");
@@ -137,7 +137,7 @@ VkFormat vk_find_supported_image_format(vulkan_state *vk_state, VkFormat *candid
 
         VkFormat format = candidates[i];
 
-        VkFormatProperties properties;
+        VkFormatProperties properties = {0};
         vkGetPhysicalDeviceFormatProperties(vk_state->vk_physical_device, format, &properties);
 
         if (tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & features) == features) {
@@ -156,7 +156,7 @@ bool vk_has_stencil_component(VkFormat format) {
     return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
-void destroy_vulkan_image(VkDevice vk_device, struct vulkan_image *image) {
+void delete_vulkan_image(VkDevice vk_device, struct vulkan_image *image) {
 
     vkDestroySampler(vk_device, image->vk_texture_sampler, NULL);
     vkDestroyImageView(vk_device, image->vk_texture_image_view, NULL);

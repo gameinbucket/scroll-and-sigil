@@ -8,7 +8,7 @@ VkCommandBuffer vk_begin_single_time_commands(vulkan_state *vk_state, VkCommandP
     alloc_info.commandPool = vk_command_pool;
     alloc_info.commandBufferCount = 1;
 
-    VkCommandBuffer command_buffer;
+    VkCommandBuffer command_buffer = {0};
 
     if (vkAllocateCommandBuffers(vk_state->vk_device, &alloc_info, &command_buffer) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Allocate Command Buffers\n");
@@ -48,12 +48,8 @@ void vk_create_command_pool(vulkan_state *vk_state, VkCommandPool *vk_command_po
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_info.queueFamilyIndex = vk_state->graphics_family_index;
 
-    VkCommandPool command_pool = {0};
-
-    if (vkCreateCommandPool(vk_state->vk_device, &pool_info, NULL, &command_pool) != VK_SUCCESS) {
+    if (vkCreateCommandPool(vk_state->vk_device, &pool_info, NULL, vk_command_pool) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Create Command Pool\n");
         exit(1);
     }
-
-    *vk_command_pool = command_pool;
 }

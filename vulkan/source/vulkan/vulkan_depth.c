@@ -11,11 +11,11 @@ void vk_choose_depth_format(vulkan_state *vk_state, struct vulkan_depth *depth) 
     depth->vk_depth_format = vk_find_depth_format(vk_state);
 }
 
-void vk_create_depth_resources(vulkan_state *vk_state, struct vulkan_swapchain *swapchain, struct vulkan_depth *depth) {
+void vk_create_depth_resources(vulkan_state *vk_state, struct vulkan_depth *depth) {
 
     struct vulkan_image_details details = {0};
-    details.width = swapchain->swapchain_extent.width;
-    details.height = swapchain->swapchain_extent.height;
+    details.width = depth->width;
+    details.height = depth->height;
     details.format = depth->vk_depth_format;
     details.tiling = VK_IMAGE_TILING_OPTIMAL;
     details.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -26,7 +26,7 @@ void vk_create_depth_resources(vulkan_state *vk_state, struct vulkan_swapchain *
     depth->vk_depth_image_view = vk_create_image_view(vk_state, depth->vk_depth_image, depth->vk_depth_format, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
-void destroy_vulkan_depth(VkDevice vk_device, struct vulkan_depth *depth) {
+void delete_vulkan_depth(VkDevice vk_device, struct vulkan_depth *depth) {
 
     vkDestroyImageView(vk_device, depth->vk_depth_image_view, NULL);
     vkDestroyImage(vk_device, depth->vk_depth_image, NULL);

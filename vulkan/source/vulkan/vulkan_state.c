@@ -2,7 +2,7 @@
 
 struct swapchain_support_details vk_query_swapchain_support(vulkan_state *vk_state, VkPhysicalDevice device) {
 
-    struct swapchain_support_details details;
+    struct swapchain_support_details details = {0};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, vk_state->vk_surface, &details.capabilities);
 
     uint32_t format_count;
@@ -153,13 +153,13 @@ void vk_create_logical_device(vulkan_state *vk_state) {
 
     uint32_t unique_queue_families[2] = {vk_state->graphics_family_index, vk_state->present_family_index};
 
-    VkDeviceQueueCreateInfo vk_queue_info_list[2];
-
     int queue_count = 2;
 
     if (vk_state->graphics_family_index == vk_state->present_family_index) {
         queue_count = 1;
     }
+
+    VkDeviceQueueCreateInfo *vk_queue_info_list = safe_calloc(queue_count, sizeof(VkDeviceQueueCreateInfo));
 
     for (int i = 0; i < queue_count; i++) {
 
@@ -188,6 +188,8 @@ void vk_create_logical_device(vulkan_state *vk_state) {
         exit(1);
     }
 
+    free(vk_queue_info_list);
+
     vkGetDeviceQueue(vk_state->vk_device, vk_state->graphics_family_index, 0, &vk_state->vk_graphics_queue);
     vkGetDeviceQueue(vk_state->vk_device, vk_state->present_family_index, 0, &vk_state->vk_present_queue);
 }
@@ -207,10 +209,13 @@ void delete_debug_utils_messennger(VkInstance instance, VkDebugUtilsMessengerEXT
 }
 
 void delete_vulkan_state(vulkan_state *self) {
+
     vkDestroyDevice(self->vk_device, NULL);
+
 #ifdef VULKAN_ENABLE_VALIDATION
     delete_debug_utils_messennger(self->vk_instance, self->vk_debug_messenger, NULL);
 #endif
+
     vkDestroySurfaceKHR(self->vk_instance, self->vk_surface, NULL);
     vkDestroyInstance(self->vk_instance, NULL);
 }

@@ -12,9 +12,9 @@
 #include "core/fileio.h"
 #include "core/mem.h"
 
-#include "vulkan_pipeline.h"
+#include "vulkan_base.h"
 #include "vulkan_state.h"
 
-void vk_create_framebuffers(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
+void vk_create_framebuffers(vulkan_state *vk_state, struct vulkan_base *vk_base);
 
 #endif

@@ -6,8 +6,9 @@ OBJECTS = $(patsubst source/%.c,objects/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
 INCLUDE = -Isource -I$(VULKAN_SDK)/include
 
-COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 -Wno-unused $(INCLUDE)
-LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip -L$(VULKAN_SDK)/lib -lvulkan -lm
+COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE)
+LINKER_LIBS = -L$(VULKAN_SDK)/lib
+LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip -lvulkan -lm
 PREFIX =
 CC = gcc
 
@@ -37,7 +38,7 @@ valgrind: all
 	@ ./valgrind.sh ./scroll-and-sigil-vk
 
 $(NAME): $(HEADERS) $(OBJECTS)
-	$(PREFIX) $(CC) $(OBJECTS) $(COMPILER_FLAGS) -o $(NAME) $(LINKER_FLAGS)
+	$(PREFIX) $(CC) $(OBJECTS) $(COMPILER_FLAGS) -o $(NAME) $(LINKER_LIBS) $(LINKER_FLAGS)
 
 objects/%.o: source/%.c
 	@mkdir -p $(dir $@)

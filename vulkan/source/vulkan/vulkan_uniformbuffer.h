@@ -10,15 +10,18 @@
 
 #include <vulkan/vulkan.h>
 
+#include "vulkan/vulkan_state.h"
+
 struct uniform_buffer_object {
     alignas(16) float mvp[16];
 };
 
 struct vulkan_uniformbuffer {
+    uint32_t count;
     VkBuffer *vk_uniform_buffers;
     VkDeviceMemory *vk_uniform_buffers_memory;
 };
 
-void delete_vulkan_uniform_buffer(struct vulkan_uniformbuffer *self);
+void vulkan_uniformbuffer_clean(vulkan_state *vk_state, struct vulkan_uniformbuffer *uniformbuffer);
 
 #endif

@@ -10,12 +10,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "core/log.h"
 #include "core/mem.h"
 #include "vulkan/vulkan_instance.h"
 #include "vulkan/vulkan_state.h"
 
-#include "log.h"
-#include "renderstate.h"
 #include "state.h"
 
 #endif

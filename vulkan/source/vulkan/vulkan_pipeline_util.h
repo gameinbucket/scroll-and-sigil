@@ -17,9 +17,8 @@
 #include "vulkan_uniformbuffer.h"
 #include "vulkan_uniforms.h"
 
-void vulkan_pipeline_create_command_buffers(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
-void vulkan_pipeline_recreate_swapchain(vulkan_state *vk_state, struct vulkan_pipeline *pipeline, uint32_t width, uint32_t height);
-void initialize_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *pipeline, uint32_t width, uint32_t height);
+void vulkan_pipeline_recreate(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
+void vulkan_pipeline_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
 void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
 
 #endif

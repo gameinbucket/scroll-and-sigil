@@ -6,7 +6,7 @@ static const int SCREEN_HEIGHT = 800;
 static bool run = true;
 
 static void window_resize(vulkan_state *vk_state) {
-    log("window resize\n");
+    LOG("window resize\n");
     vk_state->framebuffer_resized = true;
 }
 
@@ -68,8 +68,7 @@ int main() {
 
     window_init(&window, &vk_state);
 
-    renderstate *rs = create_renderstate();
-    state *s = create_state(window, rs, &vk_state);
+    state *s = create_state(window, &vk_state);
 
     SDL_StartTextInput();
 

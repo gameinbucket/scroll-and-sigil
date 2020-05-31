@@ -1,6 +1,6 @@
 #include "vulkan_semaphore.h"
 
-void vk_create_semaphores(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
+void vk_create_semaphores(vulkan_state *vk_state, struct vulkan_base *vk_base) {
 
     VkSemaphoreCreateInfo semaphore_info = {0};
     semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -31,15 +31,15 @@ void vk_create_semaphores(vulkan_state *vk_state, struct vulkan_pipeline *pipeli
         }
     }
 
-    pipeline->vk_flight_fences = flight_fences;
-    pipeline->vk_image_available_semaphores = image_available_semaphores;
-    pipeline->vk_render_finished_semaphores = render_finished_semaphores;
+    vk_base->vk_flight_fences = flight_fences;
+    vk_base->vk_image_available_semaphores = image_available_semaphores;
+    vk_base->vk_render_finished_semaphores = render_finished_semaphores;
 
-    VkFence *images_in_flight = safe_calloc(pipeline->swapchain->swapchain_image_count, sizeof(VkFence));
+    VkFence *images_in_flight = safe_calloc(vk_base->swapchain->swapchain_image_count, sizeof(VkFence));
 
-    for (uint32_t i = 0; i < pipeline->swapchain->swapchain_image_count; i++) {
+    for (uint32_t i = 0; i < vk_base->swapchain->swapchain_image_count; i++) {
         images_in_flight[i] = VK_NULL_HANDLE;
     }
 
-    pipeline->vk_images_in_flight = images_in_flight;
+    vk_base->vk_images_in_flight = images_in_flight;
 }

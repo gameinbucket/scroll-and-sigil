@@ -1,5 +1,9 @@
 #include "vulkan_swapchain.h"
 
+struct vulkan_swapchain *create_vulkan_swapchain() {
+    return safe_calloc(1, sizeof(struct vulkan_swapchain));
+}
+
 static VkSurfaceFormatKHR vk_choose_swap_surface_format(VkSurfaceFormatKHR *available, uint32_t count) {
     for (uint32_t i = 0; i < count; i++) {
         VkSurfaceFormatKHR this = available[i];
@@ -24,6 +28,7 @@ static VkPresentModeKHR vk_choose_swap_present_mode(VkPresentModeKHR *available,
 }
 
 static VkExtent2D vk_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height) {
+
     if (capabilities.currentExtent.width != UINT32_MAX) {
         return capabilities.currentExtent;
     }
@@ -39,7 +44,19 @@ static VkExtent2D vk_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, u
     return extent;
 }
 
-void vk_create_swapchain(vulkan_state *vk_state, struct vulkan_swapchain *swapchain, uint32_t width, uint32_t height) {
+void vulkan_swapchain_clean(vulkan_state *vk_state, struct vulkan_swapchain *swapchain) {
+
+    for (uint32_t i = 0; i < swapchain->swapchain_image_count; i++) {
+        vkDestroyImageView(vk_state->vk_device, swapchain->swapchain_image_views[i], NULL);
+    }
+
+    free(swapchain->swapchain_images);
+    free(swapchain->swapchain_image_views);
+
+    vkDestroySwapchainKHR(vk_state->vk_device, swapchain->vk_swapchain, NULL);
+}
+
+void vulkan_swapchain_initialize(vulkan_state *vk_state, struct vulkan_swapchain *swapchain, uint32_t width, uint32_t height) {
 
     struct swapchain_support_details swapchain_details = vk_query_swapchain_support(vk_state, vk_state->vk_physical_device);
 
@@ -113,10 +130,4 @@ void vk_create_swapchain_image_views(vulkan_state *vk_state, struct vulkan_swapc
     for (uint32_t i = 0; i < count; i++) {
         swapchain->swapchain_image_views[i] = vk_create_image_view(vk_state, swapchain->swapchain_images[i], format, VK_IMAGE_ASPECT_COLOR_BIT);
     }
-}
-
-void delete_vulkan_swapchain(struct vulkan_swapchain *self) {
-    free(self->swapchain_images);
-    free(self->swapchain_image_views);
-    free(self);
 }

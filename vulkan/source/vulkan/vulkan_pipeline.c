@@ -1,66 +1,5 @@
 #include "vulkan_pipeline.h"
 
-void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
-
-    VkAttachmentDescription color_attachment = {0};
-    color_attachment.format = pipeline->swapchain->swapchain_image_format;
-    color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-    VkAttachmentDescription depth_attachment = {0};
-    depth_attachment.format = pipeline->depth.vk_depth_format;
-    depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-    VkAttachmentReference color_attachment_ref = {0};
-    color_attachment_ref.attachment = 0;
-    color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    VkAttachmentReference depth_attachment_ref = {0};
-    depth_attachment_ref.attachment = 1;
-    depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-    VkSubpassDescription subpass = {0};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &color_attachment_ref;
-    subpass.pDepthStencilAttachment = &depth_attachment_ref;
-
-    VkSubpassDependency dependency = {0};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.srcAccessMask = 0;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-    VkAttachmentDescription attachments[2] = {color_attachment, depth_attachment};
-
-    VkRenderPassCreateInfo render_pass_info = {0};
-    render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    render_pass_info.attachmentCount = 2;
-    render_pass_info.pAttachments = attachments;
-    render_pass_info.subpassCount = 1;
-    render_pass_info.pSubpasses = &subpass;
-    render_pass_info.dependencyCount = 1;
-    render_pass_info.pDependencies = &dependency;
-
-    if (vkCreateRenderPass(vk_state->vk_device, &render_pass_info, NULL, &pipeline->vk_render_pass) != VK_SUCCESS) {
-        fprintf(stderr, "Error: Vulkan Create Render Pass\n");
-        exit(1);
-    }
-}
-
 struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment) {
     struct vulkan_pipeline *self = safe_calloc(1, sizeof(struct vulkan_pipeline));
     self->vertex_shader_path = vertex;
@@ -112,7 +51,7 @@ VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_
     return vk_shader_module;
 }
 
-void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *pipeline, struct vulkan_swapchain *swapchain) {
+void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, VkRenderPass vk_render_pass, struct vulkan_pipeline *pipeline) {
 
     size_t vertex_shader_size;
     char *vertex_shader = read_binary(pipeline->vertex_shader_path, &vertex_shader_size);
@@ -163,14 +102,14 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_pipeline 
     VkViewport viewport = {0};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float)swapchain->swapchain_extent.width;
-    viewport.height = (float)swapchain->swapchain_extent.height;
+    viewport.width = (float)vk_extent.width;
+    viewport.height = (float)vk_extent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor = {0};
     scissor.offset = (VkOffset2D){0, 0};
-    scissor.extent = swapchain->swapchain_extent;
+    scissor.extent = vk_extent;
 
     VkPipelineViewportStateCreateInfo viewport_state = {0};
     viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -240,7 +179,7 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, struct vulkan_pipeline 
     pipeline_info.pDepthStencilState = &depth_stencil;
     pipeline_info.pColorBlendState = &color_blending;
     pipeline_info.layout = vk_pipeline_layout;
-    pipeline_info.renderPass = pipeline->vk_render_pass;
+    pipeline_info.renderPass = vk_render_pass;
     pipeline_info.subpass = 0;
     pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 

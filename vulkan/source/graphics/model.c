@@ -57,11 +57,11 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
     }
 }
 
-static void bone_offset(bone *b, float x, float y, float z) {
-    b->bind_pose.position[0] = -x;
-    b->bind_pose.position[1] = -y;
-    b->bind_pose.position[2] = -z;
-}
+// static void bone_offset(bone *b, float x, float y, float z) {
+//     b->bind_pose.position[0] = -x;
+//     b->bind_pose.position[1] = -y;
+//     b->bind_pose.position[2] = -z;
+// }
 
 static void bone_rotation(bone *b, float x, float y, float z) {
     x = DEGREE_TO_RADIAN(x);

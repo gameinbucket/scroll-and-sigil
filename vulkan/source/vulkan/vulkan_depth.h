@@ -11,6 +11,8 @@
 #include "vulkan_texture.h"
 
 struct vulkan_depth {
+    uint32_t width;
+    uint32_t height;
     VkImage vk_depth_image;
     VkDeviceMemory vk_depth_image_memory;
     VkImageView vk_depth_image_view;
@@ -18,7 +20,7 @@ struct vulkan_depth {
 };
 
 void vk_choose_depth_format(vulkan_state *vk_state, struct vulkan_depth *depth);
-void vk_create_depth_resources(vulkan_state *vk_state, struct vulkan_swapchain *swapchain, struct vulkan_depth *depth);
-void destroy_vulkan_depth(VkDevice vk_device, struct vulkan_depth *depth);
+void vk_create_depth_resources(vulkan_state *vk_state, struct vulkan_depth *depth);
+void delete_vulkan_depth(VkDevice vk_device, struct vulkan_depth *depth);
 
 #endif

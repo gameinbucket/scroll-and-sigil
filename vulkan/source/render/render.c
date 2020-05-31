@@ -29,6 +29,42 @@ void render_screen(struct vulkan_renderbuffer *b, float x, float y, float width,
     render_index4(b);
 }
 
+void render_rectangle(struct vulkan_renderbuffer *b, float x, float y, float width, float height, float red, float green, float blue, float alpha) {
+    uint32_t pos = b->vertex_position;
+    float *vertices = b->vertices;
+
+    vertices[pos] = x;
+    vertices[pos + 1] = y;
+    vertices[pos + 2] = red;
+    vertices[pos + 3] = green;
+    vertices[pos + 4] = blue;
+    vertices[pos + 5] = alpha;
+
+    vertices[pos + 6] = x + width;
+    vertices[pos + 7] = y;
+    vertices[pos + 8] = red;
+    vertices[pos + 9] = green;
+    vertices[pos + 10] = blue;
+    vertices[pos + 11] = alpha;
+
+    vertices[pos + 12] = x + width;
+    vertices[pos + 13] = y + height;
+    vertices[pos + 14] = red;
+    vertices[pos + 15] = green;
+    vertices[pos + 16] = blue;
+    vertices[pos + 17] = alpha;
+
+    vertices[pos + 18] = x;
+    vertices[pos + 19] = y + height;
+    vertices[pos + 20] = red;
+    vertices[pos + 21] = green;
+    vertices[pos + 22] = blue;
+    vertices[pos + 23] = alpha;
+
+    b->vertex_position = pos + 24;
+    render_index4(b);
+}
+
 void render_cube(struct vulkan_renderbuffer *b) {
     float cube[CUBE_VERTEX_FLOAT] = RENDER_CUBE(1, 1, 1);
     memcpy(b->vertices + b->vertex_position, cube, CUBE_VERTEX_FLOAT * sizeof(float));
