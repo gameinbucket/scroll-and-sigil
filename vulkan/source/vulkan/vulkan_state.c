@@ -2,7 +2,7 @@
 
 struct swapchain_support_details vk_query_swapchain_support(vulkan_state *vk_state, VkPhysicalDevice device) {
 
-    struct swapchain_support_details details = {0};
+    struct swapchain_support_details details = {(VkSurfaceCapabilitiesKHR){0}, NULL, 0, NULL, 0};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, vk_state->vk_surface, &details.capabilities);
 
     uint32_t format_count;
