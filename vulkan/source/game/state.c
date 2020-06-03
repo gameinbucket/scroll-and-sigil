@@ -1,8 +1,6 @@
 #include "state.h"
 
-static void build_command_buffers(__attribute__((unused)) state *self, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
-
-    uint32_t size = vk_base->swapchain->swapchain_image_count;
+static void record_rendering(__attribute__((unused)) state *self, __attribute__((unused)) struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline, uint32_t image_index) {
 
     VkCommandBuffer *command_buffers = vk_base->vk_command_buffers;
 
@@ -17,6 +15,7 @@ static void build_command_buffers(__attribute__((unused)) state *self, struct vu
     render_pass_info.renderArea.extent = vk_base->swapchain->swapchain_extent;
     render_pass_info.pClearValues = clear_values;
     render_pass_info.clearValueCount = 2;
+    render_pass_info.framebuffer = vk_base->vk_framebuffers[image_index];
 
     uint32_t width = vk_base->swapchain->swapchain_extent.width;
     uint32_t height = vk_base->swapchain->swapchain_extent.height;
@@ -31,43 +30,54 @@ static void build_command_buffers(__attribute__((unused)) state *self, struct vu
     scissor.extent = (VkExtent2D){width, height};
     scissor.offset = (VkOffset2D){0, 0};
 
-    for (uint32_t i = 0; i < size; i++) {
+    VkCommandBuffer command_buffer = command_buffers[image_index];
 
-        render_pass_info.framebuffer = vk_base->vk_framebuffers[i];
+    VkCommandBufferBeginInfo command_begin_info = {0};
+    command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    command_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        VkCommandBuffer command_buffer = command_buffers[i];
-
-        VkCommandBufferBeginInfo command_begin_info = {0};
-        command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        if (vkBeginCommandBuffer(command_buffer, &command_begin_info) != VK_SUCCESS) {
-            fprintf(stderr, "Error: Vulkan Begin Command Buffer\n");
-            exit(1);
-        }
-
-        vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
-        vkCmdSetViewport(command_buffer, 0, 1, &viewport);
-        vkCmdSetScissor(command_buffer, 0, 1, &scissor);
-
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline);
-        VkBuffer vertex_buffers[1] = {pipeline->renderbuffer->vk_vertex_buffer};
-        VkDeviceSize vertex_offsets[1] = {0};
-        vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, vertex_offsets);
-        vkCmdBindIndexBuffer(command_buffer, pipeline->renderbuffer->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
-        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline_layout, 0, 1, &pipeline->vk_descriptor_sets[i], 0, NULL);
-        vkCmdDrawIndexed(command_buffer, pipeline->renderbuffer->index_count, 1, 0, 0, 0);
-
-        // render_scene(self->sc, command_buffers[i]);
-        // render_hud(self->hd, command_buffers[i]);
-
-        vkCmdEndRenderPass(command_buffer);
-
-        if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
-            fprintf(stderr, "Error: Vulkan End Command Buffer\n");
-            exit(1);
-        }
+    if (vkBeginCommandBuffer(command_buffer, &command_begin_info) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan Begin Command Buffer\n");
+        exit(1);
     }
+
+    vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+    vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline);
+    VkBuffer vertex_buffers[1] = {pipeline->renderbuffer->vk_vertex_buffer};
+    VkDeviceSize vertex_offsets[1] = {0};
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, vertex_offsets);
+    vkCmdBindIndexBuffer(command_buffer, pipeline->renderbuffer->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline_layout, 0, 1, &pipeline->vk_descriptor_sets[image_index], 0, NULL);
+    vkCmdDrawIndexed(command_buffer, pipeline->renderbuffer->index_count, 1, 0, 0, 0);
+
+    // render_scene(self->sc, command_buffers[i]);
+    // render_hud(self->hd, command_buffers[i]);
+
+    vkCmdEndRenderPass(command_buffer);
+
+    if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan End Command Buffer\n");
+        exit(1);
+    }
+
+    struct uniform_buffer_object ubo = {0};
+    float view[16];
+    float perspective[16];
+    static float x = 0.0f;
+    x += 0.01f;
+    vec3 eye = {3 + x, 3, 5};
+    vec3 center = {0, 0, 0};
+    matrix_look_at(view, &eye, &center);
+    matrix_translate(view, -eye.x, -eye.y, -eye.z);
+    float ratio = (float)vk_base->swapchain->swapchain_extent.width / (float)vk_base->swapchain->swapchain_extent.height;
+    matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
+    matrix_multiply(ubo.mvp, perspective, view);
+
+    vk_update_uniform_buffer(vk_state, pipeline, image_index, ubo);
 }
 
 state *create_state(SDL_Window *window, vulkan_state *vk_state) {
@@ -104,8 +114,6 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     self->hd = create_hud();
     self->sc = create_scene();
 
-    build_command_buffers(self, self->vk_base, self->pipeline3d);
-
     return self;
 }
 
@@ -114,11 +122,9 @@ void state_update(__attribute__((unused)) state *self) {
 
 static void render(SDL_Window *window, vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
 
-    int current_frame = vk_state->current_frame;
+    uint32_t current_frame = vk_state->current_frame;
 
-    VkResult vkres;
-
-    vkres = vkWaitForFences(vk_state->vk_device, 1, &vk_base->vk_flight_fences[current_frame], VK_TRUE, VK_SYNC_TIMEOUT);
+    VkResult vkres = vkWaitForFences(vk_state->vk_device, 1, &vk_base->vk_flight_fences[current_frame], VK_TRUE, VK_SYNC_TIMEOUT);
     vk_ok(vkres);
 
     uint32_t image_index;
@@ -130,26 +136,12 @@ static void render(SDL_Window *window, vulkan_state *vk_state, struct vulkan_bas
         SDL_Vulkan_GetDrawableSize(window, &width, &height);
         vulkan_base_recreate_swapchain(vk_state, vk_base, width, height);
         vulkan_pipeline_recreate(vk_state, vk_base, pipeline);
-        build_command_buffers(NULL, vk_base, pipeline);
         return;
     } else {
         vk_ok(vkres);
     }
 
-    struct uniform_buffer_object ubo = {0};
-    float view[16];
-    float perspective[16];
-    static float x = 0.0f;
-    x += 0.01f;
-    vec3 eye = {3 + x, 3, 5};
-    vec3 center = {0, 0, 0};
-    matrix_look_at(view, &eye, &center);
-    matrix_translate(view, -eye.x, -eye.y, -eye.z);
-    float ratio = (float)vk_base->swapchain->swapchain_extent.width / (float)vk_base->swapchain->swapchain_extent.height;
-    matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
-    matrix_multiply(ubo.mvp, perspective, view);
-
-    vk_update_uniform_buffer(vk_state, pipeline, image_index, ubo);
+    record_rendering(NULL, vk_state, vk_base, pipeline, image_index);
 
     if (vk_base->vk_images_in_flight[image_index] != VK_NULL_HANDLE) {
         vkres = vkWaitForFences(vk_state->vk_device, 1, &vk_base->vk_images_in_flight[image_index], VK_TRUE, VK_SYNC_TIMEOUT);
@@ -200,7 +192,6 @@ static void render(SDL_Window *window, vulkan_state *vk_state, struct vulkan_bas
         vk_state->framebuffer_resized = false;
         vulkan_base_recreate_swapchain(vk_state, vk_base, width, height);
         vulkan_pipeline_recreate(vk_state, vk_base, pipeline);
-        build_command_buffers(NULL, vk_base, pipeline);
     } else {
         vk_ok(vkres);
     }
@@ -209,9 +200,8 @@ static void render(SDL_Window *window, vulkan_state *vk_state, struct vulkan_bas
 }
 
 void state_render(state *self) {
-    LOG("draw. ");
 
-    build_command_buffers(NULL, self->vk_base, self->pipeline3d);
+    LOG("draw. ");
     render(self->window, self->vk_state, self->vk_base, self->pipeline3d);
 }
 

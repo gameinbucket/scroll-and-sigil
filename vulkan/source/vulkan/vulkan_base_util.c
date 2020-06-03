@@ -76,7 +76,7 @@ void vulkan_base_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base,
     vk_create_command_pool(vk_state, &vk_base->vk_command_pool);
     vk_create_framebuffers(vk_state, vk_base);
     vulkan_base_create_command_buffers(vk_state, vk_base);
-    vk_create_semaphores(vk_state, vk_base);
+    vulkan_base_create_sync_objects(vk_state, vk_base);
 }
 
 void delete_vulkan_base(vulkan_state *vk_state, struct vulkan_base *vk_base) {

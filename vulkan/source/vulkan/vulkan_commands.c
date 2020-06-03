@@ -46,6 +46,7 @@ void vk_create_command_pool(vulkan_state *vk_state, VkCommandPool *vk_command_po
 
     VkCommandPoolCreateInfo pool_info = {0};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     pool_info.queueFamilyIndex = vk_state->graphics_family_index;
 
     if (vkCreateCommandPool(vk_state->vk_device, &pool_info, NULL, vk_command_pool) != VK_SUCCESS) {

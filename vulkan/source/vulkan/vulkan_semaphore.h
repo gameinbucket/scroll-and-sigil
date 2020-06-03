@@ -6,6 +6,6 @@
 #include "vulkan_base.h"
 #include "vulkan_state.h"
 
-void vk_create_semaphores(vulkan_state *vk_state, struct vulkan_base *base);
+void vulkan_base_create_sync_objects(vulkan_state *vk_state, struct vulkan_base *base);
 
 #endif

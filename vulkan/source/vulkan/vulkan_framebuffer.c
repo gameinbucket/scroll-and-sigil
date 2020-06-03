@@ -4,7 +4,7 @@ void vk_create_framebuffers(vulkan_state *vk_state, struct vulkan_base *vk_base)
 
     uint32_t size = vk_base->swapchain->swapchain_image_count;
 
-    VkFramebuffer *framebuffers = safe_calloc(size, sizeof(VkFramebuffer));
+    vk_base->vk_framebuffers = safe_calloc(size, sizeof(VkFramebuffer));
 
     for (uint32_t i = 0; i < size; i++) {
 
@@ -19,11 +19,9 @@ void vk_create_framebuffers(vulkan_state *vk_state, struct vulkan_base *vk_base)
         framebuffer_info.height = vk_base->swapchain->swapchain_extent.height;
         framebuffer_info.layers = 1;
 
-        if (vkCreateFramebuffer(vk_state->vk_device, &framebuffer_info, NULL, &framebuffers[i]) != VK_SUCCESS) {
+        if (vkCreateFramebuffer(vk_state->vk_device, &framebuffer_info, NULL, &vk_base->vk_framebuffers[i]) != VK_SUCCESS) {
             fprintf(stderr, "Error: Create Framebuffer\n");
             exit(1);
         }
     }
-
-    vk_base->vk_framebuffers = framebuffers;
 }

@@ -1,6 +1,6 @@
 #include "vulkan_semaphore.h"
 
-void vk_create_semaphores(vulkan_state *vk_state, struct vulkan_base *vk_base) {
+void vulkan_base_create_sync_objects(vulkan_state *vk_state, struct vulkan_base *vk_base) {
 
     VkSemaphoreCreateInfo semaphore_info = {0};
     semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
