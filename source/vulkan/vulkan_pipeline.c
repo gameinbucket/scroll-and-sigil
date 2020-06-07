@@ -1,16 +1,26 @@
 #include "vulkan_pipeline.h"
 
-struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment, struct vulkan_image **images, int image_count, bool include_depth) {
+struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment) {
 
     struct vulkan_pipeline *self = safe_calloc(1, sizeof(struct vulkan_pipeline));
 
     self->vertex_shader_path = vertex;
     self->fragment_shader_path = fragment;
-    self->images = images;
-    self->image_count = image_count;
-    self->include_depth = include_depth;
 
     return self;
+}
+
+void vulkan_pipeline_set_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count) {
+
+    self->images = images;
+    self->image_count = image_count;
+}
+
+void vulkan_pipeline_settings(struct vulkan_pipeline *self, bool include_depth, VkFrontFace rasterize_face, VkCullModeFlagBits rasterize_cull_mode) {
+
+    self->include_depth = include_depth;
+    self->rasterize_face = rasterize_face;
+    self->rasterize_cull_mode = rasterize_cull_mode;
 }
 
 VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_t size) {
@@ -103,9 +113,9 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, V
     rasterizer_info.rasterizerDiscardEnable = VK_FALSE;
     rasterizer_info.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer_info.lineWidth = 1.0f;
-    rasterizer_info.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer_info.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer_info.depthBiasEnable = VK_FALSE;
+    rasterizer_info.cullMode = pipeline->rasterize_cull_mode;
+    rasterizer_info.frontFace = pipeline->rasterize_face;
 
     VkPipelineMultisampleStateCreateInfo multisampling = {0};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;

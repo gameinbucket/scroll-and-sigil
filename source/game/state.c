@@ -63,7 +63,7 @@ static void record_rendering(state *self, uint32_t image_index) {
     vkCmdSetViewport(command_buffer, 0, 1, &viewport);
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    // render_scene(vk_state, vk_base, self->sc, command_buffer, image_index);
+    render_scene(vk_state, vk_base, self->sc, command_buffer, image_index);
     render_hud(vk_state, vk_base, self->hd, command_buffer, image_index);
 
     vkCmdEndRenderPass(command_buffer);
@@ -182,7 +182,8 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
     {
         struct vulkan_renderbuffer *render = vk_create_renderbuffer(2, 4, 0, 0, 4, 6);
-        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/color2d.vert.spv", "shaders/spv/color2d.frag.spv", NULL, 0, false);
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/color2d.vert.spv", "shaders/spv/color2d.frag.spv");
+        vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
         render_rectangle(render, 0, 0, 64, 64, 1.0f, 0.0f, 0.0f, 1.0f);
         pipeline->renderbuffer = render;
 
@@ -191,9 +192,11 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
     {
         struct vulkan_renderbuffer *render = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/texture3d.vert.spv", "shaders/spv/texture3d.frag.spv");
         struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
         images[0] = &self->images[TEXTURE_GRASS];
-        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/texture3d.vert.spv", "shaders/spv/texture3d.frag.spv", images, 1, true);
+        vulkan_pipeline_set_images(pipeline, images, 1);
+        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
         render_cube(render);
         pipeline->renderbuffer = render;
 

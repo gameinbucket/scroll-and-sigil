@@ -33,9 +33,13 @@ struct vulkan_pipeline {
     VkPipeline vk_pipeline;
     VkPipelineLayout vk_pipeline_layout;
     bool include_depth;
+    VkFrontFace rasterize_face;
+    VkCullModeFlagBits rasterize_cull_mode;
 };
 
-struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment, struct vulkan_image **images, int image_count, bool include_depth);
+struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment);
+void vulkan_pipeline_set_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count);
+void vulkan_pipeline_settings(struct vulkan_pipeline *self, bool include_depth, VkFrontFace rasterize_face, VkCullModeFlagBits rasterize_cull_mode);
 void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, VkRenderPass vk_render_pass, struct vulkan_pipeline *pipeline);
 
 #endif
