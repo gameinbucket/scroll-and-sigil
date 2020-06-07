@@ -11,6 +11,7 @@
 void matrix_print(float *matrix);
 void matrix_identity(float *matrix);
 void matrix_orthographic(float *matrix, float left, float right, float bottom, float top, float near, float far);
+void matrix_orthographic_vulkan(float *matrix, float left, float right, float bottom, float top, float near, float far);
 void matrix_frustum(float *matrix, float left, float right, float bottom, float top, float near, float far);
 void matrix_perspective(float *matrix, float fov, float near, float far, float aspect);
 void matrix_translate(float *matrix, float x, float y, float z);

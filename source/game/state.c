@@ -1,304 +1,218 @@
 #include "state.h"
 
-float console_on = false;
-string *console_type;
-float debug_shadow = false;
+static void rendering_resize(state *self, int width, int height) {
 
-state *create_state(world *w, renderstate *rs, soundstate *ss) {
+    self->canvas_width = width;
+    self->canvas_height = height;
 
-    state *self = safe_calloc(1, sizeof(state));
-    self->w = w;
-    self->rs = rs;
-    self->ss = ss;
-    self->ms = create_modelstate();
-    self->c = create_camera(6);
-    self->wr = create_worldrender(rs, w);
+    vulkan_state *vk_state = self->vk_state;
+    struct vulkan_base *vk_base = self->vk_base;
 
-    wad_load_resources(rs, ss, self->ms);
-    worldrender_create_buffers(self->wr);
+    vulkan_base_recreate_swapchain(vk_state, vk_base, width, height);
 
-    wad_load_map(w, &self->in, self->ms);
-
-    int thing_count = w->thing_count;
-    thing **things = w->things;
-    for (int i = 0; i < thing_count; i++) {
-        if (things[i]->type == THING_TYPE_HERO) {
-            self->h = things[i];
-            self->c->target = self->h;
-            break;
-        }
-    }
-
-    console_type = string_init("");
-
-    return self;
+    vulkan_pipeline_recreate(vk_state, vk_base, self->sc->pipeline);
+    vulkan_pipeline_recreate(vk_state, vk_base, self->hd->pipeline);
 }
 
-void state_update(state *self) {
+static void record_rendering(state *self, uint32_t image_index) {
 
-    world_update(self->w);
+    vulkan_state *vk_state = self->vk_state;
+    struct vulkan_base *vk_base = self->vk_base;
 
-    input *in = &self->in;
+    VkCommandBuffer *command_buffers = vk_base->vk_command_buffers;
 
-    // float speed = 0.1f;
+    VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
+    VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
+    VkClearValue clear_values[2] = {clear_color, clear_depth};
 
-    // float r = self->c->ry;
+    VkRenderPassBeginInfo render_pass_info = {0};
+    render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    render_pass_info.renderPass = vk_base->vk_render_pass;
+    render_pass_info.renderArea.offset = (VkOffset2D){0, 0};
+    render_pass_info.renderArea.extent = vk_base->swapchain->swapchain_extent;
+    render_pass_info.pClearValues = clear_values;
+    render_pass_info.clearValueCount = 2;
+    render_pass_info.framebuffer = vk_base->vk_framebuffers[image_index];
 
-    // float dx = 0;
-    // float dy = 0;
-    // float dz = 0;
+    uint32_t width = vk_base->swapchain->swapchain_extent.width;
+    uint32_t height = vk_base->swapchain->swapchain_extent.height;
 
-    // const float MAXSPEED = 0.5f;
+    VkViewport viewport = {0};
+    viewport.width = width;
+    viewport.height = height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
 
-    // if (in.move_forward) {
-    //     dx += sinf(r) * speed;
-    //     dz -= cosf(r) * speed;
-    // }
+    VkRect2D scissor = {0};
+    scissor.extent = (VkExtent2D){width, height};
+    scissor.offset = (VkOffset2D){0, 0};
 
-    // if (in.move_backward) {
-    //     dx -= sinf(r) * speed * 0.5f;
-    //     dz += cosf(r) * speed * 0.5f;
-    // }
+    VkCommandBuffer command_buffer = command_buffers[image_index];
 
-    // if (in.move_up) {
-    //     self->c->y += 0.1;
-    // }
+    VkCommandBufferBeginInfo command_begin_info = {0};
+    command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    command_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-    // if (in.move_down) {
-    //     self->c->y -= 0.1;
-    // }
-
-    // if (in.move_left) {
-    //     dx -= cosf(r) * speed * 0.75f;
-    //     dz -= sinf(r) * speed * 0.75f;
-    // }
-
-    // if (in.move_right) {
-    //     dx += cosf(r) * speed * 0.75f;
-    //     dz += sinf(r) * speed * 0.75f;
-    // }
-
-    // if (dx > MAXSPEED) {
-    //     dx = MAXSPEED;
-    // } else if (dx < -MAXSPEED) {
-    //     dx = -MAXSPEED;
-    // }
-
-    // if (dy > MAXSPEED) {
-    //     dy = MAXSPEED;
-    // } else if (dy < -MAXSPEED) {
-    //     dy = -MAXSPEED;
-    // }
-
-    // self->c->x += dx;
-    // self->c->y += dy;
-    // self->c->z += dz;
-
-    if (in->look_left) {
-        self->c->ry -= 0.05;
-        if (self->c->ry < 0) {
-            self->c->ry += FLOAT_MATH_TAU;
-        }
+    if (vkBeginCommandBuffer(command_buffer, &command_begin_info) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan Begin Command Buffer\n");
+        exit(1);
     }
 
-    if (in->look_right) {
-        self->c->ry += 0.05;
-        if (self->c->ry >= FLOAT_MATH_TAU) {
-            self->c->ry -= FLOAT_MATH_TAU;
-        }
+    vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+    vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+
+    // render_scene(vk_state, vk_base, self->sc, command_buffer, image_index);
+    render_hud(vk_state, vk_base, self->hd, command_buffer, image_index);
+
+    vkCmdEndRenderPass(command_buffer);
+
+    if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan End Command Buffer\n");
+        exit(1);
+    }
+}
+
+void state_update(__attribute__((unused)) state *self) {
+}
+
+static void render(struct state *self) {
+
+    SDL_Window *window = self->window;
+    vulkan_state *vk_state = self->vk_state;
+    struct vulkan_base *vk_base = self->vk_base;
+
+    uint32_t current_frame = vk_state->current_frame;
+
+    VkResult vkres = vkWaitForFences(vk_state->vk_device, 1, &vk_base->vk_flight_fences[current_frame], VK_TRUE, VK_SYNC_TIMEOUT);
+    vk_ok(vkres);
+
+    uint32_t image_index;
+    vkres = vkAcquireNextImageKHR(vk_state->vk_device, vk_base->swapchain->vk_swapchain, VK_SYNC_TIMEOUT, vk_base->vk_image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
+
+    if (vkres == VK_ERROR_OUT_OF_DATE_KHR) {
+        int width;
+        int height;
+        SDL_Vulkan_GetDrawableSize(window, &width, &height);
+        rendering_resize(self, width, height);
+        return;
+    } else {
+        vk_ok(vkres);
     }
 
-    if (in->look_up) {
-        self->c->rx -= 0.05;
-        if (self->c->rx < 0) {
-            self->c->rx += FLOAT_MATH_TAU;
-        }
+    record_rendering(self, image_index);
+
+    if (vk_base->vk_images_in_flight[image_index] != VK_NULL_HANDLE) {
+        vkres = vkWaitForFences(vk_state->vk_device, 1, &vk_base->vk_images_in_flight[image_index], VK_TRUE, VK_SYNC_TIMEOUT);
+        vk_ok(vkres);
     }
 
-    if (in->look_down) {
-        self->c->rx += 0.05;
-        if (self->c->rx >= FLOAT_MATH_TAU) {
-            self->c->rx -= FLOAT_MATH_TAU;
-        }
+    vk_base->vk_images_in_flight[image_index] = vk_base->vk_flight_fences[current_frame];
+
+    VkSubmitInfo submit_info = {0};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkSemaphore wait_semaphores[1] = {vk_base->vk_image_available_semaphores[current_frame]};
+    VkPipelineStageFlags wait_stages[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores = wait_semaphores;
+    submit_info.pWaitDstStageMask = wait_stages;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &vk_base->vk_command_buffers[image_index];
+
+    VkSemaphore signal_semaphores[1] = {vk_base->vk_render_finished_semaphores[current_frame]};
+
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = signal_semaphores;
+
+    vkres = vkResetFences(vk_state->vk_device, 1, &vk_base->vk_flight_fences[current_frame]);
+    vk_ok(vkres);
+
+    vkres = vkQueueSubmit(vk_state->vk_graphics_queue, 1, &submit_info, vk_base->vk_flight_fences[current_frame]);
+    vk_ok(vkres);
+
+    VkSwapchainKHR swapchains[1] = {vk_base->swapchain->vk_swapchain};
+
+    VkPresentInfoKHR present_info = {0};
+    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores = signal_semaphores;
+    present_info.swapchainCount = 1;
+    present_info.pSwapchains = swapchains;
+    present_info.pImageIndices = &image_index;
+
+    vkres = vkQueuePresentKHR(vk_state->vk_present_queue, &present_info);
+
+    if (vkres == VK_ERROR_OUT_OF_DATE_KHR || vkres == VK_SUBOPTIMAL_KHR || vk_state->framebuffer_resized) {
+        int width;
+        int height;
+        SDL_Vulkan_GetDrawableSize(window, &width, &height);
+        vk_state->framebuffer_resized = false;
+        rendering_resize(self, width, height);
+    } else {
+        vk_ok(vkres);
     }
 
-    camera_update(self->c);
-
-    self->h->rotation_target = -self->c->ry;
-
-    if (in->console) {
-        in->console = false;
-        console_on = !console_on;
-    }
-
-    if (console_on) {
-        printf("type?");
-    }
+    vk_state->current_frame = (current_frame + 1) % VULKAN_MAX_FRAMES_IN_FLIGHT;
 }
 
 void state_render(state *self) {
 
-    camera *c = self->c;
-    renderstate *rs = self->rs;
+    LOG("draw. ");
+    render(self);
+}
 
-    graphics_enable_cull();
-    graphics_enable_depth();
+state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
-    // model view projection
+    state *self = safe_calloc(1, sizeof(state));
+    self->window = window;
+    self->vk_state = vk_state;
 
-    float view[16];
-    float view_projection[16];
+    SDL_Vulkan_GetDrawableSize(window, &self->canvas_width, &self->canvas_height);
 
-    matrix_identity(view);
-    matrix_rotate_x(view, sinf(c->rx), cosf(c->rx));
-    matrix_rotate_y(view, sinf(c->ry), cosf(c->ry));
-    matrix_translate(view, -c->x, -c->y, -c->z);
-    matrix_multiply(view_projection, rs->draw_perspective, view);
+    struct vulkan_base *vk_base = create_vulkan_base(vk_state);
+    vulkan_base_initialize(vk_state, vk_base, self->canvas_width, self->canvas_height);
 
-    // shadow map ----------------------------------------
+    self->vk_base = vk_base;
 
-    shadowmap *shadow = rs->shadow_map;
+    self->images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image));
+    vk_create_texture_image(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_GRASS], "textures/tiles/grass.png");
 
-    graphics_bind_fbo(shadow->fbo);
-    graphics_set_view(0, 0, shadow->size, shadow->size);
-    graphics_clear_depth();
+    {
+        struct vulkan_renderbuffer *render = vk_create_renderbuffer(2, 4, 0, 0, 4, 6);
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/color2d.vert.spv", "shaders/spv/color2d.frag.spv", NULL, 0, false);
+        render_rectangle(render, 0, 0, 64, 64, 1.0f, 0.0f, 0.0f, 1.0f);
+        pipeline->renderbuffer = render;
 
-    float shadow_view[16];
-    float shadow_view_projection[16];
-
-    vec3 eye = {0, 10, 0};
-    vec3 center = {2, 0, 10};
-    matrix_look_at(shadow_view, &eye, &center);
-
-    vec3 light_direction = {eye.x - center.x, eye.y - center.y, eye.z - center.z};
-    vector3_normalize(&light_direction);
-
-    camera shadow_camera = {0};
-    shadow_camera.rx = -shadow_view[12];
-    shadow_camera.ry = -shadow_view[14];
-
-    shadow_map_view_projection(shadow, shadow_view_projection, shadow_view, view_projection);
-
-    float shadow_bias[16] = {0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.5, 0, 0.5, 0.5, 0.5, 1};
-
-    float depth_bias_mvp[16];
-    matrix_multiply(depth_bias_mvp, shadow_bias, shadow_view_projection);
-
-    graphics_cull_front();
-
-    world_render(self->wr, &shadow_camera, shadow_view, shadow_view_projection, NULL, NULL, 0);
-
-    // geometry & gbuffer ----------------------------------------
-
-    graphics_cull_back();
-
-    // framebuffer *frame = rs->frame;
-    framebuffer *gbuffer = rs->gbuffer;
-    framebuffer *fping = rs->frame_ping;
-    framebuffer *fpong = rs->frame_pong;
-    framebuffer *f = gbuffer;
-    framebuffer *fp = NULL;
-
-    graphics_bind_fbo(f->fbo);
-    graphics_set_view(0, 0, f->width, f->height);
-    graphics_clear_color_and_depth();
-
-    world_render(self->wr, c, view, view_projection, &light_direction, depth_bias_mvp, shadow->depth_texture);
-
-    graphics_disable_cull();
-    graphics_disable_depth();
-
-    if (rs->ssao_on) {
-        // ssao ----------------------------------------
-
-        matrix_orthographic_projection(rs->mvp, rs->draw_orthographic, rs->mv, 0, 0);
-
-        fp = f;
-        f = fping;
-        graphics_bind_fbo(f->fbo);
-        renderstate_set_program(rs, SHADER_SSAO);
-        graphics_set_view(0, 0, f->width, f->height);
-        renderstate_set_uniform_vector2(rs, "texel", 1.0f / (float)fp->width, 1.0f / (float)fp->height);
-        renderstate_set_uniform_vector2(rs, "noise_scale", (float)fp->width / 4.0f, (float)fp->height / 4.0f);
-        renderstate_set_uniform_matrix(rs, "projection", rs->draw_perspective);
-        renderstate_set_uniform_vectors(rs, "samples", rs->ssao_samples, 64);
-        renderstate_set_mvp(rs, rs->mvp);
-        graphics_bind_texture(GL_TEXTURE0, fp->textures[1]);
-        graphics_bind_texture(GL_TEXTURE1, fp->textures[2]);
-        graphics_bind_texture(GL_TEXTURE2, rs->ssao_noise->id);
-        graphics_bind_and_draw(rs->draw_frame);
-
-        // blur ssao ----------------------------------------
-
-        fp = f;
-        f = fpong;
-        graphics_bind_fbo(f->fbo);
-        renderstate_set_program(rs, SHADER_SSAO_BLUR);
-        graphics_set_view(0, 0, f->width, f->height);
-        renderstate_set_uniform_vector2(rs, "texel", 1.0f / (float)fp->width, 1.0f / (float)fp->height);
-        renderstate_set_mvp(rs, rs->mvp);
-        graphics_bind_texture(GL_TEXTURE0, fp->textures[0]);
-        graphics_bind_and_draw(rs->draw_frame);
-
-        // lighting ----------------------------------------
-
-        fp = f;
-        f = fping;
-        graphics_bind_fbo(f->fbo);
-        renderstate_set_program(rs, SHADER_LIGHTING);
-        graphics_set_view(0, 0, f->width, f->height);
-        renderstate_set_uniform_vector(rs, "u_light_direction", light_direction.x, light_direction.y, light_direction.z);
-        renderstate_set_mvp(rs, rs->mvp);
-        graphics_bind_texture(GL_TEXTURE0, gbuffer->textures[0]);
-        graphics_bind_texture(GL_TEXTURE1, gbuffer->textures[1]);
-        graphics_bind_texture(GL_TEXTURE2, gbuffer->textures[2]);
-        graphics_bind_texture(GL_TEXTURE3, fp->textures[0]);
-        graphics_bind_and_draw(rs->draw_frame);
+        self->hd = create_hud(vk_state, vk_base, pipeline);
     }
 
-    // hud ----------------------------------------
+    {
+        struct vulkan_renderbuffer *render = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
+        struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
+        images[0] = &self->images[TEXTURE_GRASS];
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/texture3d.vert.spv", "shaders/spv/texture3d.frag.spv", images, 1, true);
+        render_cube(render);
+        pipeline->renderbuffer = render;
 
-    renderstate_set_program(rs, SHADER_TEXTURE_2D_COLOR);
-    matrix_orthographic_projection(rs->mvp, rs->draw_orthographic, rs->mv, 0, 0);
-    renderstate_set_mvp(rs, rs->mvp);
-
-    renderbuffer *draw_images = rs->draw_images;
-
-    renderbuffer_zero(draw_images);
-    render_colored_image(draw_images, 0.0f, 0.0f, 110.0f, 128.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-    renderstate_set_texture(rs, TEXTURE_BARON);
-    graphics_update_and_draw(draw_images);
-
-    if (console_on) {
-        renderbuffer_zero(draw_images);
-        string *message = string_init("console:");
-        message = string_append(message, console_type);
-        render_text(draw_images, 51, 399, message, 1, 0.0f, 0.0f, 0.0f);
-        render_text(draw_images, 50, 400, message, 1, 1.0f, 0.0f, 1.0f);
-        renderstate_set_texture(rs, TEXTURE_FONT);
-        graphics_update_and_draw(draw_images);
-        string_free(message);
+        self->sc = create_scene(vk_state, vk_base, pipeline);
     }
 
-    // canvas render ----------------------------------------
-
-    graphics_bind_fbo(0);
-    if (debug_shadow) {
-        renderstate_set_program(rs, SHADER_VISUALIZE_DEPTH);
-    } else {
-        renderstate_set_program(rs, SHADER_SCREEN);
-    }
-    graphics_set_view(0, 0, rs->canvas_width, rs->canvas_height);
-    matrix_orthographic_projection(rs->mvp, rs->canvas_orthographic, rs->mv, 0, 0);
-    renderstate_set_mvp(rs, rs->mvp);
-    if (debug_shadow) {
-        graphics_bind_texture(GL_TEXTURE0, shadow->depth_texture);
-    } else {
-        graphics_bind_texture(GL_TEXTURE0, f->textures[0]);
-    }
-    graphics_bind_and_draw(rs->draw_canvas);
+    return self;
 }
 
 void delete_state(state *self) {
-    delete_worldrender(self->wr);
+
+    printf("delete state %p\n", (void *)self);
+
+    delete_hud(self->vk_state, self->hd);
+    delete_scene(self->vk_state, self->sc);
+
+    delete_vulkan_image(self->vk_state->vk_device, &self->images[TEXTURE_GRASS]);
+
+    delete_vulkan_base(self->vk_state, self->vk_base);
+
+    free(self);
 }

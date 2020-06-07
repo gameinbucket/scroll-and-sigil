@@ -1,12 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <GL/glew.h>
-
-#include "x-gl.h"
-
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_vulkan.h>
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -14,16 +10,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "math/matrix.h"
-#include "opengl/graphics.h"
-#include "opengl/renderbuffer.h"
-#include "opengl/shader.h"
-#include "opengl/texture.h"
-#include "wad/parser.h"
-#include "world/world.h"
+#include "core/log.h"
+#include "core/mem.h"
+#include "core/sleep_util.h"
+#include "vulkan/vulkan_instance.h"
+#include "vulkan/vulkan_state.h"
 
-#include "renderstate.h"
-#include "soundstate.h"
 #include "state.h"
 
 #endif

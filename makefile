@@ -4,23 +4,18 @@ SOURCE = $(wildcard source/*.c) $(wildcard source/**/*.c)
 HEADERS = $(wildcard source/*.h) $(wildcard source/**/*.h)
 OBJECTS = $(patsubst source/%.c,objects/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
-INCLUDE = -Isource/
+INCLUDE = -Isource -I$(VULKAN_SDK)/include
 
 COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE)
-LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip
-LIBS = -lm
+LINKER_LIBS = -L$(VULKAN_SDK)/lib
+LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip -lvulkan -lm
 PREFIX =
 CC = gcc
 
 ifneq ($(shell uname), Linux)
 	CC = clang
-	COMPILER_FLAGS += -Wno-nullability-extension -Wno-deprecated-declarations
-	LINKER_FLAGS += -framework OpenGL
-else
-	LINKER_FLAGS += -lGL 
+	COMPILER_FLAGS += -Wno-nullability-extension
 endif
-
-LINKER_FLAGS += -lGLEW
 
 .PHONY: all analysis address valgrind clean list-source list-objects test help
 
@@ -36,14 +31,14 @@ address: all
 
 gdb: COMPILER_FLAGS += -g
 gdb: all
-	@ ./gdb.sh
+	@ gdb ./scroll-and-sigil
 
 valgrind: COMPILER_FLAGS += -g
 valgrind: all
-	@ ./valgrind.sh
+	@ ./valgrind.sh ./scroll-and-sigil
 
 $(NAME): $(HEADERS) $(OBJECTS)
-	$(PREFIX) $(CC) $(OBJECTS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(NAME) $(LIBS)
+	$(PREFIX) $(CC) $(OBJECTS) $(COMPILER_FLAGS) -o $(NAME) $(LINKER_LIBS) $(LINKER_FLAGS)
 
 objects/%.o: source/%.c
 	@mkdir -p $(dir $@)
@@ -68,8 +63,8 @@ list-dependency:
 TEST_SOURCE = $(wildcard tests/*.c) $(wildcard source/core/*.c) $(wildcard source/data/*.c)
 
 test: $(TEST_SOURCE)
-	$(CC) $(TEST_SOURCE) $(COMPILER_FLAGS) -o unit-tests $(LIBS)
-	@ ./unit-tests
+	$(CC) $(TEST_SOURCE) $(COMPILER_FLAGS) -o testing $(LIBS)
+	@ ./testing
 
 help:
 	@echo Scroll & Sigil
@@ -80,3 +75,4 @@ help:
 	@echo > list-objects
 	@echo > list-dependency
 	@echo > test
+

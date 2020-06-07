@@ -54,6 +54,29 @@ void matrix_orthographic(float *matrix, float left, float right, float bottom, f
     matrix[15] = 1.0;
 }
 
+void matrix_orthographic_vulkan(float *matrix, float left, float right, float bottom, float top, float near, float far) {
+
+    matrix[0] = 2.0 / (right - left);
+    matrix[1] = 0.0;
+    matrix[2] = 0.0;
+    matrix[3] = 0.0;
+
+    matrix[4] = 0.0;
+    matrix[5] = 2.0 / (bottom - top);
+    matrix[6] = 0.0;
+    matrix[7] = 0.0;
+
+    matrix[8] = 0.0;
+    matrix[9] = 0.0;
+    matrix[10] = 1.0 / (near - far);
+    matrix[11] = 0.0;
+
+    matrix[12] = -(right + left) / (right - left);
+    matrix[13] = -(bottom + top) / (bottom - top);
+    matrix[14] = near / (near - far);
+    matrix[15] = 1.0;
+}
+
 void matrix_frustum(float *matrix, float left, float right, float bottom, float top, float near, float far) {
 
     matrix[0] = (2.0 * near) / (right - left);

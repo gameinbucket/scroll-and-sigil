@@ -37,7 +37,6 @@ wad_array *wad_get_array(wad_element *element);
 string *wad_get_string(wad_element *element);
 int wad_get_integer(wad_element *element);
 float wad_get_float(wad_element *element);
-bool wad_get_bool(wad_element *element);
 
 void wad_add_to_object(wad_element *element, char *key, wad_element *value);
 wad_element *wad_get_from_object(wad_element *object, char *key);

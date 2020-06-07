@@ -61,8 +61,6 @@ string *float_to_string(float number);
 string *float32_to_string(float number);
 string *float64_to_string(double number);
 
-bool string_to_bool(string *str);
-
 int string_to_int(string *str);
 int8_t string_to_int8(string *str);
 int16_t string_to_int16(string *str);
