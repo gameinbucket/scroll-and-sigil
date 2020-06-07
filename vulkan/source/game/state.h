@@ -12,6 +12,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include "assets/assets.h"
 #include "core/log.h"
 #include "core/mem.h"
 #include "render/render.h"
@@ -36,8 +37,7 @@ struct state {
     int canvas_height;
     vulkan_state *vk_state;
     struct vulkan_base *vk_base;
-    struct vulkan_pipeline *pipeline2d;
-    struct vulkan_pipeline *pipeline3d;
+    struct vulkan_image *images;
     struct hud *hd;
     struct scene *sc;
 };

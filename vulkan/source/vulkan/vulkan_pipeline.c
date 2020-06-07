@@ -1,9 +1,14 @@
 #include "vulkan_pipeline.h"
 
-struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment) {
+struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment, struct vulkan_image **images, int image_count) {
+
     struct vulkan_pipeline *self = safe_calloc(1, sizeof(struct vulkan_pipeline));
+
     self->vertex_shader_path = vertex;
     self->fragment_shader_path = fragment;
+    self->images = images;
+    self->image_count = image_count;
+
     return self;
 }
 

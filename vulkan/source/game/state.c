@@ -1,6 +1,23 @@
 #include "state.h"
 
-static void record_rendering(__attribute__((unused)) state *self, __attribute__((unused)) struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline, uint32_t image_index) {
+static void rendering_resize(state *self, int width, int height) {
+
+    self->canvas_width = width;
+    self->canvas_height = height;
+
+    vulkan_state *vk_state = self->vk_state;
+    struct vulkan_base *vk_base = self->vk_base;
+
+    vulkan_base_recreate_swapchain(vk_state, vk_base, width, height);
+
+    vulkan_pipeline_recreate(vk_state, vk_base, self->sc->pipeline);
+    vulkan_pipeline_recreate(vk_state, vk_base, self->hd->pipeline);
+}
+
+static void record_rendering(state *self, uint32_t image_index) {
+
+    vulkan_state *vk_state = self->vk_state;
+    struct vulkan_base *vk_base = self->vk_base;
 
     VkCommandBuffer *command_buffers = vk_base->vk_command_buffers;
 
@@ -46,16 +63,8 @@ static void record_rendering(__attribute__((unused)) state *self, __attribute__(
     vkCmdSetViewport(command_buffer, 0, 1, &viewport);
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline);
-    VkBuffer vertex_buffers[1] = {pipeline->renderbuffer->vk_vertex_buffer};
-    VkDeviceSize vertex_offsets[1] = {0};
-    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, vertex_offsets);
-    vkCmdBindIndexBuffer(command_buffer, pipeline->renderbuffer->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline_layout, 0, 1, &pipeline->vk_descriptor_sets[image_index], 0, NULL);
-    vkCmdDrawIndexed(command_buffer, pipeline->renderbuffer->index_count, 1, 0, 0, 0);
-
-    // render_scene(self->sc, command_buffers[i]);
-    // render_hud(self->hd, command_buffers[i]);
+    render_scene(vk_state, vk_base, self->sc, command_buffer, image_index);
+    render_hud(vk_state, vk_base, self->hd, command_buffer, image_index);
 
     vkCmdEndRenderPass(command_buffer);
 
@@ -63,21 +72,6 @@ static void record_rendering(__attribute__((unused)) state *self, __attribute__(
         fprintf(stderr, "Error: Vulkan End Command Buffer\n");
         exit(1);
     }
-
-    struct uniform_buffer_object ubo = {0};
-    float view[16];
-    float perspective[16];
-    static float x = 0.0f;
-    x += 0.01f;
-    vec3 eye = {3 + x, 3, 5};
-    vec3 center = {0, 0, 0};
-    matrix_look_at(view, &eye, &center);
-    matrix_translate(view, -eye.x, -eye.y, -eye.z);
-    float ratio = (float)vk_base->swapchain->swapchain_extent.width / (float)vk_base->swapchain->swapchain_extent.height;
-    matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
-    matrix_multiply(ubo.mvp, perspective, view);
-
-    vk_update_uniform_buffer(vk_state, pipeline, image_index, ubo);
 }
 
 state *create_state(SDL_Window *window, vulkan_state *vk_state) {
@@ -93,26 +87,29 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
     self->vk_base = vk_base;
 
+    self->images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image));
+    vk_create_texture_image(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_GRASS], "../textures/tiles/grass.png");
+
     {
-        struct vulkan_renderbuffer *render3d = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
-        struct vulkan_pipeline *pipeline3d = create_vulkan_pipeline("../vulkan-shaders/spv/texture3d.vert.spv", "../vulkan-shaders/spv/texture3d.frag.spv");
-        render_cube(render3d);
-        pipeline3d->renderbuffer = render3d;
-        vulkan_pipeline_initialize(vk_state, vk_base, pipeline3d);
-        self->pipeline3d = pipeline3d;
+        struct vulkan_renderbuffer *render = vk_create_renderbuffer(2, 4, 0, 0, 4, 6);
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("../vulkan-shaders/spv/color2d.vert.spv", "../vulkan-shaders/spv/color2d.frag.spv", NULL, 0);
+        render_rectangle(render, 0, 0, 32, 32, 1.0f, 0.0f, 0.0f, 1.0f);
+        pipeline->renderbuffer = render;
+
+        self->hd = create_hud(vk_state, vk_base, pipeline);
     }
 
     {
-        struct vulkan_renderbuffer *render2d = vk_create_renderbuffer(2, 3, 2, 0, 4, 6);
-        struct vulkan_pipeline *pipeline2d = create_vulkan_pipeline("../vulkan-shaders/spv/color2d.vert.spv", "../vulkan-shaders/spv/color2d.frag.spv");
-        render_rectangle(render2d, 0, 0, 32, 32, 1.0f, 0.0f, 0.0f, 1.0f);
-        pipeline2d->renderbuffer = render2d;
-        vulkan_pipeline_initialize(vk_state, vk_base, pipeline2d);
-        self->pipeline2d = pipeline2d;
-    }
+        struct vulkan_renderbuffer *render = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
+        struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
+        images[0] = &self->images[TEXTURE_GRASS];
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("../vulkan-shaders/spv/texture3d.vert.spv", "../vulkan-shaders/spv/texture3d.frag.spv", images, 1);
+        render_cube(render);
+        pipeline->renderbuffer = render;
+        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
 
-    self->hd = create_hud();
-    self->sc = create_scene();
+        self->sc = create_scene(vk_state, vk_base, pipeline);
+    }
 
     return self;
 }
@@ -120,7 +117,11 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 void state_update(__attribute__((unused)) state *self) {
 }
 
-static void render(SDL_Window *window, vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
+static void render(struct state *self) {
+
+    SDL_Window *window = self->window;
+    vulkan_state *vk_state = self->vk_state;
+    struct vulkan_base *vk_base = self->vk_base;
 
     uint32_t current_frame = vk_state->current_frame;
 
@@ -134,14 +135,13 @@ static void render(SDL_Window *window, vulkan_state *vk_state, struct vulkan_bas
         int width;
         int height;
         SDL_Vulkan_GetDrawableSize(window, &width, &height);
-        vulkan_base_recreate_swapchain(vk_state, vk_base, width, height);
-        vulkan_pipeline_recreate(vk_state, vk_base, pipeline);
+        rendering_resize(self, width, height);
         return;
     } else {
         vk_ok(vkres);
     }
 
-    record_rendering(NULL, vk_state, vk_base, pipeline, image_index);
+    record_rendering(self, image_index);
 
     if (vk_base->vk_images_in_flight[image_index] != VK_NULL_HANDLE) {
         vkres = vkWaitForFences(vk_state->vk_device, 1, &vk_base->vk_images_in_flight[image_index], VK_TRUE, VK_SYNC_TIMEOUT);
@@ -190,8 +190,7 @@ static void render(SDL_Window *window, vulkan_state *vk_state, struct vulkan_bas
         int height;
         SDL_Vulkan_GetDrawableSize(window, &width, &height);
         vk_state->framebuffer_resized = false;
-        vulkan_base_recreate_swapchain(vk_state, vk_base, width, height);
-        vulkan_pipeline_recreate(vk_state, vk_base, pipeline);
+        rendering_resize(self, width, height);
     } else {
         vk_ok(vkres);
     }
@@ -202,14 +201,18 @@ static void render(SDL_Window *window, vulkan_state *vk_state, struct vulkan_bas
 void state_render(state *self) {
 
     LOG("draw. ");
-    render(self->window, self->vk_state, self->vk_base, self->pipeline3d);
+    render(self);
 }
 
 void delete_state(state *self) {
+
     printf("delete state %p\n", (void *)self);
 
-    delete_vulkan_pipeline(self->vk_state, self->pipeline2d);
-    delete_vulkan_pipeline(self->vk_state, self->pipeline3d);
+    delete_hud(self->vk_state, self->hd);
+    delete_scene(self->vk_state, self->sc);
+
+    delete_vulkan_image(self->vk_state->vk_device, &self->images[TEXTURE_GRASS]);
+
     delete_vulkan_base(self->vk_state, self->vk_base);
 
     free(self);

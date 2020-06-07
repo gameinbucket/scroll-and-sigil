@@ -1,30 +1,39 @@
 #include "hud.h"
 
-struct hud *create_hud() {
+struct hud *create_hud(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
+
     struct hud *self = safe_calloc(1, sizeof(struct hud));
+
+    self->pipeline = pipeline;
+
+    vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+
     return self;
 }
 
-void render_hud(struct hud *self, VkCommandBuffer command_buffer) {
+void render_hud(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct hud *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->vk_pipeline);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->vk_pipeline_layout, 0, 1, &self->vk_descriptor_set, 0, NULL);
+    vulkan_pipeline_draw(self->pipeline, self->pipeline->renderbuffer, command_buffer, image_index);
 
-    VkBuffer vertex_buffers[1] = {self->renderbuffer->vk_vertex_buffer};
-    VkDeviceSize vertex_offsets[1] = {0};
+    struct uniform_buffer_object ubo = {0};
 
-    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, vertex_offsets);
-    vkCmdBindIndexBuffer(command_buffer, self->renderbuffer->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+    float view[16];
+    float ortho[16];
 
-    vkCmdDrawIndexed(command_buffer, self->renderbuffer->index_count, 1, 0, 0, 0);
+    matrix_identity(view);
+
+    float width = (float)vk_base->swapchain->swapchain_extent.width;
+    float height = (float)vk_base->swapchain->swapchain_extent.height;
+    matrix_orthographic(ortho, 0, width, 0, height, 0, 1);
+
+    matrix_multiply(ubo.mvp, ortho, view);
+
+    vk_update_uniform_buffer(vk_state, self->pipeline, image_index, ubo);
 }
 
 void delete_hud(vulkan_state *vk_state, struct hud *self) {
 
-    vkDestroyPipeline(vk_state->vk_device, self->vk_pipeline, NULL);
-    vkDestroyPipelineLayout(vk_state->vk_device, self->vk_pipeline_layout, NULL);
-
-    delete_vulkan_renderbuffer(vk_state, self->renderbuffer);
+    delete_vulkan_pipeline(vk_state, self->pipeline);
 
     free(self);
 }

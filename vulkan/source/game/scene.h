@@ -9,19 +9,25 @@
 
 #include <vulkan/vulkan.h>
 
+#include "core/log.h"
 #include "core/mem.h"
+#include "render/render.h"
+#include "vulkan/vulkan_base.h"
+#include "vulkan/vulkan_base_util.h"
+#include "vulkan/vulkan_pipeline.h"
+#include "vulkan/vulkan_pipeline_util.h"
 #include "vulkan/vulkan_renderbuffer.h"
+#include "vulkan/vulkan_state.h"
+#include "vulkan/vulkan_uniforms.h"
 
 struct scene {
-    VkPipeline vk_pipeline;
-    VkPipelineLayout vk_pipeline_layout;
-    VkDescriptorSet vk_descriptor_set;
-    struct vulkan_renderbuffer *renderbuffer;
+    struct vulkan_image image;
+    struct vulkan_pipeline *pipeline;
 };
 
-struct scene *create_scene();
+struct scene *create_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
 
-void render_scene(struct scene *self, VkCommandBuffer command_buffer);
+void render_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct scene *self, VkCommandBuffer command_buffer, uint32_t image_index);
 
 void delete_scene(vulkan_state *vk_state, struct scene *self);
 

@@ -1,30 +1,47 @@
 #include "scene.h"
 
-struct scene *create_scene() {
+struct scene *create_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
+
     struct scene *self = safe_calloc(1, sizeof(struct scene));
+
+    self->pipeline = pipeline;
+
+    vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+
     return self;
 }
 
-void render_scene(struct scene *self, VkCommandBuffer command_buffer) {
+void render_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
-    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->vk_pipeline);
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->vk_pipeline_layout, 0, 1, &self->vk_descriptor_set, 0, NULL);
+    vulkan_pipeline_draw(self->pipeline, self->pipeline->renderbuffer, command_buffer, image_index);
 
-    VkBuffer vertex_buffers[1] = {self->renderbuffer->vk_vertex_buffer};
-    VkDeviceSize vertex_offsets[1] = {0};
+    struct uniform_buffer_object ubo = {0};
 
-    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, vertex_offsets);
-    vkCmdBindIndexBuffer(command_buffer, self->renderbuffer->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
+    float view[16];
+    float perspective[16];
 
-    vkCmdDrawIndexed(command_buffer, self->renderbuffer->index_count, 1, 0, 0, 0);
+    static float x = 0.0f;
+    x += 0.01f;
+    vec3 eye = {3 + x, 3, 5};
+    vec3 center = {0, 0, 0};
+    matrix_look_at(view, &eye, &center);
+    matrix_translate(view, -eye.x, -eye.y, -eye.z);
+
+    float width = (float)vk_base->swapchain->swapchain_extent.width;
+    float height = (float)vk_base->swapchain->swapchain_extent.height;
+    float ratio = width / height;
+    matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
+
+    matrix_multiply(ubo.mvp, perspective, view);
+
+    vk_update_uniform_buffer(vk_state, self->pipeline, image_index, ubo);
 }
 
 void delete_scene(vulkan_state *vk_state, struct scene *self) {
 
-    vkDestroyPipeline(vk_state->vk_device, self->vk_pipeline, NULL);
-    vkDestroyPipelineLayout(vk_state->vk_device, self->vk_pipeline_layout, NULL);
+    // delete_vulkan_image(vk_state->vk_device, &pipeline->image);
 
-    delete_vulkan_renderbuffer(vk_state, self->renderbuffer);
+    delete_vulkan_pipeline(vk_state, self->pipeline);
 
     free(self);
 }
