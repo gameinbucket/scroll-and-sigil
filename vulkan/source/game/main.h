@@ -12,6 +12,7 @@
 
 #include "core/log.h"
 #include "core/mem.h"
+#include "core/sleep_util.h"
 #include "vulkan/vulkan_instance.h"
 #include "vulkan/vulkan_state.h"
 

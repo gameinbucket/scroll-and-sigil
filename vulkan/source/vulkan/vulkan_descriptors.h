@@ -13,6 +13,7 @@
 #include "vulkan_buffer.h"
 #include "vulkan_pipeline.h"
 
+void vk_create_descriptor_set_layout(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
 void vk_create_descriptors(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
 
 #endif

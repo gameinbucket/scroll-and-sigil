@@ -62,6 +62,6 @@ void free_swapchain_support_details(struct swapchain_support_details *self);
 bool vk_choose_physical_device(vulkan_state *vk_state);
 void vk_create_logical_device(vulkan_state *vk_state);
 void initialize_vulkan_state(vulkan_state *vk_state);
-void delete_vulkan_state(vulkan_state *self);
+void delete_vulkan_state(vulkan_state *vk_state);
 
 #endif

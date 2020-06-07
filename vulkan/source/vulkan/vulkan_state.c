@@ -208,14 +208,16 @@ void delete_debug_utils_messennger(VkInstance instance, VkDebugUtilsMessengerEXT
     }
 }
 
-void delete_vulkan_state(vulkan_state *self) {
+void delete_vulkan_state(vulkan_state *vk_state) {
 
-    vkDestroyDevice(self->vk_device, NULL);
+    printf("delete vulkan state %p\n", (void *)vk_state);
+
+    vkDestroyDevice(vk_state->vk_device, NULL);
 
 #ifdef VULKAN_ENABLE_VALIDATION
-    delete_debug_utils_messennger(self->vk_instance, self->vk_debug_messenger, NULL);
+    delete_debug_utils_messennger(vk_state->vk_instance, vk_state->vk_debug_messenger, NULL);
 #endif
 
-    vkDestroySurfaceKHR(self->vk_instance, self->vk_surface, NULL);
-    vkDestroyInstance(self->vk_instance, NULL);
+    vkDestroySurfaceKHR(vk_state->vk_instance, vk_state->vk_surface, NULL);
+    vkDestroyInstance(vk_state->vk_instance, NULL);
 }

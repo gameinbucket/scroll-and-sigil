@@ -42,11 +42,10 @@ struct state {
     struct scene *sc;
 };
 
-state *create_state(SDL_Window *window, vulkan_state *vk_state);
-
 void state_update(state *self);
 void state_render(state *self);
 
+state *create_state(SDL_Window *window, vulkan_state *vk_state);
 void delete_state(state *self);
 
 #endif

@@ -1,5 +1,47 @@
 #include "vulkan_descriptors.h"
 
+void vk_create_descriptor_set_layout(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
+
+    uint32_t binding_count = 1 + pipeline->image_count;
+
+    VkDescriptorSetLayoutBinding *bindings = safe_malloc(binding_count * sizeof(VkDescriptorSetLayoutBinding));
+
+    VkDescriptorSetLayoutBinding ubo_layout_binding = {0};
+    ubo_layout_binding.binding = 0;
+    ubo_layout_binding.descriptorCount = 1;
+    ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    bindings[0] = ubo_layout_binding;
+
+    uint32_t binding = 1;
+
+    for (int i = 0; i < pipeline->image_count; i++) {
+
+        VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
+        sampler_layout_binding.binding = binding;
+        sampler_layout_binding.descriptorCount = 1;
+        sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        bindings[binding] = sampler_layout_binding;
+
+        binding++;
+    }
+
+    VkDescriptorSetLayoutCreateInfo layout_info = {0};
+    layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layout_info.bindingCount = binding_count;
+    layout_info.pBindings = bindings;
+
+    if (vkCreateDescriptorSetLayout(vk_state->vk_device, &layout_info, NULL, &pipeline->vk_descriptor_set_layout) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan Create Descriptor Set Layout\n");
+        exit(1);
+    }
+
+    free(bindings);
+}
+
 static void descriptor_pool(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
 
     uint32_t size = pipeline->swapchain_image_count;
@@ -13,13 +55,16 @@ static void descriptor_pool(vulkan_state *vk_state, struct vulkan_pipeline *pipe
 
     pool_sizes[0] = pool_size_uniform;
 
+    uint32_t binding = 1;
+
     for (int k = 0; k < pipeline->image_count; k++) {
 
         VkDescriptorPoolSize pool_size_sampler = {0};
         pool_size_sampler.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         pool_size_sampler.descriptorCount = size;
 
-        pool_sizes[k] = pool_size_sampler;
+        pool_sizes[binding] = pool_size_sampler;
+        binding++;
     }
 
     VkDescriptorPoolCreateInfo pool_info = {0};
@@ -61,8 +106,8 @@ static void descriptor_sets(vulkan_state *vk_state, struct vulkan_pipeline *pipe
 
     free(descriptor_set_layouts);
 
-    uint32_t total_bindings = 1 + pipeline->image_count;
-    VkWriteDescriptorSet *descriptor_writes = safe_malloc(total_bindings * sizeof(VkWriteDescriptorSet));
+    uint32_t binding_count = 1 + pipeline->image_count;
+    VkWriteDescriptorSet *descriptor_writes = safe_malloc(binding_count * sizeof(VkWriteDescriptorSet));
 
     for (uint32_t i = 0; i < size; i++) {
 
@@ -76,13 +121,15 @@ static void descriptor_sets(vulkan_state *vk_state, struct vulkan_pipeline *pipe
         VkWriteDescriptorSet descriptor_write_uniform = {0};
         descriptor_write_uniform.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptor_write_uniform.dstSet = pipeline->vk_descriptor_sets[i];
-        descriptor_write_uniform.dstBinding = binding++;
+        descriptor_write_uniform.dstBinding = binding;
         descriptor_write_uniform.dstArrayElement = 0;
         descriptor_write_uniform.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptor_write_uniform.descriptorCount = 1;
         descriptor_write_uniform.pBufferInfo = &buffer_info;
 
         descriptor_writes[0] = descriptor_write_uniform;
+
+        binding++;
 
         for (int k = 0; k < pipeline->image_count; k++) {
 
@@ -105,13 +152,14 @@ static void descriptor_sets(vulkan_state *vk_state, struct vulkan_pipeline *pipe
             binding++;
         }
 
-        vkUpdateDescriptorSets(vk_state->vk_device, total_bindings, descriptor_writes, 0, NULL);
+        vkUpdateDescriptorSets(vk_state->vk_device, binding_count, descriptor_writes, 0, NULL);
     }
 
     free(descriptor_writes);
 }
 
 void vk_create_descriptors(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
+
     descriptor_pool(vk_state, pipeline);
     descriptor_sets(vk_state, pipeline);
 }

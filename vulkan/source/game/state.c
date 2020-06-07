@@ -74,46 +74,6 @@ static void record_rendering(state *self, uint32_t image_index) {
     }
 }
 
-state *create_state(SDL_Window *window, vulkan_state *vk_state) {
-
-    state *self = safe_calloc(1, sizeof(state));
-    self->window = window;
-    self->vk_state = vk_state;
-
-    SDL_Vulkan_GetDrawableSize(window, &self->canvas_width, &self->canvas_height);
-
-    struct vulkan_base *vk_base = create_vulkan_base(vk_state);
-    vulkan_base_initialize(vk_state, vk_base, self->canvas_width, self->canvas_height);
-
-    self->vk_base = vk_base;
-
-    self->images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image));
-    vk_create_texture_image(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_GRASS], "../textures/tiles/grass.png");
-
-    {
-        struct vulkan_renderbuffer *render = vk_create_renderbuffer(2, 4, 0, 0, 4, 6);
-        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("../vulkan-shaders/spv/color2d.vert.spv", "../vulkan-shaders/spv/color2d.frag.spv", NULL, 0);
-        render_rectangle(render, 0, 0, 32, 32, 1.0f, 0.0f, 0.0f, 1.0f);
-        pipeline->renderbuffer = render;
-
-        self->hd = create_hud(vk_state, vk_base, pipeline);
-    }
-
-    {
-        struct vulkan_renderbuffer *render = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
-        struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
-        images[0] = &self->images[TEXTURE_GRASS];
-        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("../vulkan-shaders/spv/texture3d.vert.spv", "../vulkan-shaders/spv/texture3d.frag.spv", images, 1);
-        render_cube(render);
-        pipeline->renderbuffer = render;
-        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
-
-        self->sc = create_scene(vk_state, vk_base, pipeline);
-    }
-
-    return self;
-}
-
 void state_update(__attribute__((unused)) state *self) {
 }
 
@@ -202,6 +162,45 @@ void state_render(state *self) {
 
     LOG("draw. ");
     render(self);
+}
+
+state *create_state(SDL_Window *window, vulkan_state *vk_state) {
+
+    state *self = safe_calloc(1, sizeof(state));
+    self->window = window;
+    self->vk_state = vk_state;
+
+    SDL_Vulkan_GetDrawableSize(window, &self->canvas_width, &self->canvas_height);
+
+    struct vulkan_base *vk_base = create_vulkan_base(vk_state);
+    vulkan_base_initialize(vk_state, vk_base, self->canvas_width, self->canvas_height);
+
+    self->vk_base = vk_base;
+
+    self->images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image));
+    vk_create_texture_image(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_GRASS], "../textures/tiles/grass.png");
+
+    {
+        struct vulkan_renderbuffer *render = vk_create_renderbuffer(2, 4, 0, 0, 4, 6);
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("../vulkan-shaders/spv/color2d.vert.spv", "../vulkan-shaders/spv/color2d.frag.spv", NULL, 0);
+        render_rectangle(render, 0, 0, 32, 32, 1.0f, 0.0f, 0.0f, 1.0f);
+        pipeline->renderbuffer = render;
+
+        self->hd = create_hud(vk_state, vk_base, pipeline);
+    }
+
+    {
+        struct vulkan_renderbuffer *render = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
+        struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
+        images[0] = &self->images[TEXTURE_GRASS];
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("../vulkan-shaders/spv/texture3d.vert.spv", "../vulkan-shaders/spv/texture3d.frag.spv", images, 1);
+        render_cube(render);
+        pipeline->renderbuffer = render;
+
+        self->sc = create_scene(vk_state, vk_base, pipeline);
+    }
+
+    return self;
 }
 
 void delete_state(state *self) {

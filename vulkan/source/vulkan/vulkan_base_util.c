@@ -81,6 +81,8 @@ void vulkan_base_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base,
 
 void delete_vulkan_base(vulkan_state *vk_state, struct vulkan_base *vk_base) {
 
+    printf("delete vulkan base %p\n", (void *)vk_base);
+
     vulkan_base_clean_swapchain(vk_state, vk_base);
 
     for (int i = 0; i < VULKAN_MAX_FRAMES_IN_FLIGHT; i++) {

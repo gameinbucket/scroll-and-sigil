@@ -38,6 +38,7 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
 }
 
 static void main_loop(state *s) {
+
     SDL_Event event = {0};
     while (run) {
         while (SDL_PollEvent(&event) != 0) {
@@ -52,10 +53,11 @@ static void main_loop(state *s) {
             }
             }
         }
-        // sleep_ms(16);
         state_update(s);
         state_render(s);
     }
+    printf("\n");
+
     VkResult vkres = vkDeviceWaitIdle(s->vk_state->vk_device);
     vk_ok(vkres);
 }
@@ -75,9 +77,12 @@ int main() {
     main_loop(s);
 
     SDL_StopTextInput();
+    printf("\n");
     delete_state(s);
     delete_vulkan_state(&vk_state);
     SDL_Quit();
+
+    printf("\n");
 
     return 0;
 }

@@ -12,33 +12,6 @@ struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment, str
     return self;
 }
 
-void vk_create_descriptor_set_layout(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
-
-    VkDescriptorSetLayoutBinding ubo_layout_binding = {0};
-    ubo_layout_binding.binding = 0;
-    ubo_layout_binding.descriptorCount = 1;
-    ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-    VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
-    sampler_layout_binding.binding = 1;
-    sampler_layout_binding.descriptorCount = 1;
-    sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutBinding bindings[2] = {ubo_layout_binding, sampler_layout_binding};
-
-    VkDescriptorSetLayoutCreateInfo layout_info = {0};
-    layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layout_info.bindingCount = 2;
-    layout_info.pBindings = bindings;
-
-    if (vkCreateDescriptorSetLayout(vk_state->vk_device, &layout_info, NULL, &pipeline->vk_descriptor_set_layout) != VK_SUCCESS) {
-        fprintf(stderr, "Error: Vulkan Create Descriptor Set Layout\n");
-        exit(1);
-    }
-}
-
 VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_t size) {
 
     VkShaderModuleCreateInfo vk_shader_info = {0};

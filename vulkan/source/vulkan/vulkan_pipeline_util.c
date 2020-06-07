@@ -64,6 +64,8 @@ void vulkan_pipeline_initialize(vulkan_state *vk_state, struct vulkan_base *vk_b
 
 void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
 
+    printf("delete vulkan pipeline %p\n", (void *)pipeline);
+
     vulkan_pipeline_clean(vk_state, pipeline);
 
     vkDestroyDescriptorSetLayout(vk_state->vk_device, pipeline->vk_descriptor_set_layout, NULL);

@@ -39,8 +39,6 @@ void render_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
 
 void delete_scene(vulkan_state *vk_state, struct scene *self) {
 
-    // delete_vulkan_image(vk_state->vk_device, &pipeline->image);
-
     delete_vulkan_pipeline(vk_state, self->pipeline);
 
     free(self);
