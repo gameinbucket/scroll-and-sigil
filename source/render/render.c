@@ -1,5 +1,16 @@
 #include "render.h"
 
+void render_index3(struct vulkan_renderbuffer *b) {
+    uint32_t pos = b->index_position;
+    uint32_t offset = b->index_offset;
+    uint32_t *indices = b->indices;
+    indices[pos] = offset;
+    indices[pos + 1] = offset + 1;
+    indices[pos + 2] = offset + 2;
+    b->index_position = pos + 3;
+    b->index_offset = offset + 3;
+}
+
 void render_index4(struct vulkan_renderbuffer *b) {
     uint32_t pos = b->index_position;
     uint32_t offset = b->index_offset;
@@ -66,8 +77,8 @@ void render_rectangle(struct vulkan_renderbuffer *b, float x, float y, float wid
 }
 
 void render_cube(struct vulkan_renderbuffer *b) {
-    float cube[CUBE_VERTEX_FLOAT] = RENDER_CUBE(1, 1, 1);
-    memcpy(b->vertices + b->vertex_position, cube, CUBE_VERTEX_FLOAT * sizeof(float));
+    float cube[VK_CUBE_VERTEX_FLOAT] = RENDER_VK_CUBE(1, 1, 1);
+    memcpy(b->vertices + b->vertex_position, cube, VK_CUBE_VERTEX_FLOAT * sizeof(float));
     for (int k = 0; k < 6; k++) {
         render_index4(b);
     }

@@ -11,7 +11,7 @@ static VkFormat vk_vertex_format(int floats) {
     exit(1);
 }
 
-int vk_attribute_count(int position, int color, int texture, int normal) {
+int vk_attribute_count(int position, int color, int texture, int normal, int bone) {
     int count = 0;
     if (position > 0)
         count++;
@@ -21,11 +21,13 @@ int vk_attribute_count(int position, int color, int texture, int normal) {
         count++;
     if (normal > 0)
         count++;
+    if (bone > 0)
+        count++;
     return count;
 }
 
-VkVertexInputBindingDescription vk_binding_description(int position, int color, int texture, int normal) {
-    int stride = position + color + texture + normal;
+VkVertexInputBindingDescription vk_binding_description(int position, int color, int texture, int normal, int bone) {
+    int stride = position + color + texture + normal + bone;
     VkVertexInputBindingDescription description = {0};
     description.binding = 0;
     description.stride = stride * sizeof(float);
@@ -33,9 +35,9 @@ VkVertexInputBindingDescription vk_binding_description(int position, int color, 
     return description;
 }
 
-VkVertexInputAttributeDescription *vk_attribute_description(int position, int color, int texture, int normal) {
+VkVertexInputAttributeDescription *vk_attribute_description(int position, int color, int texture, int normal, int bone) {
 
-    int count = vk_attribute_count(position, color, texture, normal);
+    int count = vk_attribute_count(position, color, texture, normal, bone);
 
     VkVertexInputAttributeDescription *description = safe_calloc(count, sizeof(VkVertexInputAttributeDescription));
 
@@ -77,16 +79,25 @@ VkVertexInputAttributeDescription *vk_attribute_description(int position, int co
         i++;
     }
 
+    if (bone > 0) {
+        description[i].binding = 0;
+        description[i].location = i;
+        description[i].format = vk_vertex_format(bone);
+        description[i].offset = offset * sizeof(float);
+        i++;
+    }
+
     return description;
 }
 
-struct vulkan_renderbuffer *vk_create_renderbuffer(int position, int color, int texture, int normal, size_t vertices, size_t indices) {
+struct vulkan_renderbuffer *create_vulkan_renderbuffer(int position, int color, int texture, int normal, int bone, size_t vertices, size_t indices) {
     struct vulkan_renderbuffer *self = safe_calloc(1, sizeof(struct vulkan_renderbuffer));
     self->position = position;
     self->color = color;
     self->texture = texture;
     self->normal = normal;
-    self->stride = self->position + self->color + self->texture + self->normal;
+    self->bone = bone;
+    self->stride = self->position + self->color + self->texture + self->normal + self->bone;
     self->vertices = safe_malloc(vertices * self->stride * sizeof(float));
     self->indices = safe_malloc(indices * sizeof(uint32_t));
     self->vertex_max = vertices;

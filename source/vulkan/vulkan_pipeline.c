@@ -72,11 +72,12 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, V
     int color = pipeline->renderbuffer->color;
     int texture = pipeline->renderbuffer->texture;
     int normal = pipeline->renderbuffer->normal;
+    int bone = pipeline->renderbuffer->bone;
 
-    int attribute_count = vk_attribute_count(position, color, texture, normal);
+    int attribute_count = vk_attribute_count(position, color, texture, normal, bone);
 
-    VkVertexInputBindingDescription binding_description = vk_binding_description(position, color, texture, normal);
-    VkVertexInputAttributeDescription *attribute_description = vk_attribute_description(position, color, texture, normal);
+    VkVertexInputBindingDescription binding_description = vk_binding_description(position, color, texture, normal, bone);
+    VkVertexInputAttributeDescription *attribute_description = vk_attribute_description(position, color, texture, normal, bone);
 
     vertex_input_info.pVertexBindingDescriptions = &binding_description;
     vertex_input_info.vertexBindingDescriptionCount = 1;

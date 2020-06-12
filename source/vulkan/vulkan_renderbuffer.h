@@ -19,6 +19,7 @@ struct vulkan_renderbuffer {
     int color;
     int texture;
     int normal;
+    int bone;
     uint32_t stride;
     float *vertices;
     uint32_t vertex_max;
@@ -33,13 +34,13 @@ struct vulkan_renderbuffer {
     VkDeviceMemory vk_index_buffer_memory;
 };
 
-int vk_attribute_count(int position, int color, int texture, int normal);
-VkVertexInputBindingDescription vk_binding_description(int position, int color, int texture, int normal);
-VkVertexInputAttributeDescription *vk_attribute_description(int position, int color, int texture, int normal);
+int vk_attribute_count(int position, int color, int texture, int normal, int bone);
+VkVertexInputBindingDescription vk_binding_description(int position, int color, int texture, int normal, int bone);
+VkVertexInputAttributeDescription *vk_attribute_description(int position, int color, int texture, int normal, int bone);
 
 void vulkan_renderbuffer_update_data(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_renderbuffer *renderbuffer);
 
-struct vulkan_renderbuffer *vk_create_renderbuffer(int position, int color, int texture, int normal, size_t vertices, size_t indices);
+struct vulkan_renderbuffer *create_vulkan_renderbuffer(int position, int color, int texture, int normal, int bone, size_t vertices, size_t indices);
 void delete_vulkan_renderbuffer(vulkan_state *vk_state, struct vulkan_renderbuffer *self);
 
 #endif

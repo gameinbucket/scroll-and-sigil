@@ -12,7 +12,7 @@ worldrender *create_worldrender(world *w) {
 static void create_cache(uint_table *cache) {
 
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        struct vulkan_renderbuffer *b = create_renderbuffer(3, 0, 2, 3, 0, 4 * 800, 36 * 800, true);
+        struct vulkan_renderbuffer *b = create_vulkan_renderbuffer(3, 0, 2, 3, 0, 4 * 800, 36 * 800);
         uint_table_put(cache, i, b);
     }
 }
