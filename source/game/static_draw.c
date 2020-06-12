@@ -56,7 +56,7 @@ void static_draw_build_command_buffers(struct vulkan_base *vk_base, struct vulka
         vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, vertex_offsets);
         vkCmdBindIndexBuffer(command_buffer, pipeline->renderbuffer->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline_layout, 0, 1, &pipeline->vk_descriptor_sets[i], 0, NULL);
-        vkCmdDrawIndexed(command_buffer, pipeline->renderbuffer->index_count, 1, 0, 0, 0);
+        vkCmdDrawIndexed(command_buffer, pipeline->renderbuffer->index_max, 1, 0, 0, 0);
 
         vkCmdEndRenderPass(command_buffer);
 

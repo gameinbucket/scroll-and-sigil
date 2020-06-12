@@ -21,13 +21,13 @@ struct vulkan_renderbuffer {
     int normal;
     uint32_t stride;
     float *vertices;
+    uint32_t vertex_max;
     uint32_t vertex_position;
-    uint32_t vertex_count;
     VkBuffer vk_vertex_buffer;
     VkDeviceMemory vk_vertex_buffer_memory;
     uint32_t *indices;
+    uint32_t index_max;
     uint32_t index_position;
-    uint32_t index_count;
     uint32_t index_offset;
     VkBuffer vk_index_buffer;
     VkDeviceMemory vk_index_buffer_memory;

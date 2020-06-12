@@ -11,7 +11,7 @@ void vulkan_pipeline_draw(struct vulkan_pipeline *pipeline, struct vulkan_render
     vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, vertex_offsets);
     vkCmdBindIndexBuffer(command_buffer, renderbuffer->vk_index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
-    vkCmdDrawIndexed(command_buffer, renderbuffer->index_count, 1, 0, 0, 0);
+    vkCmdDrawIndexed(command_buffer, renderbuffer->index_position, 1, 0, 0, 0);
 }
 
 static void vulkan_pipeline_clean(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
@@ -54,5 +54,6 @@ void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *pipe
     delete_vulkan_renderbuffer(vk_state, pipeline->renderbuffer);
 
     free(pipeline->uniforms);
+    free(pipeline->images);
     free(pipeline);
 }

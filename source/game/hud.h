@@ -24,10 +24,10 @@ struct hud {
     struct vulkan_pipeline *pipeline;
 };
 
-struct hud *create_hud(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
+struct hud *create_hud(struct vulkan_pipeline *pipeline);
 
 void render_hud(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct hud *self, VkCommandBuffer command_buffer, uint32_t image_index);
 
-void delete_hud(vulkan_state *vk_state, struct hud *self);
+void delete_hud(struct hud *self);
 
 #endif

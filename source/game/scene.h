@@ -25,10 +25,10 @@ struct scene {
     struct vulkan_pipeline *pipeline;
 };
 
-struct scene *create_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
+struct scene *create_scene(struct vulkan_pipeline *pipeline);
 
 void render_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct scene *self, VkCommandBuffer command_buffer, uint32_t image_index);
 
-void delete_scene(vulkan_state *vk_state, struct scene *self);
+void delete_scene(struct scene *self);
 
 #endif

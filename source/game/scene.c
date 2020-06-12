@@ -1,12 +1,10 @@
 #include "scene.h"
 
-struct scene *create_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
+struct scene *create_scene(struct vulkan_pipeline *pipeline) {
 
     struct scene *self = safe_calloc(1, sizeof(struct scene));
 
     self->pipeline = pipeline;
-
-    vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
 
     return self;
 }
@@ -37,9 +35,7 @@ void render_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
     vk_update_uniform_buffer(vk_state, self->pipeline, image_index, ubo);
 }
 
-void delete_scene(vulkan_state *vk_state, struct scene *self) {
-
-    delete_vulkan_pipeline(vk_state, self->pipeline);
+void delete_scene(struct scene *self) {
 
     free(self);
 }

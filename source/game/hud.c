@@ -1,12 +1,10 @@
 #include "hud.h"
 
-struct hud *create_hud(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
+struct hud *create_hud(struct vulkan_pipeline *pipeline) {
 
     struct hud *self = safe_calloc(1, sizeof(struct hud));
 
     self->pipeline = pipeline;
-
-    vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
 
     return self;
 }
@@ -32,9 +30,7 @@ void render_hud(struct vulkan_state *vk_state, struct vulkan_base *vk_base, stru
     vk_update_uniform_buffer(vk_state, self->pipeline, image_index, ubo);
 }
 
-void delete_hud(vulkan_state *vk_state, struct hud *self) {
-
-    delete_vulkan_pipeline(vk_state, self->pipeline);
+void delete_hud(struct hud *self) {
 
     free(self);
 }

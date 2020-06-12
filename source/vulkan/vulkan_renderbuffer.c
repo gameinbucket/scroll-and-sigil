@@ -89,8 +89,8 @@ struct vulkan_renderbuffer *vk_create_renderbuffer(int position, int color, int 
     self->stride = self->position + self->color + self->texture + self->normal;
     self->vertices = safe_malloc(vertices * self->stride * sizeof(float));
     self->indices = safe_malloc(indices * sizeof(uint32_t));
-    self->vertex_count = vertices;
-    self->index_count = indices;
+    self->vertex_max = vertices;
+    self->index_max = indices;
     return self;
 }
 
@@ -116,7 +116,9 @@ void delete_vulkan_renderbuffer(vulkan_state *vk_state, struct vulkan_renderbuff
 
 static void create_vertex_buffer(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_renderbuffer *renderbuffer) {
 
-    VkDeviceSize size = renderbuffer->vertex_count * renderbuffer->stride * sizeof(float);
+    VkDeviceSize max_size = renderbuffer->vertex_max * renderbuffer->stride * sizeof(float);
+
+    // size_t active_size = renderbuffer->vertex_position * sizeof(uint32_t);
 
     VkBuffer staging_buffer = {0};
     VkDeviceMemory staging_buffer_memory = {0};
@@ -124,19 +126,19 @@ static void create_vertex_buffer(vulkan_state *vk_state, VkCommandPool command_p
     VkBufferUsageFlagBits staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     VkMemoryPropertyFlagBits staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-    vk_create_buffer(vk_state, size, staging_usage, staging_properties, &staging_buffer, &staging_buffer_memory);
+    vk_create_buffer(vk_state, max_size, staging_usage, staging_properties, &staging_buffer, &staging_buffer_memory);
 
     void *data;
-    vkMapMemory(vk_state->vk_device, staging_buffer_memory, 0, size, 0, &data);
-    memcpy(data, renderbuffer->vertices, (size_t)size);
+    vkMapMemory(vk_state->vk_device, staging_buffer_memory, 0, max_size, 0, &data);
+    memcpy(data, renderbuffer->vertices, (size_t)max_size);
     vkUnmapMemory(vk_state->vk_device, staging_buffer_memory);
 
     VkBufferUsageFlagBits vertex_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
     VkMemoryPropertyFlagBits vertex_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    vk_create_buffer(vk_state, size, vertex_usage, vertex_properties, &renderbuffer->vk_vertex_buffer, &renderbuffer->vk_vertex_buffer_memory);
+    vk_create_buffer(vk_state, max_size, vertex_usage, vertex_properties, &renderbuffer->vk_vertex_buffer, &renderbuffer->vk_vertex_buffer_memory);
 
-    vk_copy_buffer(vk_state, command_pool, staging_buffer, renderbuffer->vk_vertex_buffer, size);
+    vk_copy_buffer(vk_state, command_pool, staging_buffer, renderbuffer->vk_vertex_buffer, max_size);
 
     vkDestroyBuffer(vk_state->vk_device, staging_buffer, NULL);
     vkFreeMemory(vk_state->vk_device, staging_buffer_memory, NULL);
@@ -144,7 +146,9 @@ static void create_vertex_buffer(vulkan_state *vk_state, VkCommandPool command_p
 
 static void create_index_buffer(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_renderbuffer *renderbuffer) {
 
-    VkDeviceSize size = renderbuffer->index_count * sizeof(uint32_t);
+    VkDeviceSize max_size = renderbuffer->index_max * sizeof(uint32_t);
+
+    // size_t active_size = renderbuffer->index_position * sizeof(uint32_t);
 
     VkBuffer staging_buffer = {0};
     VkDeviceMemory staging_buffer_memory = {0};
@@ -152,19 +156,19 @@ static void create_index_buffer(vulkan_state *vk_state, VkCommandPool command_po
     VkBufferUsageFlagBits staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     VkMemoryPropertyFlagBits staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-    vk_create_buffer(vk_state, size, staging_usage, staging_properties, &staging_buffer, &staging_buffer_memory);
+    vk_create_buffer(vk_state, max_size, staging_usage, staging_properties, &staging_buffer, &staging_buffer_memory);
 
     void *data;
-    vkMapMemory(vk_state->vk_device, staging_buffer_memory, 0, size, 0, &data);
-    memcpy(data, renderbuffer->indices, (size_t)size);
+    vkMapMemory(vk_state->vk_device, staging_buffer_memory, 0, max_size, 0, &data);
+    memcpy(data, renderbuffer->indices, (size_t)max_size);
     vkUnmapMemory(vk_state->vk_device, staging_buffer_memory);
 
     VkBufferUsageFlagBits index_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
     VkMemoryPropertyFlagBits index_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    vk_create_buffer(vk_state, size, index_usage, index_properties, &renderbuffer->vk_index_buffer, &renderbuffer->vk_index_buffer_memory);
+    vk_create_buffer(vk_state, max_size, index_usage, index_properties, &renderbuffer->vk_index_buffer, &renderbuffer->vk_index_buffer_memory);
 
-    vk_copy_buffer(vk_state, command_pool, staging_buffer, renderbuffer->vk_index_buffer, size);
+    vk_copy_buffer(vk_state, command_pool, staging_buffer, renderbuffer->vk_index_buffer, max_size);
 
     vkDestroyBuffer(vk_state->vk_device, staging_buffer, NULL);
     vkFreeMemory(vk_state->vk_device, staging_buffer_memory, NULL);

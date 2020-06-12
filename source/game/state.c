@@ -180,18 +180,22 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     self->images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image));
     vk_create_texture_image(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_GRASS], "textures/tiles/grass.png");
 
+    self->pipelines = safe_calloc(SHADER_COUNT, sizeof(struct vulkan_pipeline *));
+
     {
         struct vulkan_renderbuffer *render = vk_create_renderbuffer(2, 4, 0, 0, 4, 6);
         struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/color2d.vert.spv", "shaders/spv/color2d.frag.spv");
         vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
         render_rectangle(render, 0, 0, 64, 64, 1.0f, 0.0f, 0.0f, 1.0f);
         pipeline->renderbuffer = render;
+        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+        self->pipelines[SHADER_COLOR_2D] = pipeline;
 
-        self->hd = create_hud(vk_state, vk_base, pipeline);
+        self->hd = create_hud(pipeline);
     }
 
     {
-        struct vulkan_renderbuffer *render = vk_create_renderbuffer(3, 3, 2, 0, CUBE_VERTEX_COUNT, CUBE_INDICE_COUNT);
+        struct vulkan_renderbuffer *render = vk_create_renderbuffer(3, 3, 2, 0, VK_CUBE_VERTEX_COUNT * 10, VK_CUBE_INDICE_COUNT * 10);
         struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/texture3d.vert.spv", "shaders/spv/texture3d.frag.spv");
         struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
         images[0] = &self->images[TEXTURE_GRASS];
@@ -199,9 +203,19 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
         render_cube(render);
         pipeline->renderbuffer = render;
+        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+        self->pipelines[SHADER_TEXTURE_3D] = pipeline;
 
-        self->sc = create_scene(vk_state, vk_base, pipeline);
+        self->sc = create_scene(pipeline);
     }
+
+    world *w = create_world();
+    worldrender *wr = create_worldrender(w);
+
+    mega_wad_load_resources();
+    worldrender_create_buffers(wr);
+
+    mega_wad_load_map(w);
 
     return self;
 }
@@ -210,8 +224,11 @@ void delete_state(state *self) {
 
     printf("delete state %p\n", (void *)self);
 
-    delete_hud(self->vk_state, self->hd);
-    delete_scene(self->vk_state, self->sc);
+    delete_hud(self->hd);
+    delete_scene(self->sc);
+
+    delete_vulkan_pipeline(self->vk_state, self->pipelines[SHADER_COLOR_2D]);
+    delete_vulkan_pipeline(self->vk_state, self->pipelines[SHADER_TEXTURE_3D]);
 
     delete_vulkan_image(self->vk_state->vk_device, &self->images[TEXTURE_GRASS]);
 
