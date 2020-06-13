@@ -27,7 +27,7 @@ struct hud {
 
 struct hud *create_hud(struct vulkan_pipeline *pipeline, struct vulkan_render_buffer *render);
 
-void render_hud(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct hud *self, VkCommandBuffer command_buffer, uint32_t image_index);
+void hud_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct hud *self, VkCommandBuffer command_buffer, uint32_t image_index);
 
 void delete_hud(struct vulkan_state *vk_state, struct hud *self);
 

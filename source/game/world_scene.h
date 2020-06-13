@@ -32,10 +32,10 @@ struct world_scene {
     uint_table *sector_cache;
     struct vulkan_pipeline *pipeline;
     struct vulkan_render_buffer *thing_buffer;
-    struct vulkan_image *foobar;
 };
 
-void render_world(struct vulkan_state *vk_state, struct vulkan_base *vk_base, world_scene *self, VkCommandBuffer command_buffer, uint32_t image_index);
+void world_scene_geometry(struct vulkan_state *vk_state, struct vulkan_base *vk_base, world_scene *self);
+void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, world_scene *self, VkCommandBuffer command_buffer, uint32_t image_index);
 void world_scene_create_buffers(vulkan_state *vk_state, VkCommandPool command_pool, world_scene *self);
 void world_scene_initialize(vulkan_state *vk_state, VkCommandPool command_pool, world_scene *self);
 world_scene *create_world_scene(world *w);

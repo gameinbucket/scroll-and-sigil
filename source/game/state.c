@@ -63,9 +63,9 @@ static void record_rendering(state *self, uint32_t image_index) {
     vkCmdSetViewport(command_buffer, 0, 1, &viewport);
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    render_scene(vk_state, vk_base, self->sc, command_buffer, image_index);
-    render_hud(vk_state, vk_base, self->hd, command_buffer, image_index);
-    render_world(vk_state, vk_base, self->ws, command_buffer, image_index);
+    scene_render(vk_state, vk_base, self->sc, command_buffer, image_index);
+    hud_render(vk_state, vk_base, self->hd, command_buffer, image_index);
+    world_scene_render(vk_state, vk_base, self->ws, command_buffer, image_index);
 
     vkCmdEndRenderPass(command_buffer);
 
@@ -195,6 +195,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     world *w = create_world();
     world_scene *ws = create_world_scene(w);
 
+    self->w = w;
+    self->ws = ws;
+
     mega_wad_load_resources();
     mega_wad_load_map(w);
 
@@ -219,7 +222,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/texture3d-color.vert.spv", "shaders/spv/texture3d-color.frag.spv", render_settings);
         struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
         images[0] = &self->images[TEXTURE_GRASS];
-        vulkan_pipeline_set_images(pipeline, images, 1);
+        vulkan_pipeline_images(pipeline, images, 1, 1);
         vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
         vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
         self->pipelines[SHADER_TEXTURE_3D_COLOR] = pipeline;
@@ -234,21 +237,27 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     {
         struct vulkan_render_settings render_settings = {0};
         vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 0);
-        struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
-        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/texture3d.vert.spv", "shaders/spv/texture3d.frag.spv", render_settings);
-        vulkan_pipeline_set_images(pipeline, images, 1);
-        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
-        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
-        self->pipelines[SHADER_TEXTURE_3D] = pipeline;
 
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/texture3d.vert.spv", "shaders/spv/texture3d.frag.spv", render_settings);
+        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+
+        struct vulkan_image **images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
+        for (int i = 0; i < TEXTURE_COUNT; i++) {
+            ws->pipeline->images[i] = &self->images[i];
+        }
+        vulkan_pipeline_images(pipeline, images, 1, TEXTURE_COUNT);
+
+        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+
+        self->pipelines[SHADER_TEXTURE_3D] = pipeline;
         ws->pipeline = pipeline;
-        ws->foobar = &self->images[TEXTURE_GRASS];
 
         world_scene_initialize(vk_state, vk_base->vk_command_pool, ws);
-    }
 
-    self->w = w;
-    self->ws = ws;
+        vk_update_descriptor_sets(vk_state, ws->pipeline);
+
+        world_scene_geometry(vk_state, vk_base, self->ws);
+    }
 
     return self;
 }

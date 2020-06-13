@@ -25,6 +25,7 @@ struct vulkan_pipeline {
     struct vulkan_uniform_buffer *uniforms;
     struct vulkan_image **images;
     int image_count;
+    uint32_t descriptor_arrays;
     char *vertex_shader_path;
     char *fragment_shader_path;
     VkDescriptorSetLayout vk_descriptor_set_layout;
@@ -38,7 +39,7 @@ struct vulkan_pipeline {
 };
 
 struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment, struct vulkan_render_settings render_settings);
-void vulkan_pipeline_set_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count);
+void vulkan_pipeline_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count, uint32_t descriptor_arrays);
 void vulkan_pipeline_settings(struct vulkan_pipeline *self, bool include_depth, VkFrontFace rasterize_face, VkCullModeFlagBits rasterize_cull_mode);
 void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, VkRenderPass vk_render_pass, struct vulkan_pipeline *pipeline);
 

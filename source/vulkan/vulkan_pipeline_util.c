@@ -8,11 +8,15 @@ void vulkan_pipeline_cmd_bind_description(struct vulkan_pipeline *pipeline, VkCo
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline_layout, 0, 1, &pipeline->vk_descriptor_sets[image_index], 0, NULL);
 }
 
+void vulkan_pipeline_cmd_bind_indexed_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set_index, uint32_t image_index) {
+    uint32_t get = set_index * pipeline->descriptor_arrays + image_index;
+    vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, get);
+}
+
 void vulkan_pipeline_draw(struct vulkan_pipeline *pipeline, struct vulkan_render_buffer *renderbuffer, VkCommandBuffer command_buffer, uint32_t image_index) {
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
     vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, image_index);
-
     vulkan_render_buffer_draw(renderbuffer, command_buffer);
 }
 
@@ -39,7 +43,6 @@ void vulkan_pipeline_recreate(vulkan_state *vk_state, struct vulkan_base *vk_bas
 void vulkan_pipeline_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
 
     pipeline->swapchain_image_count = vk_base->swapchain->swapchain_image_count;
-
     pipeline->uniforms = safe_calloc(1, sizeof(struct vulkan_uniform_buffer));
 
     vk_create_descriptor_set_layout(vk_state, pipeline);

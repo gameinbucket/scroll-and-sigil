@@ -77,15 +77,9 @@ void vulkan_render_buffer_zero(struct vulkan_render_buffer *self) {
     self->index_offset = 0;
 }
 
-void vulkan_render_buffer_update_data(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *self) {
+void vulkan_render_buffer_update(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *self) {
 
-    vkDestroyBuffer(vk_state->vk_device, self->vk_vertex_buffer, NULL);
-    vkFreeMemory(vk_state->vk_device, self->vk_vertex_buffer_memory, NULL);
-    vkDestroyBuffer(vk_state->vk_device, self->vk_index_buffer, NULL);
-    vkFreeMemory(vk_state->vk_device, self->vk_index_buffer_memory, NULL);
-
-    create_vertex_buffer(vk_state, command_pool, self);
-    create_index_buffer(vk_state, command_pool, self);
+    printf("vulkan render buffer update %p %p %p\n", (void *)vk_state, (void *)command_pool, (void *)self);
 }
 
 void vulkan_render_buffer_initialize(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *self) {

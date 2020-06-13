@@ -10,7 +10,7 @@ struct scene *create_scene(struct vulkan_pipeline *pipeline, struct vulkan_rende
     return self;
 }
 
-void render_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
+void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
     vulkan_pipeline_draw(self->pipeline, self->render, command_buffer, image_index);
 

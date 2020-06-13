@@ -7,14 +7,16 @@ struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment, str
     self->vertex_shader_path = vertex;
     self->fragment_shader_path = fragment;
     self->render_settings = render_settings;
+    self->descriptor_arrays = 1;
 
     return self;
 }
 
-void vulkan_pipeline_set_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count) {
+void vulkan_pipeline_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count, uint32_t descriptor_arrays) {
 
     self->images = images;
     self->image_count = image_count;
+    self->descriptor_arrays = descriptor_arrays;
 }
 
 void vulkan_pipeline_settings(struct vulkan_pipeline *self, bool include_depth, VkFrontFace rasterize_face, VkCullModeFlagBits rasterize_cull_mode) {
