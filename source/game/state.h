@@ -16,7 +16,7 @@
 #include "vulkan/vulkan_base_util.h"
 #include "vulkan/vulkan_pipeline.h"
 #include "vulkan/vulkan_pipeline_util.h"
-#include "vulkan/vulkan_renderbuffer.h"
+#include "vulkan/vulkan_render_buffer.h"
 #include "vulkan/vulkan_state.h"
 #include "vulkan/vulkan_uniforms.h"
 
@@ -30,7 +30,7 @@
 #include "hud.h"
 #include "mega_wad.h"
 #include "scene.h"
-#include "worldrender.h"
+#include "world_scene.h"
 
 #define VK_SYNC_TIMEOUT 1000000000
 
@@ -47,6 +47,8 @@ struct state {
     struct vulkan_pipeline **pipelines;
     struct hud *hd;
     struct scene *sc;
+    struct world *w;
+    struct world_scene *ws;
 };
 
 void state_update(state *self);

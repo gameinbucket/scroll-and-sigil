@@ -13,6 +13,6 @@
 #include "vulkan/vulkan_base.h"
 #include "vulkan/vulkan_pipeline.h"
 
-void static_draw_build_command_buffers(struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
+void static_draw_build_command_buffers(struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline, struct vulkan_render_buffer *render);
 
 #endif

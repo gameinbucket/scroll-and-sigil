@@ -1,5 +1,5 @@
-#ifndef VULKAN_UNIFORMBUFFER_H
-#define VULKAN_UNIFORMBUFFER_H
+#ifndef VULKAN_UNIFORM_BUFFER_H
+#define VULKAN_UNIFORM_BUFFER_H
 
 #include <inttypes.h>
 #include <stdalign.h>
@@ -16,12 +16,12 @@ struct uniform_buffer_object {
     alignas(16) float mvp[16];
 };
 
-struct vulkan_uniformbuffer {
+struct vulkan_uniform_buffer {
     uint32_t count;
     VkBuffer *vk_uniform_buffers;
     VkDeviceMemory *vk_uniform_buffers_memory;
 };
 
-void vulkan_uniformbuffer_clean(vulkan_state *vk_state, struct vulkan_uniformbuffer *uniformbuffer);
+void vulkan_uniformbuffer_clean(vulkan_state *vk_state, struct vulkan_uniform_buffer *uniformbuffer);
 
 #endif

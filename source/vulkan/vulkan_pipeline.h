@@ -13,16 +13,16 @@
 #include "core/mem.h"
 
 #include "vulkan_base.h"
-#include "vulkan_renderbuffer.h"
+#include "vulkan_render_buffer.h"
 #include "vulkan_state.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_texture.h"
-#include "vulkan_uniformbuffer.h"
+#include "vulkan_uniform_buffer.h"
 
 struct vulkan_pipeline {
     uint32_t swapchain_image_count;
-    struct vulkan_renderbuffer *renderbuffer;
-    struct vulkan_uniformbuffer *uniforms;
+    struct vulkan_render_settings render_settings;
+    struct vulkan_uniform_buffer *uniforms;
     struct vulkan_image **images;
     int image_count;
     char *vertex_shader_path;
@@ -37,7 +37,7 @@ struct vulkan_pipeline {
     VkCullModeFlagBits rasterize_cull_mode;
 };
 
-struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment);
+struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment, struct vulkan_render_settings render_settings);
 void vulkan_pipeline_set_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count);
 void vulkan_pipeline_settings(struct vulkan_pipeline *self, bool include_depth, VkFrontFace rasterize_face, VkCullModeFlagBits rasterize_cull_mode);
 void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, VkRenderPass vk_render_pass, struct vulkan_pipeline *pipeline);

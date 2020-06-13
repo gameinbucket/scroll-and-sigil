@@ -1,11 +1,12 @@
 #include "vulkan_pipeline.h"
 
-struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment) {
+struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment, struct vulkan_render_settings render_settings) {
 
     struct vulkan_pipeline *self = safe_calloc(1, sizeof(struct vulkan_pipeline));
 
     self->vertex_shader_path = vertex;
     self->fragment_shader_path = fragment;
+    self->render_settings = render_settings;
 
     return self;
 }
@@ -68,16 +69,10 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, V
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    int position = pipeline->renderbuffer->position;
-    int color = pipeline->renderbuffer->color;
-    int texture = pipeline->renderbuffer->texture;
-    int normal = pipeline->renderbuffer->normal;
-    int bone = pipeline->renderbuffer->bone;
+    int attribute_count = vk_attribute_count(&pipeline->render_settings);
 
-    int attribute_count = vk_attribute_count(position, color, texture, normal, bone);
-
-    VkVertexInputBindingDescription binding_description = vk_binding_description(position, color, texture, normal, bone);
-    VkVertexInputAttributeDescription *attribute_description = vk_attribute_description(position, color, texture, normal, bone);
+    VkVertexInputBindingDescription binding_description = vk_binding_description(&pipeline->render_settings);
+    VkVertexInputAttributeDescription *attribute_description = vk_attribute_description(&pipeline->render_settings);
 
     vertex_input_info.pVertexBindingDescriptions = &binding_description;
     vertex_input_info.vertexBindingDescriptionCount = 1;

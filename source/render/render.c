@@ -1,6 +1,6 @@
 #include "render.h"
 
-void render_index3(struct vulkan_renderbuffer *b) {
+void render_index3(struct vulkan_render_buffer *b) {
     uint32_t pos = b->index_position;
     uint32_t offset = b->index_offset;
     uint32_t *indices = b->indices;
@@ -11,7 +11,7 @@ void render_index3(struct vulkan_renderbuffer *b) {
     b->index_offset = offset + 3;
 }
 
-void render_index4(struct vulkan_renderbuffer *b) {
+void render_index4(struct vulkan_render_buffer *b) {
     uint32_t pos = b->index_position;
     uint32_t offset = b->index_offset;
     uint32_t *indices = b->indices;
@@ -25,7 +25,7 @@ void render_index4(struct vulkan_renderbuffer *b) {
     b->index_offset = offset + 4;
 }
 
-void render_screen(struct vulkan_renderbuffer *b, float x, float y, float width, float height) {
+void render_screen(struct vulkan_render_buffer *b, float x, float y, float width, float height) {
     uint32_t pos = b->vertex_position;
     float *vertices = b->vertices;
     vertices[pos] = x;
@@ -40,7 +40,7 @@ void render_screen(struct vulkan_renderbuffer *b, float x, float y, float width,
     render_index4(b);
 }
 
-void render_rectangle(struct vulkan_renderbuffer *b, float x, float y, float width, float height, float red, float green, float blue, float alpha) {
+void render_rectangle(struct vulkan_render_buffer *b, float x, float y, float width, float height, float red, float green, float blue, float alpha) {
     uint32_t pos = b->vertex_position;
     float *vertices = b->vertices;
 
@@ -76,7 +76,7 @@ void render_rectangle(struct vulkan_renderbuffer *b, float x, float y, float wid
     render_index4(b);
 }
 
-void render_cube(struct vulkan_renderbuffer *b) {
+void render_cube(struct vulkan_render_buffer *b) {
     float cube[VK_CUBE_VERTEX_FLOAT] = RENDER_VK_CUBE(1, 1, 1);
     memcpy(b->vertices + b->vertex_position, cube, VK_CUBE_VERTEX_FLOAT * sizeof(float));
     for (int k = 0; k < 6; k++) {

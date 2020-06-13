@@ -16,19 +16,19 @@
 #include "vulkan/vulkan_base_util.h"
 #include "vulkan/vulkan_pipeline.h"
 #include "vulkan/vulkan_pipeline_util.h"
-#include "vulkan/vulkan_renderbuffer.h"
+#include "vulkan/vulkan_render_buffer.h"
 #include "vulkan/vulkan_state.h"
 #include "vulkan/vulkan_uniforms.h"
 
 struct scene {
-    struct vulkan_image image;
     struct vulkan_pipeline *pipeline;
+    struct vulkan_render_buffer *render;
 };
 
-struct scene *create_scene(struct vulkan_pipeline *pipeline);
+struct scene *create_scene(struct vulkan_pipeline *pipeline, struct vulkan_render_buffer *render);
 
 void render_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct scene *self, VkCommandBuffer command_buffer, uint32_t image_index);
 
-void delete_scene(struct scene *self);
+void delete_scene(struct vulkan_state *vk_state, struct scene *self);
 
 #endif

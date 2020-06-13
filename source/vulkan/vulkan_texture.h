@@ -17,8 +17,6 @@
 #include "vulkan_image.h"
 #include "vulkan_state.h"
 
-void vk_create_texture_image(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path);
-void vk_create_texture_image_view(vulkan_state *vk_state, struct vulkan_image *image);
-void vk_create_texture_image_sampler(vulkan_state *vk_state, struct vulkan_image *image);
+void create_vulkan_texture(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path, VkFilter filter, VkSamplerAddressMode mode);
 
 #endif

@@ -1,20 +1,20 @@
 #include "vulkan_texture.h"
 
-void vk_create_texture_image_view(vulkan_state *vk_state, struct vulkan_image *image) {
+static void vk_create_texture_image_view(vulkan_state *vk_state, struct vulkan_image *image) {
 
     VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
     image->vk_texture_image_view = vk_create_image_view(vk_state, image->vk_texture_image, format, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
-void vk_create_texture_image_sampler(vulkan_state *vk_state, struct vulkan_image *image) {
+static void vk_create_texture_image_sampler(vulkan_state *vk_state, struct vulkan_image *image, VkFilter filter, VkSamplerAddressMode mode) {
 
     VkSamplerCreateInfo sampler_info = {0};
     sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    sampler_info.magFilter = VK_FILTER_LINEAR;
-    sampler_info.minFilter = VK_FILTER_LINEAR;
-    sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    sampler_info.magFilter = filter;
+    sampler_info.minFilter = filter;
+    sampler_info.addressModeU = mode;
+    sampler_info.addressModeV = mode;
+    sampler_info.addressModeW = mode;
     sampler_info.anisotropyEnable = VK_TRUE;
     sampler_info.maxAnisotropy = 16;
     sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
@@ -29,7 +29,7 @@ void vk_create_texture_image_sampler(vulkan_state *vk_state, struct vulkan_image
     }
 }
 
-void vk_create_texture_image(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path) {
+void create_vulkan_texture(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path, VkFilter filter, VkSamplerAddressMode mode) {
 
     simple_image *png = read_png_file(NULL, path);
 
@@ -79,5 +79,5 @@ void vk_create_texture_image(vulkan_state *vk_state, VkCommandPool command_pool,
     simple_image_free(png);
 
     vk_create_texture_image_view(vk_state, image);
-    vk_create_texture_image_sampler(vk_state, image);
+    vk_create_texture_image_sampler(vk_state, image, filter, mode);
 }

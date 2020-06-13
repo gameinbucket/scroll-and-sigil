@@ -1,17 +1,18 @@
 #include "scene.h"
 
-struct scene *create_scene(struct vulkan_pipeline *pipeline) {
+struct scene *create_scene(struct vulkan_pipeline *pipeline, struct vulkan_render_buffer *render) {
 
     struct scene *self = safe_calloc(1, sizeof(struct scene));
 
     self->pipeline = pipeline;
+    self->render = render;
 
     return self;
 }
 
 void render_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
-    vulkan_pipeline_draw(self->pipeline, self->pipeline->renderbuffer, command_buffer, image_index);
+    vulkan_pipeline_draw(self->pipeline, self->render, command_buffer, image_index);
 
     struct uniform_buffer_object ubo = {0};
 
@@ -35,7 +36,9 @@ void render_scene(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
     vk_update_uniform_buffer(vk_state, self->pipeline, image_index, ubo);
 }
 
-void delete_scene(struct scene *self) {
+void delete_scene(struct vulkan_state *vk_state, struct scene *self) {
+
+    delete_vulkan_renderbuffer(vk_state, self->render);
 
     free(self);
 }
