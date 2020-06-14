@@ -1,6 +1,6 @@
 #include "vulkan_uniforms.h"
 
-void vulkan_uniformbuffer_initialize(vulkan_state *vk_state, uint32_t count, struct vulkan_uniform_buffer *uniformbuffer) {
+void vulkan_uniform_buffer_initialize(vulkan_state *vk_state, uint32_t count, struct vulkan_uniform_buffer *uniformbuffer) {
 
     VkDeviceSize size = sizeof(struct uniform_buffer_object);
 

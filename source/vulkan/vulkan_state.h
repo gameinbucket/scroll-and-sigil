@@ -13,6 +13,8 @@
 
 #include "core/mem.h"
 
+#define VK_SYNC_TIMEOUT 1000000000
+
 #define MAX(x, y) (x > y ? x : y)
 #define MIN(x, y) (x < y ? x : y)
 

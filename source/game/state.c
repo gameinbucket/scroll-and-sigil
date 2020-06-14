@@ -75,7 +75,91 @@ static void record_rendering(state *self, uint32_t image_index) {
     }
 }
 
-void state_update(__attribute__((unused)) state *self) {
+void state_update(state *self) {
+
+    input *in = &self->in;
+
+    float speed = 0.1f;
+
+    float r = self->c->ry;
+
+    float dx = 0;
+    float dy = 0;
+    float dz = 0;
+
+    const float MAXSPEED = 0.5f;
+
+    if (in->move_forward) {
+        dx += sinf(r) * speed;
+        dz -= cosf(r) * speed;
+    }
+
+    if (in->move_backward) {
+        dx -= sinf(r) * speed * 0.5f;
+        dz += cosf(r) * speed * 0.5f;
+    }
+
+    if (in->move_up) {
+        self->c->y += 0.1;
+    }
+
+    if (in->move_down) {
+        self->c->y -= 0.1;
+    }
+
+    if (in->move_left) {
+        dx -= cosf(r) * speed * 0.75f;
+        dz -= sinf(r) * speed * 0.75f;
+    }
+
+    if (in->move_right) {
+        dx += cosf(r) * speed * 0.75f;
+        dz += sinf(r) * speed * 0.75f;
+    }
+
+    if (dx > MAXSPEED) {
+        dx = MAXSPEED;
+    } else if (dx < -MAXSPEED) {
+        dx = -MAXSPEED;
+    }
+
+    if (dy > MAXSPEED) {
+        dy = MAXSPEED;
+    } else if (dy < -MAXSPEED) {
+        dy = -MAXSPEED;
+    }
+
+    self->c->x += dx;
+    self->c->y += dy;
+    self->c->z += dz;
+
+    if (in->look_left) {
+        self->c->ry -= 0.05;
+        if (self->c->ry < 0) {
+            self->c->ry += FLOAT_MATH_TAU;
+        }
+    }
+
+    if (in->look_right) {
+        self->c->ry += 0.05;
+        if (self->c->ry >= FLOAT_MATH_TAU) {
+            self->c->ry -= FLOAT_MATH_TAU;
+        }
+    }
+
+    if (in->look_up) {
+        self->c->rx -= 0.05;
+        if (self->c->rx < 0) {
+            self->c->rx += FLOAT_MATH_TAU;
+        }
+    }
+
+    if (in->look_down) {
+        self->c->rx += 0.05;
+        if (self->c->rx >= FLOAT_MATH_TAU) {
+            self->c->rx -= FLOAT_MATH_TAU;
+        }
+    }
 }
 
 static void render(struct state *self) {
@@ -193,13 +277,19 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     self->pipelines = safe_calloc(SHADER_COUNT, sizeof(struct vulkan_pipeline *));
 
     world *w = create_world();
-    world_scene *ws = create_world_scene(w);
-
     self->w = w;
-    self->ws = ws;
 
     mega_wad_load_resources();
     mega_wad_load_map(w);
+
+    world_scene *ws = create_world_scene(w);
+    self->ws = ws;
+    world_scene_initialize(vk_state, vk_base->vk_command_pool, ws);
+    world_scene_geometry(vk_state, vk_base, ws);
+
+    camera *c = create_camera(0.0f);
+    self->c = c;
+    ws->c = c;
 
     {
         struct vulkan_render_settings render_settings = {0};
@@ -220,10 +310,10 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         struct vulkan_render_settings render_settings = {0};
         vulkan_render_settings_init(&render_settings, 3, 3, 2, 0, 0);
         struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/texture3d-color.vert.spv", "shaders/spv/texture3d-color.frag.spv", render_settings);
+        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
         struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
         images[0] = &self->images[TEXTURE_GRASS];
         vulkan_pipeline_images(pipeline, images, 1, 1);
-        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
         vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
         self->pipelines[SHADER_TEXTURE_3D_COLOR] = pipeline;
 
@@ -237,26 +327,17 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     {
         struct vulkan_render_settings render_settings = {0};
         vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 0);
-
         struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/texture3d.vert.spv", "shaders/spv/texture3d.frag.spv", render_settings);
         vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
-
         struct vulkan_image **images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
         for (int i = 0; i < TEXTURE_COUNT; i++) {
-            ws->pipeline->images[i] = &self->images[i];
+            images[i] = &self->images[i];
         }
         vulkan_pipeline_images(pipeline, images, 1, TEXTURE_COUNT);
-
-        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+        vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
 
         self->pipelines[SHADER_TEXTURE_3D] = pipeline;
         ws->pipeline = pipeline;
-
-        world_scene_initialize(vk_state, vk_base->vk_command_pool, ws);
-
-        vk_update_descriptor_sets(vk_state, ws->pipeline);
-
-        world_scene_geometry(vk_state, vk_base, self->ws);
     }
 
     return self;

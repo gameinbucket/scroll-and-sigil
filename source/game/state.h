@@ -27,12 +27,11 @@
 #include "render/render.h"
 #include "world/world.h"
 
+#include "camera.h"
 #include "hud.h"
 #include "mega_wad.h"
 #include "scene.h"
 #include "world_scene.h"
-
-#define VK_SYNC_TIMEOUT 1000000000
 
 typedef struct state state;
 
@@ -49,6 +48,7 @@ struct state {
     struct scene *sc;
     struct world *w;
     struct world_scene *ws;
+    camera *c;
 };
 
 void state_update(state *self);

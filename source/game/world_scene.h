@@ -29,6 +29,7 @@ typedef struct world_scene world_scene;
 
 struct world_scene {
     world *w;
+    camera *c;
     uint_table *sector_cache;
     struct vulkan_pipeline *pipeline;
     struct vulkan_render_buffer *thing_buffer;

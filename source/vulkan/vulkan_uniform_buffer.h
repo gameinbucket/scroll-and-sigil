@@ -22,6 +22,6 @@ struct vulkan_uniform_buffer {
     VkDeviceMemory *vk_uniform_buffers_memory;
 };
 
-void vulkan_uniformbuffer_clean(vulkan_state *vk_state, struct vulkan_uniform_buffer *uniformbuffer);
+void vulkan_uniform_buffer_clean(vulkan_state *vk_state, struct vulkan_uniform_buffer *uniformbuffer);
 
 #endif

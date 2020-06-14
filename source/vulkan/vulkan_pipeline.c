@@ -7,16 +7,15 @@ struct vulkan_pipeline *create_vulkan_pipeline(char *vertex, char *fragment, str
     self->vertex_shader_path = vertex;
     self->fragment_shader_path = fragment;
     self->render_settings = render_settings;
-    self->descriptor_arrays = 1;
 
     return self;
 }
 
-void vulkan_pipeline_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count, uint32_t descriptor_arrays) {
+void vulkan_pipeline_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count, uint32_t image_descriptors) {
 
     self->images = images;
     self->image_count = image_count;
-    self->descriptor_arrays = descriptor_arrays;
+    self->image_descriptors = image_descriptors;
 }
 
 void vulkan_pipeline_settings(struct vulkan_pipeline *self, bool include_depth, VkFrontFace rasterize_face, VkCullModeFlagBits rasterize_cull_mode) {
@@ -128,11 +127,9 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, V
     depth_stencil.stencilTestEnable = VK_FALSE;
 
     if (pipeline->include_depth) {
-
         depth_stencil.depthTestEnable = VK_TRUE;
         depth_stencil.depthWriteEnable = VK_TRUE;
         depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
-
     } else {
         depth_stencil.depthTestEnable = VK_FALSE;
         depth_stencil.depthWriteEnable = VK_FALSE;
@@ -149,10 +146,20 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, V
     color_blending.attachmentCount = 1;
     color_blending.pAttachments = &color_blend_attachment;
 
+    uint32_t descriptor_count = 1;
+    if (pipeline->image_count > 0) {
+        descriptor_count++;
+    }
+    VkDescriptorSetLayout *descriptors = safe_calloc(descriptor_count, sizeof(VkDescriptorSetLayout));
+    descriptors[0] = pipeline->vk_uniform_buffer_descriptor_set_layout;
+    if (pipeline->image_count > 0) {
+        descriptors[1] = pipeline->vk_image_descriptor_set_layout;
+    }
+
     VkPipelineLayoutCreateInfo pipeline_layout_info = {0};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipeline_layout_info.setLayoutCount = 1;
-    pipeline_layout_info.pSetLayouts = &pipeline->vk_descriptor_set_layout;
+    pipeline_layout_info.setLayoutCount = descriptor_count;
+    pipeline_layout_info.pSetLayouts = descriptors;
 
     VkPipelineLayout vk_pipeline_layout = {0};
 
@@ -190,4 +197,5 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, V
     free(vertex_shader);
     free(fragment_shader);
     free(attribute_description);
+    free(descriptors);
 }

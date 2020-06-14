@@ -45,14 +45,51 @@ static void main_loop(state *s) {
             switch (event.type) {
             case SDL_QUIT: run = false; break;
             case SDL_WINDOWEVENT_RESIZED: window_resize(s->vk_state); break;
+            case SDL_MOUSEBUTTONUP: {
+                SDL_GetMouseState(&s->in.mouse_x, &s->in.mouse_y);
+                s->in.mouse_down = false;
+                break;
+            }
+            case SDL_MOUSEBUTTONDOWN: {
+                SDL_GetMouseState(&s->in.mouse_x, &s->in.mouse_y);
+                s->in.mouse_down = true;
+                break;
+            }
+            case SDL_KEYUP: {
+                switch (event.key.keysym.sym) {
+                case SDLK_w: s->in.move_forward = false; break;
+                case SDLK_a: s->in.move_left = false; break;
+                case SDLK_s: s->in.move_backward = false; break;
+                case SDLK_d: s->in.move_right = false; break;
+                case SDLK_q: s->in.move_up = false; break;
+                case SDLK_e: s->in.move_down = false; break;
+                case SDLK_UP: s->in.look_up = false; break;
+                case SDLK_DOWN: s->in.look_down = false; break;
+                case SDLK_LEFT: s->in.look_left = false; break;
+                case SDLK_RIGHT: s->in.look_right = false; break;
+                }
+                break;
+            }
             case SDL_KEYDOWN: {
                 switch (event.key.keysym.sym) {
-                case SDLK_q:
                 case SDLK_ESCAPE: run = false; break;
+                case SDLK_w: s->in.move_forward = true; break;
+                case SDLK_a: s->in.move_left = true; break;
+                case SDLK_s: s->in.move_backward = true; break;
+                case SDLK_d: s->in.move_right = true; break;
+                case SDLK_q: s->in.move_up = true; break;
+                case SDLK_e: s->in.move_down = true; break;
+                case SDLK_UP: s->in.look_up = true; break;
+                case SDLK_DOWN: s->in.look_down = true; break;
+                case SDLK_LEFT: s->in.look_left = true; break;
+                case SDLK_RIGHT: s->in.look_right = true; break;
+                case SDLK_TAB: s->in.console = true; break;
                 }
+                break;
             }
             }
         }
+
         state_update(s);
         state_render(s);
     }

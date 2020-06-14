@@ -189,24 +189,19 @@ void world_scene_geometry(struct vulkan_state *vk_state, struct vulkan_base *vk_
 void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, world_scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
     {
+        camera *c = self->c;
+
         struct uniform_buffer_object ubo = {0};
 
         float view[16];
         float perspective[16];
-
-        static float x = 0.0f;
-        x += 0.01f;
-        vec3 eye = {0, 0, 0};
-        vec3 center = {3 + x, 3, 5};
-        matrix_look_at(view, &eye, &center);
-        matrix_translate(view, -eye.x, -eye.y, -eye.z);
 
         float width = (float)vk_base->swapchain->swapchain_extent.width;
         float height = (float)vk_base->swapchain->swapchain_extent.height;
         float ratio = width / height;
         matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
 
-        matrix_multiply(ubo.mvp, perspective, view);
+        matrix_perspective_projection(ubo.mvp, perspective, view, -c->x, -c->y, -c->z, c->rx, c->ry);
 
         vk_update_uniform_buffer(vk_state, self->pipeline, image_index, ubo);
     }
@@ -216,25 +211,27 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     struct vulkan_pipeline *pipeline = self->pipeline;
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
+    vulkan_pipeline_cmd_bind_uniform_description(pipeline, command_buffer, image_index);
 
     uint_table_iterator iter = create_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
         uint_table_pair pair = uint_table_iterator_next(&iter);
 
-        vulkan_pipeline_cmd_bind_indexed_description(pipeline, command_buffer, pair.key, image_index);
-
         struct vulkan_render_buffer *b = pair.value;
+
+        vulkan_pipeline_cmd_bind_indexed_image_description(pipeline, command_buffer, image_index, pair.key);
         vulkan_render_buffer_draw(b, command_buffer);
     }
 }
 
-void world_scene_create_buffers(vulkan_state *vk_state, VkCommandPool command_pool, world_scene *self) {
+void world_scene_create_buffers(__attribute__((unused)) vulkan_state *vk_state, __attribute__((unused)) VkCommandPool command_pool, world_scene *self) {
+
+    struct vulkan_render_settings render_settings = {0};
+    vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 0);
 
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        struct vulkan_render_settings render_settings = {0};
-        vulkan_render_settings_init(&render_settings, 3, 3, 2, 0, 0);
         struct vulkan_render_buffer *b = create_vulkan_renderbuffer(render_settings, 4 * 800, 36 * 800);
-        vulkan_render_buffer_initialize(vk_state, command_pool, b);
+        // vulkan_render_buffer_initialize(vk_state, command_pool, b);
         uint_table_put(self->sector_cache, i, b);
     }
 }
@@ -251,6 +248,9 @@ world_scene *create_world_scene(world *w) {
 }
 
 void delete_world_scene(vulkan_state *vk_state, world_scene *self) {
+
+    printf("delete world scene %p\n", (void *)self);
+
     for (int i = 0; i < TEXTURE_COUNT; i++) {
         delete_vulkan_renderbuffer(vk_state, uint_table_get(self->sector_cache, i));
     }

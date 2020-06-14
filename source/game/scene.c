@@ -12,7 +12,9 @@ struct scene *create_scene(struct vulkan_pipeline *pipeline, struct vulkan_rende
 
 void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
-    vulkan_pipeline_draw(self->pipeline, self->render, command_buffer, image_index);
+    vulkan_pipeline_cmd_bind(self->pipeline, command_buffer);
+    vulkan_pipeline_cmd_bind_description(self->pipeline, command_buffer, image_index);
+    vulkan_render_buffer_draw(self->render, command_buffer);
 
     struct uniform_buffer_object ubo = {0};
 
@@ -37,6 +39,8 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
 }
 
 void delete_scene(struct vulkan_state *vk_state, struct scene *self) {
+
+    printf("delete scene %p\n", (void *)self);
 
     delete_vulkan_renderbuffer(vk_state, self->render);
 
