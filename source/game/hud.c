@@ -26,7 +26,14 @@ void hud_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, stru
 
     float width = (float)vk_base->swapchain->swapchain_extent.width;
     float height = (float)vk_base->swapchain->swapchain_extent.height;
-    matrix_orthographic_vulkan(ortho, 0, width, 0, height, -1, 1);
+
+    // matrix_orthographic_vulkan(ortho, 0, width, 0, height, -1, 1);
+
+    float correction[16];
+    matrix_vulkan_correction(correction);
+    float original[16];
+    matrix_orthographic(original, 0, width, 0, height, -1, 1);
+    matrix_multiply(ortho, correction, original);
 
     matrix_multiply(ubo.mvp, ortho, view);
 

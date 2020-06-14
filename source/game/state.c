@@ -21,8 +21,12 @@ static void record_rendering(state *self, uint32_t image_index) {
 
     VkCommandBuffer *command_buffers = vk_base->vk_command_buffers;
 
-    VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
-    VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
+    VkClearValue clear_color = {0};
+    clear_color.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}};
+
+    VkClearValue clear_depth = {0};
+    clear_depth.depthStencil = (VkClearDepthStencilValue){1.0f, 0};
+
     VkClearValue clear_values[2] = {clear_color, clear_depth};
 
     VkRenderPassBeginInfo render_pass_info = {0};
@@ -296,20 +300,20 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     self->c = c;
     ws->c = c;
 
-    // {
-    //     struct vulkan_render_settings render_settings = {0};
-    //     vulkan_render_settings_init(&render_settings, 2, 0, 0, 0, 0);
-    //     struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/screen.vert.spv", "shaders/spv/screen.frag.spv", render_settings);
-    //     vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
-    //     struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
-    //     vulkan_pipeline_images(pipeline, images, 1, 1);
-    //     vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
-    //     self->pipelines[SHADER_SCREEN] = pipeline;
+    {
+        struct vulkan_render_settings render_settings = {0};
+        vulkan_render_settings_init(&render_settings, 2, 0, 0, 0, 0);
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/screen.vert.spv", "shaders/spv/screen.frag.spv", render_settings);
+        vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+        struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
+        vulkan_pipeline_images(pipeline, images, 1, 1);
+        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+        self->pipelines[SHADER_SCREEN] = pipeline;
 
-    //     self->draw_canvas = create_vulkan_render_buffer(render_settings, 4, 6);
-    //     render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
-    //     vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas);
-    // }
+        self->draw_canvas = create_vulkan_render_buffer(render_settings, 4, 6);
+        render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
+        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas);
+    }
 
     {
         struct vulkan_render_settings render_settings = {0};
@@ -361,6 +365,22 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         ws->pipeline = pipeline;
     }
 
+    {
+        struct vulkan_render_settings render_settings = {0};
+        vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 1);
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/model.vert.spv", "shaders/spv/model.frag.spv", render_settings);
+        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+        struct vulkan_image **images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
+        for (int i = 0; i < TEXTURE_COUNT; i++) {
+            images[i] = &self->images[i];
+        }
+        vulkan_pipeline_images(pipeline, images, 1, TEXTURE_COUNT);
+        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+
+        self->pipelines[SHADER_RENDER_MODEL] = pipeline;
+        ws->pipeline_model = pipeline;
+    }
+
     return self;
 }
 
@@ -372,7 +392,7 @@ void delete_state(state *self) {
     delete_scene(self->vk_state, self->sc);
     delete_world_scene(self->vk_state, self->ws);
 
-    // delete_vulkan_renderbuffer(self->vk_state, self->draw_canvas);
+    delete_vulkan_renderbuffer(self->vk_state, self->draw_canvas);
 
     for (int i = 0; i < SHADER_COUNT; i++) {
         if (self->pipelines[i] != NULL) {

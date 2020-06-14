@@ -32,6 +32,7 @@ struct world_scene {
     camera *c;
     uint_table *sector_cache;
     struct vulkan_pipeline *pipeline;
+    struct vulkan_pipeline *pipeline_model;
     struct vulkan_render_buffer *thing_buffer;
 };
 

@@ -1,18 +1,18 @@
 #include "vulkan_uniforms.h"
 
-void vulkan_uniform_buffer_initialize(vulkan_state *vk_state, uint32_t count, struct vulkan_uniform_buffer *uniformbuffer) {
+void vulkan_uniform_buffer_initialize(vulkan_state *vk_state, uint32_t count, struct vulkan_uniform_buffer *uniforms) {
 
     VkDeviceSize size = sizeof(struct uniform_buffer_object);
 
-    uniformbuffer->count = count;
-    uniformbuffer->vk_uniform_buffers = safe_calloc(count, sizeof(VkBuffer));
-    uniformbuffer->vk_uniform_buffers_memory = safe_calloc(count, sizeof(VkDeviceMemory));
+    uniforms->count = count;
+    uniforms->vk_uniform_buffers = safe_calloc(count, sizeof(VkBuffer));
+    uniforms->vk_uniform_buffers_memory = safe_calloc(count, sizeof(VkDeviceMemory));
 
     VkBufferUsageFlagBits usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     VkMemoryPropertyFlagBits properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
     for (uint32_t i = 0; i < count; i++) {
-        vk_create_buffer(vk_state, size, usage, properties, &uniformbuffer->vk_uniform_buffers[i], &uniformbuffer->vk_uniform_buffers_memory[i]);
+        vk_create_buffer(vk_state, size, usage, properties, &uniforms->vk_uniform_buffers[i], &uniforms->vk_uniform_buffers_memory[i]);
     }
 }
 

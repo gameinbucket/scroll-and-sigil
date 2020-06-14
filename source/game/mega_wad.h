@@ -9,6 +9,7 @@
 #include "core/string_util.h"
 #include "data/array.h"
 #include "data/table.h"
+#include "input/input.h"
 #include "math/matrix.h"
 #include "places/place.h"
 #include "things/baron.h"
@@ -19,6 +20,7 @@
 #include "world/world.h"
 #include "world/worldbuild.h"
 
+#include "modelstate.h"
 #include "state.h"
 
 void mega_wad_load_resources();

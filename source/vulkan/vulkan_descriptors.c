@@ -220,38 +220,40 @@ void vk_update_image_descriptor_set(vulkan_state *vk_state, struct vulkan_pipeli
 
     VkDescriptorSet vk_descriptor_set = pipeline->vk_image_descriptor_sets[image_index * pipeline->image_descriptors + sample_index];
 
-    uint32_t binding_count = pipeline->image_count;
-    VkWriteDescriptorSet *descriptor_writes = safe_malloc(binding_count * sizeof(VkWriteDescriptorSet));
-
     uint32_t binding = 0;
+    uint32_t image_count = pipeline->image_count;
 
-    for (int k = 0; k < pipeline->image_count; k++) {
+    VkDescriptorImageInfo *image_info = safe_calloc(image_count, sizeof(VkDescriptorImageInfo));
+    VkWriteDescriptorSet *descriptor_write_sampler = safe_calloc(image_count, sizeof(VkWriteDescriptorSet));
+    VkWriteDescriptorSet *descriptor_writes = safe_malloc(image_count * sizeof(VkWriteDescriptorSet));
+
+    for (uint32_t k = 0; k < image_count; k++) {
 
         int image_view_index = sample_index * pipeline->image_count + k;
         struct vulkan_image *image = pipeline->images[image_view_index];
 
-        VkDescriptorImageInfo image_info = {0};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image->vk_texture_image_view;
-        image_info.sampler = image->vk_texture_sampler;
+        image_info[k].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        image_info[k].imageView = image->vk_texture_image_view;
+        image_info[k].sampler = image->vk_texture_sampler;
 
-        VkWriteDescriptorSet descriptor_write_sampler = {0};
-        descriptor_write_sampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptor_write_sampler.dstSet = vk_descriptor_set;
-        descriptor_write_sampler.dstBinding = binding;
-        descriptor_write_sampler.dstArrayElement = 0;
-        descriptor_write_sampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptor_write_sampler.descriptorCount = 1;
-        descriptor_write_sampler.pImageInfo = &image_info;
+        descriptor_write_sampler[k].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptor_write_sampler[k].dstSet = vk_descriptor_set;
+        descriptor_write_sampler[k].dstBinding = binding;
+        descriptor_write_sampler[k].dstArrayElement = 0;
+        descriptor_write_sampler[k].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptor_write_sampler[k].descriptorCount = 1;
+        descriptor_write_sampler[k].pImageInfo = &image_info[k];
 
-        descriptor_writes[binding] = descriptor_write_sampler;
+        descriptor_writes[binding] = descriptor_write_sampler[k];
 
         binding++;
     }
 
-    vkUpdateDescriptorSets(vk_state->vk_device, binding_count, descriptor_writes, 0, NULL);
+    vkUpdateDescriptorSets(vk_state->vk_device, image_count, descriptor_writes, 0, NULL);
 
     free(descriptor_writes);
+    free(descriptor_write_sampler);
+    free(image_info);
 }
 
 void vk_update_image_descriptor_sets(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {

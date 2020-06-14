@@ -16,6 +16,17 @@ struct uniform_buffer_object {
     alignas(16) float mvp[16];
 };
 
+struct uniform_buffer_object_with_normal {
+    alignas(16) float mvp[16];
+    alignas(16) float normal[16];
+};
+
+struct uniform_buffer_object_with_normal_and_bones {
+    alignas(16) float mvp[16];
+    alignas(16) float normal[16];
+    alignas(16) float bones[11][16];
+};
+
 struct vulkan_uniform_buffer {
     uint32_t count;
     VkBuffer *vk_uniform_buffers;
