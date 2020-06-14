@@ -31,6 +31,29 @@ void matrix_identity(float *matrix) {
     matrix[15] = 1.0;
 }
 
+void matrix_vulkan_correction(float *matrix) {
+
+    matrix[0] = 1.0;
+    matrix[1] = 0.0;
+    matrix[2] = 0.0;
+    matrix[3] = 0.0;
+
+    matrix[4] = 0.0;
+    matrix[5] = -1.0;
+    matrix[6] = 0.0;
+    matrix[7] = 0.0;
+
+    matrix[8] = 0.0;
+    matrix[9] = 0.0;
+    matrix[10] = 0.5;
+    matrix[11] = 0.5;
+
+    matrix[12] = 0.0;
+    matrix[13] = 0.0;
+    matrix[14] = 0.0;
+    matrix[15] = 1.0;
+}
+
 void matrix_orthographic(float *matrix, float left, float right, float bottom, float top, float near, float far) {
 
     matrix[0] = 2.0 / (right - left);
@@ -108,6 +131,31 @@ void matrix_perspective(float *matrix, float fov, float near, float far, float a
     float right = top * aspect;
 
     matrix_frustum(matrix, left, right, bottom, top, near, far);
+}
+
+void matrix_perspective_vulkan(float *matrix, float fov, float near, float far, float aspect) {
+
+    float f = 1.0f / tanf(fov * MATH_PI / 360.0);
+
+    matrix[0] = f / aspect;
+    matrix[1] = 0.0;
+    matrix[2] = 0.0;
+    matrix[3] = 0.0;
+
+    matrix[4] = 0.0;
+    matrix[5] = -f;
+    matrix[6] = 0.0;
+    matrix[7] = 0.0;
+
+    matrix[8] = 0.0f;
+    matrix[9] = 0.0f;
+    matrix[10] = far / (near - far);
+    matrix[11] = -1.0;
+
+    matrix[12] = 0.0;
+    matrix[13] = 0.0;
+    matrix[14] = (near * far) / (near - far);
+    matrix[15] = 0.0;
 }
 
 void matrix_translate(float *matrix, float x, float y, float z) {

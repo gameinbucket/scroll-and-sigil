@@ -129,7 +129,7 @@ void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, V
     if (pipeline->include_depth) {
         depth_stencil.depthTestEnable = VK_TRUE;
         depth_stencil.depthWriteEnable = VK_TRUE;
-        depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     } else {
         depth_stencil.depthTestEnable = VK_FALSE;
         depth_stencil.depthWriteEnable = VK_FALSE;

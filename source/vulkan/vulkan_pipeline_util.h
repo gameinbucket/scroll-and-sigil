@@ -10,7 +10,7 @@
 #include <vulkan/vulkan.h>
 
 #include "vulkan_descriptors.h"
-#include "vulkan_framebuffer.h"
+#include "vulkan_frame_buffer.h"
 #include "vulkan_pipeline.h"
 #include "vulkan_render_buffer.h"
 #include "vulkan_semaphore.h"

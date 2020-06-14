@@ -23,7 +23,9 @@ void vk_create_depth_resources(vulkan_state *vk_state, struct vulkan_depth *dept
 
     vk_create_image(vk_state, details, &depth->vk_depth_image, &depth->vk_depth_image_memory);
 
-    depth->vk_depth_image_view = vk_create_image_view(vk_state, depth->vk_depth_image, depth->vk_depth_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+    VkImageAspectFlags flags = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+    depth->vk_depth_image_view = vk_create_image_view(vk_state, depth->vk_depth_image, depth->vk_depth_format, flags);
 }
 
 void delete_vulkan_depth(VkDevice vk_device, struct vulkan_depth *depth) {

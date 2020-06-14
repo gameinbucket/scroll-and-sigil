@@ -1,5 +1,5 @@
-#ifndef VULKAN_FRAMEBUFFER_H
-#define VULKAN_FRAMEBUFFER_H
+#ifndef VULKAN_FRAME_BUFFER_H
+#define VULKAN_FRAME_BUFFER_H
 
 #include <inttypes.h>
 #include <stdbool.h>

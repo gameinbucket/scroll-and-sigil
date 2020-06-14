@@ -31,9 +31,11 @@ void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_swapchain *swap
 
     attachments[0] = color_attachment;
 
+    VkAttachmentDescription depth_attachment = {0};
+    VkAttachmentReference depth_attachment_ref = {0};
+
     if (depth != NULL) {
 
-        VkAttachmentDescription depth_attachment = {0};
         depth_attachment.format = depth->vk_depth_format;
         depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
         depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -43,7 +45,6 @@ void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_swapchain *swap
         depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentReference depth_attachment_ref = {0};
         depth_attachment_ref.attachment = 1;
         depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
@@ -62,8 +63,8 @@ void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_swapchain *swap
 
     VkRenderPassCreateInfo render_pass_info = {0};
     render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    render_pass_info.attachmentCount = attachment_count;
     render_pass_info.pAttachments = attachments;
+    render_pass_info.attachmentCount = attachment_count;
     render_pass_info.subpassCount = 1;
     render_pass_info.pSubpasses = &subpass;
     render_pass_info.dependencyCount = 1;

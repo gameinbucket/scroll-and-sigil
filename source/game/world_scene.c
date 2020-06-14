@@ -199,7 +199,16 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         float width = (float)vk_base->swapchain->swapchain_extent.width;
         float height = (float)vk_base->swapchain->swapchain_extent.height;
         float ratio = width / height;
-        matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
+
+        // matrix_perspective_vulkan(perspective, 60.0, 0.01, 100, ratio);
+
+        // matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
+
+        float correction[16];
+        matrix_vulkan_correction(correction);
+        float original[16];
+        matrix_perspective(original, 60.0, 0.01, 100, ratio);
+        matrix_multiply(perspective, correction, original);
 
         matrix_perspective_projection(ubo.mvp, perspective, view, -c->x, -c->y, -c->z, c->rx, c->ry);
 
@@ -230,7 +239,7 @@ void world_scene_create_buffers(__attribute__((unused)) vulkan_state *vk_state, 
     vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 0);
 
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        struct vulkan_render_buffer *b = create_vulkan_renderbuffer(render_settings, 4 * 800, 36 * 800);
+        struct vulkan_render_buffer *b = create_vulkan_render_buffer(render_settings, 4 * 800, 36 * 800);
         // vulkan_render_buffer_initialize(vk_state, command_pool, b);
         uint_table_put(self->sector_cache, i, b);
     }

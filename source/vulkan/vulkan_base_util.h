@@ -14,7 +14,7 @@
 #include "core/mem.h"
 
 #include "vulkan_base.h"
-#include "vulkan_framebuffer.h"
+#include "vulkan_frame_buffer.h"
 #include "vulkan_render_pass.h"
 #include "vulkan_semaphore.h"
 #include "vulkan_state.h"

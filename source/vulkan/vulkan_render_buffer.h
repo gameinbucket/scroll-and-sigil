@@ -34,7 +34,7 @@ void vulkan_render_buffer_draw(struct vulkan_render_buffer *render, VkCommandBuf
 void vulkan_render_buffer_zero(struct vulkan_render_buffer *self);
 void vulkan_render_buffer_update(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *self);
 void vulkan_render_buffer_initialize(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *self);
-struct vulkan_render_buffer *create_vulkan_renderbuffer(struct vulkan_render_settings settings, size_t vertices, size_t indices);
+struct vulkan_render_buffer *create_vulkan_render_buffer(struct vulkan_render_settings settings, size_t vertices, size_t indices);
 void delete_vulkan_renderbuffer(vulkan_state *vk_state, struct vulkan_render_buffer *self);
 
 #endif

@@ -31,7 +31,7 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
     float width = (float)vk_base->swapchain->swapchain_extent.width;
     float height = (float)vk_base->swapchain->swapchain_extent.height;
     float ratio = width / height;
-    matrix_perspective(perspective, 60.0, 0.01, 100, ratio);
+    matrix_perspective_vulkan(perspective, 60.0, 0.01, 100, ratio);
 
     matrix_multiply(ubo.mvp, perspective, view);
 

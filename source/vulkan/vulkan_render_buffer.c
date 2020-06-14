@@ -88,7 +88,7 @@ void vulkan_render_buffer_initialize(vulkan_state *vk_state, VkCommandPool comma
     create_index_buffer(vk_state, command_pool, self);
 }
 
-struct vulkan_render_buffer *create_vulkan_renderbuffer(struct vulkan_render_settings settings, size_t vertices, size_t indices) {
+struct vulkan_render_buffer *create_vulkan_render_buffer(struct vulkan_render_settings settings, size_t vertices, size_t indices) {
     struct vulkan_render_buffer *self = safe_calloc(1, sizeof(struct vulkan_render_buffer));
     self->settings = settings;
     self->vertices = safe_malloc(vertices * settings.stride * sizeof(float));

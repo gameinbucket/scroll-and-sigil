@@ -49,6 +49,7 @@ struct state {
     struct world *w;
     struct world_scene *ws;
     camera *c;
+    struct vulkan_render_buffer *draw_canvas;
 };
 
 void state_update(state *self);
