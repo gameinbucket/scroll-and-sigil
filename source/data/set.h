@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "core/mem.h"
-#include "core/slice.h"
+#include "common/mem.h"
+#include "common/slice.h"
 
 typedef struct set_item set_item;
 

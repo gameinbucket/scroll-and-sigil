@@ -9,20 +9,20 @@
 #include <stdlib.h>
 #include <zip.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 #include "data/table.h"
 
 #include "model.h"
 
-typedef struct modelstate modelstate;
+typedef struct model_system model_system;
 
-struct modelstate {
+struct model_system {
     table *models;
 };
 
-modelstate *create_modelstate();
-void modelstate_add_model(modelstate *self, char *name, model_info *info);
-model_info *modelstate_get_model(modelstate *self, char *name);
-void delete_modelstate(modelstate *self);
+model_system *create_model_system();
+void model_system_add_model(model_system *self, char *name, model_info *info);
+model_info *model_system_get_model(model_system *self, char *name);
+void delete_model_system(model_system *self);
 
 #endif

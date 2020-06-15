@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 #include "world/world.h"
 
 typedef struct camera camera;

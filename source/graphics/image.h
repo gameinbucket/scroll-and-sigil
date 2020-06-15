@@ -9,9 +9,9 @@
 #include <stdlib.h>
 #include <zip.h>
 
-#include "core/archive.h"
-#include "core/fileio.h"
-#include "core/mem.h"
+#include "common/archive.h"
+#include "common/fileio.h"
+#include "common/mem.h"
 
 typedef struct simple_image simple_image;
 

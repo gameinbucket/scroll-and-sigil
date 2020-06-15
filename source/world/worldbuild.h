@@ -4,7 +4,7 @@
 #include <float.h>
 #include <math.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 #include "data/array.h"
 #include "map/sector.h"
 #include "map/triangulate.h"

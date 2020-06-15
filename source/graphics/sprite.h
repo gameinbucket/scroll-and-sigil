@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 
 typedef struct sprite sprite;
 

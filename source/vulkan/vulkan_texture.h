@@ -9,8 +9,8 @@
 
 #include <vulkan/vulkan.h>
 
-#include "core/fileio.h"
-#include "core/mem.h"
+#include "common/fileio.h"
+#include "common/mem.h"
 #include "graphics/image.h"
 
 #include "vulkan_buffer.h"

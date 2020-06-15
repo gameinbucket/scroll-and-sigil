@@ -2,7 +2,7 @@
 #define PLACE_H
 
 #include "assets/assets.h"
-#include "core/mem.h"
+#include "common/mem.h"
 #include "map/sector.h"
 #include "world/world.h"
 

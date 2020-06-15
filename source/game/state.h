@@ -21,8 +21,8 @@
 #include "vulkan/vulkan_uniforms.h"
 
 #include "assets/assets.h"
-#include "core/log.h"
-#include "core/mem.h"
+#include "common/log.h"
+#include "common/mem.h"
 #include "input/input.h"
 #include "render/render.h"
 #include "world/world.h"
@@ -46,8 +46,9 @@ struct state {
     struct vulkan_pipeline **pipelines;
     struct hud *hd;
     struct scene *sc;
-    struct world *w;
-    struct world_scene *ws;
+    model_system *ms;
+    world *w;
+    world_scene *ws;
     camera *c;
     struct vulkan_render_buffer *draw_canvas;
 };

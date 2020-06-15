@@ -9,7 +9,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 #include "vulkan_depth.h"
 #include "vulkan_swapchain.h"
 

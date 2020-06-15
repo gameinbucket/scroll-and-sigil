@@ -16,15 +16,16 @@ struct uniform_buffer_object {
     alignas(16) float mvp[16];
 };
 
-struct uniform_buffer_object_with_normal {
+struct uniform_buffer_projection_and_normal {
     alignas(16) float mvp[16];
     alignas(16) float normal[16];
 };
 
-struct uniform_buffer_object_with_normal_and_bones {
-    alignas(16) float mvp[16];
-    alignas(16) float normal[16];
-    alignas(16) float bones[11][16];
+#define SMALL_BONE_LIMIT 11
+#define MATRIX_4_4 16
+
+struct uniform_buffer_bones {
+    alignas(256) float bones[SMALL_BONE_LIMIT * MATRIX_4_4];
 };
 
 struct vulkan_uniform_buffer {

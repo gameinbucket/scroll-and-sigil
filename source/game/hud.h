@@ -9,8 +9,8 @@
 
 #include <vulkan/vulkan.h>
 
-#include "core/log.h"
-#include "core/mem.h"
+#include "common/log.h"
+#include "common/mem.h"
 #include "render/render.h"
 #include "vulkan/vulkan_base.h"
 #include "vulkan/vulkan_base_util.h"

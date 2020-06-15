@@ -11,7 +11,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 
 #define VK_SYNC_TIMEOUT 1000000000
 

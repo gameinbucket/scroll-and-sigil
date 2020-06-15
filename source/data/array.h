@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 
 typedef struct array array;
 

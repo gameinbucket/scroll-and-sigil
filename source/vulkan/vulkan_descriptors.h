@@ -6,7 +6,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 #include "math/matrix.h"
 
 #include "vulkan_base.h"

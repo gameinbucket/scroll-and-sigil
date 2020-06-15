@@ -2,7 +2,7 @@
 #define HERO_H
 
 #include "assets/assets.h"
-#include "core/mem.h"
+#include "common/mem.h"
 #include "graphics/model.h"
 #include "input/input.h"
 #include "world/world.h"

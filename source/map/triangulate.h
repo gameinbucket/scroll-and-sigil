@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 #include "data/array.h"
 #include "data/list.h"
 #include "math/math_util.h"

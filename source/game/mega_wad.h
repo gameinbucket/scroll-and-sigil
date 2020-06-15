@@ -4,11 +4,12 @@
 #include <zip.h>
 
 #include "assets/assets.h"
-#include "core/archive.h"
-#include "core/fileio.h"
-#include "core/string_util.h"
+#include "common/archive.h"
+#include "common/fileio.h"
+#include "common/string_util.h"
 #include "data/array.h"
 #include "data/table.h"
+#include "graphics/model_system.h"
 #include "input/input.h"
 #include "math/matrix.h"
 #include "places/place.h"
@@ -20,10 +21,9 @@
 #include "world/world.h"
 #include "world/worldbuild.h"
 
-#include "modelstate.h"
 #include "state.h"
 
-void mega_wad_load_resources();
-void mega_wad_load_map(world *w);
+void mega_wad_load_resources(model_system *ms);
+void mega_wad_load_map(world *w, input *in, model_system *ms);
 
 #endif

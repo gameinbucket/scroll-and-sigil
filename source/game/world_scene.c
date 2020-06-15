@@ -316,31 +316,32 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
     // things
 
-    pipeline = self->pipeline_model;
+    // pipeline = self->pipeline_model;
 
-    struct uniform_buffer_object_with_normal ubo = {0};
+    // struct uniform_buffer_object_with_normal ubo = {0};
 
-    float temp[16];
-    matrix_identity(ubo.normal);
-    matrix_inverse(temp, ubo.normal);
-    matrix_transpose(ubo.normal, temp);
+    // float temp[16];
+    // matrix_identity(ubo.normal);
+    // matrix_inverse(temp, ubo.normal);
+    // matrix_transpose(ubo.normal, temp);
 
-    vulkan_pipeline_cmd_bind(pipeline, command_buffer);
+    // vulkan_pipeline_cmd_bind(pipeline, command_buffer);
 
-    int thing_model_count = w->thing_models_count;
-    thing **thing_models = w->thing_models;
-    for (int i = 0; i < thing_model_count; i++) {
+    // vk_update_uniform_buffer(vk_state, self->pipeline, image_index, ubo);
+    // vulkan_pipeline_cmd_bind_uniform_description(pipeline, command_buffer, image_index);
+    // vulkan_pipeline_cmd_bind_indexed_image_description(pipeline, command_buffer, image_index, TEXTURE_GRASS);
 
-        thing_model_render(thing_models[i]);
+    // int thing_model_count = w->thing_models_count;
+    // thing **thing_models = w->thing_models;
+    // for (int i = 0; i < thing_model_count; i++) {
 
-        // vk_update_uniform_buffer(vk_state, self->pipeline, image_index, ubo);
-        vulkan_pipeline_cmd_bind_uniform_description(pipeline, command_buffer, image_index);
-        vulkan_pipeline_cmd_bind_indexed_image_description(pipeline, command_buffer, image_index, TEXTURE_GRASS);
-        vulkan_render_buffer_draw(self->thing_buffer, command_buffer);
-    }
+    //     thing_model_render(thing_models[i]);
+
+    //     vulkan_render_buffer_draw(self->thing_buffer, command_buffer);
+    // }
 }
 
-void world_scene_create_buffers(__attribute__((unused)) vulkan_state *vk_state, __attribute__((unused)) VkCommandPool command_pool, world_scene *self) {
+void world_scene_initialize(__attribute__((unused)) vulkan_state *vk_state, __attribute__((unused)) VkCommandPool command_pool, world_scene *self) {
 
     struct vulkan_render_settings render_settings = {0};
     vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 0);
@@ -353,10 +354,6 @@ void world_scene_create_buffers(__attribute__((unused)) vulkan_state *vk_state, 
 
     vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 1);
     self->thing_buffer = create_vulkan_render_buffer(render_settings, 4 * 800, 36 * 800);
-}
-
-void world_scene_initialize(vulkan_state *vk_state, VkCommandPool command_pool, world_scene *self) {
-    world_scene_create_buffers(vk_state, command_pool, self);
 }
 
 world_scene *create_world_scene(world *w) {

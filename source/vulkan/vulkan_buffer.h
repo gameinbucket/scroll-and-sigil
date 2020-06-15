@@ -6,7 +6,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 
 #include "vulkan_commands.h"
 #include "vulkan_state.h"

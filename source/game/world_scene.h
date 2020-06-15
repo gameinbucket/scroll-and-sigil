@@ -16,8 +16,8 @@
 #include "vulkan/vulkan_uniforms.h"
 
 #include "assets/assets.h"
-#include "core/mem.h"
-#include "core/string_util.h"
+#include "common/mem.h"
+#include "common/string_util.h"
 #include "data/uint_table.h"
 #include "math/matrix.h"
 #include "render/render.h"

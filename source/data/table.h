@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 
 typedef struct table_item table_item;
 

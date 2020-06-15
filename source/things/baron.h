@@ -2,7 +2,7 @@
 #define BARON_H
 
 #include "assets/assets.h"
-#include "core/mem.h"
+#include "common/mem.h"
 #include "world/world.h"
 
 #include "npc.h"

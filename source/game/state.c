@@ -280,11 +280,14 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
     self->pipelines = safe_calloc(SHADER_COUNT, sizeof(struct vulkan_pipeline *));
 
+    model_system *ms = create_model_system();
+    self->ms = ms;
+
     world *w = create_world();
     self->w = w;
 
-    mega_wad_load_resources();
-    mega_wad_load_map(w);
+    mega_wad_load_resources(ms);
+    mega_wad_load_map(w, &self->in, ms);
 
     world_scene *ws = create_world_scene(w);
     self->ws = ws;

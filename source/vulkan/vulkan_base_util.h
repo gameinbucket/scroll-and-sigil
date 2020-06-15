@@ -11,7 +11,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "core/mem.h"
+#include "common/mem.h"
 
 #include "vulkan_base.h"
 #include "vulkan_frame_buffer.h"

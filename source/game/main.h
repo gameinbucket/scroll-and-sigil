@@ -10,9 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "core/log.h"
-#include "core/mem.h"
-#include "core/sleep_util.h"
+#include "common/log.h"
+#include "common/mem.h"
+#include "common/sleep_util.h"
 #include "vulkan/vulkan_instance.h"
 #include "vulkan/vulkan_state.h"
 

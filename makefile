@@ -6,7 +6,7 @@ OBJECTS = $(patsubst source/%.c,objects/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
 INCLUDE = -Isource -I$(VULKAN_SDK)/include
 
-COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE)
+COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE) -Wno-unused
 LINKER_LIBS = -L$(VULKAN_SDK)/lib
 LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip -lvulkan -lm
 PREFIX =
@@ -60,7 +60,7 @@ list-objects:
 list-dependency:
 	@echo $(DEPENDENCY)
 
-TEST_SOURCE = $(wildcard tests/*.c) $(wildcard source/core/*.c) $(wildcard source/data/*.c)
+TEST_SOURCE = $(wildcard tests/*.c) $(wildcard source/common/*.c) $(wildcard source/data/*.c)
 
 test: $(TEST_SOURCE)
 	$(CC) $(TEST_SOURCE) $(COMPILER_FLAGS) -o testing $(LIBS)

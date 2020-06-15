@@ -8,3 +8,4 @@
 - shared descriptor sets for images
 - shared descriptor sets for uniform buffer
 - deferred rendering with frame_buffers
+- descriptor_system manages pool of descriptor_sets
