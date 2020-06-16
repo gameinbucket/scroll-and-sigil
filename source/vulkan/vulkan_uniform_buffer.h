@@ -12,7 +12,7 @@
 
 #include "vulkan/vulkan_state.h"
 
-struct uniform_buffer_object {
+struct uniform_buffer_projection {
     alignas(16) float mvp[16];
 };
 
@@ -29,11 +29,12 @@ struct uniform_buffer_bones {
 };
 
 struct vulkan_uniform_buffer {
+    size_t size;
     uint32_t count;
     VkBuffer *vk_uniform_buffers;
     VkDeviceMemory *vk_uniform_buffers_memory;
 };
 
-void vulkan_uniform_buffer_clean(vulkan_state *vk_state, struct vulkan_uniform_buffer *uniformbuffer);
+void vulkan_uniform_buffer_clean(vulkan_state *vk_state, struct vulkan_uniform_buffer *uniform_buffer);
 
 #endif

@@ -16,7 +16,7 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
     vulkan_pipeline_cmd_bind_description(self->pipeline, command_buffer, image_index);
     vulkan_render_buffer_draw(self->render, command_buffer);
 
-    struct uniform_buffer_object ubo = {0};
+    struct uniform_buffer_projection ubo = {0};
 
     float view[16];
     float perspective[16];
@@ -35,7 +35,7 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
 
     matrix_multiply(ubo.mvp, perspective, view);
 
-    vk_update_uniform_buffer(vk_state, self->pipeline, image_index, ubo);
+    vulkan_uniform_mem_copy(vk_state, self->pipeline, image_index, &ubo, sizeof(ubo));
 }
 
 void delete_scene(struct vulkan_state *vk_state, struct scene *self) {

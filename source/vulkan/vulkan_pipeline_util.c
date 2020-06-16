@@ -49,7 +49,9 @@ void vulkan_pipeline_recreate(vulkan_state *vk_state, struct vulkan_base *vk_bas
 void vulkan_pipeline_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
 
     pipeline->swapchain_image_count = vk_base->swapchain->swapchain_image_count;
+
     pipeline->uniforms = safe_calloc(1, sizeof(struct vulkan_uniform_buffer));
+    pipeline->uniforms->size = sizeof(struct uniform_buffer_projection);
 
     vk_create_descriptor_set_layouts(vk_state, pipeline);
     vk_create_graphics_pipeline(vk_state, vk_base->swapchain->swapchain_extent, vk_base->vk_render_pass, pipeline);

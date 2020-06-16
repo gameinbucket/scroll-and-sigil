@@ -21,12 +21,8 @@ static void record_rendering(state *self, uint32_t image_index) {
 
     VkCommandBuffer *command_buffers = vk_base->vk_command_buffers;
 
-    VkClearValue clear_color = {0};
-    clear_color.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}};
-
-    VkClearValue clear_depth = {0};
-    clear_depth.depthStencil = (VkClearDepthStencilValue){1.0f, 0};
-
+    VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
+    VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
     VkClearValue clear_values[2] = {clear_color, clear_depth};
 
     VkRenderPassBeginInfo render_pass_info = {0};

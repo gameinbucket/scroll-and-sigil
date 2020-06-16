@@ -14,7 +14,7 @@
 #include "vulkan_pipeline.h"
 #include "vulkan_uniform_buffer.h"
 
-void vulkan_uniform_buffer_initialize(vulkan_state *vk_state, uint32_t count, struct vulkan_uniform_buffer *uniformbuffer);
-void vk_update_uniform_buffer(vulkan_state *vk_state, struct vulkan_pipeline *pipeline, uint32_t image_index, struct uniform_buffer_object ubo);
+void vulkan_uniform_buffer_initialize(vulkan_state *vk_state, uint32_t count, struct vulkan_uniform_buffer *uniform_buffer);
+void vulkan_uniform_mem_copy(vulkan_state *vk_state, struct vulkan_pipeline *pipeline, uint32_t image_index, void *uniforms, size_t size);
 
 #endif

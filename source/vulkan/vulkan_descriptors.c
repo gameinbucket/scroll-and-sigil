@@ -191,7 +191,7 @@ void vk_update_uniform_buffer_descriptor_set(vulkan_state *vk_state, struct vulk
     VkDescriptorBufferInfo buffer_info = {0};
     buffer_info.buffer = pipeline->uniforms->vk_uniform_buffers[image_index];
     buffer_info.offset = 0;
-    buffer_info.range = sizeof(struct uniform_buffer_object);
+    buffer_info.range = sizeof(struct uniform_buffer_projection);
 
     VkWriteDescriptorSet descriptor_write_uniform = {0};
     descriptor_write_uniform.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
