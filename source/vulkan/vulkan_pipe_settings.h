@@ -15,9 +15,10 @@
 #include "vulkan_state.h"
 
 struct vulkan_pipe_item {
+    uint32_t size;
     uint32_t count;
     VkDescriptorType type;
-    VkDescriptorSetLayoutBinding stage_flags;
+    VkShaderStageFlagBits stages;
 };
 
 struct vulkan_pipe_set {
@@ -27,7 +28,7 @@ struct vulkan_pipe_set {
 };
 
 struct vulkan_pipe_settings {
-    uint32_t set_count;
+    uint32_t number_of_sets;
     struct vulkan_pipe_set *sets;
 };
 

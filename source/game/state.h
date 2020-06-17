@@ -14,6 +14,7 @@
 
 #include "vulkan/vulkan_base.h"
 #include "vulkan/vulkan_base_util.h"
+#include "vulkan/vulkan_pipe_settings.h"
 #include "vulkan/vulkan_pipeline.h"
 #include "vulkan/vulkan_pipeline_util.h"
 #include "vulkan/vulkan_render_buffer.h"

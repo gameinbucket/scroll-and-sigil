@@ -365,6 +365,48 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     }
 
     {
+        struct vulkan_pipe_item item1 = {0};
+        item1.count = 1;
+        item1.size = sizeof(struct uniform_buffer_projection_and_normal);
+        item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
+
+        struct vulkan_pipe_set set1 = {0};
+        set1.index = 0;
+        set1.item_count = 1;
+        set1.items = safe_calloc(set1.item_count, sizeof(struct vulkan_pipe_item));
+        set1.items[0] = item1;
+
+        struct vulkan_pipe_item item2 = {0};
+        item2.count = TEXTURE_COUNT;
+        item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        struct vulkan_pipe_set set2 = {0};
+        set2.index = 1;
+        set2.item_count = 1;
+        set2.items = safe_calloc(set2.item_count, sizeof(struct vulkan_pipe_item));
+        set2.items[0] = item2;
+
+        struct vulkan_pipe_item item3 = {0};
+        item3.count = 1;
+        item3.size = sizeof(struct uniform_buffer_bones);
+        item3.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        item3.stages = VK_SHADER_STAGE_VERTEX_BIT;
+
+        struct vulkan_pipe_set set3 = {0};
+        set3.index = 2;
+        set3.item_count = 1;
+        set3.items = safe_calloc(set3.item_count, sizeof(struct vulkan_pipe_item));
+        set3.items[0] = item3;
+
+        struct vulkan_pipe_settings settings = {0};
+        settings.number_of_sets = 3;
+        settings.sets = safe_calloc(settings.number_of_sets, sizeof(struct vulkan_pipe_set));
+        settings.sets[0] = set1;
+        settings.sets[1] = set2;
+        settings.sets[2] = set3;
+
         struct vulkan_render_settings render_settings = {0};
         vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 1);
         struct vulkan_pipeline *pipeline = create_vulkan_pipeline("shaders/spv/model.vert.spv", "shaders/spv/model.frag.spv", render_settings);
