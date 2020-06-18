@@ -78,6 +78,8 @@ void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *pipe
         vkDestroyDescriptorSetLayout(vk_state->vk_device, pipeline->vk_image_descriptor_set_layout, NULL);
     }
 
+    delete_vulkan_pipe_settings(&pipeline->pipe_settings);
+
     free(pipeline->uniforms);
     free(pipeline->images);
     free(pipeline);

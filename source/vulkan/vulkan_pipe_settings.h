@@ -30,6 +30,10 @@ struct vulkan_pipe_set {
 struct vulkan_pipe_settings {
     uint32_t number_of_sets;
     struct vulkan_pipe_set *sets;
+    char *vertex;
+    char *fragment;
 };
+
+void delete_vulkan_pipe_settings(struct vulkan_pipe_settings *settings);
 
 #endif
