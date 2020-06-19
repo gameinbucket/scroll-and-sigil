@@ -12,6 +12,7 @@
 #include "common/mem.h"
 
 #include "vulkan_buffer.h"
+#include "vulkan_image.h"
 #include "vulkan_state.h"
 
 struct vulkan_pipe_item {
@@ -19,12 +20,15 @@ struct vulkan_pipe_item {
     uint32_t count;
     VkDescriptorType type;
     VkShaderStageFlagBits stages;
+    struct vulkan_image **images;
 };
 
 struct vulkan_pipe_set {
     uint32_t index;
     uint32_t item_count;
     struct vulkan_pipe_item *items;
+    VkDescriptorSetLayout layout;
+    VkDescriptorSet *descriptors;
 };
 
 struct vulkan_pipe_settings {

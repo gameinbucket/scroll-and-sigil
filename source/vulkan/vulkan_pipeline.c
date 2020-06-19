@@ -1,24 +1,19 @@
 #include "vulkan_pipeline.h"
 
 struct vulkan_pipeline *create_vulkan_pipeline(struct vulkan_pipe_settings pipe_settings, struct vulkan_render_settings render_settings) {
-
     struct vulkan_pipeline *self = safe_calloc(1, sizeof(struct vulkan_pipeline));
-
     self->pipe_settings = pipe_settings;
     self->render_settings = render_settings;
-
     return self;
 }
 
 void vulkan_pipeline_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count, uint32_t image_descriptors) {
-
     self->images = images;
     self->image_count = image_count;
     self->image_descriptors = image_descriptors;
 }
 
 void vulkan_pipeline_settings(struct vulkan_pipeline *self, bool include_depth, VkFrontFace rasterize_face, VkCullModeFlagBits rasterize_cull_mode) {
-
     self->include_depth = include_depth;
     self->rasterize_face = rasterize_face;
     self->rasterize_cull_mode = rasterize_cull_mode;

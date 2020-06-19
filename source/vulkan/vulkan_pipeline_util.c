@@ -54,6 +54,8 @@ void vulkan_pipeline_initialize(vulkan_state *vk_state, struct vulkan_base *vk_b
     pipeline->uniforms->size = sizeof(struct uniform_buffer_projection);
 
     vk_create_descriptor_set_layouts(vk_state, pipeline);
+    vulkan_pipeline_layout(vk_state, pipeline);
+
     vk_create_graphics_pipeline(vk_state, vk_base->swapchain->swapchain_extent, vk_base->vk_render_pass, pipeline);
     vulkan_uniform_buffer_initialize(vk_state, pipeline->swapchain_image_count, pipeline->uniforms);
     vk_create_descriptor_pool(vk_state, pipeline);

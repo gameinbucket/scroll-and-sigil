@@ -299,39 +299,39 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     self->c = c;
     ws->c = c;
 
-    {
-        struct vulkan_pipe_item item1 = {0};
-        item1.count = 1;
-        item1.size = sizeof(struct uniform_buffer_projection);
-        item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
+    // {
+    //     struct vulkan_pipe_item item1 = {0};
+    //     item1.count = 1;
+    //     item1.size = sizeof(struct uniform_buffer_projection);
+    //     item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    //     item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
 
-        struct vulkan_pipe_set set1 = {0};
-        set1.index = 0;
-        set1.item_count = 1;
-        set1.items = safe_calloc(set1.item_count, sizeof(struct vulkan_pipe_item));
-        set1.items[0] = item1;
+    //     struct vulkan_pipe_set set1 = {0};
+    //     set1.index = 0;
+    //     set1.item_count = 1;
+    //     set1.items = safe_calloc(set1.item_count, sizeof(struct vulkan_pipe_item));
+    //     set1.items[0] = item1;
 
-        struct vulkan_pipe_settings pipe_settings = {0};
-        pipe_settings.vertex = "shaders/spv/screen.vert.spv";
-        pipe_settings.fragment = "shaders/spv/screen.frag.spv";
-        pipe_settings.number_of_sets = 1;
-        pipe_settings.sets = safe_calloc(pipe_settings.number_of_sets, sizeof(struct vulkan_pipe_set));
-        pipe_settings.sets[0] = set1;
+    //     struct vulkan_pipe_settings pipe_settings = {0};
+    //     pipe_settings.vertex = "shaders/spv/screen.vert.spv";
+    //     pipe_settings.fragment = "shaders/spv/screen.frag.spv";
+    //     pipe_settings.number_of_sets = 1;
+    //     pipe_settings.sets = safe_calloc(pipe_settings.number_of_sets, sizeof(struct vulkan_pipe_set));
+    //     pipe_settings.sets[0] = set1;
 
-        struct vulkan_render_settings render_settings = {0};
-        vulkan_render_settings_init(&render_settings, 2, 0, 0, 0, 0);
-        struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
-        vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
-        struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
-        vulkan_pipeline_images(pipeline, images, 1, 1);
-        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
-        self->pipelines[SHADER_SCREEN] = pipeline;
+    //     struct vulkan_render_settings render_settings = {0};
+    //     vulkan_render_settings_init(&render_settings, 2, 0, 0, 0, 0);
+    //     struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
+    //     vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+    //     struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
+    //     vulkan_pipeline_images(pipeline, images, 1, 1);
+    //     vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+    //     self->pipelines[SHADER_SCREEN] = pipeline;
 
-        self->draw_canvas = create_vulkan_render_buffer(render_settings, 4, 6);
-        render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
-        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas);
-    }
+    //     self->draw_canvas = create_vulkan_render_buffer(render_settings, 4, 6);
+    //     render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
+    //     vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas);
+    // }
 
     {
         struct vulkan_pipe_item item1 = {0};
@@ -382,6 +382,8 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_pipe_item item2 = {0};
         item2.count = 1;
+        item2.images = safe_calloc(item2.count, sizeof(struct vulkan_image *));
+        item2.images[0] = &self->images[TEXTURE_GRASS];
         item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
 
@@ -432,6 +434,10 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_pipe_item item2 = {0};
         item2.count = TEXTURE_COUNT;
+        item2.images = safe_calloc(item2.count, sizeof(struct vulkan_image *));
+        for (int i = 0; i < TEXTURE_COUNT; i++) {
+            item2.images[i] = &self->images[i];
+        }
         item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
 
@@ -464,65 +470,69 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         ws->pipeline = pipeline;
     }
 
-    {
-        struct vulkan_pipe_item item1 = {0};
-        item1.count = 1;
-        item1.size = sizeof(struct uniform_buffer_projection_and_normal);
-        item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
+    // {
+    //     struct vulkan_pipe_item item1 = {0};
+    //     item1.count = 1;
+    //     item1.size = sizeof(struct uniform_buffer_projection_and_normal);
+    //     item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    //     item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
 
-        struct vulkan_pipe_set set1 = {0};
-        set1.index = 0;
-        set1.item_count = 1;
-        set1.items = safe_calloc(set1.item_count, sizeof(struct vulkan_pipe_item));
-        set1.items[0] = item1;
+    //     struct vulkan_pipe_set set1 = {0};
+    //     set1.index = 0;
+    //     set1.item_count = 1;
+    //     set1.items = safe_calloc(set1.item_count, sizeof(struct vulkan_pipe_item));
+    //     set1.items[0] = item1;
 
-        struct vulkan_pipe_item item2 = {0};
-        item2.count = TEXTURE_COUNT;
-        item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
+    //     struct vulkan_pipe_item item2 = {0};
+    //     item2.count = TEXTURE_COUNT;
+    //     item2.images = safe_calloc(item2.count, sizeof(struct vulkan_image *));
+    //     for (int i = 0; i < TEXTURE_COUNT; i++) {
+    //         item2.images[i] = &self->images[i];
+    //     }
+    //     item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    //     item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        struct vulkan_pipe_set set2 = {0};
-        set2.index = 1;
-        set2.item_count = 1;
-        set2.items = safe_calloc(set2.item_count, sizeof(struct vulkan_pipe_item));
-        set2.items[0] = item2;
+    //     struct vulkan_pipe_set set2 = {0};
+    //     set2.index = 1;
+    //     set2.item_count = 1;
+    //     set2.items = safe_calloc(set2.item_count, sizeof(struct vulkan_pipe_item));
+    //     set2.items[0] = item2;
 
-        struct vulkan_pipe_item item3 = {0};
-        item3.count = 1;
-        item3.size = sizeof(struct uniform_buffer_bones);
-        item3.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        item3.stages = VK_SHADER_STAGE_VERTEX_BIT;
+    //     struct vulkan_pipe_item item3 = {0};
+    //     item3.count = 1;
+    //     item3.size = sizeof(struct uniform_buffer_bones);
+    //     item3.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    //     item3.stages = VK_SHADER_STAGE_VERTEX_BIT;
 
-        struct vulkan_pipe_set set3 = {0};
-        set3.index = 2;
-        set3.item_count = 1;
-        set3.items = safe_calloc(set3.item_count, sizeof(struct vulkan_pipe_item));
-        set3.items[0] = item3;
+    //     struct vulkan_pipe_set set3 = {0};
+    //     set3.index = 2;
+    //     set3.item_count = 1;
+    //     set3.items = safe_calloc(set3.item_count, sizeof(struct vulkan_pipe_item));
+    //     set3.items[0] = item3;
 
-        struct vulkan_pipe_settings pipe_settings = {0};
-        pipe_settings.vertex = "shaders/spv/model.vert.spv";
-        pipe_settings.fragment = "shaders/spv/model.frag.spv";
-        pipe_settings.number_of_sets = 3;
-        pipe_settings.sets = safe_calloc(pipe_settings.number_of_sets, sizeof(struct vulkan_pipe_set));
-        pipe_settings.sets[0] = set1;
-        pipe_settings.sets[1] = set2;
-        pipe_settings.sets[2] = set3;
+    //     struct vulkan_pipe_settings pipe_settings = {0};
+    //     pipe_settings.vertex = "shaders/spv/model.vert.spv";
+    //     pipe_settings.fragment = "shaders/spv/model.frag.spv";
+    //     pipe_settings.number_of_sets = 3;
+    //     pipe_settings.sets = safe_calloc(pipe_settings.number_of_sets, sizeof(struct vulkan_pipe_set));
+    //     pipe_settings.sets[0] = set1;
+    //     pipe_settings.sets[1] = set2;
+    //     pipe_settings.sets[2] = set3;
 
-        struct vulkan_render_settings render_settings = {0};
-        vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 1);
-        struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
-        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
-        struct vulkan_image **images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
-        for (int i = 0; i < TEXTURE_COUNT; i++) {
-            images[i] = &self->images[i];
-        }
-        vulkan_pipeline_images(pipeline, images, 1, TEXTURE_COUNT);
-        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+    //     struct vulkan_render_settings render_settings = {0};
+    //     vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 1);
+    //     struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
+    //     vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+    //     // struct vulkan_image **images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
+    //     // for (int i = 0; i < TEXTURE_COUNT; i++) {
+    //     // images[i] = &self->images[i];
+    //     // }
+    //     // vulkan_pipeline_images(pipeline, images, 1, TEXTURE_COUNT);
+    //     vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
 
-        self->pipelines[SHADER_RENDER_MODEL] = pipeline;
-        ws->pipeline_model = pipeline;
-    }
+    //     self->pipelines[SHADER_RENDER_MODEL] = pipeline;
+    //     ws->pipeline_model = pipeline;
+    // }
 
     return self;
 }

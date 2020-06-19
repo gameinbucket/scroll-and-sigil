@@ -288,3 +288,73 @@ void vk_update_descriptor_sets(vulkan_state *vk_state, struct vulkan_pipeline *p
         vk_update_image_descriptor_sets(vk_state, pipeline);
     }
 }
+
+static void vulkan_pipeline_layout(vulkan_state *vk_state, struct vulkan_pipe_set *set) {
+
+    uint32_t size = set->item_count;
+
+    VkDescriptorSetLayoutBinding *bindings = safe_calloc(size, sizeof(VkDescriptorSetLayoutBinding));
+
+    for (uint32_t i = 0; i < size; i++) {
+
+        struct vulkan_pipe_item *item = &set->items[i];
+
+        VkDescriptorSetLayoutBinding layout_binding = {0};
+        layout_binding.binding = i;
+        layout_binding.descriptorCount = item->count;
+        layout_binding.descriptorType = item->type;
+        layout_binding.stageFlags = item->stages;
+
+        bindings[i] = layout_binding;
+    }
+
+    VkDescriptorSetLayoutCreateInfo layout_info = {0};
+    layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layout_info.bindingCount = size;
+    layout_info.pBindings = bindings;
+
+    if (vkCreateDescriptorSetLayout(vk_state->vk_device, &layout_info, NULL, &set->layout) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan Create Descriptor Set Layout\n");
+        exit(1);
+    }
+
+    free(bindings);
+}
+
+static void vulkan_pipeline_create_descriptor(vulkan_state *vk_state, struct vulkan_pipeline *pipeline, struct vulkan_pipe_set *set) {
+
+    uint32_t size = pipeline->swapchain_image_count * set->item_count;
+
+    VkDescriptorSetLayout *descriptor_set_layouts = safe_calloc(size, sizeof(VkDescriptorSetLayout));
+
+    for (uint32_t i = 0; i < size; i++) {
+        memcpy(&descriptor_set_layouts[i], &pipeline->vk_image_descriptor_set_layout, sizeof(VkDescriptorSetLayout));
+    }
+
+    VkDescriptorSetAllocateInfo alloc_info = {0};
+    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    alloc_info.descriptorPool = pipeline->vk_descriptor_pool;
+    alloc_info.descriptorSetCount = size;
+    alloc_info.pSetLayouts = descriptor_set_layouts;
+
+    pipeline->vk_image_descriptor_sets = safe_calloc(size, sizeof(VkDescriptorSet));
+
+    if (vkAllocateDescriptorSets(vk_state->vk_device, &alloc_info, pipeline->vk_image_descriptor_sets) != VK_SUCCESS) {
+        fprintf(stderr, "Error: Vulkan Allocate Descriptor Sets\n");
+        exit(1);
+    }
+
+    free(descriptor_set_layouts);
+}
+
+void vulkan_pipeline_layouts(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
+    for (uint32_t i = 0; i < pipeline->pipe_settings.number_of_sets; i++) {
+        vulkan_pipeline_layout(vk_state, &pipeline->pipe_settings.sets[i]);
+    }
+}
+
+void vulkan_pipeline_create_descriptors(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
+    for (uint32_t i = 0; i < pipeline->pipe_settings.number_of_sets; i++) {
+        vulkan_pipeline_create_descriptor(vk_state, pipeline, &pipeline->pipe_settings.sets[i]);
+    }
+}

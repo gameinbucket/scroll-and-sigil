@@ -11,6 +11,7 @@
 
 #include "vulkan_base.h"
 #include "vulkan_buffer.h"
+#include "vulkan_pipe_settings.h"
 #include "vulkan_pipeline.h"
 
 void vk_create_descriptor_pool(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
@@ -25,5 +26,8 @@ void vk_update_image_descriptor_sets(vulkan_state *vk_state, struct vulkan_pipel
 void vk_create_descriptor_set_layouts(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
 void vk_create_descriptor_sets(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
 void vk_update_descriptor_sets(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
+
+void vulkan_pipeline_layouts(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
+void vulkan_pipeline_create_descriptors(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
 
 #endif
