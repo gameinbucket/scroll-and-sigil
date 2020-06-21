@@ -12,7 +12,7 @@
 #include "vulkan/vulkan_image.h"
 #include "vulkan/vulkan_pipeline.h"
 #include "vulkan/vulkan_pipeline_util.h"
-#include "vulkan/vulkan_uniforms.h"
+#include "vulkan/vulkan_uniform_util.h"
 
 struct vulkan_descriptor_system {
     uint32_t swapchain_image_count;

@@ -294,7 +294,7 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
         matrix_perspective_projection(ubo.mvp, perspective, view, -c->x, -c->y, -c->z, c->rx, c->ry);
 
-        vulkan_uniform_mem_copy(vk_state, self->pipeline, image_index, &ubo, sizeof(ubo));
+        vulkan_uniform_mem_copy(vk_state, self->pipeline->uniforms->vk_uniform_buffers_memory[image_index], &ubo, sizeof(ubo));
     }
 
     uint_table *cache = self->sector_cache;
@@ -327,7 +327,7 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
     // vulkan_pipeline_cmd_bind(pipeline, command_buffer);
 
-    // vulkan_uniform_mem_copy(vk_state, self->pipeline, image_index, ubo);
+    // vulkan_uniform_mem_copy(vk_state, self->pipeline->uniforms->vk_uniform_buffers_memory[image_index], ubo);
     // vulkan_pipeline_cmd_bind_uniform_description(pipeline, command_buffer, image_index);
     // vulkan_pipeline_cmd_bind_indexed_image_description(pipeline, command_buffer, image_index, TEXTURE_GRASS);
 

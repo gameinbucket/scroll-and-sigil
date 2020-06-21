@@ -14,12 +14,12 @@
 
 #include "vulkan/vulkan_base.h"
 #include "vulkan/vulkan_base_util.h"
-#include "vulkan/vulkan_pipe_settings.h"
+#include "vulkan/vulkan_pipe_data.h"
 #include "vulkan/vulkan_pipeline.h"
 #include "vulkan/vulkan_pipeline_util.h"
 #include "vulkan/vulkan_render_buffer.h"
 #include "vulkan/vulkan_state.h"
-#include "vulkan/vulkan_uniforms.h"
+#include "vulkan/vulkan_uniform_util.h"
 
 #include "assets/assets.h"
 #include "common/log.h"

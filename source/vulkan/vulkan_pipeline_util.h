@@ -15,8 +15,8 @@
 #include "vulkan_render_buffer.h"
 #include "vulkan_semaphore.h"
 #include "vulkan_state.h"
-#include "vulkan_uniform_buffer.h"
-#include "vulkan_uniforms.h"
+#include "vulkan_uniform.h"
+#include "vulkan_uniform_util.h"
 
 void vulkan_pipeline_cmd_bind(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer);
 void vulkan_pipeline_cmd_bind_uniform_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t image_index);

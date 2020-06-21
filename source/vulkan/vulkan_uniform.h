@@ -1,5 +1,5 @@
-#ifndef VULKAN_UNIFORM_BUFFER_H
-#define VULKAN_UNIFORM_BUFFER_H
+#ifndef VULKAN_UNIFORM_H
+#define VULKAN_UNIFORM_H
 
 #include <inttypes.h>
 #include <stdalign.h>

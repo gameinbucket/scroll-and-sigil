@@ -13,15 +13,15 @@
 #include "common/mem.h"
 
 #include "vulkan_base.h"
-#include "vulkan_pipe_settings.h"
+#include "vulkan_image.h"
+#include "vulkan_pipe_data.h"
 #include "vulkan_render_buffer.h"
 #include "vulkan_state.h"
 #include "vulkan_swapchain.h"
-#include "vulkan_texture.h"
-#include "vulkan_uniform_buffer.h"
+#include "vulkan_uniform.h"
 
 struct vulkan_pipeline {
-    struct vulkan_pipe_settings pipe_settings;
+    struct vulkan_pipe_data pipe_data;
     struct vulkan_render_settings render_settings;
     uint32_t swapchain_image_count;
     struct vulkan_uniform_buffer *uniforms;
@@ -40,9 +40,9 @@ struct vulkan_pipeline {
     VkCullModeFlagBits rasterize_cull_mode;
 };
 
-struct vulkan_pipeline *create_vulkan_pipeline(struct vulkan_pipe_settings pipe_settings, struct vulkan_render_settings render_settings);
+struct vulkan_pipeline *create_vulkan_pipeline(struct vulkan_pipe_data pipe_data, struct vulkan_render_settings render_settings);
 void vulkan_pipeline_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count, uint32_t image_descriptors);
 void vulkan_pipeline_settings(struct vulkan_pipeline *self, bool include_depth, VkFrontFace rasterize_face, VkCullModeFlagBits rasterize_cull_mode);
-void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, VkRenderPass vk_render_pass, struct vulkan_pipeline *pipeline);
+void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_extent, VkRenderPass vk_render_pass, struct vulkan_pipeline *pipeline);
 
 #endif

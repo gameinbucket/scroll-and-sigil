@@ -1,4 +1,4 @@
-#include "vulkan_uniform_buffer.h"
+#include "vulkan_uniform.h"
 
 void vulkan_uniform_buffer_clean(vulkan_state *vk_state, struct vulkan_uniform_buffer *uniform_buffer) {
 

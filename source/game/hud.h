@@ -18,7 +18,7 @@
 #include "vulkan/vulkan_pipeline_util.h"
 #include "vulkan/vulkan_render_buffer.h"
 #include "vulkan/vulkan_state.h"
-#include "vulkan/vulkan_uniforms.h"
+#include "vulkan/vulkan_uniform_util.h"
 
 struct hud {
     struct vulkan_pipeline *pipeline;

@@ -35,7 +35,7 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
 
     matrix_multiply(ubo.mvp, perspective, view);
 
-    vulkan_uniform_mem_copy(vk_state, self->pipeline, image_index, &ubo, sizeof(ubo));
+    vulkan_uniform_mem_copy(vk_state, self->pipeline->uniforms->vk_uniform_buffers_memory[image_index], &ubo, sizeof(ubo));
 }
 
 void delete_scene(struct vulkan_state *vk_state, struct scene *self) {

@@ -163,6 +163,14 @@ unsigned int array_size(array *self) {
     return self->length;
 }
 
+void release_array_items(array *self) {
+    int len = self->length;
+    void **items = self->items;
+    for (int i = 0; i < len; i++) {
+        free(items[i]);
+    }
+}
+
 void release_array(array *self) {
     free(self->items);
 }

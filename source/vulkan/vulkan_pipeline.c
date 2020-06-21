@@ -1,8 +1,8 @@
 #include "vulkan_pipeline.h"
 
-struct vulkan_pipeline *create_vulkan_pipeline(struct vulkan_pipe_settings pipe_settings, struct vulkan_render_settings render_settings) {
+struct vulkan_pipeline *create_vulkan_pipeline(struct vulkan_pipe_data pipe_data, struct vulkan_render_settings render_settings) {
     struct vulkan_pipeline *self = safe_calloc(1, sizeof(struct vulkan_pipeline));
-    self->pipe_settings = pipe_settings;
+    self->pipe_data = pipe_data;
     self->render_settings = render_settings;
     return self;
 }
@@ -36,13 +36,13 @@ VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_
     return vk_shader_module;
 }
 
-void vk_create_graphics_pipeline(vulkan_state *vk_state, VkExtent2D vk_extent, VkRenderPass vk_render_pass, struct vulkan_pipeline *pipeline) {
+void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_extent, VkRenderPass vk_render_pass, struct vulkan_pipeline *pipeline) {
 
     size_t vertex_shader_size;
-    char *vertex_shader = read_binary(pipeline->pipe_settings.vertex, &vertex_shader_size);
+    char *vertex_shader = read_binary(pipeline->pipe_data.vertex, &vertex_shader_size);
 
     size_t fragment_shader_size;
-    char *fragment_shader = read_binary(pipeline->pipe_settings.fragment, &fragment_shader_size);
+    char *fragment_shader = read_binary(pipeline->pipe_data.fragment, &fragment_shader_size);
 
     VkShaderModule vertex_module = vk_create_shader_module(vk_state, vertex_shader, vertex_shader_size);
     VkShaderModule fragment_module = vk_create_shader_module(vk_state, fragment_shader, fragment_shader_size);

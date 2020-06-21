@@ -44,6 +44,7 @@ bool array_is_empty(array *self);
 bool array_not_empty(array *self);
 unsigned int array_size(array *self);
 
+void release_array_items(array *self);
 void release_array(array *self);
 void delete_array(array *self);
 

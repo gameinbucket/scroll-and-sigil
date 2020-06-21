@@ -37,7 +37,7 @@ void hud_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, stru
 
     matrix_multiply(ubo.mvp, ortho, view);
 
-    vulkan_uniform_mem_copy(vk_state, self->pipeline, image_index, &ubo, sizeof(ubo));
+    vulkan_uniform_mem_copy(vk_state, self->pipeline->uniforms->vk_uniform_buffers_memory[image_index], &ubo, sizeof(ubo));
 }
 
 void delete_hud(struct vulkan_state *vk_state, struct hud *self) {
