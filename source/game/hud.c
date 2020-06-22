@@ -13,7 +13,7 @@ struct hud *create_hud(struct vulkan_pipeline *pipeline, struct vulkan_render_bu
 void hud_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct hud *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
     vulkan_pipeline_cmd_bind(self->pipeline, command_buffer);
-    vulkan_pipeline_cmd_bind_uniform_description(self->pipeline, command_buffer, image_index);
+    vulkan_pipeline_cmd_bind_description(self->pipeline, command_buffer, 0, image_index);
     vulkan_render_buffer_draw(self->render, command_buffer);
 
     struct uniform_buffer_projection ubo = {0};
@@ -37,7 +37,8 @@ void hud_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, stru
 
     matrix_multiply(ubo.mvp, ortho, view);
 
-    vulkan_uniform_mem_copy(vk_state, self->pipeline->uniforms->vk_uniform_buffers_memory[image_index], &ubo, sizeof(ubo));
+    VkDeviceMemory memory = self->pipeline->pipe_data.sets[0].items[0].uniforms->vk_uniform_buffers_memory[image_index];
+    vulkan_uniform_mem_copy(vk_state, memory, &ubo, sizeof(ubo));
 }
 
 void delete_hud(struct vulkan_state *vk_state, struct hud *self) {

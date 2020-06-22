@@ -5,6 +5,9 @@ static const int SCREEN_HEIGHT = 800;
 
 static bool run = true;
 
+#define FPS_ON
+#define BILLION 1000000000L
+
 static void window_resize(vulkan_state *vk_state) {
     LOG("window resize\n");
     vk_state->framebuffer_resized = true;
@@ -38,6 +41,9 @@ static void window_init(SDL_Window **win, vulkan_state *vk_state) {
 }
 
 static void main_loop(state *s) {
+
+    unsigned int time = 0.0;
+    unsigned int frames = 0;
 
     SDL_Event event = {0};
     while (run) {
@@ -90,8 +96,26 @@ static void main_loop(state *s) {
             }
         }
 
+#ifdef FPS_ON
+        struct timeval start, stop;
+        gettimeofday(&start, NULL);
+#endif
+
         state_update(s);
         state_render(s);
+
+#ifdef FPS_ON
+        gettimeofday(&stop, NULL);
+        unsigned int microseconds = (stop.tv_sec - start.tv_sec) * 1000000 + ((int)stop.tv_usec - (int)start.tv_usec);
+        unsigned int milliseconds = microseconds / 1000;
+        time += milliseconds;
+        frames++;
+        if (time >= 1000) {
+            printf("frames per second: %d\n", frames);
+            time -= 1000;
+            frames = 0;
+        }
+#endif
     }
     printf("\n");
 

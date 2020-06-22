@@ -7,12 +7,6 @@ struct vulkan_pipeline *create_vulkan_pipeline(struct vulkan_pipe_data pipe_data
     return self;
 }
 
-void vulkan_pipeline_images(struct vulkan_pipeline *self, struct vulkan_image **images, int image_count, uint32_t image_descriptors) {
-    self->images = images;
-    self->image_count = image_count;
-    self->image_descriptors = image_descriptors;
-}
-
 void vulkan_pipeline_settings(struct vulkan_pipeline *self, bool include_depth, VkFrontFace rasterize_face, VkCullModeFlagBits rasterize_cull_mode) {
     self->include_depth = include_depth;
     self->rasterize_face = rasterize_face;
@@ -140,20 +134,16 @@ void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_exte
     color_blending.attachmentCount = 1;
     color_blending.pAttachments = &color_blend_attachment;
 
-    uint32_t descriptor_count = 1;
-    if (pipeline->image_count > 0) {
-        descriptor_count++;
-    }
-    VkDescriptorSetLayout *descriptors = safe_calloc(descriptor_count, sizeof(VkDescriptorSetLayout));
-    descriptors[0] = pipeline->vk_uniform_buffer_descriptor_set_layout;
-    if (pipeline->image_count > 0) {
-        descriptors[1] = pipeline->vk_image_descriptor_set_layout;
+    uint32_t descriptor_layout_count = pipeline->pipe_data.number_of_sets;
+    VkDescriptorSetLayout *descriptor_layouts = safe_calloc(descriptor_layout_count, sizeof(VkDescriptorSetLayout));
+    for (uint32_t i = 0; i < descriptor_layout_count; i++) {
+        descriptor_layouts[i] = pipeline->pipe_data.sets[i].descriptor_layout;
     }
 
     VkPipelineLayoutCreateInfo pipeline_layout_info = {0};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipeline_layout_info.setLayoutCount = descriptor_count;
-    pipeline_layout_info.pSetLayouts = descriptors;
+    pipeline_layout_info.setLayoutCount = descriptor_layout_count;
+    pipeline_layout_info.pSetLayouts = descriptor_layouts;
 
     VkPipelineLayout vk_pipeline_layout = {0};
 
@@ -191,5 +181,5 @@ void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_exte
     free(vertex_shader);
     free(fragment_shader);
     free(attribute_description);
-    free(descriptors);
+    free(descriptor_layouts);
 }

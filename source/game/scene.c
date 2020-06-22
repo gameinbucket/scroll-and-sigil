@@ -12,8 +12,16 @@ struct scene *create_scene(struct vulkan_pipeline *pipeline, struct vulkan_rende
 
 void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
-    vulkan_pipeline_cmd_bind(self->pipeline, command_buffer);
-    vulkan_pipeline_cmd_bind_description(self->pipeline, command_buffer, image_index);
+    struct vulkan_pipeline *pipeline = self->pipeline;
+
+    vulkan_pipeline_cmd_bind(pipeline, command_buffer);
+
+    VkDescriptorSet descriptors[2] = {
+        pipeline->pipe_data.sets[0].descriptor_sets[image_index],
+        pipeline->pipe_data.sets[1].descriptor_sets[0],
+    };
+    vulkan_pipeline_cmd_bind_given_description(pipeline, command_buffer, 2, descriptors);
+
     vulkan_render_buffer_draw(self->render, command_buffer);
 
     struct uniform_buffer_projection ubo = {0};
@@ -35,7 +43,8 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
 
     matrix_multiply(ubo.mvp, perspective, view);
 
-    vulkan_uniform_mem_copy(vk_state, self->pipeline->uniforms->vk_uniform_buffers_memory[image_index], &ubo, sizeof(ubo));
+    VkDeviceMemory memory = pipeline->pipe_data.sets[0].items[0].uniforms->vk_uniform_buffers_memory[image_index];
+    vulkan_uniform_mem_copy(vk_state, memory, &ubo, sizeof(ubo));
 }
 
 void delete_scene(struct vulkan_state *vk_state, struct scene *self) {

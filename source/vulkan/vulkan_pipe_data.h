@@ -27,7 +27,6 @@ struct vulkan_pipe_item {
 };
 
 struct vulkan_pipe_set {
-    uint32_t index;
     uint32_t number_of_items;
     uint32_t number_of_copies;
     struct vulkan_pipe_item *items;

@@ -294,7 +294,8 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
         matrix_perspective_projection(ubo.mvp, perspective, view, -c->x, -c->y, -c->z, c->rx, c->ry);
 
-        vulkan_uniform_mem_copy(vk_state, self->pipeline->uniforms->vk_uniform_buffers_memory[image_index], &ubo, sizeof(ubo));
+        VkDeviceMemory memory = self->pipeline->pipe_data.sets[0].items[0].uniforms->vk_uniform_buffers_memory[image_index];
+        vulkan_uniform_mem_copy(vk_state, memory, &ubo, sizeof(ubo));
     }
 
     uint_table *cache = self->sector_cache;
@@ -302,7 +303,9 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     struct vulkan_pipeline *pipeline = self->pipeline;
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
-    vulkan_pipeline_cmd_bind_uniform_description(pipeline, command_buffer, image_index);
+    vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
+
+    struct vulkan_pipe_set *pipe_set = &pipeline->pipe_data.sets[1];
 
     uint_table_iterator iter = create_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
@@ -310,7 +313,8 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
         struct vulkan_render_buffer *b = pair.value;
 
-        vulkan_pipeline_cmd_bind_indexed_image_description(pipeline, command_buffer, image_index, pair.key);
+        uint32_t index = pair.key;
+        vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 1, index);
         vulkan_render_buffer_draw(b, command_buffer);
     }
 
