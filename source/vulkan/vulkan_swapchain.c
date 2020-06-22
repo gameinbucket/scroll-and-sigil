@@ -15,16 +15,17 @@ static VkSurfaceFormatKHR vk_choose_swap_surface_format(VkSurfaceFormatKHR *avai
 }
 
 static VkPresentModeKHR vk_choose_swap_present_mode(VkPresentModeKHR *available, uint32_t count) {
-    const bool mailbox = false;
-    if (mailbox) {
-        for (uint32_t i = 0; i < count; i++) {
-            VkPresentModeKHR this = available[i];
-            if (this == VK_PRESENT_MODE_MAILBOX_KHR) {
-                return this;
-            }
-        }
-    }
-    return VK_PRESENT_MODE_FIFO_KHR;
+    // const bool mailbox = false;
+    // if (mailbox) {
+    //     for (uint32_t i = 0; i < count; i++) {
+    //         VkPresentModeKHR this = available[i];
+    //         if (this == VK_PRESENT_MODE_MAILBOX_KHR) {
+    //             return this;
+    //         }
+    //     }
+    // }
+    // return VK_PRESENT_MODE_FIFO_KHR;
+    return VK_PRESENT_MODE_IMMEDIATE_KHR;
 }
 
 static VkExtent2D vk_choose_swap_extent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height) {

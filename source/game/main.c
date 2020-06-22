@@ -107,12 +107,11 @@ static void main_loop(state *s) {
 #ifdef FPS_ON
         gettimeofday(&stop, NULL);
         unsigned int microseconds = (stop.tv_sec - start.tv_sec) * 1000000 + ((int)stop.tv_usec - (int)start.tv_usec);
-        unsigned int milliseconds = microseconds / 1000;
-        time += milliseconds;
+        time += microseconds;
         frames++;
-        if (time >= 1000) {
+        if (time >= 1000000) {
             printf("frames per second: %d\n", frames);
-            time -= 1000;
+            time -= 1000000;
             frames = 0;
         }
 #endif
