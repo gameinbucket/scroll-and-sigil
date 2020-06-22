@@ -25,6 +25,7 @@ static VkPresentModeKHR vk_choose_swap_present_mode(VkPresentModeKHR *available,
     //     }
     // }
     // return VK_PRESENT_MODE_FIFO_KHR;
+
     return VK_PRESENT_MODE_IMMEDIATE_KHR;
 }
 

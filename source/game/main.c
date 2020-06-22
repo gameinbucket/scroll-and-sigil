@@ -8,6 +8,8 @@ static bool run = true;
 #define FPS_ON
 #define BILLION 1000000000L
 
+#define SLEEP_ON
+
 static void window_resize(vulkan_state *vk_state) {
     LOG("window resize\n");
     vk_state->framebuffer_resized = true;
@@ -96,17 +98,16 @@ static void main_loop(state *s) {
             }
         }
 
-#ifdef FPS_ON
         struct timeval start, stop;
         gettimeofday(&start, NULL);
-#endif
 
         state_update(s);
         state_render(s);
 
-#ifdef FPS_ON
         gettimeofday(&stop, NULL);
         unsigned int microseconds = (stop.tv_sec - start.tv_sec) * 1000000 + ((int)stop.tv_usec - (int)start.tv_usec);
+
+#ifdef FPS_ON
         time += microseconds;
         frames++;
         if (time >= 1000000) {
@@ -114,6 +115,10 @@ static void main_loop(state *s) {
             time -= 1000000;
             frames = 0;
         }
+#endif
+
+#ifdef SLEEP_ON
+        sleep_micro(8000 - microseconds);
 #endif
     }
     printf("\n");
