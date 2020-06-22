@@ -172,7 +172,7 @@ static void thing_model_render_recursive(bone *b, float bones[][16], float absol
     }
 }
 
-static void thing_model_render(thing *t) {
+static void thing_model_render(thing *t, struct uniform_buffer_bones *ubo) {
 
     model *m = t->model_data;
     model_info *info = m->info;
@@ -195,6 +195,8 @@ static void thing_model_render(thing *t) {
 
     thing_model_render_recursive(master, bones, absolute, animate);
     // renderstate_set_uniform_matrices(r, "u_bones", bones[0], bone_count);
+
+    memcpy(ubo->bones, bones[0], bone_count * 16 * sizeof(float));
 }
 
 static void sector_render(uint_table *cache, sector *s) {
@@ -265,6 +267,7 @@ void world_scene_geometry(struct vulkan_state *vk_state, struct vulkan_base *vk_
     // things
 
     thing_model_geometry(self->thing_buffer, w->thing_models[0]);
+    vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->thing_buffer);
 }
 
 void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, world_scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
@@ -272,10 +275,11 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     world *w = self->w;
     camera *c = self->c;
 
-    float view[16];
-    float perspective[16];
+    float mvp[16];
 
     // sectors
+
+    struct vulkan_pipeline *pipeline = self->pipeline;
 
     {
         struct uniform_buffer_projection ubo = {0};
@@ -283,6 +287,9 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         float width = (float)vk_base->swapchain->swapchain_extent.width;
         float height = (float)vk_base->swapchain->swapchain_extent.height;
         float ratio = width / height;
+
+        float view[16];
+        float perspective[16];
 
         // matrix_perspective_vulkan(perspective, 60.0, 0.01, 100, ratio);
 
@@ -292,15 +299,15 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         matrix_perspective(original, 60.0, 0.01, 100, ratio);
         matrix_multiply(perspective, correction, original);
 
-        matrix_perspective_projection(ubo.mvp, perspective, view, -c->x, -c->y, -c->z, c->rx, c->ry);
+        matrix_perspective_projection(mvp, perspective, view, -c->x, -c->y, -c->z, c->rx, c->ry);
 
-        VkDeviceMemory memory = self->pipeline->pipe_data.sets[0].items[0].uniforms->vk_uniform_buffers_memory[image_index];
+        memcpy(ubo.mvp, mvp, 16 * sizeof(float));
+
+        VkDeviceMemory memory = pipeline->pipe_data.sets[0].items[0].uniforms->vk_uniform_buffers_memory[image_index];
         vulkan_uniform_mem_copy(vk_state, memory, &ubo, sizeof(ubo));
     }
 
     uint_table *cache = self->sector_cache;
-
-    struct vulkan_pipeline *pipeline = self->pipeline;
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
     vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
@@ -320,29 +327,43 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
     // things
 
-    // pipeline = self->pipeline_model;
+    pipeline = self->pipeline_model;
 
-    // struct uniform_buffer_object_with_normal ubo = {0};
+    {
+        struct uniform_buffer_projection_and_normal ubo = {0};
 
-    // float temp[16];
-    // matrix_identity(ubo.normal);
-    // matrix_inverse(temp, ubo.normal);
-    // matrix_transpose(ubo.normal, temp);
+        float temp[16];
+        matrix_identity(ubo.normal);
+        matrix_inverse(temp, ubo.normal);
+        matrix_transpose(ubo.normal, temp);
 
-    // vulkan_pipeline_cmd_bind(pipeline, command_buffer);
+        memcpy(ubo.mvp, mvp, 16 * sizeof(float));
 
-    // vulkan_uniform_mem_copy(vk_state, self->pipeline->uniforms->vk_uniform_buffers_memory[image_index], ubo);
-    // vulkan_pipeline_cmd_bind_uniform_description(pipeline, command_buffer, image_index);
-    // vulkan_pipeline_cmd_bind_indexed_image_description(pipeline, command_buffer, image_index, TEXTURE_GRASS);
+        VkDeviceMemory memory = pipeline->pipe_data.sets[0].items[0].uniforms->vk_uniform_buffers_memory[image_index];
+        vulkan_uniform_mem_copy(vk_state, memory, &ubo, sizeof(ubo));
+    }
 
-    // int thing_model_count = w->thing_models_count;
-    // thing **thing_models = w->thing_models;
-    // for (int i = 0; i < thing_model_count; i++) {
+    vulkan_pipeline_cmd_bind(pipeline, command_buffer);
+    vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
+    vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 1, TEXTURE_STONE_FLOOR);
 
-    //     thing_model_render(thing_models[i]);
+    int thing_model_count = w->thing_models_count;
+    thing **thing_models = w->thing_models;
+    for (int i = 0; i < thing_model_count; i++) {
 
-    //     vulkan_render_buffer_draw(self->thing_buffer, command_buffer);
-    // }
+        struct uniform_buffer_bones ubo = {0};
+
+        thing_model_render(thing_models[i], &ubo);
+
+        VkDeviceMemory memory = pipeline->pipe_data.sets[2].items[0].uniforms->vk_uniform_buffers_memory[image_index];
+        vulkan_uniform_mem_copy(vk_state, memory, &ubo, sizeof(ubo));
+
+        vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 2, image_index);
+
+        vulkan_render_buffer_draw(self->thing_buffer, command_buffer);
+
+        break;
+    }
 }
 
 void world_scene_initialize(__attribute__((unused)) vulkan_state *vk_state, __attribute__((unused)) VkCommandPool command_pool, world_scene *self) {
@@ -376,6 +397,8 @@ void delete_world_scene(vulkan_state *vk_state, world_scene *self) {
     }
 
     delete_uint_table(self->sector_cache);
+
+    delete_vulkan_renderbuffer(vk_state, self->thing_buffer);
 
     free(self);
 }
