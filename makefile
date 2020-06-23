@@ -6,7 +6,7 @@ OBJECTS = $(patsubst source/%.c,objects/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
 INCLUDE = -Isource -I$(VULKAN_SDK)/include
 
-COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE) -Wno-unused
+COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE) -Wno-unused -Wno-unused-parameter
 LINKER_LIBS = -L$(VULKAN_SDK)/lib
 LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lpng -lzip -lvulkan -lm
 PREFIX =
