@@ -194,7 +194,6 @@ static void thing_model_render(thing *t, struct uniform_buffer_bones *ubo) {
     float bones[SHADER_RENDER_MODEL_MAX_BONES][16];
 
     thing_model_render_recursive(master, bones, absolute, animate);
-    // renderstate_set_uniform_matrices(r, "u_bones", bones[0], bone_count);
 
     memcpy(ubo->bones, bones[0], bone_count * 16 * sizeof(float));
 }
@@ -361,8 +360,6 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 2, image_index);
 
         vulkan_render_buffer_draw(self->thing_buffer, command_buffer);
-
-        break;
     }
 }
 

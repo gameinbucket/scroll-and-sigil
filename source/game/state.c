@@ -491,6 +491,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         set2.items = safe_calloc(set2.number_of_items, sizeof(struct vulkan_pipe_item));
         set2.items[0] = item2;
 
+        // TODO: For now just have a VkBuffer + VkDescriptorSet per-model
+        // It's hard to say how worthile dynamic uniforms will be
+
         struct vulkan_pipe_item item3 = {0};
         item3.count = 1;
         item3.byte_size = sizeof(struct uniform_buffer_bones);
