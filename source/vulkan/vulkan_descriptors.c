@@ -412,8 +412,6 @@ static void update_descriptor_set(vulkan_state *vk_state, struct vulkan_pipe_set
             write_descriptor[i].descriptorCount = item->count;
             write_descriptor[i].pImageInfo = info;
         }
-
-        i++;
     }
 
     vkUpdateDescriptorSets(vk_state->vk_device, 1, write_descriptor, 0, NULL);

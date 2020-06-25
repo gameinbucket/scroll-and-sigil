@@ -281,7 +281,7 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     struct vulkan_pipeline *pipeline = self->pipeline;
 
     {
-        struct uniform_buffer_projection ubo = {0};
+        struct uniform_buffer_projection ubo;
 
         float width = (float)vk_base->swapchain->swapchain_extent.width;
         float height = (float)vk_base->swapchain->swapchain_extent.height;
@@ -329,7 +329,7 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     pipeline = self->pipeline_model;
 
     {
-        struct uniform_buffer_projection_and_normal ubo = {0};
+        struct uniform_buffer_projection_and_normal ubo;
 
         float temp[16];
         matrix_identity(ubo.normal);
