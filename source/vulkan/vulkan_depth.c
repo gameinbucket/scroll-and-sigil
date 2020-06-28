@@ -1,6 +1,6 @@
 #include "vulkan_depth.h"
 
-static VkFormat vk_find_depth_format(vulkan_state *vk_state) {
+VkFormat vk_find_depth_format(vulkan_state *vk_state) {
 
     VkFormat candidates[3] = {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT};
     return vk_find_supported_image_format(vk_state, candidates, 3, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);

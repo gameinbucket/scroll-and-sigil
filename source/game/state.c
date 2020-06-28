@@ -215,7 +215,7 @@ void state_update(state *self) {
     }
 }
 
-static void render(struct state *self) {
+void state_render(state *self) {
 
     SDL_Window *window = self->window;
     vulkan_state *vk_state = self->vk_state;
@@ -296,12 +296,6 @@ static void render(struct state *self) {
     vk_state->current_frame = (current_frame + 1) % VULKAN_MAX_FRAMES_IN_FLIGHT;
 }
 
-void state_render(state *self) {
-
-    // LOG("draw. ");
-    render(self);
-}
-
 state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
     state *self = safe_calloc(1, sizeof(state));
@@ -360,40 +354,42 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     world_scene_initialize(vk_state, vk_base->vk_command_pool, ws);
     world_scene_geometry(vk_state, vk_base, ws);
 
-    // {
-    //     struct vulkan_pipe_item item1 = {0};
-    //     item1.count = 1;
-    //     item1.size = sizeof(struct uniform_buffer_projection);
-    //     item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    //     item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
+    {
+        //     struct vulkan_pipe_item item1 = {0};
+        //     item1.count = 1;
+        //     item1.size = sizeof(struct uniform_buffer_projection);
+        //     item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        //     item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
 
-    //     struct vulkan_pipe_set set1 = {0};
-    //     set1.index = 0;
-    //     set1.number_of_items = 1;
-    //     set1.number_of_copies = vk_base->swapchain->swapchain_image_count;
-    //     set1.items = safe_calloc(set1.number_of_items, sizeof(struct vulkan_pipe_item));
-    //     set1.items[0] = item1;
+        //     struct vulkan_pipe_set set1 = {0};
+        //     set1.index = 0;
+        //     set1.number_of_items = 1;
+        //     set1.number_of_copies = vk_base->swapchain->swapchain_image_count;
+        //     set1.items = safe_calloc(set1.number_of_items, sizeof(struct vulkan_pipe_item));
+        //     set1.items[0] = item1;
 
-    //     struct vulkan_pipe_data pipe_settings = {0};
-    //     pipe_settings.vertex = "shaders/spv/screen.vert.spv";
-    //     pipe_settings.fragment = "shaders/spv/screen.frag.spv";
-    //     pipe_settings.number_of_sets = 1;
-    //     pipe_settings.sets = safe_calloc(pipe_settings.number_of_sets, sizeof(struct vulkan_pipe_set));
-    //     pipe_settings.sets[0] = set1;
+        //     struct vulkan_pipe_data pipe_settings = {0};
+        //     pipe_settings.vertex = "shaders/spv/screen.vert.spv";
+        //     pipe_settings.fragment = "shaders/spv/screen.frag.spv";
+        //     pipe_settings.number_of_sets = 1;
+        //     pipe_settings.sets = safe_calloc(pipe_settings.number_of_sets, sizeof(struct vulkan_pipe_set));
+        //     pipe_settings.sets[0] = set1;
 
-    struct vulkan_render_settings render_settings = {0};
-    vulkan_render_settings_init(&render_settings, 2, 0, 0, 0, 0);
-    //     struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
-    //     vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
-    //     struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
-    //     vulkan_pipeline_images(pipeline, images, 1, 1);
-    //     vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
-    //     self->pipelines[SHADER_SCREEN] = pipeline;
+        struct vulkan_render_settings render_settings = {0};
+        vulkan_render_settings_init(&render_settings, 2, 0, 0, 0, 0);
+        //     struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
+        //     vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+        //     struct vulkan_image **images = safe_calloc(1, sizeof(struct vulkan_image *));
+        //     vulkan_pipeline_images(pipeline, images, 1, 1);
+        //     vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+        //     self->pipelines[SHADER_SCREEN] = pipeline;
 
-    self->draw_canvas = create_vulkan_render_buffer(render_settings, 4, 6);
-    render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
-    vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas);
-    // }
+        self->draw_canvas = create_vulkan_render_buffer(render_settings, 4, 6);
+        render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
+        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas);
+
+        self->gbuffer = create_vulkan_offscreen_buffer(vk_state, self->canvas_width, self->canvas_height);
+    }
 
     {
         struct vulkan_pipe_item item1 = {0};
@@ -597,6 +593,7 @@ void delete_state(state *self) {
     delete_hud(self->vk_state, self->hd);
 
     delete_vulkan_renderbuffer(self->vk_state, self->draw_canvas);
+    delete_vulkan_offscreen_buffer(self->vk_state, self->gbuffer);
 
     for (int i = 0; i < SHADER_COUNT; i++) {
         if (self->pipelines[i] != NULL) {

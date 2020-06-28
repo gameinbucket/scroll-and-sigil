@@ -17,6 +17,8 @@
 #include "vulkan_state.h"
 #include "vulkan_swapchain.h"
 
+typedef struct vulkan_base vulkan_base;
+
 struct vulkan_base {
     struct vulkan_swapchain *swapchain;
     struct vulkan_depth depth;

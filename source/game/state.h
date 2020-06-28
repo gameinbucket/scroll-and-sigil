@@ -14,6 +14,7 @@
 
 #include "vulkan/vulkan_base.h"
 #include "vulkan/vulkan_base_util.h"
+#include "vulkan/vulkan_offscreen_buffer.h"
 #include "vulkan/vulkan_pipe_data.h"
 #include "vulkan/vulkan_pipeline.h"
 #include "vulkan/vulkan_pipeline_util.h"
@@ -52,6 +53,7 @@ struct state {
     struct vulkan_image *images;
     struct vulkan_pipeline **pipelines;
     struct vulkan_render_buffer *draw_canvas;
+    vulkan_offscreen_buffer *gbuffer;
     world_scene *ws;
     struct hud *hd;
     struct scene *sc;

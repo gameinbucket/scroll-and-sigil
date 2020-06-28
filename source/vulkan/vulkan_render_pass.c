@@ -20,19 +20,17 @@ void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_swapchain *swap
     color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    VkAttachmentReference color_attachment_ref = {0};
-    color_attachment_ref.attachment = 0;
-    color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    VkAttachmentReference color_reference = (VkAttachmentReference){.attachment = 0, .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
 
     VkSubpassDescription subpass = {0};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &color_attachment_ref;
+    subpass.pColorAttachments = &color_reference;
 
     attachments[0] = color_attachment;
 
     VkAttachmentDescription depth_attachment = {0};
-    VkAttachmentReference depth_attachment_ref = {0};
+    VkAttachmentReference depth_reference = {0};
 
     if (depth != NULL) {
 
@@ -45,10 +43,10 @@ void vk_create_render_pass(vulkan_state *vk_state, struct vulkan_swapchain *swap
         depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        depth_attachment_ref.attachment = 1;
-        depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depth_reference.attachment = 1;
+        depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        subpass.pDepthStencilAttachment = &depth_attachment_ref;
+        subpass.pDepthStencilAttachment = &depth_reference;
 
         attachments[1] = depth_attachment;
     }

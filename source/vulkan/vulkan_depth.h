@@ -19,6 +19,7 @@ struct vulkan_depth {
     VkFormat vk_depth_format;
 };
 
+VkFormat vk_find_depth_format(vulkan_state *vk_state);
 void vk_choose_depth_format(vulkan_state *vk_state, struct vulkan_depth *depth);
 void vk_create_depth_resources(vulkan_state *vk_state, struct vulkan_depth *depth);
 void delete_vulkan_depth(VkDevice vk_device, struct vulkan_depth *depth);
