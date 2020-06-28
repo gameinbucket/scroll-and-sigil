@@ -31,6 +31,7 @@
 
 #include "camera.h"
 #include "hud.h"
+#include "image_descriptor_system.h"
 #include "mega_wad.h"
 #include "scene.h"
 #include "sound_system.h"
@@ -54,6 +55,7 @@ struct state {
     struct vulkan_pipeline **pipelines;
     struct vulkan_render_buffer *draw_canvas;
     vulkan_offscreen_buffer *gbuffer;
+    image_descriptor_system *image_system;
     world_scene *ws;
     struct hud *hd;
     struct scene *sc;

@@ -319,8 +319,8 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
         struct vulkan_render_buffer *b = pair.value;
 
-        uint32_t index = pair.key;
-        vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 1, index);
+        VkDescriptorSet get_image = image_descriptor_system_get(self->image_system, pair.key);
+        vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &get_image);
         vulkan_render_buffer_draw(b, command_buffer);
     }
 
@@ -344,7 +344,9 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
     vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
-    vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 1, TEXTURE_STONE_FLOOR);
+
+    VkDescriptorSet stone_descriptor = image_descriptor_system_get(self->image_system, TEXTURE_STONE_FLOOR);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &stone_descriptor);
 
     int thing_model_count = w->thing_models_count;
     thing **thing_models = w->thing_models;
@@ -386,8 +388,6 @@ world_scene *create_world_scene(world *w) {
 }
 
 void delete_world_scene(vulkan_state *vk_state, world_scene *self) {
-
-    printf("delete world scene %p\n", (void *)self);
 
     for (int i = 0; i < TEXTURE_COUNT; i++) {
         delete_vulkan_renderbuffer(vk_state, uint_table_get(self->sector_cache, i));

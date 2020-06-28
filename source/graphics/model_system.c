@@ -15,5 +15,6 @@ model_info *model_system_get_model(model_system *self, char *name) {
 }
 
 void delete_model_system(model_system *self) {
-    printf("delete model_system %p\n", (void *)self);
+    free(self->models);
+    free(self);
 }

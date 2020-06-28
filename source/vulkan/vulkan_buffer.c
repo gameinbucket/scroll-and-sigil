@@ -36,10 +36,7 @@ void vk_create_buffer(vulkan_state *vk_state, VkDeviceSize size, VkBufferUsageFl
     mem_info.allocationSize = mem_requirements.size;
     mem_info.memoryTypeIndex = vk_memory_type(vk_state, mem_requirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(vk_state->vk_device, &mem_info, NULL, buffer_memory) != VK_SUCCESS) {
-        fprintf(stderr, "Error: Vulkan Allocate Vertex Memory\n");
-        exit(1);
-    }
+    VK_RESULT_OK(vkAllocateMemory(vk_state->vk_device, &mem_info, NULL, buffer_memory));
 
     vkBindBufferMemory(vk_state->vk_device, (*buffer), (*buffer_memory), 0);
 }

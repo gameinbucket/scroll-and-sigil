@@ -18,8 +18,9 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
 
     VkDescriptorSet descriptors[2] = {
         pipeline->pipe_data.sets[0].descriptor_sets[image_index],
-        pipeline->pipe_data.sets[1].descriptor_sets[0],
+        image_descriptor_system_get(self->image_system, TEXTURE_PLANK_FLOOR),
     };
+
     vulkan_pipeline_cmd_bind_given_description(pipeline, command_buffer, 2, descriptors);
 
     vulkan_render_buffer_draw(self->render, command_buffer);
@@ -48,8 +49,6 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
 }
 
 void delete_scene(struct vulkan_state *vk_state, struct scene *self) {
-
-    printf("delete scene %p\n", (void *)self);
 
     delete_vulkan_renderbuffer(vk_state, self->render);
 

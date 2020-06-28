@@ -43,8 +43,6 @@ void hud_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, stru
 
 void delete_hud(struct vulkan_state *vk_state, struct hud *self) {
 
-    printf("delete hud %p\n", (void *)self);
-
     delete_vulkan_renderbuffer(vk_state, self->render);
 
     free(self);

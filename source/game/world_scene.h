@@ -24,6 +24,7 @@
 #include "world/world.h"
 
 #include "camera.h"
+#include "image_descriptor_system.h"
 
 typedef struct world_scene world_scene;
 
@@ -31,6 +32,7 @@ struct world_scene {
     world *w;
     camera *c;
     uint_table *sector_cache;
+    image_descriptor_system *image_system;
     struct vulkan_pipeline *pipeline;
     struct vulkan_pipeline *pipeline_model;
     struct vulkan_render_buffer *thing_buffer;

@@ -100,8 +100,6 @@ struct vulkan_render_buffer *create_vulkan_render_buffer(struct vulkan_render_se
 
 void delete_vulkan_renderbuffer(vulkan_state *vk_state, struct vulkan_render_buffer *self) {
 
-    printf("delete vulkan render buffer %p\n", (void *)self);
-
     vkDestroyBuffer(vk_state->vk_device, self->vk_vertex_buffer, NULL);
     vkFreeMemory(vk_state->vk_device, self->vk_vertex_buffer_memory, NULL);
     vkDestroyBuffer(vk_state->vk_device, self->vk_index_buffer, NULL);

@@ -210,8 +210,6 @@ void delete_debug_utils_messennger(VkInstance instance, VkDebugUtilsMessengerEXT
 
 void delete_vulkan_state(vulkan_state *vk_state) {
 
-    printf("delete vulkan state %p\n", (void *)vk_state);
-
     vkDestroyDevice(vk_state->vk_device, NULL);
 
 #ifdef VULKAN_ENABLE_VALIDATION

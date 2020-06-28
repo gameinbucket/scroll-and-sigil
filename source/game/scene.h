@@ -9,6 +9,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include "assets/assets.h"
 #include "common/log.h"
 #include "common/mem.h"
 #include "render/render.h"
@@ -20,9 +21,12 @@
 #include "vulkan/vulkan_state.h"
 #include "vulkan/vulkan_uniform_util.h"
 
+#include "image_descriptor_system.h"
+
 struct scene {
     struct vulkan_pipeline *pipeline;
     struct vulkan_render_buffer *render;
+    image_descriptor_system *image_system;
 };
 
 struct scene *create_scene(struct vulkan_pipeline *pipeline, struct vulkan_render_buffer *render);

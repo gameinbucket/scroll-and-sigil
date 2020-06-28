@@ -10,7 +10,6 @@ void vulkan_pipe_data_initialize_uniforms(vulkan_state *vk_state, struct vulkan_
                 for (uint32_t u = 0; u < item->count; u++) {
                     item->uniforms[u].size = item->byte_size;
                     vulkan_uniform_buffer_initialize(vk_state, pipe_set->number_of_copies, &item->uniforms[u]);
-                    printf("uniforms: i %d | k %d | u %d | count %d | copies %d\n", i, k, u, item->count, pipe_set->number_of_copies);
                 }
             }
         }
@@ -33,8 +32,6 @@ static void vulkan_pipe_set_clean(vulkan_state *vk_state, struct vulkan_pipe_set
 }
 
 void vulkan_pipe_data_clean(vulkan_state *vk_state, struct vulkan_pipe_data *pipe_data) {
-
-    printf("vulkan pipe data clean %p\n", (void *)pipe_data);
 
     for (uint32_t i = 0; i < pipe_data->number_of_sets; i++) {
         vulkan_pipe_set_clean(vk_state, &pipe_data->sets[i]);

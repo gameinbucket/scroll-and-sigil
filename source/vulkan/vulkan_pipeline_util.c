@@ -9,8 +9,12 @@ void vulkan_pipeline_cmd_bind_description(struct vulkan_pipeline *pipeline, VkCo
     vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline_layout, set_index, 1, &descriptor, 0, NULL);
 }
 
+void vulkan_pipeline_cmd_bind_set(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set, uint32_t count, VkDescriptorSet *descriptors) {
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline_layout, set, count, descriptors, 0, NULL);
+}
+
 void vulkan_pipeline_cmd_bind_given_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t count, VkDescriptorSet *descriptors) {
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline_layout, 0, count, descriptors, 0, NULL);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 0, count, descriptors);
 }
 
 static void vulkan_pipeline_clean(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
@@ -54,8 +58,6 @@ void vulkan_pipeline_static_initialize(vulkan_state *vk_state, struct vulkan_bas
 }
 
 void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
-
-    printf("delete vulkan pipeline %p\n", (void *)pipeline);
 
     vulkan_pipeline_clean(vk_state, pipeline);
     delete_vulkan_pipe_data(vk_state, &pipeline->pipe_data);
