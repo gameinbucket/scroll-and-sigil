@@ -18,10 +18,8 @@ void vulkan_pipe_data_initialize_uniforms(vulkan_state *vk_state, struct vulkan_
 }
 
 static void vulkan_pipe_item_clean(vulkan_state *vk_state, struct vulkan_pipe_item *pipe_item) {
-    printf("vulkan pipe item clean %p\n", (void *)pipe_item);
     if (pipe_item->uniforms != NULL) {
         for (uint32_t i = 0; i < pipe_item->count; i++) {
-            printf("vulkan pipe item clean uniform %p\n", (void *)&pipe_item->uniforms[i]);
             vulkan_uniform_buffer_clean(vk_state, &pipe_item->uniforms[i]);
         }
     }

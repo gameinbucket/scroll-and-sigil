@@ -17,10 +17,17 @@ static void window_resize(vulkan_state *vk_state) {
 
 static void window_init(SDL_Window **win, vulkan_state *vk_state) {
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
         fprintf(stderr, "Could not initialize SDL: %s\n", SDL_GetError());
         exit(1);
     }
+
+    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
+        fprintf(stderr, "Could not initialize SDL Mixer: %s\n", Mix_GetError());
+        exit(1);
+    }
+
+    Mix_AllocateChannels(SOUND_MAX_CHANNELS);
 
     Uint32 window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
     SDL_Window *window = SDL_CreateWindow("Scroll And Sigil", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, window_flags);
@@ -46,6 +53,7 @@ static void main_loop(state *s) {
 
     unsigned int time = 0.0;
     unsigned int frames = 0;
+    unsigned int updates = 0;
 
     SDL_Event event = {0};
     while (run) {
@@ -98,10 +106,15 @@ static void main_loop(state *s) {
             }
         }
 
+        updates++;
+
         struct timeval start, stop;
         gettimeofday(&start, NULL);
 
-        state_update(s);
+        if (updates == 4) {
+            state_update(s);
+            updates = 0;
+        }
         state_render(s);
 
         gettimeofday(&stop, NULL);
@@ -118,7 +131,7 @@ static void main_loop(state *s) {
 #endif
 
 #ifdef SLEEP_ON
-        sleep_micro(8000 - microseconds);
+        sleep_micro(4000 - microseconds);
 #endif
     }
     printf("\n");
@@ -145,6 +158,7 @@ int main() {
     printf("\n");
     delete_state(s);
     delete_vulkan_state(&vk_state);
+    Mix_CloseAudio();
     SDL_Quit();
 
     printf("\n");

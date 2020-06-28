@@ -32,12 +32,18 @@
 #include "hud.h"
 #include "mega_wad.h"
 #include "scene.h"
+#include "sound_system.h"
 #include "world_scene.h"
 
 typedef struct state state;
 
 struct state {
     input in;
+    sound_system *ss;
+    model_system *ms;
+    world *w;
+    camera *c;
+    thing *h;
     SDL_Window *window;
     int canvas_width;
     int canvas_height;
@@ -45,13 +51,10 @@ struct state {
     struct vulkan_base *vk_base;
     struct vulkan_image *images;
     struct vulkan_pipeline **pipelines;
+    struct vulkan_render_buffer *draw_canvas;
+    world_scene *ws;
     struct hud *hd;
     struct scene *sc;
-    model_system *ms;
-    world *w;
-    world_scene *ws;
-    camera *c;
-    struct vulkan_render_buffer *draw_canvas;
 };
 
 void state_update(state *self);

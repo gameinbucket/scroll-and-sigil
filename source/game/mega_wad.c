@@ -1,6 +1,6 @@
 #include "mega_wad.h"
 
-void mega_wad_load_resources(model_system *ms) {
+void mega_wad_load_resources(sound_system *ss, model_system *ms) {
 
     struct zip *z = NULL;
     const bool use_zip = false;
@@ -17,11 +17,11 @@ void mega_wad_load_resources(model_system *ms) {
     string_free(wad_str);
     delete_wad(wad);
 
-    // ss->music = safe_malloc(MUSIC_COUNT * sizeof(Mix_Music *));
-    // soundstate_load_music(ss, z, MUSIC_VAMPIRE_KILLER, "music/vampire-killer.wav");
+    ss->music = safe_malloc(MUSIC_COUNT * sizeof(Mix_Music *));
+    sound_system_load_music(ss, z, MUSIC_VAMPIRE_KILLER, "music/vampire-killer.wav");
 
-    // ss->sound = safe_malloc(SOUND_COUNT * sizeof(Mix_Chunk *));
-    // soundstate_load_sound(ss, z, SOUND_BARON_SCREAM, "sounds/baron-scream.wav");
+    ss->sound = safe_malloc(SOUND_COUNT * sizeof(Mix_Chunk *));
+    sound_system_load_sound(ss, z, SOUND_BARON_SCREAM, "sounds/baron-scream.wav");
 
     string *human_data = cat("models/human.wad");
     wad_element *human_wad = parse_wad(human_data);
@@ -56,8 +56,9 @@ void mega_wad_load_resources(model_system *ms) {
     npc_parse(baron_wad);
     delete_wad(baron_wad);
 
-    // soundstate_play_music(ss, MUSIC_VAMPIRE_KILLER);
-    // soundstate_play_sound(ss, SOUND_BARON_SCREAM);
+    ss->mute = true;
+    sound_system_play_music(ss, MUSIC_VAMPIRE_KILLER);
+    sound_system_play_sound(ss, SOUND_BARON_SCREAM);
 
     if (use_zip) {
         zip_close(z);

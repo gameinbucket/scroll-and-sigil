@@ -21,9 +21,10 @@
 #include "world/world.h"
 #include "world/worldbuild.h"
 
+#include "sound_system.h"
 #include "state.h"
 
-void mega_wad_load_resources(model_system *ms);
+void mega_wad_load_resources(sound_system *ss, model_system *ms);
 void mega_wad_load_map(world *w, input *in, model_system *ms);
 
 #endif

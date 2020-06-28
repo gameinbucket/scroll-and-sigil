@@ -1,5 +1,9 @@
 #include "state.h"
 
+float console_on = false;
+string *console_type;
+float debug_shadow = false;
+
 static void rendering_resize(state *self, int width, int height) {
 
     self->canvas_width = width;
@@ -78,87 +82,135 @@ static void record_rendering(state *self, uint32_t image_index) {
 
 void state_update(state *self) {
 
+    world_update(self->w);
+
     input *in = &self->in;
 
-    float speed = 0.1f;
+    bool third_person = true;
 
-    float r = self->c->ry;
+    if (third_person) {
 
-    float dx = 0;
-    float dy = 0;
-    float dz = 0;
-
-    const float MAXSPEED = 0.5f;
-
-    if (in->move_forward) {
-        dx += sinf(r) * speed;
-        dz -= cosf(r) * speed;
-    }
-
-    if (in->move_backward) {
-        dx -= sinf(r) * speed * 0.5f;
-        dz += cosf(r) * speed * 0.5f;
-    }
-
-    if (in->move_up) {
-        self->c->y += 0.1;
-    }
-
-    if (in->move_down) {
-        self->c->y -= 0.1;
-    }
-
-    if (in->move_left) {
-        dx -= cosf(r) * speed * 0.75f;
-        dz -= sinf(r) * speed * 0.75f;
-    }
-
-    if (in->move_right) {
-        dx += cosf(r) * speed * 0.75f;
-        dz += sinf(r) * speed * 0.75f;
-    }
-
-    if (dx > MAXSPEED) {
-        dx = MAXSPEED;
-    } else if (dx < -MAXSPEED) {
-        dx = -MAXSPEED;
-    }
-
-    if (dy > MAXSPEED) {
-        dy = MAXSPEED;
-    } else if (dy < -MAXSPEED) {
-        dy = -MAXSPEED;
-    }
-
-    self->c->x += dx;
-    self->c->y += dy;
-    self->c->z += dz;
-
-    if (in->look_left) {
-        self->c->ry -= 0.05;
-        if (self->c->ry < 0) {
-            self->c->ry += FLOAT_MATH_TAU;
+        if (in->look_left) {
+            self->c->ry -= 0.05;
+            if (self->c->ry < 0) {
+                self->c->ry += FLOAT_MATH_TAU;
+            }
         }
-    }
 
-    if (in->look_right) {
-        self->c->ry += 0.05;
-        if (self->c->ry >= FLOAT_MATH_TAU) {
-            self->c->ry -= FLOAT_MATH_TAU;
+        if (in->look_right) {
+            self->c->ry += 0.05;
+            if (self->c->ry >= FLOAT_MATH_TAU) {
+                self->c->ry -= FLOAT_MATH_TAU;
+            }
         }
-    }
 
-    if (in->look_up) {
-        self->c->rx -= 0.05;
-        if (self->c->rx < 0) {
-            self->c->rx += FLOAT_MATH_TAU;
+        if (in->look_up) {
+            self->c->rx -= 0.05;
+            if (self->c->rx < 0) {
+                self->c->rx += FLOAT_MATH_TAU;
+            }
         }
-    }
 
-    if (in->look_down) {
-        self->c->rx += 0.05;
-        if (self->c->rx >= FLOAT_MATH_TAU) {
-            self->c->rx -= FLOAT_MATH_TAU;
+        if (in->look_down) {
+            self->c->rx += 0.05;
+            if (self->c->rx >= FLOAT_MATH_TAU) {
+                self->c->rx -= FLOAT_MATH_TAU;
+            }
+        }
+
+        camera_update(self->c);
+
+        self->h->rotation_target = -self->c->ry;
+
+        if (in->console) {
+            in->console = false;
+            console_on = !console_on;
+        }
+
+        if (console_on) {
+            printf("type?");
+        }
+
+    } else {
+        float speed = 0.1f;
+        float r = self->c->ry;
+
+        float dx = 0;
+        float dy = 0;
+        float dz = 0;
+
+        const float MAXSPEED = 0.5f;
+
+        if (in->move_forward) {
+            dx += sinf(r) * speed;
+            dz -= cosf(r) * speed;
+        }
+
+        if (in->move_backward) {
+            dx -= sinf(r) * speed * 0.5f;
+            dz += cosf(r) * speed * 0.5f;
+        }
+
+        if (in->move_up) {
+            self->c->y += 0.1;
+        }
+
+        if (in->move_down) {
+            self->c->y -= 0.1;
+        }
+
+        if (in->move_left) {
+            dx -= cosf(r) * speed * 0.75f;
+            dz -= sinf(r) * speed * 0.75f;
+        }
+
+        if (in->move_right) {
+            dx += cosf(r) * speed * 0.75f;
+            dz += sinf(r) * speed * 0.75f;
+        }
+
+        if (dx > MAXSPEED) {
+            dx = MAXSPEED;
+        } else if (dx < -MAXSPEED) {
+            dx = -MAXSPEED;
+        }
+
+        if (dy > MAXSPEED) {
+            dy = MAXSPEED;
+        } else if (dy < -MAXSPEED) {
+            dy = -MAXSPEED;
+        }
+
+        self->c->x += dx;
+        self->c->y += dy;
+        self->c->z += dz;
+
+        if (in->look_left) {
+            self->c->ry -= 0.05;
+            if (self->c->ry < 0) {
+                self->c->ry += FLOAT_MATH_TAU;
+            }
+        }
+
+        if (in->look_right) {
+            self->c->ry += 0.05;
+            if (self->c->ry >= FLOAT_MATH_TAU) {
+                self->c->ry -= FLOAT_MATH_TAU;
+            }
+        }
+
+        if (in->look_up) {
+            self->c->rx -= 0.05;
+            if (self->c->rx < 0) {
+                self->c->rx += FLOAT_MATH_TAU;
+            }
+        }
+
+        if (in->look_down) {
+            self->c->rx += 0.05;
+            if (self->c->rx >= FLOAT_MATH_TAU) {
+                self->c->rx -= FLOAT_MATH_TAU;
+            }
         }
     }
 }
@@ -277,28 +329,36 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
     self->pipelines = safe_calloc(SHADER_COUNT, sizeof(struct vulkan_pipeline *));
 
+    sound_system *ss = create_sound_system();
+    self->ss = ss;
+
     model_system *ms = create_model_system();
     self->ms = ms;
 
     world *w = create_world();
     self->w = w;
 
-    mega_wad_load_resources(ms);
+    mega_wad_load_resources(ss, ms);
     mega_wad_load_map(w, &self->in, ms);
 
+    camera *c = create_camera(6);
+    self->c = c;
+
+    int thing_count = w->thing_count;
+    thing **things = w->things;
+    for (int i = 0; i < thing_count; i++) {
+        if (things[i]->type == THING_TYPE_HERO) {
+            self->h = things[i];
+            self->c->target = self->h;
+            break;
+        }
+    }
+
     world_scene *ws = create_world_scene(w);
+    ws->c = c;
     self->ws = ws;
     world_scene_initialize(vk_state, vk_base->vk_command_pool, ws);
     world_scene_geometry(vk_state, vk_base, ws);
-
-    camera *c = create_camera(0.0f);
-    c->x = 1;
-    c->y = 1;
-    c->z = 1;
-    c->ry = 1.5;
-
-    self->c = c;
-    ws->c = c;
 
     // {
     //     struct vulkan_pipe_item item1 = {0};
@@ -549,6 +609,9 @@ void delete_state(state *self) {
     }
 
     delete_vulkan_base(self->vk_state, self->vk_base);
+
+    delete_sound_system(self->ss);
+    delete_model_system(self->ms);
 
     free(self);
 }
