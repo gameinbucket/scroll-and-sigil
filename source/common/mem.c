@@ -32,3 +32,12 @@ void *safe_box(void *stack_struct, size_t size) {
     memcpy(mem, stack_struct, size);
     return mem;
 }
+
+void *safe_aligned_malloc(size_t size, size_t alignment) {
+    void *mem = aligned_alloc(alignment, size);
+    if (mem) {
+        return mem;
+    }
+    fprintf(stderr, "posix_memalign failed.\n");
+    exit(1);
+}

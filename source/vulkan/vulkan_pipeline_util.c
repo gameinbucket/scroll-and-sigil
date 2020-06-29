@@ -4,9 +4,13 @@ void vulkan_pipeline_cmd_bind(struct vulkan_pipeline *pipeline, VkCommandBuffer 
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline);
 }
 
-void vulkan_pipeline_cmd_bind_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set_index, uint32_t image_index) {
+void vulkan_pipeline_cmd_bind_dynamic_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set_index, uint32_t image_index, uint32_t offset_count, const uint32_t *offsets) {
     VkDescriptorSet descriptor = pipeline->pipe_data.sets[set_index].descriptor_sets[image_index];
-    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline_layout, set_index, 1, &descriptor, 0, NULL);
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline_layout, set_index, 1, &descriptor, offset_count, offsets);
+}
+
+void vulkan_pipeline_cmd_bind_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set_index, uint32_t image_index) {
+    vulkan_pipeline_cmd_bind_dynamic_description(pipeline, command_buffer, set_index, image_index, 0, NULL);
 }
 
 void vulkan_pipeline_cmd_bind_set(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set, uint32_t count, VkDescriptorSet *descriptors) {

@@ -25,7 +25,7 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
 
     vulkan_render_buffer_draw(self->render, command_buffer);
 
-    struct uniform_buffer_projection ubo = {0};
+    struct uniform_projection ubo = {0};
 
     float view[16];
     float perspective[16];
@@ -44,8 +44,8 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
 
     matrix_multiply(ubo.mvp, perspective, view);
 
-    VkDeviceMemory memory = pipeline->pipe_data.sets[0].items[0].uniforms->vk_uniform_buffers_memory[image_index];
-    vulkan_uniform_mem_copy(vk_state, memory, &ubo, sizeof(ubo));
+    struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
+    vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
 }
 
 void delete_scene(struct vulkan_state *vk_state, struct scene *self) {

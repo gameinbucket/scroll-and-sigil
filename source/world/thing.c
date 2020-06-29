@@ -230,6 +230,8 @@ void thing_standard_update(thing *self) {
 
 void thing_initialize(thing *self, world *map, float x, float z, float r, float box, float height) {
 
+    assert(self);
+
     self->id = thing_unique_id++;
     self->map = map;
     self->sec = world_find_sector(map, x, z);

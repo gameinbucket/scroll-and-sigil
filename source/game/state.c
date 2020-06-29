@@ -361,7 +361,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     {
         struct vulkan_pipe_item item1 = {0};
         item1.count = 1;
-        item1.byte_size = sizeof(struct uniform_buffer_projection);
+        item1.byte_size = sizeof(struct uniform_projection);
         item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
 
@@ -381,11 +381,11 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         struct vulkan_render_settings render_settings = {0};
         vulkan_render_settings_init(&render_settings, 2, 0, 0, 0, 0);
 
-        struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
-        vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
-        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+        // struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
+        // vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+        // vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
 
-        self->pipelines[SHADER_SCREEN] = pipeline;
+        // self->pipelines[SHADER_SCREEN] = pipeline;
 
         self->draw_canvas = create_vulkan_render_buffer(render_settings, 4, 6);
         render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
@@ -397,7 +397,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     {
         struct vulkan_pipe_item item1 = {0};
         item1.count = 1;
-        item1.byte_size = sizeof(struct uniform_buffer_projection);
+        item1.byte_size = sizeof(struct uniform_projection);
         item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
 
@@ -431,7 +431,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     {
         struct vulkan_pipe_item item1 = {0};
         item1.count = 1;
-        item1.byte_size = sizeof(struct uniform_buffer_projection);
+        item1.byte_size = sizeof(struct uniform_projection);
         item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
 
@@ -480,7 +480,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     {
         struct vulkan_pipe_item item1 = {0};
         item1.count = 1;
-        item1.byte_size = sizeof(struct uniform_buffer_projection);
+        item1.byte_size = sizeof(struct uniform_projection);
         item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
 
@@ -526,7 +526,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     {
         struct vulkan_pipe_item item1 = {0};
         item1.count = 1;
-        item1.byte_size = sizeof(struct uniform_buffer_projection_and_normal);
+        item1.byte_size = sizeof(struct uniform_projection_and_normal);
         item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
 
@@ -551,13 +551,10 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         set2.items = safe_calloc(set2.number_of_items, sizeof(struct vulkan_pipe_item));
         set2.items[0] = item2;
 
-        // TODO: For now just have a VkBuffer + VkDescriptorSet per-model
-        // It's hard to say how worthile dynamic uniforms will be
-
         struct vulkan_pipe_item item3 = {0};
         item3.count = 1;
-        item3.byte_size = sizeof(struct uniform_buffer_bones);
-        item3.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        item3.byte_size = 4 * sizeof(struct uniform_bones);
+        item3.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         item3.stages = VK_SHADER_STAGE_VERTEX_BIT;
 
         struct vulkan_pipe_set set3 = {0};

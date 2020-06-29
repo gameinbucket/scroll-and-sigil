@@ -57,6 +57,7 @@ struct vulkan_state {
     VkInstance vk_instance;
     VkSurfaceKHR vk_surface;
     VkPhysicalDevice vk_physical_device;
+    VkPhysicalDeviceProperties vk_physical_device_properties;
     VkDevice vk_device;
     VkQueue vk_present_queue;
     VkQueue vk_graphics_queue;
@@ -65,6 +66,7 @@ struct vulkan_state {
     VkDebugUtilsMessengerEXT vk_debug_messenger;
     uint32_t current_frame;
     bool framebuffer_resized;
+    size_t minimum_uniform_offset_alignment;
 };
 
 struct swapchain_support_details vk_query_swapchain_support(vulkan_state *vk_state, VkPhysicalDevice device);

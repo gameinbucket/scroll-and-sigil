@@ -12,20 +12,22 @@
 
 #include "vulkan/vulkan_state.h"
 
-struct uniform_buffer_projection {
+struct uniform_projection {
     alignas(16) float mvp[16];
 };
 
-struct uniform_buffer_projection_and_normal {
+struct uniform_projection_and_normal {
     alignas(16) float mvp[16];
     alignas(16) float normal[16];
 };
 
 #define SMALL_BONE_LIMIT 11
 #define MATRIX_4_4 16
+#define UBO_BONE_ALIGNMENT 256
+#define UBO_BONE_PACKED_BYTES 1024
 
-struct uniform_buffer_bones {
-    alignas(256) float bones[SMALL_BONE_LIMIT * MATRIX_4_4];
+struct uniform_bones {
+    float bones[SMALL_BONE_LIMIT * MATRIX_4_4];
 };
 
 struct vulkan_uniform_buffer {
@@ -33,8 +35,8 @@ struct vulkan_uniform_buffer {
     uint32_t count;
     VkBuffer *vk_uniform_buffers;
     VkDeviceMemory *vk_uniform_buffers_memory;
+    void **mapped_memory;
+    size_t dynamic_alignment;
 };
-
-void vulkan_uniform_buffer_clean(vulkan_state *vk_state, struct vulkan_uniform_buffer *uniform_buffer);
 
 #endif

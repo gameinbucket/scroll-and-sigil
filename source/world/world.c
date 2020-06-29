@@ -12,7 +12,6 @@ void world_add_thing(world *self, thing *t) {
         self->thing_cap = 1;
         self->thing_count = 1;
     } else {
-
         if (self->thing_count == self->thing_cap) {
             self->thing_cap += 8;
             self->things = safe_realloc(self->things, self->thing_cap * sizeof(thing *));
@@ -32,7 +31,7 @@ void world_add_thing(world *self, thing *t) {
 
             if (self->thing_sprites_count == self->thing_sprites_cap) {
                 self->thing_sprites_cap += 8;
-                self->thing_sprites = safe_realloc(self->things, self->thing_sprites_cap * sizeof(thing *));
+                self->thing_sprites = safe_realloc(self->thing_sprites, self->thing_sprites_cap * sizeof(thing *));
             }
             self->thing_sprites[self->thing_sprites_count] = t;
             self->thing_sprites_count++;
@@ -48,7 +47,7 @@ void world_add_thing(world *self, thing *t) {
 
             if (self->thing_models_count == self->thing_models_cap) {
                 self->thing_models_cap += 8;
-                self->thing_models = safe_realloc(self->things, self->thing_models_cap * sizeof(thing *));
+                self->thing_models = safe_realloc(self->thing_models, self->thing_models_cap * sizeof(thing *));
             }
             self->thing_models[self->thing_models_count] = t;
             self->thing_models_count++;

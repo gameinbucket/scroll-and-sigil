@@ -74,6 +74,8 @@ static bool is_vk_physical_device_device_suitable(vulkan_state *vk_state, VkPhys
         return false;
     }
 
+    vk_state->vk_physical_device_properties = vk_device_properties;
+
     bool present_family_found = false;
     bool graphics_family_found = false;
 
@@ -195,7 +197,6 @@ void vk_create_logical_device(vulkan_state *vk_state) {
 }
 
 void initialize_vulkan_state(vulkan_state *vk_state) {
-
     vk_choose_physical_device(vk_state);
     vk_create_logical_device(vk_state);
 }

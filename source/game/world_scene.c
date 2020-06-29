@@ -172,7 +172,7 @@ static void thing_model_render_recursive(bone *b, float bones[][16], float absol
     }
 }
 
-static void thing_model_render(thing *t, struct uniform_buffer_bones *ubo) {
+static void thing_model_render(thing *t, struct uniform_bones *ubo) {
 
     model *m = t->model_data;
     model_info *info = m->info;
@@ -281,7 +281,7 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     struct vulkan_pipeline *pipeline = self->pipeline;
 
     {
-        struct uniform_buffer_projection ubo;
+        struct uniform_projection ubo;
 
         float width = (float)vk_base->swapchain->swapchain_extent.width;
         float height = (float)vk_base->swapchain->swapchain_extent.height;
@@ -302,8 +302,8 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
         memcpy(ubo.mvp, mvp, 16 * sizeof(float));
 
-        VkDeviceMemory memory = pipeline->pipe_data.sets[0].items[0].uniforms->vk_uniform_buffers_memory[image_index];
-        vulkan_uniform_mem_copy(vk_state, memory, &ubo, sizeof(ubo));
+        struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
+        vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
     }
 
     uint_table *cache = self->sector_cache;
@@ -329,7 +329,7 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     pipeline = self->pipeline_model;
 
     {
-        struct uniform_buffer_projection_and_normal ubo;
+        struct uniform_projection_and_normal ubo;
 
         float temp[16];
         matrix_identity(ubo.normal);
@@ -338,8 +338,8 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
         memcpy(ubo.mvp, mvp, 16 * sizeof(float));
 
-        VkDeviceMemory memory = pipeline->pipe_data.sets[0].items[0].uniforms->vk_uniform_buffers_memory[image_index];
-        vulkan_uniform_mem_copy(vk_state, memory, &ubo, sizeof(ubo));
+        struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
+        vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
     }
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
@@ -350,16 +350,24 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
     int thing_model_count = w->thing_models_count;
     thing **thing_models = w->thing_models;
+
+    struct uniform_bones *ubos = safe_calloc(thing_model_count, sizeof(struct uniform_bones));
+
+    for (int i = 0; i < thing_model_count; i++) {
+        thing_model_render(thing_models[i], &ubos[i]);
+    }
+
+    struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[2].items[0].uniforms;
+    vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubos, thing_model_count * sizeof(struct uniform_bones));
+
+    printf("%d, %ld, %ld\n", thing_model_count, sizeof(struct uniform_bones), uniform_buffer->dynamic_alignment);
+    fflush(stdout);
+    exit(1);
+
     for (int i = 0; i < thing_model_count; i++) {
 
-        struct uniform_buffer_bones ubo = {0};
-
-        thing_model_render(thing_models[i], &ubo);
-
-        VkDeviceMemory memory = pipeline->pipe_data.sets[2].items[0].uniforms->vk_uniform_buffers_memory[image_index];
-        vulkan_uniform_mem_copy(vk_state, memory, &ubo, sizeof(ubo));
-
-        vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 2, image_index);
+        const uint32_t dynamic = i * uniform_buffer->dynamic_alignment;
+        vulkan_pipeline_cmd_bind_dynamic_description(pipeline, command_buffer, 2, image_index, 1, &dynamic);
 
         vulkan_render_buffer_draw(self->thing_buffer, command_buffer);
     }
