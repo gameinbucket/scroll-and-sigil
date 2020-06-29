@@ -363,9 +363,18 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         void *map_pointer = (void *)((char *)mapped_memory + dynamic);
 
         vulkan_copy_memory(map_pointer, &ubo, sizeof(ubo));
+    }
 
+    VkMappedMemoryRange memory_range = {0};
+    memory_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    memory_range.memory = uniform_buffer->vk_uniform_buffers_memory[image_index];
+    memory_range.size = thing_model_count * uniform_buffer->dynamic_alignment;
+    vkFlushMappedMemoryRanges(vk_state->vk_device, 1, &memory_range);
+
+    for (int i = 0; i < thing_model_count; i++) {
+
+        const uint32_t dynamic = i * uniform_buffer->dynamic_alignment;
         vulkan_pipeline_cmd_bind_dynamic_description(pipeline, command_buffer, 2, image_index, 1, &dynamic);
-
         vulkan_render_buffer_draw(self->thing_buffer, command_buffer);
     }
 }

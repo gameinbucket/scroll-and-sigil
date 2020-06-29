@@ -9,7 +9,7 @@ void vulkan_uniform_buffer_initialize(vulkan_state *vk_state, uint32_t count, st
     uniform_buffer->vk_uniform_buffers_memory = safe_calloc(count, sizeof(VkDeviceMemory));
 
     VkBufferUsageFlagBits usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    VkMemoryPropertyFlagBits properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    VkMemoryPropertyFlagBits properties;
 
     VkDeviceSize buffer_size = uniform_buffer->object_size;
 
@@ -17,6 +17,11 @@ void vulkan_uniform_buffer_initialize(vulkan_state *vk_state, uint32_t count, st
 
         uniform_buffer->dynamic_alignment = vuklan_calculate_dynamic_alignment(vk_state, buffer_size);
         buffer_size = uniform_buffer->object_instances * uniform_buffer->dynamic_alignment;
+
+        properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+    } else {
+
+        properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     }
 
     uniform_buffer->buffer_size = buffer_size;
