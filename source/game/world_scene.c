@@ -351,22 +351,19 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     int thing_model_count = w->thing_models_count;
     thing **thing_models = w->thing_models;
 
-    struct uniform_bones *ubos = safe_calloc(thing_model_count, sizeof(struct uniform_bones));
-
-    for (int i = 0; i < thing_model_count; i++) {
-        thing_model_render(thing_models[i], &ubos[i]);
-    }
-
     struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[2].items[0].uniforms;
-    vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubos, thing_model_count * sizeof(struct uniform_bones));
-
-    printf("%d, %ld, %ld\n", thing_model_count, sizeof(struct uniform_bones), uniform_buffer->dynamic_alignment);
-    fflush(stdout);
-    exit(1);
+    void *mapped_memory = uniform_buffer->mapped_memory[image_index];
 
     for (int i = 0; i < thing_model_count; i++) {
+
+        struct uniform_bones ubo = {0};
+        thing_model_render(thing_models[i], &ubo);
 
         const uint32_t dynamic = i * uniform_buffer->dynamic_alignment;
+        void *map_pointer = (void *)((char *)mapped_memory + dynamic);
+
+        vulkan_copy_memory(map_pointer, &ubo, sizeof(ubo));
+
         vulkan_pipeline_cmd_bind_dynamic_description(pipeline, command_buffer, 2, image_index, 1, &dynamic);
 
         vulkan_render_buffer_draw(self->thing_buffer, command_buffer);

@@ -23,20 +23,21 @@ struct uniform_projection_and_normal {
 
 #define SMALL_BONE_LIMIT 11
 #define MATRIX_4_4 16
-#define UBO_BONE_ALIGNMENT 256
-#define UBO_BONE_PACKED_BYTES 1024
+#define UBO_BONE_ELEMENTS (SMALL_BONE_LIMIT * MATRIX_4_4)
 
 struct uniform_bones {
-    float bones[SMALL_BONE_LIMIT * MATRIX_4_4];
+    float bones[UBO_BONE_ELEMENTS];
 };
 
 struct vulkan_uniform_buffer {
-    size_t size;
     uint32_t count;
+    size_t object_size;
+    size_t dynamic_alignment;
+    uint32_t object_instances;
+    size_t buffer_size;
     VkBuffer *vk_uniform_buffers;
     VkDeviceMemory *vk_uniform_buffers_memory;
     void **mapped_memory;
-    size_t dynamic_alignment;
 };
 
 #endif

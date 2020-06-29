@@ -71,7 +71,8 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_offsc
 
     init_vulkan_frame_attachment(vk_state, &offscreen->depth, depth_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, width, height);
 
-    VkAttachmentDescription descriptions[4] = {0};
+    VkAttachmentDescription descriptions[4];
+    memset(descriptions, 0, 4 * sizeof(VkAttachmentDescription));
 
     for (uint32_t i = 0; i < 4; ++i) {
         descriptions[i].samples = VK_SAMPLE_COUNT_1_BIT;
@@ -106,7 +107,8 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_offsc
     subpass.colorAttachmentCount = 3;
     subpass.pDepthStencilAttachment = &depth_reference;
 
-    VkSubpassDependency dependencies[2] = {0};
+    VkSubpassDependency dependencies[2];
+    memset(descriptions, 0, 2 * sizeof(VkSubpassDependency));
 
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[0].dstSubpass = 0;

@@ -391,7 +391,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
         vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas);
 
-        self->gbuffer = create_vulkan_offscreen_buffer(vk_state, self->canvas_width, self->canvas_height);
+        // self->gbuffer = create_vulkan_offscreen_buffer(vk_state, self->canvas_width, self->canvas_height);
     }
 
     {
@@ -553,7 +553,8 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_pipe_item item3 = {0};
         item3.count = 1;
-        item3.byte_size = 4 * sizeof(struct uniform_bones);
+        item3.byte_size = sizeof(struct uniform_bones);
+        item3.object_instances = 4;
         item3.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         item3.stages = VK_SHADER_STAGE_VERTEX_BIT;
 

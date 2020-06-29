@@ -38,6 +38,6 @@ void *safe_aligned_malloc(size_t size, size_t alignment) {
     if (mem) {
         return mem;
     }
-    fprintf(stderr, "posix_memalign failed.\n");
+    fprintf(stderr, "aligned_alloc failed.\n");
     exit(1);
 }

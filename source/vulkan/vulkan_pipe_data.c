@@ -8,7 +8,8 @@ void vulkan_pipe_data_initialize_uniforms(vulkan_state *vk_state, struct vulkan_
             if (item->type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER || item->type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC) {
                 item->uniforms = safe_calloc(item->count, sizeof(struct vulkan_uniform_buffer));
                 for (uint32_t u = 0; u < item->count; u++) {
-                    item->uniforms[u].size = item->byte_size;
+                    item->uniforms[u].object_size = item->byte_size;
+                    item->uniforms[u].object_instances = item->object_instances;
                     vulkan_uniform_buffer_initialize(vk_state, pipe_set->number_of_copies, &item->uniforms[u]);
                 }
             }
