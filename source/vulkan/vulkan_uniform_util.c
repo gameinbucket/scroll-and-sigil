@@ -35,7 +35,7 @@ void vulkan_uniform_buffer_initialize(vulkan_state *vk_state, uint32_t count, st
 void vulkan_uniform_buffer_clean(vulkan_state *vk_state, struct vulkan_uniform_buffer *uniform_buffer) {
 
     for (uint32_t i = 0; i < uniform_buffer->count; i++) {
-        vulkan_unmap_memory(vk_state, uniform_buffer->mapped_memory[i]);
+        vulkan_unmap_memory(vk_state, uniform_buffer->vk_uniform_buffers_memory[i]);
         vkDestroyBuffer(vk_state->vk_device, uniform_buffer->vk_uniform_buffers[i], NULL);
         vkFreeMemory(vk_state->vk_device, uniform_buffer->vk_uniform_buffers_memory[i], NULL);
     }

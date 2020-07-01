@@ -31,7 +31,7 @@ address: all
 
 gdb: COMPILER_FLAGS += -g
 gdb: all
-	@ gdb ./scroll-and-sigil
+	@ ./gdb.sh ./scroll-and-sigil
 
 valgrind: COMPILER_FLAGS += -g
 valgrind: all

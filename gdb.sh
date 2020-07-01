@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $(uname) = 'Darwin' ]; then
-    lldb ./scroll-and-sigil
+    lldb "$1"
 else
-    gdb -ex run ./scroll-and-sigil
+    gdb -ex run "$1"
 fi

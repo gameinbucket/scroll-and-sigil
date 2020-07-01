@@ -593,7 +593,10 @@ void delete_state(state *self) {
     delete_hud(self->vk_state, self->hd);
 
     delete_vulkan_renderbuffer(self->vk_state, self->draw_canvas);
-    delete_vulkan_offscreen_buffer(self->vk_state, self->gbuffer);
+
+    if (self->gbuffer != NULL) {
+        delete_vulkan_offscreen_buffer(self->vk_state, self->gbuffer);
+    }
 
     for (int i = 0; i < SHADER_COUNT; i++) {
         if (self->pipelines[i] != NULL) {

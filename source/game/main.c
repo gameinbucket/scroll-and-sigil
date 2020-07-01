@@ -110,35 +110,36 @@ static void main_loop(state *s) {
 
         updates++;
 
-        struct timeval start, stop;
-        gettimeofday(&start, NULL);
-
         if (updates == 4) {
             state_update(s);
             updates = 0;
         }
+
+        // struct timeval start, stop;
+        // gettimeofday(&start, NULL);
+
         state_render(s);
 
-        gettimeofday(&stop, NULL);
-        unsigned int microseconds = (stop.tv_sec - start.tv_sec) * 1000000 + ((int)stop.tv_usec - (int)start.tv_usec);
+        //         gettimeofday(&stop, NULL);
+        //         unsigned int microseconds = (stop.tv_sec - start.tv_sec) * 1000000 + ((int)stop.tv_usec - (int)start.tv_usec);
 
-#ifdef TIMING_ON
-        printf("microseconds: %d\n", microseconds);
-#endif
+        // #ifdef TIMING_ON
+        //         printf("microseconds: %d\n", microseconds);
+        // #endif
 
-#ifdef FPS_ON
-        time += microseconds;
-        frames++;
-        if (time >= 1000000) {
-            printf("frames per second: %d\n", frames);
-            time -= 1000000;
-            frames = 0;
-        }
-#endif
+        // #ifdef FPS_ON
+        //         time += microseconds;
+        //         frames++;
+        //         if (time >= 1000000) {
+        //             printf("frames per second: %d\n", frames);
+        //             time -= 1000000;
+        //             frames = 0;
+        //         }
+        // #endif
 
-#ifdef SLEEP_ON
-        sleep_micro(4000 - microseconds);
-#endif
+        // #ifdef SLEEP_ON
+        //         sleep_micro(4000 - microseconds);
+        // #endif
     }
     printf("\n");
 

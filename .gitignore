@@ -3,6 +3,7 @@
 main
 scroll-and-sigil
 unit-tests
+.DS_Store
 
 *.o
 *.d
