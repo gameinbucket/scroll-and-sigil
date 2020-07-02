@@ -337,7 +337,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     mega_wad_load_resources(ss, ms);
     mega_wad_load_map(w, &self->in, ms);
 
-    camera *c = create_camera(6);
+    camera *c = create_camera(4);
     self->c = c;
 
     int thing_count = w->thing_count;
@@ -391,7 +391,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
         vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas);
 
-        // self->gbuffer = create_vulkan_offscreen_buffer(vk_state, self->canvas_width, self->canvas_height);
+        self->gbuffer = create_vulkan_offscreen_buffer(vk_state, self->canvas_width, self->canvas_height);
     }
 
     {

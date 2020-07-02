@@ -71,28 +71,28 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_offsc
 
     init_vulkan_frame_attachment(vk_state, &offscreen->depth, depth_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, width, height);
 
-    VkAttachmentDescription descriptions[4];
-    memset(descriptions, 0, 4 * sizeof(VkAttachmentDescription));
+    VkAttachmentDescription attachments[4];
+    memset(attachments, 0, 4 * sizeof(VkAttachmentDescription));
 
-    for (uint32_t i = 0; i < 4; ++i) {
-        descriptions[i].samples = VK_SAMPLE_COUNT_1_BIT;
-        descriptions[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        descriptions[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        descriptions[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        descriptions[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        descriptions[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    for (uint32_t i = 0; i < 4; i++) {
+        attachments[i].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
         if (i == 3) {
-            descriptions[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            attachments[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         } else {
-            descriptions[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            attachments[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         }
     }
 
-    descriptions[0].format = offscreen->color.format;
-    descriptions[1].format = offscreen->normal.format;
-    descriptions[2].format = offscreen->position.format;
-    descriptions[3].format = offscreen->depth.format;
+    attachments[0].format = offscreen->color.format;
+    attachments[1].format = offscreen->normal.format;
+    attachments[2].format = offscreen->position.format;
+    attachments[3].format = offscreen->depth.format;
 
     VkAttachmentReference color_reference[3];
     color_reference[0] = (VkAttachmentReference){.attachment = 0, .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
@@ -108,7 +108,7 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_offsc
     subpass.pDepthStencilAttachment = &depth_reference;
 
     VkSubpassDependency dependencies[2];
-    memset(descriptions, 0, 2 * sizeof(VkSubpassDependency));
+    memset(dependencies, 0, 2 * sizeof(VkSubpassDependency));
 
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[0].dstSubpass = 0;
@@ -129,7 +129,7 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_offsc
     VkRenderPassCreateInfo render_pass_info = {0};
     render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     render_pass_info.attachmentCount = 4;
-    render_pass_info.pAttachments = descriptions;
+    render_pass_info.pAttachments = attachments;
     render_pass_info.subpassCount = 1;
     render_pass_info.pSubpasses = &subpass;
     render_pass_info.dependencyCount = 2;
@@ -137,17 +137,17 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_offsc
 
     VK_RESULT_OK(vkCreateRenderPass(vk_state->vk_device, &render_pass_info, NULL, &offscreen->render_pass));
 
-    VkImageView attachments[4];
-    attachments[0] = offscreen->color.view;
-    attachments[1] = offscreen->normal.view;
-    attachments[2] = offscreen->position.view;
-    attachments[3] = offscreen->depth.view;
+    VkImageView views[4];
+    views[0] = offscreen->color.view;
+    views[1] = offscreen->normal.view;
+    views[2] = offscreen->position.view;
+    views[3] = offscreen->depth.view;
 
     VkFramebufferCreateInfo create_info = {0};
     create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     create_info.pNext = NULL;
     create_info.renderPass = offscreen->render_pass;
-    create_info.pAttachments = attachments;
+    create_info.pAttachments = views;
     create_info.attachmentCount = 4;
     create_info.width = offscreen->width;
     create_info.height = offscreen->height;
