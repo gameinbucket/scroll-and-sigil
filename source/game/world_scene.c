@@ -150,14 +150,6 @@ static void memcopy_mesh(struct vulkan_render_buffer *r, bone *b) {
         memcopy_faces(r, extension);
     }
 
-    // memcpy(r->vertices + r->vertex_position, b->cubes, cube_count * CUBE_MODEL_VERTEX_BYTES);
-    // r->vertex_position += cube_count * CUBE_MODEL_VERTEX_COUNT;
-    // for (int c = 0; c < cube_count; c++) {
-    //     for (int k = 0; k < 6; k++) {
-    //         render_index4(r);
-    //     }
-    // }
-
     for (int i = 0; i < b->child_count; i++) {
         memcopy_mesh(r, b->child[i]);
     }
