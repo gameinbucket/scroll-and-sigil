@@ -20,14 +20,35 @@ int model_animation_index_of_name(model_info *self, char *name) {
     return -1;
 }
 
-static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_element *size, wad_element *pivot, wad_element *origin, wad_element *rotation, float scale) {
+static void model_cube_texture(float *mesh, wad_element *sample, char *side_key, int side_index) {
+    wad_element *side = wad_get_from_object(sample, side_key);
+    if (side == NULL) {
+        return;
+    }
+    float x = wad_get_float(wad_get_from_array(side, 0)) / 64.0;
+    float y = wad_get_float(wad_get_from_array(side, 1)) / 64.0;
+    float z = wad_get_float(wad_get_from_array(side, 2)) / 64.0;
+    float w = wad_get_float(wad_get_from_array(side, 3)) / 64.0;
+    texture_cube_model(mesh, side_index, x, y, z, w);
+}
+
+static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_element *cube, float scale) {
+
+    wad_element *size = wad_get_required_from_object(cube, "size");
+    wad_element *pivot = wad_get_from_object(cube, "pivot");
+    wad_element *origin = wad_get_from_object(cube, "origin");
+    wad_element *rotation = wad_get_from_object(cube, "rotation");
+    wad_element *sample = wad_get_from_object(cube, "sample");
+    wad_element *extension = wad_get_from_object(cube, "extension");
+
     bone *b = &bones[bone_index];
     float width = wad_get_float(wad_get_from_array(size, 0)) * scale;
     float height = wad_get_float(wad_get_from_array(size, 1)) * scale;
     float length = wad_get_float(wad_get_from_array(size, 2)) * scale;
-    float cube[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width, height, length, bone_index);
-    memcpy(&b->cubes[cube_index * CUBE_MODEL_VERTEX_COUNT], cube, CUBE_MODEL_VERTEX_BYTES);
+
+    float mesh[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width, height, length, bone_index);
     struct model_cube *info = &b->cube_info[cube_index];
+
     if (pivot != NULL) {
         float x = wad_get_float(wad_get_from_array(pivot, 0)) * scale;
         float y = wad_get_float(wad_get_from_array(pivot, 1)) * scale;
@@ -55,6 +76,18 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
     } else {
         quaternion_identity(info->rotation);
     }
+    if (sample != NULL) {
+        model_cube_texture(mesh, sample, "front", CUBE_FRONT);
+        model_cube_texture(mesh, sample, "back", CUBE_BACK);
+        model_cube_texture(mesh, sample, "left", CUBE_LEFT);
+        model_cube_texture(mesh, sample, "right", CUBE_RIGHT);
+        model_cube_texture(mesh, sample, "top", CUBE_TOP);
+        model_cube_texture(mesh, sample, "bottom", CUBE_BOTTOM);
+    }
+    if (extension != NULL) {
+        printf("TODO: Texture extensions\n");
+    }
+    memcpy(&b->cubes[cube_index * CUBE_MODEL_VERTEX_COUNT], mesh, CUBE_MODEL_VERTEX_BYTES);
 }
 
 // static void bone_offset(bone *b, float x, float y, float z) {
@@ -225,11 +258,7 @@ model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
 
         for (int c_i = 0; c_i < cube_count; c_i++) {
             wad_element *cube = wad_get_from_array(cubes, c_i);
-            wad_element *size = wad_get_required_from_object(cube, "size");
-            wad_element *pivot = wad_get_from_object(cube, "pivot");
-            wad_element *origin = wad_get_from_object(cube, "origin");
-            wad_element *rotation = wad_get_from_object(cube, "rotation");
-            model_cube_init(bones, b_i, c_i, size, pivot, origin, rotation, scale);
+            model_cube_init(bones, b_i, c_i, cube, scale);
         }
 
         if (parent == NULL) {
