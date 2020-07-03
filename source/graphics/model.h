@@ -35,6 +35,8 @@ struct model_cube {
     float pivot[3];
     float origin[3];
     float rotation[4];
+    float sample[CUBE_MODEL_VERTEX_COUNT];
+    float extension[CUBE_MODEL_VERTEX_COUNT];
 };
 
 typedef struct bone bone;
@@ -49,8 +51,7 @@ struct bone {
     transform bind_pose;
     float bind_pose_matrix[16];
     float inverse_bind_pose_matrix[16];
-    float *cubes;
-    struct model_cube *cube_info;
+    struct model_cube *cubes;
     int cube_count;
 };
 

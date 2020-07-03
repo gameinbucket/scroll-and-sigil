@@ -18,3 +18,8 @@ void texture_cube_model(float *cube, int side, float x, float y, float z, float 
     cube[i + 3] = x;
     cube[i + 4] = w;
 }
+
+bool skip_cube_model_face(float *cube, int side) {
+    int i = CUBE_MODEL_STRIDE * side * 4;
+    return cube[i + 3] < 0.0f || cube[i + 4] < 0.0f;
+}

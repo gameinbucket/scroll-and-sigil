@@ -123,19 +123,43 @@ static void render_triangle(struct vulkan_render_buffer *b, triangle *t) {
 //     render_index4(b);
 // }
 
-static void memcopy_skeleton(struct vulkan_render_buffer *r, bone *b) {
+static void memcopy_faces(struct vulkan_render_buffer *r, float *cube) {
+
+    for (int f = 0; f < 6; f++) {
+        if (skip_cube_model_face(cube, f)) {
+            continue;
+        }
+        memcpy(r->vertices + r->vertex_position, &cube[CUBE_MODEL_STRIDE * f * 4], CUBE_MODEL_FACE_VERTEX_BYTES);
+        r->vertex_position += CUBE_MODEL_FACE_VERTEX_COUNT;
+        render_index4(r);
+    }
+}
+
+static void memcopy_mesh(struct vulkan_render_buffer *r, bone *b) {
 
     int cube_count = b->cube_count;
-    memcpy(r->vertices + r->vertex_position, b->cubes, cube_count * CUBE_MODEL_VERTEX_BYTES);
-    r->vertex_position += cube_count * CUBE_MODEL_VERTEX_COUNT;
+    struct model_cube *cubes = b->cubes;
+
     for (int c = 0; c < cube_count; c++) {
-        for (int k = 0; k < 6; k++) {
-            render_index4(r);
-        }
+
+        struct model_cube *cube = &b->cubes[c];
+        float *sample = cube->sample;
+        float *extension = cube->extension;
+
+        memcopy_faces(r, sample);
+        memcopy_faces(r, extension);
     }
 
+    // memcpy(r->vertices + r->vertex_position, b->cubes, cube_count * CUBE_MODEL_VERTEX_BYTES);
+    // r->vertex_position += cube_count * CUBE_MODEL_VERTEX_COUNT;
+    // for (int c = 0; c < cube_count; c++) {
+    //     for (int k = 0; k < 6; k++) {
+    //         render_index4(r);
+    //     }
+    // }
+
     for (int i = 0; i < b->child_count; i++) {
-        memcopy_skeleton(r, b->child[i]);
+        memcopy_mesh(r, b->child[i]);
     }
 }
 
@@ -146,7 +170,7 @@ static void thing_model_geometry(struct vulkan_render_buffer *r, thing *t) {
     bone *master = info->master;
 
     vulkan_render_buffer_zero(r);
-    memcopy_skeleton(r, master);
+    memcopy_mesh(r, master);
 }
 
 static void thing_model_render_recursive(bone *b, float bones[][16], float absolute[][16], float *animate) {

@@ -46,8 +46,7 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
     float height = wad_get_float(wad_get_from_array(size, 1)) * scale;
     float length = wad_get_float(wad_get_from_array(size, 2)) * scale;
 
-    float mesh[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width, height, length, bone_index);
-    struct model_cube *info = &b->cube_info[cube_index];
+    struct model_cube *info = &b->cubes[cube_index];
 
     if (pivot != NULL) {
         float x = wad_get_float(wad_get_from_array(pivot, 0)) * scale;
@@ -57,6 +56,7 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
         info->pivot[1] = y;
         info->pivot[2] = z;
     }
+
     if (origin != NULL) {
         float x = wad_get_float(wad_get_from_array(origin, 0)) * scale;
         float y = wad_get_float(wad_get_from_array(origin, 1)) * scale;
@@ -65,6 +65,7 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
         info->origin[1] = y;
         info->origin[2] = z;
     }
+
     if (rotation != NULL) {
         float x = wad_get_float(wad_get_from_array(rotation, 0));
         float y = wad_get_float(wad_get_from_array(rotation, 1));
@@ -76,6 +77,8 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
     } else {
         quaternion_identity(info->rotation);
     }
+
+    float mesh[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width, height, length, bone_index);
     if (sample != NULL) {
         model_cube_texture(mesh, sample, "front", CUBE_FRONT);
         model_cube_texture(mesh, sample, "back", CUBE_BACK);
@@ -84,10 +87,18 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
         model_cube_texture(mesh, sample, "top", CUBE_TOP);
         model_cube_texture(mesh, sample, "bottom", CUBE_BOTTOM);
     }
+    memcpy(info->sample, mesh, CUBE_MODEL_VERTEX_BYTES);
+
     if (extension != NULL) {
-        printf("TODO: Texture extensions\n");
+        float mesh[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width, height, length, bone_index);
+        model_cube_texture(mesh, extension, "front", CUBE_FRONT);
+        model_cube_texture(mesh, extension, "back", CUBE_BACK);
+        model_cube_texture(mesh, extension, "left", CUBE_LEFT);
+        model_cube_texture(mesh, extension, "right", CUBE_RIGHT);
+        model_cube_texture(mesh, extension, "top", CUBE_TOP);
+        model_cube_texture(mesh, extension, "bottom", CUBE_BOTTOM);
+        memcpy(info->extension, mesh, CUBE_MODEL_VERTEX_BYTES);
     }
-    memcpy(&b->cubes[cube_index * CUBE_MODEL_VERTEX_COUNT], mesh, CUBE_MODEL_VERTEX_BYTES);
 }
 
 // static void bone_offset(bone *b, float x, float y, float z) {
@@ -141,8 +152,7 @@ static void bone_init(bone *bones, int index, string *name, wad_element *pivot, 
     bone *b = &bones[index];
     b->index = index;
     b->name = name;
-    b->cubes = safe_malloc(cube_count * CUBE_MODEL_VERTEX_BYTES);
-    b->cube_info = safe_calloc(cube_count, sizeof(struct model_cube));
+    b->cubes = safe_calloc(cube_count, sizeof(struct model_cube));
     b->cube_count = cube_count;
     if (pivot != NULL) {
         float x = wad_get_float(wad_get_from_array(pivot, 0)) * scale;
@@ -161,6 +171,33 @@ static void bone_init(bone *bones, int index, string *name, wad_element *pivot, 
     quaternion_identity(b->local.rotation);
 }
 
+static void cube_model_bind_pose(struct model_cube *info, float *cube) {
+
+    // for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+    //     float out[3];
+    //     matrix_multiply_vector3(out, inverse_bind_pose, &cube[i]);
+    //     cube[i] = out[0];
+    //     cube[i + 1] = out[1];
+    //     cube[i + 2] = out[2];
+    // }
+
+    for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+        cube[i] += info->pivot[0];
+        cube[i + 1] += info->pivot[1];
+        cube[i + 2] += info->pivot[2];
+    }
+
+    float matrix[16];
+    rotation_and_position_to_matrix(matrix, info->rotation, info->origin);
+    for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+        float out[3];
+        matrix_multiply_vector3(out, matrix, &cube[i]);
+        cube[i] = out[0];
+        cube[i + 1] = out[1];
+        cube[i + 2] = out[2];
+    }
+}
+
 static void bone_calculate_bind_pose(bone *b) {
 
     bone *parent = b->parent;
@@ -168,7 +205,6 @@ static void bone_calculate_bind_pose(bone *b) {
     if (parent == NULL) {
         rotation_and_position_to_matrix(b->bind_pose_matrix, b->bind_pose.rotation, b->bind_pose.position);
     } else {
-
         float bind[16];
         rotation_and_position_to_matrix(bind, b->bind_pose.rotation, b->bind_pose.position);
         matrix_multiply(b->bind_pose_matrix, b->parent->bind_pose_matrix, bind);
@@ -189,32 +225,9 @@ static void bone_calculate_bind_pose(bone *b) {
     matrix_inverse(inverse_bind_pose, bind_pose);
 
     for (int c = 0; c < b->cube_count; c++) {
-        struct model_cube *info = &b->cube_info[c];
-        float *cube = &b->cubes[c * CUBE_MODEL_VERTEX_COUNT];
-
-        // for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
-        //     float out[3];
-        //     matrix_multiply_vector3(out, inverse_bind_pose, &cube[i]);
-        //     cube[i] = out[0];
-        //     cube[i + 1] = out[1];
-        //     cube[i + 2] = out[2];
-        // }
-
-        for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
-            cube[i] += info->pivot[0];
-            cube[i + 1] += info->pivot[1];
-            cube[i + 2] += info->pivot[2];
-        }
-
-        float matrix[16];
-        rotation_and_position_to_matrix(matrix, info->rotation, info->origin);
-        for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
-            float out[3];
-            matrix_multiply_vector3(out, matrix, &cube[i]);
-            cube[i] = out[0];
-            cube[i + 1] = out[1];
-            cube[i + 2] = out[2];
-        }
+        struct model_cube *info = &b->cubes[c];
+        cube_model_bind_pose(info, info->sample);
+        cube_model_bind_pose(info, info->extension);
     }
 
     for (int i = 0; i < b->child_count; i++) {
