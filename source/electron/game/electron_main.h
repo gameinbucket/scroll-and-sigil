@@ -1,6 +1,8 @@
 #ifndef ELECTRON_MAIN_H
 #define ELECTRON_MAIN_H
 
+#include <emscripten/emscripten.h>
+
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>

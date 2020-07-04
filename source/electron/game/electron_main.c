@@ -1,6 +1,6 @@
 #include "electron_main.h"
 
-int main() {
+int EMSCRIPTEN_KEEPALIVE main() {
     printf("----------------------------------------------------------------------\n");
     printf("\n");
     return 0;
