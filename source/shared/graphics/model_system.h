@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <zip.h>
 
 #include "common/mem.h"
 #include "data/table.h"

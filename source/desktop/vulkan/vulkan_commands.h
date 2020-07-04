@@ -9,8 +9,8 @@
 
 #include <vulkan/vulkan.h>
 
-#include "common/fileio.h"
 #include "common/mem.h"
+#include "io/fileio.h"
 
 #include "vulkan_state.h"
 

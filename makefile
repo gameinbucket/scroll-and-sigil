@@ -1,10 +1,10 @@
 NAME = scroll-and-sigil
 
-SOURCE = $(wildcard source/*.c) $(wildcard source/**/*.c)
-HEADERS = $(wildcard source/*.h) $(wildcard source/**/*.h)
-OBJECTS = $(patsubst source/%.c,objects/%.o,$(SOURCE))
+SOURCE = $(wildcard source/shared/**/*.c) $(wildcard source/desktop/**/*.c)
+HEADERS = $(wildcard source/shared/**/*.h) $(wildcard source/desktop/**/*.h)
+OBJECTS = $(patsubst source/%.c,compile/objects/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
-INCLUDE = -Isource -I$(VULKAN_SDK)/include
+INCLUDE = -Isource/shared -Isource/desktop -I$(VULKAN_SDK)/include
 
 COMPILER_FLAGS = -Wall -Wextra -Werror -pedantic -std=c11 $(INCLUDE) -Wno-unused -Wno-unused-parameter
 LINKER_LIBS = -L$(VULKAN_SDK)/lib
@@ -40,13 +40,13 @@ valgrind: all
 $(NAME): $(HEADERS) $(OBJECTS)
 	$(PREFIX) $(CC) $(OBJECTS) $(COMPILER_FLAGS) -o $(NAME) $(LINKER_LIBS) $(LINKER_FLAGS)
 
-objects/%.o: source/%.c
+compile/objects/%.o: source/%.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $< $(COMPILER_FLAGS) -MMD -o $@
 
 clean:
 	rm -f ./$(NAME)
-	rm -rf ./objects
+	rm -rf ./compile/objects
 
 list-source:
 	@echo $(SOURCE)

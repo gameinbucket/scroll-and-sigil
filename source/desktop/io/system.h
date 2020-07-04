@@ -10,7 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "string_util.h"
+#include "common/string_util.h"
 
 string *cmd(char *command);
 

@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <zip.h>
 
-#include "string_util.h"
+#include "common/string_util.h"
 
 struct archive_blob {
     char *data;

@@ -4,13 +4,13 @@
 #include <zip.h>
 
 #include "assets/assets.h"
-#include "common/archive.h"
-#include "common/fileio.h"
 #include "common/string_util.h"
 #include "data/array.h"
 #include "data/table.h"
 #include "graphics/model_system.h"
 #include "input/input.h"
+#include "io/archive.h"
+#include "io/fileio.h"
 #include "math/matrix.h"
 #include "places/place.h"
 #include "things/baron.h"

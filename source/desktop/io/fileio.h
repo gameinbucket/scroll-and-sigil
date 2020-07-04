@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mem.h"
-#include "string_util.h"
+#include "common/mem.h"
+#include "common/string_util.h"
 
 size_t file_size(char *path);
 size_t file_binary_size(char *path);

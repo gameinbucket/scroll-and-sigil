@@ -12,8 +12,8 @@
 #include <zip.h>
 
 #include "assets/assets.h"
-#include "common/archive.h"
 #include "common/mem.h"
+#include "io/archive.h"
 
 #define SOUND_MAX_CHANNELS 8
 

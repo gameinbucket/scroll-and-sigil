@@ -1,11 +1,15 @@
-.vscode/
+.vscode
+.DS_Store
 
 main
 scroll-and-sigil
 unit-tests
-.DS_Store
+node_modules
+scroll-and-sigil.js
+scroll-and-sigil.html
 
 *.o
 *.d
 *.pack
 *.spv
+*.wasm

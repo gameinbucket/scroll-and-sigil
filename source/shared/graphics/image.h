@@ -7,10 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <zip.h>
 
-#include "common/archive.h"
-#include "common/fileio.h"
 #include "common/mem.h"
 
 typedef struct simple_image simple_image;
@@ -21,7 +18,6 @@ struct simple_image {
     void *pixels;
 };
 
-simple_image *read_png_file(struct zip *z, char *path);
 void simple_image_free(simple_image *self);
 
 #endif

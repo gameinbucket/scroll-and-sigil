@@ -1,8 +1,5 @@
-#ifndef MAIN_H
-#define MAIN_H
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_vulkan.h>
+#ifndef ELECTRON_MAIN_H
+#define ELECTRON_MAIN_H
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -15,10 +12,5 @@
 
 #include "common/log.h"
 #include "common/mem.h"
-#include "common/sleep_util.h"
-#include "vulkan/vulkan_instance.h"
-#include "vulkan/vulkan_state.h"
-
-#include "state.h"
 
 #endif

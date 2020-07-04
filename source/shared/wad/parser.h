@@ -2,8 +2,6 @@
 #define WAD_PARSER_H
 
 #include "assets/assets.h"
-#include "common/archive.h"
-#include "common/fileio.h"
 #include "common/string_util.h"
 #include "data/array.h"
 #include "data/table.h"

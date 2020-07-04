@@ -1,4 +1,4 @@
-#include "image.h"
+#include "image_read.h"
 
 struct png_blob_handle {
     char *data;
@@ -101,9 +101,4 @@ simple_image *read_png_file(struct zip *z, char *path) {
     img->pixels = pixels;
 
     return img;
-}
-
-void simple_image_free(simple_image *self) {
-    free(self->pixels);
-    free(self);
 }
