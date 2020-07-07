@@ -151,15 +151,7 @@ static void bone_init(bone *bones, int index, string *name, wad_element *pivot, 
     quaternion_identity(b->local.rotation);
 }
 
-static void cube_model_bind_pose(struct model_cube *info, float *cube) {
-
-    // for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
-    //     float out[3];
-    //     matrix_multiply_vector3(out, bind_pose, &cube[i]);
-    //     cube[i] = out[0];
-    //     cube[i + 1] = out[1];
-    //     cube[i + 2] = out[2];
-    // }
+static void cube_model_bind_pose(bone *b, struct model_cube *info, float *cube) {
 
     for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
         cube[i] += info->pivot[0];
@@ -167,11 +159,27 @@ static void cube_model_bind_pose(struct model_cube *info, float *cube) {
         cube[i + 2] += info->pivot[2];
     }
 
+    // for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+    //     float out[3];
+    //     matrix_multiply_vector3(out, b->bind_pose_matrix, &cube[i]);
+    //     cube[i] = out[0];
+    //     cube[i + 1] = out[1];
+    //     cube[i + 2] = out[2];
+    // }
+
     float matrix[16];
     rotation_and_position_to_matrix(matrix, info->rotation, info->origin);
     for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
         float out[3];
         matrix_multiply_vector3(out, matrix, &cube[i]);
+        cube[i] = out[0];
+        cube[i + 1] = out[1];
+        cube[i + 2] = out[2];
+    }
+
+    for (int i = 0; i < CUBE_MODEL_VERTEX_COUNT; i += CUBE_MODEL_STRIDE) {
+        float out[3];
+        matrix_multiply_vector3(out, b->inverse_bind_pose_matrix, &cube[i]);
         cube[i] = out[0];
         cube[i + 1] = out[1];
         cube[i + 2] = out[2];
@@ -197,8 +205,8 @@ static void bone_calculate_bind_pose(bone *b) {
 
     for (int c = 0; c < b->cube_count; c++) {
         struct model_cube *info = &b->cubes[c];
-        cube_model_bind_pose(info, info->sample);
-        cube_model_bind_pose(info, info->extension);
+        cube_model_bind_pose(b, info, info->sample);
+        cube_model_bind_pose(b, info, info->extension);
     }
 
     for (int i = 0; i < b->child_count; i++) {

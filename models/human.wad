@@ -24,7 +24,7 @@ bones{
         cubes[{
             size[3, 8, 3]
             pivot[0, 0, 0]
-            origin[0, 0, 0]
+            origin[11, 16, 0]
             rotation[0, 0, 0]
             sample{
                 front[0, 0, 64, 64]
