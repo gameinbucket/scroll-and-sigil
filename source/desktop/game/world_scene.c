@@ -361,7 +361,7 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
     vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
 
-    VkDescriptorSet stone_descriptor = image_descriptor_system_get(self->image_system, TEXTURE_STONE_FLOOR);
+    VkDescriptorSet stone_descriptor = image_descriptor_system_get(self->image_system, TEXTURE_HERO);
     vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &stone_descriptor);
 
     int thing_model_count = w->thing_models_count;

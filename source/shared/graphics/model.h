@@ -14,6 +14,8 @@
 #include "wad/parser.h"
 
 #include "cube.h"
+#include "image.h"
+#include "image_system.h"
 
 typedef struct transform transform;
 
@@ -79,7 +81,7 @@ struct model {
 
 int model_bone_index_of_name(model_info *self, string *name);
 int model_animation_index_of_name(model_info *self, char *name);
-model_info *model_parse(wad_element *model_wad, wad_element *animation_wad);
+model_info *model_parse(image_system *system, wad_element *model_wad, wad_element *animation_wad);
 model *create_model(model_info *info);
 
 #endif

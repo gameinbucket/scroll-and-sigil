@@ -6,9 +6,9 @@ static const int SCREEN_HEIGHT = 800;
 static bool run = true;
 
 // #define FPS_ON
-#define TIMING_ON
+// #define TIMING_ON
 
-// #define SLEEP_ON
+#define SLEEP_ON
 
 #define BILLION 1000000000L
 
@@ -115,31 +115,31 @@ static void main_loop(state *s) {
             updates = 0;
         }
 
-        // struct timeval start, stop;
-        // gettimeofday(&start, NULL);
+        struct timeval start, stop;
+        gettimeofday(&start, NULL);
 
         state_render(s);
 
-        //         gettimeofday(&stop, NULL);
-        //         unsigned int microseconds = (stop.tv_sec - start.tv_sec) * 1000000 + ((int)stop.tv_usec - (int)start.tv_usec);
+        gettimeofday(&stop, NULL);
+        unsigned int microseconds = (stop.tv_sec - start.tv_sec) * 1000000 + ((int)stop.tv_usec - (int)start.tv_usec);
 
-        // #ifdef TIMING_ON
-        //         printf("microseconds: %d\n", microseconds);
-        // #endif
+#ifdef TIMING_ON
+        printf("microseconds: %d\n", microseconds);
+#endif
 
-        // #ifdef FPS_ON
-        //         time += microseconds;
-        //         frames++;
-        //         if (time >= 1000000) {
-        //             printf("frames per second: %d\n", frames);
-        //             time -= 1000000;
-        //             frames = 0;
-        //         }
-        // #endif
+#ifdef FPS_ON
+        time += microseconds;
+        frames++;
+        if (time >= 1000000) {
+            printf("frames per second: %d\n", frames);
+            time -= 1000000;
+            frames = 0;
+        }
+#endif
 
-        // #ifdef SLEEP_ON
-        //         sleep_micro(4000 - microseconds);
-        // #endif
+#ifdef SLEEP_ON
+        sleep_micro(4000 - microseconds);
+#endif
     }
     printf("\n");
 

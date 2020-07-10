@@ -320,6 +320,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_PARTICLES], "textures/particles.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
     create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_SCENERY], "textures/scenery.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
     create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_FONT], "textures/font.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_HERO], "textures/hero.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
 
     self->image_system = create_image_descriptor_system(vk_state, TEXTURE_COUNT, self->images);
 
@@ -328,13 +329,21 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     sound_system *ss = create_sound_system();
     self->ss = ss;
 
+    image_system *is = create_image_system();
+    self->is = is;
+
+    image_details *info_d = safe_calloc(1, sizeof(image_details));
+    info_d->width = 128;
+    info_d->height = 128;
+    image_system_add_image(is, "textures/hero.png", info_d);
+
     model_system *ms = create_model_system();
     self->ms = ms;
 
     world *w = create_world();
     self->w = w;
 
-    mega_wad_load_resources(ss, ms);
+    mega_wad_load_resources(ss, is, ms);
     mega_wad_load_map(w, &self->in, ms);
 
     camera *c = create_camera(4);

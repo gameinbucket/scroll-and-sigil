@@ -20,19 +20,19 @@ int model_animation_index_of_name(model_info *self, char *name) {
     return -1;
 }
 
-static void model_cube_texture(float *mesh, wad_element *sample, char *side_key, int side_index) {
+static void model_cube_texture(float *mesh, wad_element *sample, char *side_key, int side_index, int width, int height) {
     wad_element *side = wad_get_from_object(sample, side_key);
     if (side == NULL) {
         return;
     }
-    float x = wad_get_float(wad_get_from_array(side, 0)) / 64.0;
-    float y = wad_get_float(wad_get_from_array(side, 1)) / 64.0;
-    float z = wad_get_float(wad_get_from_array(side, 2)) / 64.0;
-    float w = wad_get_float(wad_get_from_array(side, 3)) / 64.0;
+    float x = wad_get_float(wad_get_from_array(side, 0)) / (float)width;
+    float y = wad_get_float(wad_get_from_array(side, 1)) / (float)height;
+    float z = wad_get_float(wad_get_from_array(side, 2)) / (float)width;
+    float w = wad_get_float(wad_get_from_array(side, 3)) / (float)height;
     texture_cube_model(mesh, side_index, x, y, z, w);
 }
 
-static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_element *cube, float scale) {
+static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_element *cube, float scale, int image_width, int image_height) {
 
     wad_element *size = wad_get_required_from_object(cube, "size");
     wad_element *pivot = wad_get_from_object(cube, "pivot");
@@ -80,24 +80,24 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
 
     float mesh[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width, height, length, bone_index);
     if (sample != NULL) {
-        model_cube_texture(mesh, sample, "front", CUBE_FRONT);
-        model_cube_texture(mesh, sample, "back", CUBE_BACK);
-        model_cube_texture(mesh, sample, "left", CUBE_LEFT);
-        model_cube_texture(mesh, sample, "right", CUBE_RIGHT);
-        model_cube_texture(mesh, sample, "top", CUBE_TOP);
-        model_cube_texture(mesh, sample, "bottom", CUBE_BOTTOM);
+        model_cube_texture(mesh, sample, "front", CUBE_FRONT, image_width, image_height);
+        model_cube_texture(mesh, sample, "back", CUBE_BACK, image_width, image_height);
+        model_cube_texture(mesh, sample, "left", CUBE_LEFT, image_width, image_height);
+        model_cube_texture(mesh, sample, "right", CUBE_RIGHT, image_width, image_height);
+        model_cube_texture(mesh, sample, "top", CUBE_TOP, image_width, image_height);
+        model_cube_texture(mesh, sample, "bottom", CUBE_BOTTOM, image_width, image_height);
     }
     memcpy(info->sample, mesh, CUBE_MODEL_VERTEX_BYTES);
 
     if (extension != NULL) {
         const float extend = 1.2f;
         float mesh[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width * extend, height * extend, length * extend, bone_index);
-        model_cube_texture(mesh, extension, "front", CUBE_FRONT);
-        model_cube_texture(mesh, extension, "back", CUBE_BACK);
-        model_cube_texture(mesh, extension, "left", CUBE_LEFT);
-        model_cube_texture(mesh, extension, "right", CUBE_RIGHT);
-        model_cube_texture(mesh, extension, "top", CUBE_TOP);
-        model_cube_texture(mesh, extension, "bottom", CUBE_BOTTOM);
+        model_cube_texture(mesh, extension, "front", CUBE_FRONT, image_width, image_height);
+        model_cube_texture(mesh, extension, "back", CUBE_BACK, image_width, image_height);
+        model_cube_texture(mesh, extension, "left", CUBE_LEFT, image_width, image_height);
+        model_cube_texture(mesh, extension, "right", CUBE_RIGHT, image_width, image_height);
+        model_cube_texture(mesh, extension, "top", CUBE_TOP, image_width, image_height);
+        model_cube_texture(mesh, extension, "bottom", CUBE_BOTTOM, image_width, image_height);
         memcpy(info->extension, mesh, CUBE_MODEL_VERTEX_BYTES);
     }
 }
@@ -214,7 +214,7 @@ static void bone_calculate_bind_pose(bone *b) {
     }
 }
 
-model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
+model_info *model_parse(image_system *system, wad_element *model_wad, wad_element *animation_wad) {
 
     const float scale = 0.03f;
 
@@ -229,6 +229,16 @@ model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
     info->texture = texture;
     info->bones = bones;
     info->bone_count = bone_count;
+
+    image_details *details = image_system_get_image(system, texture);
+
+    if (details == NULL) {
+        fprintf(stderr, "Missing texture `%s` for model\n", texture);
+        exit(1);
+    }
+
+    int width = details->width;
+    int height = details->height;
 
     unsigned int b_i = 0;
     table_iterator bone_iter = wad_object_iterator(bones_table);
@@ -250,7 +260,7 @@ model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
 
         for (int c_i = 0; c_i < cube_count; c_i++) {
             wad_element *cube = wad_get_from_array(cubes, c_i);
-            model_cube_init(bones, b_i, c_i, cube, scale);
+            model_cube_init(bones, b_i, c_i, cube, scale, width, height);
         }
 
         if (parent == NULL) {
@@ -343,7 +353,7 @@ model_info *model_parse(wad_element *model_wad, wad_element *animation_wad) {
 
                 int index = model_bone_index_of_name(info, bone_name);
                 if (index == -1) {
-                    fprintf(stdout, "Bone %s does not exist in animation %s\n", bone_name, wad_to_string(frame_data));
+                    fprintf(stderr, "Bone `%s` does not exist in animation `%s`\n", bone_name, wad_to_string(frame_data));
                     exit(1);
                 }
 

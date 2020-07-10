@@ -1,6 +1,6 @@
 #include "mega_wad.h"
 
-void mega_wad_load_resources(sound_system *ss, model_system *ms) {
+void mega_wad_load_resources(sound_system *ss, image_system *is, model_system *ms) {
 
     struct zip *z = NULL;
     const bool use_zip = false;
@@ -37,7 +37,7 @@ void mega_wad_load_resources(sound_system *ss, model_system *ms) {
     // printf("\nhuman animation %s\n", human_animation_str);
     // string_free(human_animation_str);
 
-    model_info *human_model = model_parse(human_wad, human_animation_wad);
+    model_info *human_model = model_parse(is, human_wad, human_animation_wad);
     // for (int i = 0; i < TEXTURE_COUNT; i++) {
     //     if (string_equal(human_model->texture, rs->textures[i]->path)) {
     //         human_model->texture_id = i;

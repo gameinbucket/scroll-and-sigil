@@ -25,6 +25,8 @@
 #include "assets/assets.h"
 #include "common/log.h"
 #include "common/mem.h"
+#include "graphics/image_system.h"
+#include "graphics/model_system.h"
 #include "input/input.h"
 #include "render/render.h"
 #include "world/world.h"
@@ -42,6 +44,7 @@ typedef struct state state;
 struct state {
     input in;
     sound_system *ss;
+    image_system *is;
     model_system *ms;
     world *w;
     camera *c;
@@ -51,6 +54,7 @@ struct state {
     int canvas_height;
     vulkan_state *vk_state;
     struct vulkan_base *vk_base;
+    struct table *image_lookup;
     struct vulkan_image *images;
     struct vulkan_pipeline **pipelines;
     struct vulkan_render_buffer *draw_canvas;
