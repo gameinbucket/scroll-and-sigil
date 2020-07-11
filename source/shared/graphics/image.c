@@ -1,6 +1,6 @@
 #include "image.h"
 
-void simple_image_free(simple_image *self) {
+void delete_image_pixels(image_pixels *self) {
     free(self->pixels);
     free(self);
 }

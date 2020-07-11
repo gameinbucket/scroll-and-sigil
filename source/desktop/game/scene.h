@@ -26,7 +26,7 @@
 struct scene {
     struct vulkan_pipeline *pipeline;
     struct vulkan_render_buffer *render;
-    image_descriptor_system *image_system;
+    image_descriptor_system *image_descriptors;
 };
 
 struct scene *create_scene(struct vulkan_pipeline *pipeline, struct vulkan_render_buffer *render);

@@ -296,6 +296,12 @@ void state_render(state *self) {
     vk_state->current_frame = (current_frame + 1) % VULKAN_MAX_FRAMES_IN_FLIGHT;
 }
 
+static void create_texture(image_system *is, vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path, VkFilter filter, VkSamplerAddressMode mode) {
+    image_details details = create_vulkan_texture(vk_state, command_pool, image, path, filter, mode);
+    image_details *info = safe_box(&details, sizeof(image_details));
+    image_system_add_image(is, path, info);
+}
+
 state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
     state *self = safe_calloc(1, sizeof(state));
@@ -310,32 +316,27 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
     self->vk_base = vk_base;
 
-    self->images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image));
-    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_BARON], "textures/baron.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_GRASS], "textures/tiles/grass.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_PLANK_FLOOR], "textures/tiles/plank-floor.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_PLANKS], "textures/tiles/planks.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_STONE], "textures/tiles/stone.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_STONE_FLOOR], "textures/tiles/stone-floor.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_PARTICLES], "textures/particles.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_SCENERY], "textures/scenery.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_FONT], "textures/font.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-    create_vulkan_texture(vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_HERO], "textures/hero.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+    image_system *is = create_image_system();
+    self->is = is;
 
-    self->image_system = create_image_descriptor_system(vk_state, TEXTURE_COUNT, self->images);
+    self->images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image));
+    create_texture(is, vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_BARON], "textures/baron.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+    create_texture(is, vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_GRASS], "textures/tiles/grass.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    create_texture(is, vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_PLANK_FLOOR], "textures/tiles/plank-floor.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    create_texture(is, vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_PLANKS], "textures/tiles/planks.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    create_texture(is, vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_STONE], "textures/tiles/stone.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    create_texture(is, vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_STONE_FLOOR], "textures/tiles/stone-floor.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+    create_texture(is, vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_PARTICLES], "textures/particles.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+    create_texture(is, vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_SCENERY], "textures/scenery.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+    create_texture(is, vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_FONT], "textures/font.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+    create_texture(is, vk_state, vk_base->vk_command_pool, &self->images[TEXTURE_HERO], "textures/hero.png", VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+
+    self->image_descriptors = create_image_descriptor_system(vk_state, TEXTURE_COUNT, self->images);
 
     self->pipelines = safe_calloc(SHADER_COUNT, sizeof(struct vulkan_pipeline *));
 
     sound_system *ss = create_sound_system();
     self->ss = ss;
-
-    image_system *is = create_image_system();
-    self->is = is;
-
-    image_details *info_d = safe_calloc(1, sizeof(image_details));
-    info_d->width = 128;
-    info_d->height = 128;
-    image_system_add_image(is, "textures/hero.png", info_d);
 
     model_system *ms = create_model_system();
     self->ms = ms;
@@ -360,7 +361,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     }
 
     world_scene *ws = create_world_scene(w);
-    ws->image_system = self->image_system;
+    ws->image_descriptors = self->image_descriptors;
     ws->c = c;
     world_scene_initialize(vk_state, vk_base->vk_command_pool, ws);
     world_scene_geometry(vk_state, vk_base, ws);
@@ -483,7 +484,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, render);
 
         self->sc = create_scene(pipeline, render);
-        self->sc->image_system = self->image_system;
+        self->sc->image_descriptors = self->image_descriptors;
     }
 
     {
@@ -617,7 +618,7 @@ void delete_state(state *self) {
         delete_vulkan_image(self->vk_state->vk_device, &self->images[i]);
     }
 
-    delete_image_descriptor_system(self->vk_state, self->image_system);
+    delete_image_descriptor_system(self->vk_state, self->image_descriptors);
 
     delete_vulkan_base(self->vk_state, self->vk_base);
 

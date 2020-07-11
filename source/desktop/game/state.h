@@ -59,7 +59,7 @@ struct state {
     struct vulkan_pipeline **pipelines;
     struct vulkan_render_buffer *draw_canvas;
     vulkan_offscreen_buffer *gbuffer;
-    image_descriptor_system *image_system;
+    image_descriptor_system *image_descriptors;
     world_scene *ws;
     struct hud *hd;
     struct scene *sc;

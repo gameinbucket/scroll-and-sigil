@@ -14,6 +14,6 @@
 #include "io/archive.h"
 #include "io/fileio.h"
 
-simple_image *read_png_file(struct zip *z, char *path);
+image_pixels *read_png_file(struct zip *z, char *path);
 
 #endif

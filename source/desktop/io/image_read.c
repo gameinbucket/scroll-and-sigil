@@ -12,7 +12,7 @@ static void png_read_from_buffer(png_structp png, png_bytep out, png_size_t read
     handle->offset += read_length;
 }
 
-simple_image *read_png_file(struct zip *z, char *path) {
+image_pixels *read_png_file(struct zip *z, char *path) {
 
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png) {
@@ -95,7 +95,7 @@ simple_image *read_png_file(struct zip *z, char *path) {
 
     png_destroy_read_struct(&png, &info, NULL);
 
-    simple_image *img = safe_calloc(1, sizeof(simple_image));
+    image_pixels *img = safe_calloc(1, sizeof(image_pixels));
     img->width = width;
     img->height = height;
     img->pixels = pixels;

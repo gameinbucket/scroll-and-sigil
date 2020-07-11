@@ -18,7 +18,7 @@ void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, st
 
     VkDescriptorSet descriptors[2] = {
         pipeline->pipe_data.sets[0].descriptor_sets[image_index],
-        image_descriptor_system_get(self->image_system, TEXTURE_PLANK_FLOOR),
+        image_descriptor_system_get(self->image_descriptors, TEXTURE_PLANK_FLOOR),
     };
 
     vulkan_pipeline_cmd_bind_given_description(pipeline, command_buffer, 2, descriptors);

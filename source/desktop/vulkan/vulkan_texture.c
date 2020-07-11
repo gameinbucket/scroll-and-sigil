@@ -29,9 +29,9 @@ static void vk_create_texture_image_sampler(vulkan_state *vk_state, struct vulka
     }
 }
 
-void create_vulkan_texture(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path, VkFilter filter, VkSamplerAddressMode mode) {
+image_details create_vulkan_texture(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path, VkFilter filter, VkSamplerAddressMode mode) {
 
-    simple_image *png = read_png_file(NULL, path);
+    image_pixels *png = read_png_file(NULL, path);
 
     int width = png->width;
     int height = png->height;
@@ -51,18 +51,18 @@ void create_vulkan_texture(vulkan_state *vk_state, VkCommandPool command_pool, s
     memcpy(data, png->pixels, image_byte_size);
     vkUnmapMemory(vk_state->vk_device, staging_buffer_memory);
 
-    struct vulkan_image_details image_details = {0};
-    image_details.width = width;
-    image_details.height = height;
-    image_details.format = VK_FORMAT_R8G8B8A8_SRGB;
-    image_details.tiling = VK_IMAGE_TILING_OPTIMAL;
-    image_details.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-    image_details.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    struct vulkan_image_details details = {0};
+    details.width = width;
+    details.height = height;
+    details.format = VK_FORMAT_R8G8B8A8_SRGB;
+    details.tiling = VK_IMAGE_TILING_OPTIMAL;
+    details.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    details.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
     VkImage texture_image = {0};
     VkDeviceMemory texture_image_memory = {0};
 
-    vk_create_image(vk_state, image_details, &texture_image, &texture_image_memory);
+    vk_create_image(vk_state, details, &texture_image, &texture_image_memory);
 
     vk_transition_image_layout(vk_state, command_pool, texture_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
@@ -76,8 +76,13 @@ void create_vulkan_texture(vulkan_state *vk_state, VkCommandPool command_pool, s
     image->vk_texture_image = texture_image;
     image->vk_texture_image_memory = texture_image_memory;
 
-    simple_image_free(png);
+    delete_image_pixels(png);
 
     vk_create_texture_image_view(vk_state, image);
     vk_create_texture_image_sampler(vk_state, image, filter, mode);
+
+    return (image_details){
+        .width = width,
+        .height = height,
+    };
 }
