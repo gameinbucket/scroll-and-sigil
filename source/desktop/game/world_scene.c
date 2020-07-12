@@ -194,7 +194,7 @@ static void thing_model_render(thing *t, struct uniform_bones *ubo) {
     model_info *info = m->info;
     bone *master = info->master;
 
-    euler_to_quaternion(master->local.rotation, 0.0f, -t->rotation, 0.0f);
+    euler_to_quaternion(master->local.rotation, 0.0f, MATH_PI - t->rotation, 0.0f);
     master->local.position[0] = t->x;
     master->local.position[1] = t->y + 48 * 0.03f;
     master->local.position[2] = t->z;

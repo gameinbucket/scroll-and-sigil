@@ -5,11 +5,10 @@ static const int SCREEN_HEIGHT = 800;
 
 static bool run = true;
 
+#define CALC_TIME
 // #define FPS_ON
 // #define TIMING_ON
-
 #define SLEEP_ON
-
 #define BILLION 1000000000L
 
 static void window_resize(vulkan_state *vk_state) {
@@ -115,13 +114,19 @@ static void main_loop(state *s) {
             updates = 0;
         }
 
+#ifdef CALC_TIME
         struct timeval start, stop;
         gettimeofday(&start, NULL);
+#endif
 
         state_render(s);
 
+#ifdef CALC_TIME
         gettimeofday(&stop, NULL);
         unsigned int microseconds = (stop.tv_sec - start.tv_sec) * 1000000 + ((int)stop.tv_usec - (int)start.tv_usec);
+#else
+        unsigned int microseconds = 2000;
+#endif
 
 #ifdef TIMING_ON
         printf("microseconds: %d\n", microseconds);
@@ -138,7 +143,10 @@ static void main_loop(state *s) {
 #endif
 
 #ifdef SLEEP_ON
-        sleep_micro(4000 - microseconds);
+        const unsigned int rest = 4000;
+        if (microseconds < rest) {
+            sleep_micro(rest - microseconds);
+        }
 #endif
     }
     printf("\n");

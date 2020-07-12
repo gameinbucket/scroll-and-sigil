@@ -586,7 +586,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         struct vulkan_render_settings render_settings = {0};
         vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 1);
         struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
-        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_NONE);
         vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
 
         self->pipelines[SHADER_RENDER_MODEL] = pipeline;
