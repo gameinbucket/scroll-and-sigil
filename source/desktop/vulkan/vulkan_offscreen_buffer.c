@@ -58,7 +58,7 @@ static void init_vulkan_frame_attachment(vulkan_state *vk_state, vulkan_frame_at
     VK_RESULT_OK(vkCreateImageView(vk_state->vk_device, &view_info, NULL, &attachment->view));
 }
 
-static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_offscreen_buffer *offscreen, uint32_t width, uint32_t height) {
+static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t width, uint32_t height) {
 
     offscreen->width = width;
     offscreen->height = height;
@@ -175,12 +175,14 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_offsc
     semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
     VK_RESULT_OK(vkCreateSemaphore(vk_state->vk_device, &semaphore_info, NULL, &offscreen->semaphore));
+
+    offscreen->command_buffers = vulkan_util_create_command_buffers(vk_state, vk_base->vk_command_pool, vk_base->swapchain->swapchain_image_count);
 }
 
-vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, uint32_t width, uint32_t height) {
+vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, uint32_t width, uint32_t height) {
 
     vulkan_offscreen_buffer *offscreen = safe_calloc(1, sizeof(vulkan_offscreen_buffer));
-    prepare_vulkan_offscreen_buffer(vk_state, offscreen, width, height);
+    prepare_vulkan_offscreen_buffer(vk_state, vk_base, offscreen, width, height);
     return offscreen;
 }
 
@@ -191,20 +193,33 @@ static void delete_vulkan_frame_attachment(vulkan_state *vk_state, vulkan_frame_
     vkFreeMemory(vk_state->vk_device, self->memory, NULL);
 }
 
-void delete_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_offscreen_buffer *self) {
+void vulkan_offscreen_buffer_clean(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self) {
+
+    vkFreeCommandBuffers(vk_state->vk_device, vk_base->vk_command_pool, vk_base->swapchain->swapchain_image_count, self->command_buffers);
+
+    vkDestroyRenderPass(vk_state->vk_device, self->render_pass, NULL);
+}
+
+void vulkan_offscreen_buffer_recreate(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self) {
+}
+
+void delete_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self) {
 
     delete_vulkan_frame_attachment(vk_state, &self->color);
     delete_vulkan_frame_attachment(vk_state, &self->normal);
     delete_vulkan_frame_attachment(vk_state, &self->position);
     delete_vulkan_frame_attachment(vk_state, &self->depth);
 
+    vulkan_offscreen_buffer_clean(vk_state, vk_base, self);
+
     vkDestroySampler(vk_state->vk_device, self->color_sampler, NULL);
     vkDestroyFramebuffer(vk_state->vk_device, self->buffer, NULL);
-    vkDestroyRenderPass(vk_state->vk_device, self->render_pass, NULL);
     vkDestroySemaphore(vk_state->vk_device, self->semaphore, NULL);
+
+    free(self->command_buffers);
 }
 
-void vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen) {
+void vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t image_index) {
 
     uint32_t width = offscreen->width;
     uint32_t height = offscreen->height;
@@ -233,7 +248,7 @@ void vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base
     scissor.extent = (VkExtent2D){width, height};
     scissor.offset = (VkOffset2D){0, 0};
 
-    VkCommandBuffer command_buffer = offscreen->command_buffer;
+    VkCommandBuffer command_buffer = offscreen->command_buffers[image_index];
 
     VkCommandBufferBeginInfo command_begin_info = {0};
     command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -246,8 +261,8 @@ void vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 }
 
-void vulkan_offscreen_buffer_end_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen) {
+void vulkan_offscreen_buffer_end_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t image_index) {
 
-    vkCmdEndRenderPass(offscreen->command_buffer);
-    VK_RESULT_OK(vkEndCommandBuffer(offscreen->command_buffer));
+    vkCmdEndRenderPass(offscreen->command_buffers[image_index]);
+    VK_RESULT_OK(vkEndCommandBuffer(offscreen->command_buffers[image_index]));
 }

@@ -13,6 +13,7 @@
 #include "io/fileio.h"
 
 #include "vulkan_base.h"
+#include "vulkan_base_util.h"
 #include "vulkan_commands.h"
 #include "vulkan_depth.h"
 #include "vulkan_state.h"
@@ -35,11 +36,16 @@ struct vulkan_offscreen_buffer {
     VkRenderPass render_pass;
     VkSampler color_sampler;
     VkSemaphore semaphore;
-    VkCommandBuffer command_buffer;
+    VkCommandBuffer *command_buffers;
 };
 
-vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, uint32_t width, uint32_t height);
-void delete_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_offscreen_buffer *self);
-void vulkan_offscreen_buffer_command_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen);
+vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, uint32_t width, uint32_t height);
+
+void vulkan_offscreen_buffer_clean(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self);
+void vulkan_offscreen_buffer_recreate(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self);
+void delete_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self);
+
+void vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t image_index);
+void vulkan_offscreen_buffer_end_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t image_index);
 
 #endif

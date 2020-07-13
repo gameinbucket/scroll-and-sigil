@@ -17,22 +17,29 @@ static void vulkan_base_clean_swapchain(vulkan_state *vk_state, struct vulkan_ba
     vulkan_swapchain_clean(vk_state, vk_base->swapchain);
 }
 
-void vulkan_base_create_command_buffers(vulkan_state *vk_state, struct vulkan_base *vk_base) {
+VkCommandBuffer *vulkan_util_create_command_buffers(vulkan_state *vk_state, VkCommandPool command_pool, uint32_t count) {
 
-    uint32_t size = vk_base->swapchain->swapchain_image_count;
-
-    vk_base->vk_command_buffers = safe_calloc(size, sizeof(VkCommandBuffer));
+    VkCommandBuffer *command_buffers = safe_calloc(count, sizeof(VkCommandBuffer));
 
     VkCommandBufferAllocateInfo command_buffer_alloc_info = {0};
     command_buffer_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    command_buffer_alloc_info.commandPool = vk_base->vk_command_pool;
+    command_buffer_alloc_info.commandPool = command_pool;
     command_buffer_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    command_buffer_alloc_info.commandBufferCount = size;
+    command_buffer_alloc_info.commandBufferCount = count;
 
-    if (vkAllocateCommandBuffers(vk_state->vk_device, &command_buffer_alloc_info, vk_base->vk_command_buffers) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(vk_state->vk_device, &command_buffer_alloc_info, command_buffers) != VK_SUCCESS) {
         fprintf(stderr, "Error: Vulkan Allocate Command Buffers\n");
         exit(1);
     }
+
+    return command_buffers;
+}
+
+void vulkan_base_create_command_buffers(vulkan_state *vk_state, struct vulkan_base *vk_base) {
+
+    uint32_t count = vk_base->swapchain->swapchain_image_count;
+
+    vk_base->vk_command_buffers = vulkan_util_create_command_buffers(vk_state, vk_base->vk_command_pool, count);
 }
 
 void vulkan_base_recreate_swapchain(vulkan_state *vk_state, struct vulkan_base *vk_base, uint32_t width, uint32_t height) {

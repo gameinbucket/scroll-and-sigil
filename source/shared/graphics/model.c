@@ -1,5 +1,7 @@
 #include "model.h"
 
+static const float MODEL_EXTENSION = 1.1f;
+
 int model_bone_index_of_name(model_info *self, string *name) {
     int count = self->bone_count;
     for (int i = 0; i < count; i++) {
@@ -90,8 +92,7 @@ static void model_cube_init(bone *bones, int bone_index, int cube_index, wad_ele
     memcpy(info->sample, mesh, CUBE_MODEL_VERTEX_BYTES);
 
     if (extension != NULL) {
-        const float extend = 1.2f;
-        float mesh[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width * extend, height * extend, length * extend, bone_index);
+        float mesh[CUBE_MODEL_VERTEX_COUNT] = RENDER_CUBE_MODEL(width * MODEL_EXTENSION, height * MODEL_EXTENSION, length * MODEL_EXTENSION, bone_index);
         model_cube_texture(mesh, extension, "front", CUBE_FRONT, image_width, image_height);
         model_cube_texture(mesh, extension, "back", CUBE_BACK, image_width, image_height);
         model_cube_texture(mesh, extension, "left", CUBE_LEFT, image_width, image_height);

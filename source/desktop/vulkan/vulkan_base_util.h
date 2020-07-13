@@ -20,6 +20,8 @@
 #include "vulkan_state.h"
 #include "vulkan_swapchain.h"
 
+VkCommandBuffer *vulkan_util_create_command_buffers(vulkan_state *vk_state, VkCommandPool command_pool, uint32_t count);
+
 void vulkan_base_create_command_buffers(vulkan_state *vk_state, struct vulkan_base *vk_base);
 
 void vulkan_base_recreate_swapchain(vulkan_state *vk_state, struct vulkan_base *vk_base, uint32_t width, uint32_t height);

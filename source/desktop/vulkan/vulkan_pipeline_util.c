@@ -1,5 +1,12 @@
 #include "vulkan_pipeline_util.h"
 
+VkPipelineColorBlendAttachmentState create_color_blend_attachment(VkColorComponentFlags mask, VkBool32 blend) {
+    VkPipelineColorBlendAttachmentState color_blend_attachment = {0};
+    color_blend_attachment.colorWriteMask = mask;
+    color_blend_attachment.blendEnable = blend;
+    return color_blend_attachment;
+}
+
 void vulkan_pipeline_cmd_bind(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer) {
     vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vk_pipeline);
 }
@@ -37,7 +44,7 @@ void vulkan_pipeline_recreate(vulkan_state *vk_state, struct vulkan_base *vk_bas
     vulkan_pipeline_create_descriptor_pool(vk_state, pipeline);
     vulkan_pipeline_create_descriptor_sets(vk_state, pipeline);
 
-    vulkan_pipeline_compile_graphics(vk_state, vk_base->swapchain->swapchain_extent, vk_base->vk_render_pass, pipeline);
+    vulkan_pipeline_compile_graphics(vk_state, vk_base, pipeline);
 
     vulkan_pipeline_update_descriptor_sets(vk_state, pipeline);
 }
@@ -52,7 +59,7 @@ void vulkan_pipeline_initialize(vulkan_state *vk_state, struct vulkan_base *vk_b
     vulkan_pipeline_create_descriptor_pool(vk_state, pipeline);
     vulkan_pipeline_create_descriptor_sets(vk_state, pipeline);
 
-    vulkan_pipeline_compile_graphics(vk_state, vk_base->swapchain->swapchain_extent, vk_base->vk_render_pass, pipeline);
+    vulkan_pipeline_compile_graphics(vk_state, vk_base, pipeline);
 }
 
 void vulkan_pipeline_static_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {

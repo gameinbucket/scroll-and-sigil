@@ -41,6 +41,10 @@ struct vulkan_pipe_data {
     char *vertex;
     char *fragment;
     VkDescriptorPool descriptor_pool;
+    bool use_render_pass;
+    VkRenderPass render_pass;
+    uint32_t color_blend_attachments_count;
+    VkPipelineColorBlendAttachmentState *color_blend_attachments;
 };
 
 void vulkan_pipe_data_initialize_uniforms(vulkan_state *vk_state, struct vulkan_pipe_data *pipe_data);

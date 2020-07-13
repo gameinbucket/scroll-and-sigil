@@ -4,7 +4,7 @@ bones{
         pivot[0, 0, 0]
         rotation[0, 0, 0]
         cubes[{
-            size[8, 14, 5]
+            size[8, 12, 4]
             pivot[0, 0, 0]
             origin[0, 0, 0]
             rotation[0, 0, 0]
@@ -30,9 +30,9 @@ bones{
         pivot[0, 0, 0]
         rotation[0, 0, 0]
         cubes[{
-            size[3, 2.2, 3]
+            size[3, 1.2, 3]
             pivot[0, 0, 0]
-            origin[0, 15.2, 0]
+            origin[0, 17.2, 0]
             rotation[0, 0, 0]
             sample{
                 front[0, 0, 64, 64]
@@ -49,7 +49,7 @@ bones{
         cubes[{
             size[6, 6, 6]
             pivot[0, 0, 0]
-            origin[0, 22.2, 0]
+            origin[0, 23.2, 0]
             rotation[0, 0, 0]
             sample{
                 front[16, 16, 32, 32]
@@ -73,9 +73,9 @@ bones{
         pivot[0, 0, 0]
         rotation[0, 0, 0]
         cubes[{
-            size[3, 7, 3]
-            pivot[0, -7, 0]
-            origin[11, 14, 0]
+            size[4, 12, 4]
+            pivot[0, -6, 0]
+            origin[12, 6, 0]
             rotation[0, 0, 0]
             sample{
                 front[104, 40, 112, 64]
@@ -95,41 +95,14 @@ bones{
             }
         }]
         parent:body
-    }
-    left-forearm{
-        pivot[0, 0, 0]
-        rotation[0, 0, 0]
-        cubes[{
-            size[3, 9, 3]
-            pivot[0, 0, 0]
-            origin[11, -10, 0]
-            rotation[0, 0, 0]
-            sample{
-                front[104, 40, 112, 64]
-                back[88, 40, 96, 64]
-                left[80, 40, 88, 64]
-                right[96, 40, 104, 64]
-                top[88, 32, 96, 40]
-                bottom[96, 32, 104, 40]
-            }
-            extension{
-                front[104, 72, 112, 96]
-                back[88, 72, 96, 96]
-                left[80, 72, 88, 96]
-                right[96, 72, 104, 96]
-                top[88, 64, 96, 72]
-                bottom[96, 64, 104, 72]
-            }
-        }]
-        parent:left-arm
     }
     left-leg{
         pivot[0, 0, 0]
         rotation[0, 0, 0]
         cubes[{
-            size[3, 8, 3]
-            pivot[0, 0, 0]
-            origin[5, -24, 0]
+            size[4, 12, 4]
+            pivot[0, -6, 0]
+            origin[4, -18, 0]
             rotation[0, 0, 0]
             sample{
                 front[24, 40, 32, 64]
@@ -149,32 +122,5 @@ bones{
             }
         }]
         parent:body
-    }
-    left-knee{
-        pivot[0, -16, 0]
-        rotation[0, 0, 0]
-        cubes[{
-            size[3, 8, 3]
-            pivot[0, 0, 0]
-            origin[5, -8, 0]
-            rotation[0, 0, 0]
-            sample{
-                front[24, 40, 32, 64]
-                back[8, 40, 16, 64]
-                left[0, 40, 8, 64]
-                right[16, 40, 24, 64]
-                top[8, 32, 16, 40]
-                bottom[16, 32, 24, 40]
-            }
-            extension{
-                front[24, 72, 32, 96]
-                back[8, 72, 16, 96]
-                left[8, 72, 8, 96]
-                right[16, 72, 24, 96]
-                top[8, 64, 16, 72]
-                bottom[16, 64, 24, 72]
-            }
-        }]
-        parent:left-leg
     }
 }

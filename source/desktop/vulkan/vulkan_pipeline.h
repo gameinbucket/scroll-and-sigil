@@ -33,6 +33,6 @@ struct vulkan_pipeline {
 
 struct vulkan_pipeline *create_vulkan_pipeline(struct vulkan_pipe_data pipe_data, struct vulkan_render_settings render_settings);
 void vulkan_pipeline_settings(struct vulkan_pipeline *self, bool include_depth, VkFrontFace rasterize_face, VkCullModeFlagBits rasterize_cull_mode);
-void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_extent, VkRenderPass vk_render_pass, struct vulkan_pipeline *pipeline);
+void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
 
 #endif

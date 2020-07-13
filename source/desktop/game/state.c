@@ -19,7 +19,130 @@ static void rendering_resize(state *self, int width, int height) {
     vulkan_pipeline_recreate(vk_state, vk_base, self->hd->pipeline);
 }
 
+static void record_rendering_offscreen(state *self, uint32_t image_index) {
+
+    vulkan_state *vk_state = self->vk_state;
+    struct vulkan_base *vk_base = self->vk_base;
+
+    LOG("offscreen\n");
+
+    vulkan_offscreen_buffer *offscreen = self->gbuffer;
+
+    vulkan_offscreen_buffer_begin_recording(vk_state, vk_base, offscreen, image_index);
+
+    VkCommandBuffer command_buffer = offscreen->command_buffers[image_index];
+
+    // scene_render(vk_state, vk_base, self->sc, command_buffer, image_index);
+    world_scene_render(vk_state, vk_base, self->ws, command_buffer, image_index);
+    // hud_render(vk_state, vk_base, self->hd, command_buffer, image_index);
+
+    vulkan_offscreen_buffer_end_recording(vk_state, vk_base, offscreen, image_index);
+
+    LOG("end\n");
+}
+
+static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *self, VkCommandBuffer command_buffer, uint32_t image_index) {
+
+    // VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &pipelineLayouts.deferred));
+    // VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &pipelineLayouts.offscreen));
+
+    // vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.deferred, 1, 1, &descriptorSet, 0, NULL);
+
+    struct vulkan_pipeline *pipeline = self->pipelines[SHADER_SCREEN];
+
+    vulkan_pipeline_cmd_bind(pipeline, command_buffer);
+    vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
+    vulkan_render_buffer_draw(self->draw_canvas, command_buffer);
+
+    struct uniform_projection ubo = {0};
+
+    float view[16];
+    float ortho[16];
+
+    matrix_identity(view);
+    matrix_translate(view, 0, 0, 0);
+
+    float width = (float)vk_base->swapchain->swapchain_extent.width;
+    float height = (float)vk_base->swapchain->swapchain_extent.height;
+
+    float correction[16];
+    matrix_vulkan_correction(correction);
+    float original[16];
+    matrix_orthographic(original, 0, width, 0, height, -1, 1);
+    matrix_multiply(ortho, correction, original);
+
+    matrix_multiply(ubo.mvp, ortho, view);
+
+    struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
+    vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
+}
+
 static void record_rendering(state *self, uint32_t image_index) {
+
+    bool offscreen = true;
+
+    if (offscreen) {
+
+        record_rendering_offscreen(self, image_index);
+
+        vulkan_state *vk_state = self->vk_state;
+        struct vulkan_base *vk_base = self->vk_base;
+
+        VkCommandBuffer *command_buffers = vk_base->vk_command_buffers;
+
+        VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
+        VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
+        VkClearValue clear_values[2] = {clear_color, clear_depth};
+
+        VkRenderPassBeginInfo render_pass_info = {0};
+        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_info.renderPass = vk_base->vk_render_pass;
+        render_pass_info.renderArea.offset = (VkOffset2D){0, 0};
+        render_pass_info.renderArea.extent = vk_base->swapchain->swapchain_extent;
+        render_pass_info.pClearValues = clear_values;
+        render_pass_info.clearValueCount = 2;
+        render_pass_info.framebuffer = vk_base->vk_framebuffers[image_index];
+
+        uint32_t width = vk_base->swapchain->swapchain_extent.width;
+        uint32_t height = vk_base->swapchain->swapchain_extent.height;
+
+        VkViewport viewport = {0};
+        viewport.width = width;
+        viewport.height = height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+
+        VkRect2D scissor = {0};
+        scissor.extent = (VkExtent2D){width, height};
+        scissor.offset = (VkOffset2D){0, 0};
+
+        VkCommandBuffer command_buffer = command_buffers[image_index];
+
+        VkCommandBufferBeginInfo command_begin_info = {0};
+        command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        if (vkBeginCommandBuffer(command_buffer, &command_begin_info) != VK_SUCCESS) {
+            fprintf(stderr, "Error: Vulkan Begin Command Buffer\n");
+            exit(1);
+        }
+
+        vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+        vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+
+        copy_rendering(vk_state, vk_base, self, command_buffer, image_index);
+
+        vkCmdEndRenderPass(command_buffer);
+
+        if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+            fprintf(stderr, "Error: Vulkan End Command Buffer\n");
+            exit(1);
+        }
+
+        return;
+    }
 
     vulkan_state *vk_state = self->vk_state;
     struct vulkan_base *vk_base = self->vk_base;
@@ -365,8 +488,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     ws->c = c;
     world_scene_initialize(vk_state, vk_base->vk_command_pool, ws);
     world_scene_geometry(vk_state, vk_base, ws);
-
     self->ws = ws;
+
+    self->gbuffer = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height);
 
     {
         struct vulkan_pipe_item item1 = {0};
@@ -381,27 +505,155 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         set1.items = safe_calloc(set1.number_of_items, sizeof(struct vulkan_pipe_item));
         set1.items[0] = item1;
 
+        struct vulkan_pipe_item item2 = {0};
+        item2.count = 1;
+        item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        struct vulkan_pipe_set set2 = {0};
+        set2.number_of_items = 1;
+        set2.number_of_copies = 1;
+        set2.items = safe_calloc(set2.number_of_items, sizeof(struct vulkan_pipe_item));
+        set2.items[0] = item2;
+
         struct vulkan_pipe_data pipe_settings = {0};
         pipe_settings.vertex = "shaders/spv/screen.vert.spv";
         pipe_settings.fragment = "shaders/spv/screen.frag.spv";
-        pipe_settings.number_of_sets = 1;
+        pipe_settings.number_of_sets = 2;
         pipe_settings.sets = safe_calloc(pipe_settings.number_of_sets, sizeof(struct vulkan_pipe_set));
         pipe_settings.sets[0] = set1;
+        pipe_settings.sets[1] = set2;
 
         struct vulkan_render_settings render_settings = {0};
         vulkan_render_settings_init(&render_settings, 2, 0, 0, 0, 0);
 
-        // struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
-        // vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
-        // vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
+        vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
 
-        // self->pipelines[SHADER_SCREEN] = pipeline;
+        self->pipelines[SHADER_SCREEN] = pipeline;
 
         self->draw_canvas = create_vulkan_render_buffer(render_settings, 4, 6);
         render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
         vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas);
+    }
 
-        self->gbuffer = create_vulkan_offscreen_buffer(vk_state, self->canvas_width, self->canvas_height);
+    {
+        struct vulkan_pipe_item item1 = {0};
+        item1.count = 1;
+        item1.byte_size = sizeof(struct uniform_projection);
+        item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
+
+        struct vulkan_pipe_set set1 = {0};
+        set1.number_of_items = 1;
+        set1.number_of_copies = vk_base->swapchain->swapchain_image_count;
+        set1.items = safe_calloc(set1.number_of_items, sizeof(struct vulkan_pipe_item));
+        set1.items[0] = item1;
+
+        struct vulkan_pipe_item item2 = {0};
+        item2.count = 1;
+        item2.images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
+        for (int i = 0; i < TEXTURE_COUNT; i++) {
+            item2.images[i] = &self->images[i];
+        }
+        item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        struct vulkan_pipe_set set2 = {0};
+        set2.number_of_items = 1;
+        set2.number_of_copies = TEXTURE_COUNT;
+        set2.items = safe_calloc(set2.number_of_items, sizeof(struct vulkan_pipe_item));
+        set2.items[0] = item2;
+
+        struct vulkan_pipe_data pipe_settings = {0};
+        pipe_settings.vertex = "shaders/spv/texture3d.deferred.vert.spv";
+        pipe_settings.fragment = "shaders/spv/texture3d.deferred.frag.spv";
+        pipe_settings.number_of_sets = 2;
+        pipe_settings.sets = safe_calloc(pipe_settings.number_of_sets, sizeof(struct vulkan_pipe_set));
+        pipe_settings.sets[0] = set1;
+        pipe_settings.sets[1] = set2;
+        pipe_settings.use_render_pass = true;
+        pipe_settings.render_pass = self->gbuffer->render_pass;
+        pipe_settings.color_blend_attachments_count = 3;
+        pipe_settings.color_blend_attachments = safe_calloc(pipe_settings.color_blend_attachments_count, sizeof(VkPipelineColorBlendAttachmentState));
+        pipe_settings.color_blend_attachments[0] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+        pipe_settings.color_blend_attachments[1] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+        pipe_settings.color_blend_attachments[2] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+
+        struct vulkan_render_settings render_settings = {0};
+        vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 0);
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
+        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+        vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
+
+        self->pipelines[SHADER_DEFERRED_TEXTURE_3D] = pipeline;
+    }
+
+    {
+        struct vulkan_pipe_item item1 = {0};
+        item1.count = 1;
+        item1.byte_size = sizeof(struct uniform_projection_and_normal);
+        item1.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        item1.stages = VK_SHADER_STAGE_VERTEX_BIT;
+
+        struct vulkan_pipe_set set1 = {0};
+        set1.number_of_items = 1;
+        set1.number_of_copies = vk_base->swapchain->swapchain_image_count;
+        set1.items = safe_calloc(set1.number_of_items, sizeof(struct vulkan_pipe_item));
+        set1.items[0] = item1;
+
+        struct vulkan_pipe_item item2 = {0};
+        item2.count = 1;
+        item2.images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
+        for (int i = 0; i < TEXTURE_COUNT; i++) {
+            item2.images[i] = &self->images[i];
+        }
+        item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        struct vulkan_pipe_set set2 = {0};
+        set2.number_of_items = 1;
+        set2.number_of_copies = TEXTURE_COUNT;
+        set2.items = safe_calloc(set2.number_of_items, sizeof(struct vulkan_pipe_item));
+        set2.items[0] = item2;
+
+        struct vulkan_pipe_item item3 = {0};
+        item3.count = 1;
+        item3.byte_size = sizeof(struct uniform_bones);
+        item3.object_instances = 4;
+        item3.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        item3.stages = VK_SHADER_STAGE_VERTEX_BIT;
+
+        struct vulkan_pipe_set set3 = {0};
+        set3.number_of_items = 1;
+        set3.number_of_copies = vk_base->swapchain->swapchain_image_count;
+        set3.items = safe_calloc(set3.number_of_items, sizeof(struct vulkan_pipe_item));
+        set3.items[0] = item3;
+
+        struct vulkan_pipe_data pipe_settings = {0};
+        pipe_settings.vertex = "shaders/spv/model.deferred.vert.spv";
+        pipe_settings.fragment = "shaders/spv/model.deferred.frag.spv";
+        pipe_settings.number_of_sets = 3;
+        pipe_settings.sets = safe_calloc(pipe_settings.number_of_sets, sizeof(struct vulkan_pipe_set));
+        pipe_settings.sets[0] = set1;
+        pipe_settings.sets[1] = set2;
+        pipe_settings.sets[2] = set3;
+        pipe_settings.use_render_pass = true;
+        pipe_settings.render_pass = self->gbuffer->render_pass;
+        pipe_settings.color_blend_attachments_count = 3;
+        pipe_settings.color_blend_attachments = safe_calloc(pipe_settings.color_blend_attachments_count, sizeof(VkPipelineColorBlendAttachmentState));
+        pipe_settings.color_blend_attachments[0] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+        pipe_settings.color_blend_attachments[1] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+        pipe_settings.color_blend_attachments[2] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+
+        struct vulkan_render_settings render_settings = {0};
+        vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 1);
+        struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
+        vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_NONE);
+        vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
+
+        self->pipelines[SHADER_DEFERRED_RENDER_MODEL] = pipeline;
     }
 
     {
@@ -530,7 +782,6 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
 
         self->pipelines[SHADER_TEXTURE_3D] = pipeline;
-        ws->pipeline = pipeline;
     }
 
     {
@@ -590,8 +841,13 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
 
         self->pipelines[SHADER_RENDER_MODEL] = pipeline;
-        ws->pipeline_model = pipeline;
     }
+
+    // ws->pipeline = self->pipelines[SHADER_TEXTURE_3D];
+    // ws->pipeline_model = self->pipelines[SHADER_RENDER_MODEL];
+
+    ws->pipeline = self->pipelines[SHADER_DEFERRED_TEXTURE_3D];
+    ws->pipeline_model = self->pipelines[SHADER_DEFERRED_RENDER_MODEL];
 
     return self;
 }
@@ -605,7 +861,7 @@ void delete_state(state *self) {
     delete_vulkan_renderbuffer(self->vk_state, self->draw_canvas);
 
     if (self->gbuffer != NULL) {
-        delete_vulkan_offscreen_buffer(self->vk_state, self->gbuffer);
+        delete_vulkan_offscreen_buffer(self->vk_state, self->vk_base, self->gbuffer);
     }
 
     for (int i = 0; i < SHADER_COUNT; i++) {

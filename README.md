@@ -2,10 +2,24 @@
 
 - [website](https://scrollandsigil.com)
 
-# development
+# development planning
+
+## vulkan
 
 - dynamic render_buffer updates
-- shared descriptor sets for images
 - shared descriptor sets for uniform buffer
-- deferred rendering with frame_buffers
-- descriptor_system manages pool of descriptor_sets
+- deferred offscreen rendering with frame_buffers
+
+## rendering
+
+- diffuse + specular textures
+- shadow mapping
+
+## phyics
+
+- rigid bodies
+
+## scripting system
+
+- runnable within game loop
+- conditionals, updating game objects

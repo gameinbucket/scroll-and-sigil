@@ -30,7 +30,9 @@ VkShaderModule vk_create_shader_module(vulkan_state *vk_state, char *code, size_
     return vk_shader_module;
 }
 
-void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_extent, VkRenderPass vk_render_pass, struct vulkan_pipeline *pipeline) {
+void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
+
+    struct vulkan_render_settings *render_settings = &pipeline->render_settings;
 
     size_t vertex_shader_size;
     char *vertex_shader = read_binary(pipeline->pipe_data.vertex, &vertex_shader_size);
@@ -58,10 +60,10 @@ void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_exte
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    int attribute_count = vk_attribute_count(&pipeline->render_settings);
+    int attribute_count = vk_attribute_count(render_settings);
 
-    VkVertexInputBindingDescription binding_description = vk_binding_description(&pipeline->render_settings);
-    VkVertexInputAttributeDescription *attribute_description = vk_attribute_description(&pipeline->render_settings);
+    VkVertexInputBindingDescription binding_description = vk_binding_description(render_settings);
+    VkVertexInputAttributeDescription *attribute_description = vk_attribute_description(render_settings);
 
     vertex_input_info.pVertexBindingDescriptions = &binding_description;
     vertex_input_info.vertexBindingDescriptionCount = 1;
@@ -72,6 +74,8 @@ void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_exte
     input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     input_assembly.primitiveRestartEnable = VK_FALSE;
+
+    VkExtent2D vk_extent = vk_base->swapchain->swapchain_extent;
 
     VkViewport viewport = {0};
     viewport.x = 0.0f;
@@ -124,15 +128,24 @@ void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_exte
         depth_stencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
     }
 
-    VkPipelineColorBlendAttachmentState color_blend_attachment = {0};
-    color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    color_blend_attachment.blendEnable = VK_FALSE;
+    struct vulkan_pipe_data *pipe_data = &pipeline->pipe_data;
+
+    uint32_t color_blend_attachment_count = pipe_data->color_blend_attachments == NULL ? 1 : pipe_data->color_blend_attachments_count;
+
+    VkPipelineColorBlendAttachmentState *color_blend_attachments = safe_calloc(color_blend_attachment_count, sizeof(VkPipelineColorBlendAttachmentState));
+
+    if (pipe_data->color_blend_attachments == NULL) {
+        color_blend_attachments[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        color_blend_attachments[0].blendEnable = VK_FALSE;
+    } else {
+        memcpy(color_blend_attachments, pipe_data->color_blend_attachments, color_blend_attachment_count * sizeof(VkPipelineColorBlendAttachmentState));
+    }
 
     VkPipelineColorBlendStateCreateInfo color_blending = {0};
     color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     color_blending.logicOpEnable = VK_FALSE;
-    color_blending.attachmentCount = 1;
-    color_blending.pAttachments = &color_blend_attachment;
+    color_blending.attachmentCount = color_blend_attachment_count;
+    color_blending.pAttachments = color_blend_attachments;
 
     uint32_t descriptor_layout_count = pipeline->pipe_data.number_of_sets;
     VkDescriptorSetLayout *descriptor_layouts = safe_calloc(descriptor_layout_count, sizeof(VkDescriptorSetLayout));
@@ -153,6 +166,8 @@ void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_exte
     }
 
     pipeline->vk_pipeline_layout = vk_pipeline_layout;
+
+    VkRenderPass vk_render_pass = pipe_data->use_render_pass ? pipe_data->render_pass : vk_base->vk_render_pass;
 
     VkGraphicsPipelineCreateInfo pipeline_info = {0};
     pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -182,4 +197,5 @@ void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, VkExtent2D vk_exte
     free(fragment_shader);
     free(attribute_description);
     free(descriptor_layouts);
+    free(color_blend_attachments);
 }

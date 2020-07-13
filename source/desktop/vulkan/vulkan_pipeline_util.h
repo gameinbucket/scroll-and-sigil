@@ -18,6 +18,7 @@
 #include "vulkan_uniform.h"
 #include "vulkan_uniform_util.h"
 
+VkPipelineColorBlendAttachmentState create_color_blend_attachment(VkColorComponentFlags mask, VkBool32 blend);
 void vulkan_pipeline_cmd_bind(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer);
 void vulkan_pipeline_cmd_bind_dynamic_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set_index, uint32_t image_index, uint32_t offset_count, const uint32_t *offsets);
 void vulkan_pipeline_cmd_bind_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set_index, uint32_t image_index);
