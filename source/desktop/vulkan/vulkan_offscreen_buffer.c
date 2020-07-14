@@ -179,6 +179,24 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base 
     offscreen->command_buffers = vulkan_util_create_command_buffers(vk_state, vk_base->vk_command_pool, vk_base->swapchain->swapchain_image_count);
 }
 
+static void prepare_color_samples(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen){
+
+    // offscreen->position.view
+    // offscreen->normal.view
+    // offscreen->color.view
+
+    // VkDescriptorImageInfo texDescriptorPosition = descriptorImageInfo(colorSampler, offScreenFrameBuf.position.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    // VkDescriptorImageInfo texDescriptorNormal = descriptorImageInfo(colorSampler, offScreenFrameBuf.normal.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    // VkDescriptorImageInfo texDescriptorAlbedo = descriptorImageInfo(colorSampler, offScreenFrameBuf.albedo.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    // writeDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, &uniformBuffers.vsFullScreen.descriptor),
+    // writeDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &texDescriptorPosition),
+    // writeDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2, &texDescriptorNormal),
+    // writeDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3, &texDescriptorAlbedo),
+    // writeDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 4, &uniformBuffers.fsLights.descriptor),
+};
+}
+
 vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, uint32_t width, uint32_t height) {
 
     vulkan_offscreen_buffer *offscreen = safe_calloc(1, sizeof(vulkan_offscreen_buffer));
