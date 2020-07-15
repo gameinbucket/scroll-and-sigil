@@ -72,9 +72,9 @@ static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *
         vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
     }
 
-    // image_descriptor_system_get(self->image_descriptors, TEXTURE_GRASS);
-
-    VkDescriptorSet get_image = pipeline->pipe_data.sets[1].descriptor_sets[image_index];
+    // VkDescriptorSet get_image = image_descriptor_system_get(self->image_descriptors, TEXTURE_GRASS);
+    // VkDescriptorSet get_image = self->gbuffer->output_descriptor;
+    VkDescriptorSet get_image = pipeline->pipe_data.sets[1].descriptor_sets[0];
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
     vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);

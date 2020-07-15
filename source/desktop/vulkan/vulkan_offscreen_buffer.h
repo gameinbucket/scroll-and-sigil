@@ -38,6 +38,7 @@ struct vulkan_offscreen_buffer {
     VkSampler color_sampler;
     VkSemaphore semaphore;
     VkCommandBuffer *command_buffers;
+    VkDescriptorSet output_descriptor;
 };
 
 vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, uint32_t width, uint32_t height);
