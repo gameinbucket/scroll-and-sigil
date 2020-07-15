@@ -74,7 +74,7 @@ static void update_descriptor_set(vulkan_state *vk_state, struct vulkan_pipe_set
 
     uint32_t number_of_items = pipe_set->number_of_items;
 
-    VkWriteDescriptorSet *write_descriptor = safe_calloc(number_of_items, sizeof(VkWriteDescriptorSet));
+    VkWriteDescriptorSet *write_descriptors = safe_calloc(number_of_items, sizeof(VkWriteDescriptorSet));
 
     array *image_info = create_array(0);
     array *buffer_info = create_array(0);
@@ -87,41 +87,39 @@ static void update_descriptor_set(vulkan_state *vk_state, struct vulkan_pipe_set
             struct vulkan_uniform_buffer *uniform = &item->uniforms[0];
 
             VkDescriptorBufferInfo *info = safe_calloc(1, sizeof(VkDescriptorBufferInfo));
-            array_push(buffer_info, info);
-
             info->buffer = uniform->vk_uniform_buffers[0];
             info->offset = 0;
             info->range = item->byte_size;
 
-            write_descriptor[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_descriptor[i].dstSet = descriptor_set;
-            write_descriptor[i].dstBinding = i;
-            write_descriptor[i].dstArrayElement = 0;
-            write_descriptor[i].descriptorType = item->type;
-            write_descriptor[i].descriptorCount = item->count;
-            write_descriptor[i].pBufferInfo = info;
+            array_push(buffer_info, info);
+
+            write_descriptors[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptors[i].dstSet = descriptor_set;
+            write_descriptors[i].dstBinding = i;
+            write_descriptors[i].descriptorType = item->type;
+            write_descriptors[i].descriptorCount = item->count;
+            write_descriptors[i].pBufferInfo = info;
 
         } else {
-            struct vulkan_image *image = item->images[index];
+            struct vulkan_image_view_and_sample *image = &item->images[index];
 
             VkDescriptorImageInfo *info = safe_calloc(1, sizeof(VkDescriptorImageInfo));
+            info->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            info->imageView = image->view;
+            info->sampler = image->sample;
+
             array_push(image_info, info);
 
-            info->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            info->imageView = image->vk_texture_image_view;
-            info->sampler = image->vk_texture_sampler;
-
-            write_descriptor[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_descriptor[i].dstSet = descriptor_set;
-            write_descriptor[i].dstBinding = i;
-            write_descriptor[i].dstArrayElement = 0;
-            write_descriptor[i].descriptorType = item->type;
-            write_descriptor[i].descriptorCount = item->count;
-            write_descriptor[i].pImageInfo = info;
+            write_descriptors[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptors[i].dstSet = descriptor_set;
+            write_descriptors[i].dstBinding = i;
+            write_descriptors[i].descriptorType = item->type;
+            write_descriptors[i].descriptorCount = item->count;
+            write_descriptors[i].pImageInfo = info;
         }
     }
 
-    vkUpdateDescriptorSets(vk_state->vk_device, 1, write_descriptor, 0, NULL);
+    vkUpdateDescriptorSets(vk_state->vk_device, 1, write_descriptors, 0, NULL);
 
     release_array_items(image_info);
     release_array_items(buffer_info);
@@ -129,7 +127,7 @@ static void update_descriptor_set(vulkan_state *vk_state, struct vulkan_pipe_set
     delete_array(image_info);
     delete_array(buffer_info);
 
-    free(write_descriptor);
+    free(write_descriptors);
 }
 
 static void update_descriptor_sets(vulkan_state *vk_state, struct vulkan_pipe_set *pipe_set) {

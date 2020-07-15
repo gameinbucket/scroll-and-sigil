@@ -17,6 +17,7 @@
 #include "vulkan_commands.h"
 #include "vulkan_depth.h"
 #include "vulkan_state.h"
+#include "vulkan_util.h"
 
 typedef struct vulkan_frame_attachment vulkan_frame_attachment;
 

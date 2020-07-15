@@ -27,9 +27,7 @@ static void record_rendering_offscreen(state *self, uint32_t image_index) {
     LOG("offscreen\n");
 
     vulkan_offscreen_buffer *offscreen = self->gbuffer;
-
     vulkan_offscreen_buffer_begin_recording(vk_state, vk_base, offscreen, image_index);
-
     VkCommandBuffer command_buffer = offscreen->command_buffers[image_index];
 
     // scene_render(vk_state, vk_base, self->sc, command_buffer, image_index);
@@ -50,31 +48,39 @@ static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *
 
     struct vulkan_pipeline *pipeline = self->pipelines[SHADER_SCREEN];
 
+    {
+        struct uniform_projection ubo = {0};
+
+        float view[16];
+        float ortho[16];
+
+        matrix_identity(view);
+        matrix_translate(view, 0, 0, 0);
+
+        float width = (float)vk_base->swapchain->swapchain_extent.width;
+        float height = (float)vk_base->swapchain->swapchain_extent.height;
+
+        float correction[16];
+        matrix_vulkan_correction(correction);
+        float original[16];
+        matrix_orthographic(original, 0, width, 0, height, -1, 1);
+        matrix_multiply(ortho, correction, original);
+
+        matrix_multiply(ubo.mvp, ortho, view);
+
+        struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
+        vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
+    }
+
+    // image_descriptor_system_get(self->image_descriptors, TEXTURE_GRASS);
+
+    VkDescriptorSet get_image = pipeline->pipe_data.sets[1].descriptor_sets[image_index];
+
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
     vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &get_image);
+
     vulkan_render_buffer_draw(self->draw_canvas, command_buffer);
-
-    struct uniform_projection ubo = {0};
-
-    float view[16];
-    float ortho[16];
-
-    matrix_identity(view);
-    matrix_translate(view, 0, 0, 0);
-
-    float width = (float)vk_base->swapchain->swapchain_extent.width;
-    float height = (float)vk_base->swapchain->swapchain_extent.height;
-
-    float correction[16];
-    matrix_vulkan_correction(correction);
-    float original[16];
-    matrix_orthographic(original, 0, width, 0, height, -1, 1);
-    matrix_multiply(ortho, correction, original);
-
-    matrix_multiply(ubo.mvp, ortho, view);
-
-    struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
-    vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
 }
 
 static void record_rendering(state *self, uint32_t image_index) {
@@ -85,60 +91,64 @@ static void record_rendering(state *self, uint32_t image_index) {
 
         record_rendering_offscreen(self, image_index);
 
-        vulkan_state *vk_state = self->vk_state;
-        struct vulkan_base *vk_base = self->vk_base;
+        bool copy = true;
 
-        VkCommandBuffer *command_buffers = vk_base->vk_command_buffers;
+        if (copy) {
+            vulkan_state *vk_state = self->vk_state;
+            struct vulkan_base *vk_base = self->vk_base;
 
-        VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
-        VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
-        VkClearValue clear_values[2] = {clear_color, clear_depth};
+            VkCommandBuffer *command_buffers = vk_base->vk_command_buffers;
 
-        VkRenderPassBeginInfo render_pass_info = {0};
-        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        render_pass_info.renderPass = vk_base->vk_render_pass;
-        render_pass_info.renderArea.offset = (VkOffset2D){0, 0};
-        render_pass_info.renderArea.extent = vk_base->swapchain->swapchain_extent;
-        render_pass_info.pClearValues = clear_values;
-        render_pass_info.clearValueCount = 2;
-        render_pass_info.framebuffer = vk_base->vk_framebuffers[image_index];
+            VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
+            VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
+            VkClearValue clear_values[2] = {clear_color, clear_depth};
 
-        uint32_t width = vk_base->swapchain->swapchain_extent.width;
-        uint32_t height = vk_base->swapchain->swapchain_extent.height;
+            VkRenderPassBeginInfo render_pass_info = {0};
+            render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            render_pass_info.renderPass = vk_base->vk_render_pass;
+            render_pass_info.renderArea.offset = (VkOffset2D){0, 0};
+            render_pass_info.renderArea.extent = vk_base->swapchain->swapchain_extent;
+            render_pass_info.pClearValues = clear_values;
+            render_pass_info.clearValueCount = 2;
+            render_pass_info.framebuffer = vk_base->vk_framebuffers[image_index];
 
-        VkViewport viewport = {0};
-        viewport.width = width;
-        viewport.height = height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+            uint32_t width = vk_base->swapchain->swapchain_extent.width;
+            uint32_t height = vk_base->swapchain->swapchain_extent.height;
 
-        VkRect2D scissor = {0};
-        scissor.extent = (VkExtent2D){width, height};
-        scissor.offset = (VkOffset2D){0, 0};
+            VkViewport viewport = {0};
+            viewport.width = width;
+            viewport.height = height;
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
 
-        VkCommandBuffer command_buffer = command_buffers[image_index];
+            VkRect2D scissor = {0};
+            scissor.extent = (VkExtent2D){width, height};
+            scissor.offset = (VkOffset2D){0, 0};
 
-        VkCommandBufferBeginInfo command_begin_info = {0};
-        command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        command_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            VkCommandBuffer command_buffer = command_buffers[image_index];
 
-        if (vkBeginCommandBuffer(command_buffer, &command_begin_info) != VK_SUCCESS) {
-            fprintf(stderr, "Error: Vulkan Begin Command Buffer\n");
-            exit(1);
-        }
+            VkCommandBufferBeginInfo command_begin_info = {0};
+            command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            command_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+            if (vkBeginCommandBuffer(command_buffer, &command_begin_info) != VK_SUCCESS) {
+                fprintf(stderr, "Error: Vulkan Begin Command Buffer\n");
+                exit(1);
+            }
 
-        vkCmdSetViewport(command_buffer, 0, 1, &viewport);
-        vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+            vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        copy_rendering(vk_state, vk_base, self, command_buffer, image_index);
+            vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+            vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-        vkCmdEndRenderPass(command_buffer);
+            copy_rendering(vk_state, vk_base, self, command_buffer, image_index);
 
-        if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
-            fprintf(stderr, "Error: Vulkan End Command Buffer\n");
-            exit(1);
+            vkCmdEndRenderPass(command_buffer);
+
+            if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+                fprintf(stderr, "Error: Vulkan End Command Buffer\n");
+                exit(1);
+            }
         }
 
         return;
@@ -507,6 +517,8 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_pipe_item item2 = {0};
         item2.count = 1;
+        item2.images = safe_calloc(1, sizeof(struct vulkan_image_view_and_sample));
+        item2.images[0] = (struct vulkan_image_view_and_sample){.view = self->gbuffer->color.view, .sample = self->gbuffer->color_sampler};
         item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
 
@@ -529,7 +541,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_pipeline *pipeline = create_vulkan_pipeline(pipe_settings, render_settings);
         vulkan_pipeline_settings(pipeline, false, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
-        vulkan_pipeline_initialize(vk_state, vk_base, pipeline);
+        vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
 
         self->pipelines[SHADER_SCREEN] = pipeline;
 
@@ -553,9 +565,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_pipe_item item2 = {0};
         item2.count = 1;
-        item2.images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
+        item2.images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image_view_and_sample));
         for (int i = 0; i < TEXTURE_COUNT; i++) {
-            item2.images[i] = &self->images[i];
+            item2.images[i] = get_vulkan_image_view_and_sample(&self->images[i]);
         }
         item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -605,9 +617,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_pipe_item item2 = {0};
         item2.count = 1;
-        item2.images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
+        item2.images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image_view_and_sample));
         for (int i = 0; i < TEXTURE_COUNT; i++) {
-            item2.images[i] = &self->images[i];
+            item2.images[i] = get_vulkan_image_view_and_sample(&self->images[i]);
         }
         item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -705,8 +717,8 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_pipe_item item2 = {0};
         item2.count = 1;
-        item2.images = safe_calloc(item2.count, sizeof(struct vulkan_image *));
-        item2.images[0] = &self->images[TEXTURE_GRASS];
+        item2.images = safe_calloc(item2.count, sizeof(struct vulkan_image_view_and_sample));
+        item2.images[0] = get_vulkan_image_view_and_sample(&self->images[TEXTURE_GRASS]);
         item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
 
@@ -754,9 +766,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_pipe_item item2 = {0};
         item2.count = 1;
-        item2.images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
+        item2.images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image_view_and_sample));
         for (int i = 0; i < TEXTURE_COUNT; i++) {
-            item2.images[i] = &self->images[i];
+            item2.images[i] = get_vulkan_image_view_and_sample(&self->images[i]);
         }
         item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -799,9 +811,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_pipe_item item2 = {0};
         item2.count = 1;
-        item2.images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image *));
+        item2.images = safe_calloc(TEXTURE_COUNT, sizeof(struct vulkan_image_view_and_sample));
         for (int i = 0; i < TEXTURE_COUNT; i++) {
-            item2.images[i] = &self->images[i];
+            item2.images[i] = get_vulkan_image_view_and_sample(&self->images[i]);
         }
         item2.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         item2.stages = VK_SHADER_STAGE_FRAGMENT_BIT;

@@ -340,6 +340,11 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         vulkan_render_buffer_draw(b, command_buffer);
     }
 
+    const bool debug_offscreen = true;
+    if (debug_offscreen) {
+        return;
+    }
+
     // things
 
     pipeline = self->pipeline_model;

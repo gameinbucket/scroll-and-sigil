@@ -14,6 +14,7 @@
 #include "vulkan/vulkan_pipeline_util.h"
 #include "vulkan/vulkan_state.h"
 #include "vulkan/vulkan_uniform_util.h"
+#include "vulkan/vulkan_util.h"
 
 typedef struct image_descriptor_system image_descriptor_system;
 

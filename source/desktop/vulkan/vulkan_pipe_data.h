@@ -22,7 +22,7 @@ struct vulkan_pipe_item {
     uint32_t byte_size;
     uint32_t object_instances;
     struct vulkan_uniform_buffer *uniforms;
-    struct vulkan_image **images;
+    struct vulkan_image_view_and_sample *images;
     VkDescriptorType type;
     VkShaderStageFlagBits stages;
 };

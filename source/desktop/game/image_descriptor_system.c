@@ -64,16 +64,11 @@ void image_descriptor_system_update_descriptors(vulkan_state *vk_state, image_de
 
         VkDescriptorSet vk_descriptor_set = system->image_descriptors[i];
 
-        VkDescriptorImageInfo image_info = {0};
-        VkWriteDescriptorSet descriptor_write_sampler = {0};
-        VkWriteDescriptorSet descriptor_writes = {0};
-
         struct vulkan_image *image = &system->images[i];
 
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = image->vk_texture_image_view;
-        image_info.sampler = image->vk_texture_sampler;
+        VkDescriptorImageInfo image_info = new_descriptor_image_info(image->vk_texture_sampler, image->vk_texture_image_view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
+        VkWriteDescriptorSet descriptor_write_sampler = {0};
         descriptor_write_sampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptor_write_sampler.dstSet = vk_descriptor_set;
         descriptor_write_sampler.dstBinding = 0;
@@ -82,7 +77,7 @@ void image_descriptor_system_update_descriptors(vulkan_state *vk_state, image_de
         descriptor_write_sampler.descriptorCount = 1;
         descriptor_write_sampler.pImageInfo = &image_info;
 
-        descriptor_writes = descriptor_write_sampler;
+        VkWriteDescriptorSet descriptor_writes = descriptor_write_sampler;
 
         vkUpdateDescriptorSets(vk_state->vk_device, 1, &descriptor_writes, 0, NULL);
     }

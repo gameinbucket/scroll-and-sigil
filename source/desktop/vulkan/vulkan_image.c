@@ -1,5 +1,9 @@
 #include "vulkan_texture.h"
 
+struct vulkan_image_view_and_sample get_vulkan_image_view_and_sample(struct vulkan_image *image) {
+    return (struct vulkan_image_view_and_sample){.view = image->vk_texture_image_view, .sample = image->vk_texture_sampler};
+}
+
 void vk_create_image(vulkan_state *vk_state, struct vulkan_image_details details, VkImage *image, VkDeviceMemory *image_memory) {
 
     VkImageCreateInfo image_info = {0};

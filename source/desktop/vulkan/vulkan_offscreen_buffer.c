@@ -58,6 +58,45 @@ static void init_vulkan_frame_attachment(vulkan_state *vk_state, vulkan_frame_at
     VK_RESULT_OK(vkCreateImageView(vk_state->vk_device, &view_info, NULL, &attachment->view));
 }
 
+static void prepare_description(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen) {
+
+    // VkDescriptorBufferInfo uniform_descriptor = {0};
+
+    // write[0] = new_buffer_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, &uniform_descriptor, 1);
+
+    //
+
+    // VkDescriptorSetLayoutBinding *bindings = safe_calloc(2, sizeof(VkDescriptorSetLayoutBinding));
+
+    // bindings[0] = new_descriptor_set_layout_binding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0, 1);
+
+    // VkDescriptorSetLayoutCreateInfo layout_info = new_descriptor_set_layout_create_info(bindings, 2);
+
+    // VkDescriptorSetLayout descriptor_layout = {0};
+
+    // if (vkCreateDescriptorSetLayout(vk_state->vk_device, &layout_info, NULL, &descriptor_layout) != VK_SUCCESS) {
+    //     fprintf(stderr, "Error: Vulkan Create Descriptor Set Layout\n");
+    //     exit(1);
+    // }
+
+    // free(bindings);
+
+    // //
+
+    // VkDescriptorSet descriptor_set = {0};
+
+    // VkDescriptorImageInfo color_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->color.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    // VkDescriptorImageInfo position_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->position.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    // VkDescriptorImageInfo normal_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->normal.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    // VkWriteDescriptorSet write[3];
+    // write[0] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &color_descriptor, 1);
+    // write[1] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &position_descriptor, 1);
+    // write[2] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &normal_descriptor, 1);
+
+    // vkUpdateDescriptorSets(vk_state->vk_device, 4, write, 0, NULL);
+}
+
 static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t width, uint32_t height) {
 
     offscreen->width = width;
@@ -177,24 +216,6 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base 
     VK_RESULT_OK(vkCreateSemaphore(vk_state->vk_device, &semaphore_info, NULL, &offscreen->semaphore));
 
     offscreen->command_buffers = vulkan_util_create_command_buffers(vk_state, vk_base->vk_command_pool, vk_base->swapchain->swapchain_image_count);
-}
-
-static void prepare_color_samples(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen){
-
-    // offscreen->position.view
-    // offscreen->normal.view
-    // offscreen->color.view
-
-    // VkDescriptorImageInfo texDescriptorPosition = descriptorImageInfo(colorSampler, offScreenFrameBuf.position.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    // VkDescriptorImageInfo texDescriptorNormal = descriptorImageInfo(colorSampler, offScreenFrameBuf.normal.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    // VkDescriptorImageInfo texDescriptorAlbedo = descriptorImageInfo(colorSampler, offScreenFrameBuf.albedo.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-    // writeDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 0, &uniformBuffers.vsFullScreen.descriptor),
-    // writeDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &texDescriptorPosition),
-    // writeDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2, &texDescriptorNormal),
-    // writeDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3, &texDescriptorAlbedo),
-    // writeDescriptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 4, &uniformBuffers.fsLights.descriptor),
-};
 }
 
 vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, uint32_t width, uint32_t height) {

@@ -21,12 +21,19 @@ struct vulkan_image_details {
     VkMemoryPropertyFlags properties;
 };
 
+struct vulkan_image_view_and_sample {
+    VkImageView view;
+    VkSampler sample;
+};
+
 struct vulkan_image {
     VkImage vk_texture_image;
     VkDeviceMemory vk_texture_image_memory;
     VkImageView vk_texture_image_view;
     VkSampler vk_texture_sampler;
 };
+
+struct vulkan_image_view_and_sample get_vulkan_image_view_and_sample(struct vulkan_image *image);
 
 void vk_create_image(vulkan_state *vk_state, struct vulkan_image_details details, VkImage *image, VkDeviceMemory *image_memory);
 bool vk_has_stencil_component(VkFormat format);
