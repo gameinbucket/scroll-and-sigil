@@ -107,7 +107,7 @@ static void main_loop(state *s) {
             }
         }
 
-        run = false;
+        // run = false;
 
         updates++;
 

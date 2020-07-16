@@ -60,18 +60,65 @@ static void init_vulkan_frame_attachment(vulkan_state *vk_state, vulkan_frame_at
 
 static void prepare_descriptors(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen) {
 
+    // pool
+
+    uint32_t total = 1;
+
+    VkDescriptorPoolSize pool_size_sampler = {0};
+    pool_size_sampler.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    pool_size_sampler.descriptorCount = total;
+
+    VkDescriptorPoolCreateInfo pool_info = {0};
+    pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    pool_info.poolSizeCount = 1;
+    pool_info.pPoolSizes = &pool_size_sampler;
+    pool_info.maxSets = total;
+
+    VK_RESULT_OK(vkCreateDescriptorPool(vk_state->vk_device, &pool_info, NULL, &offscreen->descriptor_pool));
+
+    // layout
+
+    VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
+    sampler_layout_binding.binding = 0;
+    sampler_layout_binding.descriptorCount = 1;
+    sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layout_info = {0};
+    layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layout_info.bindingCount = 1;
+    layout_info.pBindings = &sampler_layout_binding;
+
+    VK_RESULT_OK(vkCreateDescriptorSetLayout(vk_state->vk_device, &layout_info, NULL, &offscreen->descriptor_layout));
+
+    // allocate
+
+    VkDescriptorSetAllocateInfo info = {0};
+    info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    info.descriptorPool = offscreen->descriptor_pool;
+    info.descriptorSetCount = 1;
+    info.pSetLayouts = &offscreen->descriptor_layout;
+
     VkDescriptorSet descriptor_set = {0};
 
+    VK_RESULT_OK(vkAllocateDescriptorSets(vk_state->vk_device, &info, &descriptor_set));
+
+    // write
+
     VkDescriptorImageInfo color_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->color.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    VkDescriptorImageInfo position_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->position.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    VkDescriptorImageInfo normal_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->normal.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    VkWriteDescriptorSet write = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, &color_descriptor, 1);
+    vkUpdateDescriptorSets(vk_state->vk_device, 1, &write, 0, NULL);
 
-    VkWriteDescriptorSet write[3];
-    write[0] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &color_descriptor, 1);
-    write[1] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &position_descriptor, 1);
-    write[2] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &normal_descriptor, 1);
+    // VkDescriptorImageInfo color_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->color.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    // VkDescriptorImageInfo position_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->position.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    // VkDescriptorImageInfo normal_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->normal.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    vkUpdateDescriptorSets(vk_state->vk_device, 3, write, 0, NULL);
+    // VkWriteDescriptorSet write[3];
+    // write[0] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &color_descriptor, 1);
+    // write[1] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &position_descriptor, 1);
+    // write[2] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &normal_descriptor, 1);
+
+    // vkUpdateDescriptorSets(vk_state->vk_device, 3, write, 0, NULL);
 
     offscreen->output_descriptor = descriptor_set;
 }
@@ -196,7 +243,7 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base 
 
     offscreen->command_buffers = vulkan_util_create_command_buffers(vk_state, vk_base->vk_command_pool, vk_base->swapchain->swapchain_image_count);
 
-    // prepare_descriptors(vk_state, vk_base, offscreen);
+    prepare_descriptors(vk_state, vk_base, offscreen);
 }
 
 vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, uint32_t width, uint32_t height) {
@@ -223,20 +270,23 @@ void vulkan_offscreen_buffer_clean(vulkan_state *vk_state, vulkan_base *vk_base,
 void vulkan_offscreen_buffer_recreate(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self) {
 }
 
-void delete_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self) {
+void delete_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen) {
 
-    delete_vulkan_frame_attachment(vk_state, &self->color);
-    delete_vulkan_frame_attachment(vk_state, &self->normal);
-    delete_vulkan_frame_attachment(vk_state, &self->position);
-    delete_vulkan_frame_attachment(vk_state, &self->depth);
+    delete_vulkan_frame_attachment(vk_state, &offscreen->color);
+    delete_vulkan_frame_attachment(vk_state, &offscreen->normal);
+    delete_vulkan_frame_attachment(vk_state, &offscreen->position);
+    delete_vulkan_frame_attachment(vk_state, &offscreen->depth);
 
-    vulkan_offscreen_buffer_clean(vk_state, vk_base, self);
+    vkDestroyDescriptorPool(vk_state->vk_device, offscreen->descriptor_pool, NULL);
+    vkDestroyDescriptorSetLayout(vk_state->vk_device, offscreen->descriptor_layout, NULL);
 
-    vkDestroySampler(vk_state->vk_device, self->color_sampler, NULL);
-    vkDestroyFramebuffer(vk_state->vk_device, self->buffer, NULL);
-    vkDestroySemaphore(vk_state->vk_device, self->semaphore, NULL);
+    vulkan_offscreen_buffer_clean(vk_state, vk_base, offscreen);
 
-    free(self->command_buffers);
+    vkDestroySampler(vk_state->vk_device, offscreen->color_sampler, NULL);
+    vkDestroyFramebuffer(vk_state->vk_device, offscreen->buffer, NULL);
+    vkDestroySemaphore(vk_state->vk_device, offscreen->semaphore, NULL);
+
+    free(offscreen->command_buffers);
 }
 
 void vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t image_index) {

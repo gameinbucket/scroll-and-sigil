@@ -305,15 +305,12 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
         float view[16];
         float perspective[16];
-
-        // matrix_perspective_vulkan(perspective, 60.0, 0.01, 100, ratio);
-
         float correction[16];
-        matrix_vulkan_correction(correction);
         float original[16];
+
+        matrix_vulkan_correction(correction);
         matrix_perspective(original, 60.0, 0.01, 100, ratio);
         matrix_multiply(perspective, correction, original);
-
         matrix_perspective_projection(mvp, perspective, view, -c->x, -c->y, -c->z, c->rx, c->ry);
 
         memcpy(ubo.mvp, mvp, 16 * sizeof(float));
@@ -338,11 +335,6 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         VkDescriptorSet get_image = image_descriptor_system_get(self->image_descriptors, pair.key);
         vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &get_image);
         vulkan_render_buffer_draw(b, command_buffer);
-    }
-
-    const bool debug_offscreen = true;
-    if (debug_offscreen) {
-        return;
     }
 
     // things

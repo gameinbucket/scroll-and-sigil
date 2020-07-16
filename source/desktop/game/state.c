@@ -24,27 +24,17 @@ static void record_rendering_offscreen(state *self, uint32_t image_index) {
     vulkan_state *vk_state = self->vk_state;
     struct vulkan_base *vk_base = self->vk_base;
 
-    LOG("offscreen\n");
-
     vulkan_offscreen_buffer *offscreen = self->gbuffer;
     vulkan_offscreen_buffer_begin_recording(vk_state, vk_base, offscreen, image_index);
     VkCommandBuffer command_buffer = offscreen->command_buffers[image_index];
 
-    // scene_render(vk_state, vk_base, self->sc, command_buffer, image_index);
+    scene_render(vk_state, vk_base, self->sc, command_buffer, image_index);
     world_scene_render(vk_state, vk_base, self->ws, command_buffer, image_index);
-    // hud_render(vk_state, vk_base, self->hd, command_buffer, image_index);
 
     vulkan_offscreen_buffer_end_recording(vk_state, vk_base, offscreen, image_index);
-
-    LOG("end\n");
 }
 
 static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *self, VkCommandBuffer command_buffer, uint32_t image_index) {
-
-    // VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &pipelineLayouts.deferred));
-    // VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &pipelineLayouts.offscreen));
-
-    // vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.deferred, 1, 1, &descriptorSet, 0, NULL);
 
     struct vulkan_pipeline *pipeline = self->pipelines[SHADER_SCREEN];
 
@@ -72,9 +62,7 @@ static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *
         vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
     }
 
-    // VkDescriptorSet get_image = image_descriptor_system_get(self->image_descriptors, TEXTURE_GRASS);
-    // VkDescriptorSet get_image = self->gbuffer->output_descriptor;
-    VkDescriptorSet get_image = pipeline->pipe_data.sets[1].descriptor_sets[0];
+    VkDescriptorSet get_image = self->gbuffer->output_descriptor;
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
     vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
@@ -96,8 +84,6 @@ static void record_rendering(state *self, uint32_t image_index) {
         if (copy) {
             vulkan_state *vk_state = self->vk_state;
             struct vulkan_base *vk_base = self->vk_base;
-
-            VkCommandBuffer *command_buffers = vk_base->vk_command_buffers;
 
             VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
             VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
@@ -125,7 +111,7 @@ static void record_rendering(state *self, uint32_t image_index) {
             scissor.extent = (VkExtent2D){width, height};
             scissor.offset = (VkOffset2D){0, 0};
 
-            VkCommandBuffer command_buffer = command_buffers[image_index];
+            VkCommandBuffer command_buffer = vk_base->vk_command_buffers[image_index];
 
             VkCommandBufferBeginInfo command_begin_info = {0};
             command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -142,6 +128,7 @@ static void record_rendering(state *self, uint32_t image_index) {
             vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
             copy_rendering(vk_state, vk_base, self, command_buffer, image_index);
+            hud_render(vk_state, vk_base, self->hd, command_buffer, image_index);
 
             vkCmdEndRenderPass(command_buffer);
 
@@ -381,22 +368,43 @@ void state_render(state *self) {
 
     vk_base->vk_images_in_flight[image_index] = vk_base->vk_flight_fences[current_frame];
 
+    VkSemaphore wait_image_available_semaphores[1] = {vk_base->vk_image_available_semaphores[current_frame]};
+    VkPipelineStageFlags wait_stages[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+    VkSemaphore signal_render_complete_semaphores[1] = {vk_base->vk_render_finished_semaphores[current_frame]};
+
+    const bool offscreen_rendering = true;
+    vulkan_offscreen_buffer *offscreen = self->gbuffer;
+    if (offscreen_rendering) {
+
+        VkSubmitInfo submit_info = {0};
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        submit_info.waitSemaphoreCount = 1;
+        submit_info.pWaitSemaphores = wait_image_available_semaphores;
+        submit_info.pWaitDstStageMask = wait_stages;
+        submit_info.signalSemaphoreCount = 1;
+        submit_info.pSignalSemaphores = &offscreen->semaphore;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &offscreen->command_buffers[image_index];
+
+        VK_RESULT_OK(vkQueueSubmit(vk_state->vk_graphics_queue, 1, &submit_info, VK_NULL_HANDLE));
+    }
+
     VkSubmitInfo submit_info = {0};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore wait_semaphores[1] = {vk_base->vk_image_available_semaphores[current_frame]};
-    VkPipelineStageFlags wait_stages[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-
     submit_info.waitSemaphoreCount = 1;
-    submit_info.pWaitSemaphores = wait_semaphores;
+    if (offscreen_rendering) {
+        submit_info.pWaitSemaphores = &offscreen->semaphore;
+    } else {
+        submit_info.pWaitSemaphores = wait_image_available_semaphores;
+    }
     submit_info.pWaitDstStageMask = wait_stages;
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = signal_render_complete_semaphores;
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &vk_base->vk_command_buffers[image_index];
-
-    VkSemaphore signal_semaphores[1] = {vk_base->vk_render_finished_semaphores[current_frame]};
-
-    submit_info.signalSemaphoreCount = 1;
-    submit_info.pSignalSemaphores = signal_semaphores;
 
     vkres = vkResetFences(vk_state->vk_device, 1, &vk_base->vk_flight_fences[current_frame]);
     vk_ok(vkres);
@@ -409,7 +417,7 @@ void state_render(state *self) {
     VkPresentInfoKHR present_info = {0};
     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     present_info.waitSemaphoreCount = 1;
-    present_info.pWaitSemaphores = signal_semaphores;
+    present_info.pWaitSemaphores = signal_render_complete_semaphores;
     present_info.swapchainCount = 1;
     present_info.pSwapchains = swapchains;
     present_info.pImageIndices = &image_index;
@@ -502,6 +510,8 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
     self->gbuffer = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height);
 
+    VkPipelineColorBlendAttachmentState color_attach = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+
     {
         struct vulkan_pipe_item item1 = {0};
         item1.count = 1;
@@ -589,9 +599,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         pipe_settings.render_pass = self->gbuffer->render_pass;
         pipe_settings.color_blend_attachments_count = 3;
         pipe_settings.color_blend_attachments = safe_calloc(pipe_settings.color_blend_attachments_count, sizeof(VkPipelineColorBlendAttachmentState));
-        pipe_settings.color_blend_attachments[0] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
-        pipe_settings.color_blend_attachments[1] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
-        pipe_settings.color_blend_attachments[2] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+        pipe_settings.color_blend_attachments[0] = color_attach;
+        pipe_settings.color_blend_attachments[1] = color_attach;
+        pipe_settings.color_blend_attachments[2] = color_attach;
 
         struct vulkan_render_settings render_settings = {0};
         vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 0);
@@ -655,9 +665,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         pipe_settings.render_pass = self->gbuffer->render_pass;
         pipe_settings.color_blend_attachments_count = 3;
         pipe_settings.color_blend_attachments = safe_calloc(pipe_settings.color_blend_attachments_count, sizeof(VkPipelineColorBlendAttachmentState));
-        pipe_settings.color_blend_attachments[0] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
-        pipe_settings.color_blend_attachments[1] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
-        pipe_settings.color_blend_attachments[2] = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+        pipe_settings.color_blend_attachments[0] = color_attach;
+        pipe_settings.color_blend_attachments[1] = color_attach;
+        pipe_settings.color_blend_attachments[2] = color_attach;
 
         struct vulkan_render_settings render_settings = {0};
         vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 1);
@@ -735,6 +745,13 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         pipe_settings.sets = safe_calloc(pipe_settings.number_of_sets, sizeof(struct vulkan_pipe_set));
         pipe_settings.sets[0] = set1;
         pipe_settings.sets[1] = set2;
+        pipe_settings.use_render_pass = true;
+        pipe_settings.render_pass = self->gbuffer->render_pass;
+        pipe_settings.color_blend_attachments_count = 3;
+        pipe_settings.color_blend_attachments = safe_calloc(pipe_settings.color_blend_attachments_count, sizeof(VkPipelineColorBlendAttachmentState));
+        pipe_settings.color_blend_attachments[0] = color_attach;
+        pipe_settings.color_blend_attachments[1] = color_attach;
+        pipe_settings.color_blend_attachments[2] = color_attach;
 
         struct vulkan_render_settings render_settings = {0};
         vulkan_render_settings_init(&render_settings, 3, 3, 2, 0, 0);
@@ -854,9 +871,6 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         self->pipelines[SHADER_RENDER_MODEL] = pipeline;
     }
-
-    // ws->pipeline = self->pipelines[SHADER_TEXTURE_3D];
-    // ws->pipeline_model = self->pipelines[SHADER_RENDER_MODEL];
 
     ws->pipeline = self->pipelines[SHADER_DEFERRED_TEXTURE_3D];
     ws->pipeline_model = self->pipelines[SHADER_DEFERRED_RENDER_MODEL];

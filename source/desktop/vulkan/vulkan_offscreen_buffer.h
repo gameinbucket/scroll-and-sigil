@@ -38,6 +38,8 @@ struct vulkan_offscreen_buffer {
     VkSampler color_sampler;
     VkSemaphore semaphore;
     VkCommandBuffer *command_buffers;
+    VkDescriptorSetLayout descriptor_layout;
+    VkDescriptorPool descriptor_pool;
     VkDescriptorSet output_descriptor;
 };
 
