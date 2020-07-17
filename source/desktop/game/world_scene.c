@@ -1,6 +1,6 @@
 #include "world_scene.h"
 
-static void render_wall(struct vulkan_render_buffer *b, wall *w) {
+static void render_wall(vulkan_render_buffer *b, wall *w) {
     uint32_t pos = b->vertex_position;
     float *vertices = b->vertices;
 
@@ -44,7 +44,7 @@ static void render_wall(struct vulkan_render_buffer *b, wall *w) {
     render_index4(b);
 }
 
-static void render_triangle(struct vulkan_render_buffer *b, triangle *t) {
+static void render_triangle(vulkan_render_buffer *b, triangle *t) {
     uint32_t pos = b->vertex_position;
     float *vertices = b->vertices;
 
@@ -79,51 +79,66 @@ static void render_triangle(struct vulkan_render_buffer *b, triangle *t) {
     render_index3(b);
 }
 
-// static void render_decal(struct vulkan_render_buffer *b, decal *d) {
-//     uint32_t pos = b->vertex_position;
-//     float *vertices = b->vertices;
+static void render_decal(vulkan_render_buffer *b, decal *d) {
+    uint32_t pos = b->vertex_position;
+    float *vertices = b->vertices;
 
-//     vertices[pos] = d->x1;
-//     vertices[pos + 1] = d->y1;
-//     vertices[pos + 2] = d->z1;
-//     vertices[pos + 3] = d->u1;
-//     vertices[pos + 4] = d->v1;
-//     vertices[pos + 5] = d->nx;
-//     vertices[pos + 6] = d->ny;
-//     vertices[pos + 7] = d->nz;
+    vertices[pos] = d->x1;
+    vertices[pos + 1] = d->y1;
+    vertices[pos + 2] = d->z1;
+    vertices[pos + 3] = d->u1;
+    vertices[pos + 4] = d->v1;
+    vertices[pos + 5] = d->nx;
+    vertices[pos + 6] = d->ny;
+    vertices[pos + 7] = d->nz;
 
-//     vertices[pos + 8] = d->x2;
-//     vertices[pos + 9] = d->y2;
-//     vertices[pos + 10] = d->z2;
-//     vertices[pos + 11] = d->u2;
-//     vertices[pos + 12] = d->v2;
-//     vertices[pos + 13] = d->nx;
-//     vertices[pos + 14] = d->ny;
-//     vertices[pos + 15] = d->nz;
+    vertices[pos + 8] = d->x2;
+    vertices[pos + 9] = d->y2;
+    vertices[pos + 10] = d->z2;
+    vertices[pos + 11] = d->u2;
+    vertices[pos + 12] = d->v2;
+    vertices[pos + 13] = d->nx;
+    vertices[pos + 14] = d->ny;
+    vertices[pos + 15] = d->nz;
 
-//     vertices[pos + 16] = d->x3;
-//     vertices[pos + 17] = d->y3;
-//     vertices[pos + 18] = d->z3;
-//     vertices[pos + 19] = d->u3;
-//     vertices[pos + 20] = d->v3;
-//     vertices[pos + 21] = d->nx;
-//     vertices[pos + 22] = d->ny;
-//     vertices[pos + 23] = d->nz;
+    vertices[pos + 16] = d->x3;
+    vertices[pos + 17] = d->y3;
+    vertices[pos + 18] = d->z3;
+    vertices[pos + 19] = d->u3;
+    vertices[pos + 20] = d->v3;
+    vertices[pos + 21] = d->nx;
+    vertices[pos + 22] = d->ny;
+    vertices[pos + 23] = d->nz;
 
-//     vertices[pos + 24] = d->x4;
-//     vertices[pos + 25] = d->y4;
-//     vertices[pos + 26] = d->z4;
-//     vertices[pos + 27] = d->u4;
-//     vertices[pos + 28] = d->v4;
-//     vertices[pos + 29] = d->nx;
-//     vertices[pos + 30] = d->ny;
-//     vertices[pos + 31] = d->nz;
+    vertices[pos + 24] = d->x4;
+    vertices[pos + 25] = d->y4;
+    vertices[pos + 26] = d->z4;
+    vertices[pos + 27] = d->u4;
+    vertices[pos + 28] = d->v4;
+    vertices[pos + 29] = d->nx;
+    vertices[pos + 30] = d->ny;
+    vertices[pos + 31] = d->nz;
 
-//     b->vertex_position = pos + 32;
-//     render_index4(b);
-// }
+    b->vertex_position = pos + 32;
+    render_index4(b);
+}
 
-static void memcopy_faces(struct vulkan_render_buffer *r, float *cube) {
+static void thing_sprite_render(uint_table *cache, thing *t, float sine, float cosine) {
+    vulkan_render_buffer *b = uint_table_get(cache, t->sprite_id);
+    render_sprite(b, t->x, t->y, t->z, t->sprite_data, sine, cosine);
+}
+
+static void particle_render(uint_table *cache, particle *p, float *view) {
+    vulkan_render_buffer *b = uint_table_get(cache, p->texture);
+    render_aligned_sprite(b, p->x, p->y, p->z, p->sprite_data, view);
+}
+
+static void decal_render(uint_table *cache, decal *d) {
+    vulkan_render_buffer *b = uint_table_get(cache, d->texture);
+    render_decal(b, d);
+}
+
+static void memcopy_faces(vulkan_render_buffer *r, float *cube) {
 
     for (int f = 0; f < 6; f++) {
         if (skip_cube_model_face(cube, f)) {
@@ -135,7 +150,7 @@ static void memcopy_faces(struct vulkan_render_buffer *r, float *cube) {
     }
 }
 
-static void memcopy_mesh(struct vulkan_render_buffer *r, bone *b) {
+static void memcopy_mesh(vulkan_render_buffer *r, bone *b) {
 
     int cube_count = b->cube_count;
     struct model_cube *cubes = b->cubes;
@@ -155,7 +170,7 @@ static void memcopy_mesh(struct vulkan_render_buffer *r, bone *b) {
     }
 }
 
-static void thing_model_geometry(struct vulkan_render_buffer *r, thing *t) {
+static void thing_model_geometry(vulkan_render_buffer *r, thing *t) {
 
     model *m = t->model_data;
     model_info *info = m->info;
@@ -226,17 +241,17 @@ static void sector_render(uint_table *cache, sector *s) {
         wall *bottom = ld->bottom;
 
         if (top) {
-            struct vulkan_render_buffer *b = uint_table_get(cache, top->texture);
+            vulkan_render_buffer *b = uint_table_get(cache, top->texture);
             render_wall(b, top);
         }
 
         if (ld->middle) {
-            struct vulkan_render_buffer *b = uint_table_get(cache, middle->texture);
+            vulkan_render_buffer *b = uint_table_get(cache, middle->texture);
             render_wall(b, middle);
         }
 
         if (ld->bottom) {
-            struct vulkan_render_buffer *b = uint_table_get(cache, bottom->texture);
+            vulkan_render_buffer *b = uint_table_get(cache, bottom->texture);
             render_wall(b, bottom);
         }
     }
@@ -246,7 +261,7 @@ static void sector_render(uint_table *cache, sector *s) {
 
     for (int i = 0; i < triangle_count; i++) {
         triangle *td = triangles[i];
-        struct vulkan_render_buffer *b = uint_table_get(cache, td->texture);
+        vulkan_render_buffer *b = uint_table_get(cache, td->texture);
         render_triangle(b, td);
     }
 }
@@ -262,7 +277,7 @@ void world_scene_geometry(struct vulkan_state *vk_state, struct vulkan_base *vk_
     uint_table_iterator iter = create_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
         uint_table_pair pair = uint_table_iterator_next(&iter);
-        struct vulkan_render_buffer *b = pair.value;
+        vulkan_render_buffer *b = pair.value;
         vulkan_render_buffer_zero(b);
     }
 
@@ -275,7 +290,7 @@ void world_scene_geometry(struct vulkan_state *vk_state, struct vulkan_base *vk_
     iter = create_uint_table_iterator(cache);
     while (uint_table_iterator_has_next(&iter)) {
         uint_table_pair pair = uint_table_iterator_next(&iter);
-        struct vulkan_render_buffer *b = pair.value;
+        vulkan_render_buffer *b = pair.value;
         vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, b);
     }
 
@@ -290,9 +305,8 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     world *w = self->w;
     camera *c = self->c;
 
+    float view[16];
     float mvp[16];
-
-    // sectors
 
     struct vulkan_pipeline *pipeline = self->pipeline;
 
@@ -303,7 +317,6 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         float height = (float)vk_base->swapchain->swapchain_extent.height;
         float ratio = width / height;
 
-        float view[16];
         float perspective[16];
         float correction[16];
         float original[16];
@@ -319,25 +332,71 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
     }
 
-    uint_table *cache = self->sector_cache;
-
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
     vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
 
-    struct vulkan_pipe_set *pipe_set = &pipeline->pipe_data.sets[1];
+    // sprites
 
-    uint_table_iterator iter = create_uint_table_iterator(cache);
-    while (uint_table_iterator_has_next(&iter)) {
-        uint_table_pair pair = uint_table_iterator_next(&iter);
+    uint_table *sprite_cache = self->sprite_cache[image_index];
 
-        struct vulkan_render_buffer *b = pair.value;
+    {
+        uint_table_iterator iter = create_uint_table_iterator(sprite_cache);
+        while (uint_table_iterator_has_next(&iter)) {
+            uint_table_pair pair = uint_table_iterator_next(&iter);
+            vulkan_render_buffer_zero((vulkan_render_buffer *)pair.value);
+        }
+    }
 
-        VkDescriptorSet get_image = image_descriptor_system_get(self->image_descriptors, pair.key);
-        vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &get_image);
-        vulkan_render_buffer_draw(b, command_buffer);
+    // particles
+
+    int particle_count = w->particle_count;
+    particle **particles = w->particles;
+    for (int i = 0; i < particle_count; i++) {
+        particle_render(sprite_cache, particles[i], view);
+    }
+
+    // decals
+
+    int decal_count = w->decal_count;
+    decal **decals = w->decals;
+    for (int i = 0; i < decal_count; i++) {
+        decal_render(sprite_cache, decals[i]);
     }
 
     // things
+
+    float sine = sinf(-c->ry);
+    float cosine = cosf(-c->ry);
+
+    int thing_sprite_count = w->thing_sprites_count;
+    thing **thing_sprites = w->thing_sprites;
+    for (int i = 0; i < thing_sprite_count; i++) {
+        thing_sprite_render(sprite_cache, thing_sprites[i], sine, cosine);
+    }
+
+    // sectors
+
+    uint_table *sector_cache = self->sector_cache;
+
+    // render
+
+    for (int i = 0; i < TEXTURE_COUNT; i++) {
+        VkDescriptorSet get_image = image_descriptor_system_get(self->image_descriptors, i);
+        vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &get_image);
+
+        vulkan_render_buffer_draw((vulkan_render_buffer *)uint_table_get(sector_cache, i), command_buffer);
+
+        vulkan_render_buffer *sprites = uint_table_get(sprite_cache, i);
+        // flush / map VkBuffer
+        // VkMappedMemoryRange memory_range = {0};
+        // memory_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+        // memory_range.memory = uniform_buffer->vk_uniform_buffers_memory[image_index];
+        // memory_range.size = thing_model_count * uniform_buffer->dynamic_alignment;
+        // vkFlushMappedMemoryRanges(vk_state->vk_device, 1, &memory_range);
+        vulkan_render_buffer_draw(sprites, command_buffer);
+    }
+
+    // thing models
 
     pipeline = self->pipeline_model;
 
@@ -392,15 +451,31 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     }
 }
 
-void world_scene_initialize(__attribute__((unused)) vulkan_state *vk_state, __attribute__((unused)) VkCommandPool command_pool, world_scene *self) {
+void world_scene_initialize(vulkan_state *vk_state, vulkan_base *vk_base, VkCommandPool command_pool, world_scene *self) {
+
+    uint32_t swapchain_copies = vk_base->swapchain->swapchain_image_count;
+
+    self->sector_cache = create_uint_table();
+
+    self->sprite_cache = safe_calloc(swapchain_copies, sizeof(uint_table *));
+    for (int i = 0; i < swapchain_copies; i++) {
+        self->sprite_cache[i] = create_uint_table();
+    }
 
     struct vulkan_render_settings render_settings = {0};
     vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 0);
 
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        struct vulkan_render_buffer *b = create_vulkan_render_buffer(render_settings, 4 * 800, 36 * 800);
+        vulkan_render_buffer *b = create_vulkan_render_buffer(render_settings, 4 * 800, 36 * 800);
         // vulkan_render_buffer_initialize(vk_state, command_pool, b);
         uint_table_put(self->sector_cache, i, b);
+    }
+
+    for (int i = 0; i < swapchain_copies; i++) {
+        for (int k = 0; k < TEXTURE_COUNT; k++) {
+            vulkan_render_buffer *b = create_vulkan_render_buffer(render_settings, 4 * 800, 36 * 800);
+            uint_table_put(self->sprite_cache[i], i, b);
+        }
     }
 
     vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 1);
@@ -410,7 +485,6 @@ void world_scene_initialize(__attribute__((unused)) vulkan_state *vk_state, __at
 world_scene *create_world_scene(world *w) {
     world_scene *self = safe_calloc(1, sizeof(world_scene));
     self->w = w;
-    self->sector_cache = create_uint_table();
     return self;
 }
 

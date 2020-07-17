@@ -32,6 +32,7 @@ struct world_scene {
     world *w;
     camera *c;
     uint_table *sector_cache;
+    uint_table **sprite_cache;
     image_descriptor_system *image_descriptors;
     struct vulkan_pipeline *pipeline;
     struct vulkan_pipeline *pipeline_model;
@@ -41,7 +42,7 @@ struct world_scene {
 void world_scene_geometry(struct vulkan_state *vk_state, struct vulkan_base *vk_base, world_scene *self);
 void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, world_scene *self, VkCommandBuffer command_buffer, uint32_t image_index);
 void world_scene_create_buffers(vulkan_state *vk_state, VkCommandPool command_pool, world_scene *self);
-void world_scene_initialize(vulkan_state *vk_state, VkCommandPool command_pool, world_scene *self);
+void world_scene_initialize(vulkan_state *vk_state, vulkan_base *vk_base, VkCommandPool command_pool, world_scene *self);
 world_scene *create_world_scene(world *w);
 void delete_world_scene(vulkan_state *vk_state, world_scene *self);
 

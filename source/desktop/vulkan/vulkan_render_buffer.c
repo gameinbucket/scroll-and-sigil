@@ -1,6 +1,10 @@
 #include "vulkan_render_buffer.h"
 
-void vulkan_render_buffer_draw(struct vulkan_render_buffer *render, VkCommandBuffer command_buffer) {
+void vulkan_render_buffer_draw(vulkan_render_buffer *render, VkCommandBuffer command_buffer) {
+
+    if (render->vertex_position == 0) {
+        return;
+    }
 
     VkBuffer vertex_buffers[1] = {render->vk_vertex_buffer};
     VkDeviceSize vertex_offsets[1] = {0};
@@ -11,7 +15,7 @@ void vulkan_render_buffer_draw(struct vulkan_render_buffer *render, VkCommandBuf
     vkCmdDrawIndexed(command_buffer, render->index_position, 1, 0, 0, 0);
 }
 
-static void create_vertex_buffer(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *renderbuffer) {
+static void create_vertex_buffer(vulkan_state *vk_state, VkCommandPool command_pool, vulkan_render_buffer *renderbuffer) {
 
     VkDeviceSize max_size = renderbuffer->vertex_max * renderbuffer->settings.stride * sizeof(float);
 
@@ -41,7 +45,7 @@ static void create_vertex_buffer(vulkan_state *vk_state, VkCommandPool command_p
     vkFreeMemory(vk_state->vk_device, staging_buffer_memory, NULL);
 }
 
-static void create_index_buffer(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *renderbuffer) {
+static void create_index_buffer(vulkan_state *vk_state, VkCommandPool command_pool, vulkan_render_buffer *renderbuffer) {
 
     VkDeviceSize max_size = renderbuffer->index_max * sizeof(uint32_t);
 
@@ -77,19 +81,19 @@ void vulkan_render_buffer_zero(struct vulkan_render_buffer *self) {
     self->index_offset = 0;
 }
 
-void vulkan_render_buffer_update(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *self) {
+void vulkan_render_buffer_update(vulkan_state *vk_state, VkCommandPool command_pool, vulkan_render_buffer *self) {
 
     printf("vulkan render buffer update %p %p %p\n", (void *)vk_state, (void *)command_pool, (void *)self);
 }
 
-void vulkan_render_buffer_initialize(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *self) {
+void vulkan_render_buffer_initialize(vulkan_state *vk_state, VkCommandPool command_pool, vulkan_render_buffer *self) {
 
     create_vertex_buffer(vk_state, command_pool, self);
     create_index_buffer(vk_state, command_pool, self);
 }
 
-struct vulkan_render_buffer *create_vulkan_render_buffer(struct vulkan_render_settings settings, size_t vertices, size_t indices) {
-    struct vulkan_render_buffer *self = safe_calloc(1, sizeof(struct vulkan_render_buffer));
+vulkan_render_buffer *create_vulkan_render_buffer(struct vulkan_render_settings settings, size_t vertices, size_t indices) {
+    vulkan_render_buffer *self = safe_calloc(1, sizeof(struct vulkan_render_buffer));
     self->settings = settings;
     self->vertices = safe_malloc(vertices * settings.stride * sizeof(float));
     self->indices = safe_malloc(indices * sizeof(uint32_t));
@@ -98,7 +102,7 @@ struct vulkan_render_buffer *create_vulkan_render_buffer(struct vulkan_render_se
     return self;
 }
 
-void delete_vulkan_renderbuffer(vulkan_state *vk_state, struct vulkan_render_buffer *self) {
+void delete_vulkan_renderbuffer(vulkan_state *vk_state, vulkan_render_buffer *self) {
 
     vkDestroyBuffer(vk_state->vk_device, self->vk_vertex_buffer, NULL);
     vkFreeMemory(vk_state->vk_device, self->vk_vertex_buffer_memory, NULL);
