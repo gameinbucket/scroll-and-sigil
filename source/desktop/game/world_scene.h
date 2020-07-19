@@ -44,6 +44,6 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 void world_scene_create_buffers(vulkan_state *vk_state, VkCommandPool command_pool, world_scene *self);
 void world_scene_initialize(vulkan_state *vk_state, vulkan_base *vk_base, VkCommandPool command_pool, world_scene *self);
 world_scene *create_world_scene(world *w);
-void delete_world_scene(vulkan_state *vk_state, world_scene *self);
+void delete_world_scene(vulkan_state *vk_state, vulkan_base *vk_base, world_scene *self);
 
 #endif

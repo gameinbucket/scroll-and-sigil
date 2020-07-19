@@ -107,8 +107,6 @@ static void main_loop(state *s) {
             }
         }
 
-        // run = false;
-
         updates++;
 
         if (updates == 4) {

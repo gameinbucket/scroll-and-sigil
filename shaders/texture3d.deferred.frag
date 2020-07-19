@@ -12,9 +12,11 @@ layout(location = 1) out vec4 out_normal;
 layout(location = 2) out vec4 out_position;
 
 void main() {
-   out_color = texture(texture_sampler, in_texture);
+  vec4 pixel = texture(texture_sampler, in_texture);
+  if (pixel.a == 0.0) {
+    discard;
+  }
+  out_color = pixel;
   out_position = vec4(in_position, 0.0);
   out_normal = vec4(in_normal, 0.0);
 }
-
-

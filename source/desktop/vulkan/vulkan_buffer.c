@@ -38,17 +38,22 @@ void vk_create_buffer(vulkan_state *vk_state, VkDeviceSize size, VkBufferUsageFl
 
     VK_RESULT_OK(vkAllocateMemory(vk_state->vk_device, &mem_info, NULL, buffer_memory));
 
-    vkBindBufferMemory(vk_state->vk_device, (*buffer), (*buffer_memory), 0);
+    VK_RESULT_OK(vkBindBufferMemory(vk_state->vk_device, (*buffer), (*buffer_memory), 0));
 }
 
-void vk_copy_buffer(vulkan_state *vk_state, VkCommandPool command_pool, VkBuffer source, VkBuffer destination, VkDeviceSize size) {
-
-    VkCommandBuffer command_buffer = vk_begin_single_time_commands(vk_state, command_pool);
+void vk_copy_buffer(vulkan_state *vk_state, VkCommandBuffer command_buffer, VkBuffer source, VkBuffer destination, VkDeviceSize size) {
 
     VkBufferCopy copy_region = {0};
     copy_region.size = size;
 
     vkCmdCopyBuffer(command_buffer, source, destination, 1, &copy_region);
+}
+
+void vk_single_command_copy_buffer(vulkan_state *vk_state, VkCommandPool command_pool, VkBuffer source, VkBuffer destination, VkDeviceSize size) {
+
+    VkCommandBuffer command_buffer = vk_begin_single_time_commands(vk_state, command_pool);
+
+    vk_copy_buffer(vk_state, command_buffer, source, destination, size);
 
     vk_end_single_time_commands(vk_state, command_pool, command_buffer);
 }

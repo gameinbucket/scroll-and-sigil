@@ -504,7 +504,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     world_scene *ws = create_world_scene(w);
     ws->image_descriptors = self->image_descriptors;
     ws->c = c;
-    world_scene_initialize(vk_state, vk_base->vk_command_pool, ws);
+    world_scene_initialize(vk_state, vk_base, vk_base->vk_command_pool, ws);
     world_scene_geometry(vk_state, vk_base, ws);
     self->ws = ws;
 
@@ -557,7 +557,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         self->draw_canvas = create_vulkan_render_buffer(render_settings, 4, 6);
         render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
-        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas);
+        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas, true);
     }
 
     {
@@ -707,7 +707,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_render_buffer *render = create_vulkan_render_buffer(render_settings, 4, 6);
         render_rectangle(render, 0, 0, 64, 64, 1.0f, 0.0f, 0.0f, 1.0f);
-        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, render);
+        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, render, true);
 
         self->hd = create_hud(pipeline, render);
     }
@@ -762,7 +762,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         struct vulkan_render_buffer *render = create_vulkan_render_buffer(render_settings, VK_CUBE_VERTEX_COUNT * 10, VK_CUBE_INDICE_COUNT * 10);
         render_cube(render);
-        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, render);
+        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, render, true);
 
         self->sc = create_scene(pipeline, render);
         self->sc->image_descriptors = self->image_descriptors;
@@ -881,7 +881,7 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 void delete_state(state *self) {
 
     delete_scene(self->vk_state, self->sc);
-    delete_world_scene(self->vk_state, self->ws);
+    delete_world_scene(self->vk_state, self->vk_base, self->ws);
     delete_hud(self->vk_state, self->hd);
 
     delete_vulkan_renderbuffer(self->vk_state, self->draw_canvas);

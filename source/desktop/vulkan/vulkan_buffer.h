@@ -13,6 +13,7 @@
 
 uint32_t vk_memory_type(vulkan_state *vk_state, uint32_t filter, VkMemoryPropertyFlags properties);
 void vk_create_buffer(vulkan_state *vk_state, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer *buffer, VkDeviceMemory *buffer_memory);
-void vk_copy_buffer(vulkan_state *vk_state, VkCommandPool command_pool, VkBuffer source, VkBuffer destination, VkDeviceSize size);
+void vk_copy_buffer(vulkan_state *vk_state, VkCommandBuffer command_buffer, VkBuffer source, VkBuffer destination, VkDeviceSize size);
+void vk_single_command_copy_buffer(vulkan_state *vk_state, VkCommandPool command_pool, VkBuffer source, VkBuffer destination, VkDeviceSize size);
 
 #endif
