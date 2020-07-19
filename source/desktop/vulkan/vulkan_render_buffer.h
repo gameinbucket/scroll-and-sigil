@@ -19,6 +19,7 @@
 typedef struct vulkan_render_buffer vulkan_render_buffer;
 
 struct vulkan_render_buffer {
+    bool memory_host_visible;
     struct vulkan_render_settings settings;
     float *vertices;
     uint32_t vertex_max;
@@ -42,9 +43,8 @@ struct vulkan_render_buffer {
 void vulkan_render_buffer_draw(vulkan_render_buffer *render, VkCommandBuffer command_buffer);
 void vulkan_render_buffer_zero(vulkan_render_buffer *b);
 void vulkan_render_buffer_flush(vulkan_state *vk_state, VkCommandBuffer command_buffer, struct vulkan_render_buffer *b);
-void vulkan_render_buffer_finish(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *b);
-void vulkan_render_buffer_initialize(vulkan_state *vk_state, VkCommandPool command_pool, vulkan_render_buffer *b, bool flush);
-vulkan_render_buffer *create_vulkan_render_buffer(struct vulkan_render_settings settings, size_t vertices, size_t indices);
+void vulkan_render_buffer_immediate_flush(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_render_buffer *b);
+vulkan_render_buffer *create_vulkan_render_buffer(vulkan_state *vk_state, struct vulkan_render_settings settings, size_t vertices, size_t indices);
 void delete_vulkan_renderbuffer(vulkan_state *vk_state, vulkan_render_buffer *b);
 
 #endif

@@ -27,9 +27,7 @@ VkCommandBuffer vk_begin_single_time_commands(vulkan_state *vk_state, VkCommandP
     return command_buffer;
 }
 
-void vk_end_single_time_commands(vulkan_state *vk_state, VkCommandPool vk_command_pool, VkCommandBuffer command_buffer) {
-
-    vkEndCommandBuffer(command_buffer);
+void vk_wait_on_command_buffer(vulkan_state *vk_state, VkCommandBuffer command_buffer) {
 
     VkSubmitInfo submit_info = {0};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -38,6 +36,13 @@ void vk_end_single_time_commands(vulkan_state *vk_state, VkCommandPool vk_comman
 
     vkQueueSubmit(vk_state->vk_graphics_queue, 1, &submit_info, VK_NULL_HANDLE);
     vkQueueWaitIdle(vk_state->vk_graphics_queue);
+}
+
+void vk_end_single_time_commands(vulkan_state *vk_state, VkCommandPool vk_command_pool, VkCommandBuffer command_buffer) {
+
+    vkEndCommandBuffer(command_buffer);
+
+    vk_wait_on_command_buffer(vk_state, command_buffer);
 
     vkFreeCommandBuffers(vk_state->vk_device, vk_command_pool, 1, &command_buffer);
 }

@@ -291,28 +291,21 @@ void world_scene_geometry(struct vulkan_state *vk_state, struct vulkan_base *vk_
     while (uint_table_iterator_has_next(&iter)) {
         uint_table_pair pair = uint_table_iterator_next(&iter);
         vulkan_render_buffer *b = pair.value;
-        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, b, true);
+        vulkan_render_buffer_immediate_flush(vk_state, vk_base->vk_command_pool, b);
     }
 
     // things
 
     thing_model_geometry(self->thing_buffer, w->thing_models[0]);
-    vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->thing_buffer, true);
+    vulkan_render_buffer_immediate_flush(vk_state, vk_base->vk_command_pool, self->thing_buffer);
 }
 
-void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, world_scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
+void world_scene_transfers(struct vulkan_state *vk_state, struct vulkan_base *vk_base, world_scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
     world *w = self->w;
     camera *c = self->c;
 
-    float view[16];
-    float mvp[16];
-
-    struct vulkan_pipeline *pipeline = self->pipeline;
-
     {
-        struct uniform_projection ubo;
-
         float width = (float)vk_base->swapchain->swapchain_extent.width;
         float height = (float)vk_base->swapchain->swapchain_extent.height;
         float ratio = width / height;
@@ -324,16 +317,8 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         matrix_vulkan_correction(correction);
         matrix_perspective(original, 60.0, 0.01, 100, ratio);
         matrix_multiply(perspective, correction, original);
-        matrix_perspective_projection(mvp, perspective, view, -c->x, -c->y, -c->z, c->rx, c->ry);
-
-        memcpy(ubo.mvp, mvp, 16 * sizeof(float));
-
-        struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
-        vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
+        matrix_perspective_projection(self->model_view_projection, perspective, self->view, -c->x, -c->y, -c->z, c->rx, c->ry);
     }
-
-    vulkan_pipeline_cmd_bind(pipeline, command_buffer);
-    vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
 
     // sprites
 
@@ -352,7 +337,7 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     int particle_count = w->particle_count;
     particle **particles = w->particles;
     for (int i = 0; i < particle_count; i++) {
-        particle_render(sprite_cache, particles[i], view);
+        particle_render(sprite_cache, particles[i], self->view);
     }
 
     // decals
@@ -374,11 +359,38 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         thing_sprite_render(sprite_cache, thing_sprites[i], sine, cosine);
     }
 
-    // sectors
+    // render
 
-    uint_table *sector_cache = self->sector_cache;
+    for (int i = 0; i < TEXTURE_COUNT; i++) {
+
+        vulkan_render_buffer *sprites = uint_table_get(sprite_cache, i);
+        vulkan_render_buffer_flush(vk_state, command_buffer, sprites);
+    }
+}
+
+void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, world_scene *self, VkCommandBuffer command_buffer, uint32_t image_index) {
+
+    world *w = self->w;
+    camera *c = self->c;
+
+    struct vulkan_pipeline *pipeline = self->pipeline;
+
+    {
+        struct uniform_projection ubo;
+
+        memcpy(ubo.mvp, self->model_view_projection, 16 * sizeof(float));
+
+        struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
+        vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
+    }
+
+    vulkan_pipeline_cmd_bind(pipeline, command_buffer);
+    vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
 
     // render
+
+    uint_table *sector_cache = self->sector_cache;
+    uint_table *sprite_cache = self->sprite_cache[image_index];
 
     for (int i = 0; i < TEXTURE_COUNT; i++) {
         VkDescriptorSet get_image = image_descriptor_system_get(self->image_descriptors, i);
@@ -388,7 +400,6 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         vulkan_render_buffer_draw(sectors, command_buffer);
 
         vulkan_render_buffer *sprites = uint_table_get(sprite_cache, i);
-        vulkan_render_buffer_flush(vk_state, command_buffer, sprites);
         vulkan_render_buffer_draw(sprites, command_buffer);
     }
 
@@ -404,7 +415,7 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
         matrix_inverse(temp, ubo.normal);
         matrix_transpose(ubo.normal, temp);
 
-        memcpy(ubo.mvp, mvp, 16 * sizeof(float));
+        memcpy(ubo.mvp, self->model_view_projection, 16 * sizeof(float));
 
         struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
         vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
@@ -457,7 +468,7 @@ void world_scene_initialize(vulkan_state *vk_state, vulkan_base *vk_base, VkComm
 
     self->sector_cache = create_uint_table();
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        vulkan_render_buffer *b = create_vulkan_render_buffer(render_settings, 4 * 800, 36 * 800);
+        vulkan_render_buffer *b = create_vulkan_render_buffer(vk_state, render_settings, 4 * 800, 36 * 800);
         uint_table_put(self->sector_cache, i, b);
     }
 
@@ -465,14 +476,13 @@ void world_scene_initialize(vulkan_state *vk_state, vulkan_base *vk_base, VkComm
     for (uint32_t c = 0; c < swapchain_copies; c++) {
         self->sprite_cache[c] = create_uint_table();
         for (int i = 0; i < TEXTURE_COUNT; i++) {
-            vulkan_render_buffer *b = create_vulkan_render_buffer(render_settings, 4 * 800, 36 * 800);
-            vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, b, false);
+            vulkan_render_buffer *b = create_vulkan_render_buffer(vk_state, render_settings, 4 * 800, 36 * 800);
             uint_table_put(self->sprite_cache[c], i, b);
         }
     }
 
     vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 1);
-    self->thing_buffer = create_vulkan_render_buffer(render_settings, 4 * 800, 36 * 800);
+    self->thing_buffer = create_vulkan_render_buffer(vk_state, render_settings, 4 * 800, 36 * 800);
 }
 
 world_scene *create_world_scene(world *w) {

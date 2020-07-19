@@ -289,7 +289,19 @@ void delete_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base
     free(offscreen->command_buffers);
 }
 
-void vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t image_index) {
+VkCommandBuffer vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t image_index) {
+
+    VkCommandBuffer command_buffer = offscreen->command_buffers[image_index];
+
+    VkCommandBufferBeginInfo command_begin_info = {0};
+    command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    VK_RESULT_OK(vkBeginCommandBuffer(command_buffer, &command_begin_info));
+
+    return command_buffer;
+}
+
+void vulkan_offscreen_buffer_begin_render_pass(vulkan_offscreen_buffer *offscreen, VkCommandBuffer command_buffer) {
 
     uint32_t width = offscreen->width;
     uint32_t height = offscreen->height;
@@ -317,13 +329,6 @@ void vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base
     VkRect2D scissor = {0};
     scissor.extent = (VkExtent2D){width, height};
     scissor.offset = (VkOffset2D){0, 0};
-
-    VkCommandBuffer command_buffer = offscreen->command_buffers[image_index];
-
-    VkCommandBufferBeginInfo command_begin_info = {0};
-    command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-    VK_RESULT_OK(vkBeginCommandBuffer(command_buffer, &command_begin_info));
 
     vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 

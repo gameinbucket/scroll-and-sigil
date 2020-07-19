@@ -49,7 +49,8 @@ void vulkan_offscreen_buffer_clean(vulkan_state *vk_state, vulkan_base *vk_base,
 void vulkan_offscreen_buffer_recreate(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self);
 void delete_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self);
 
-void vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t image_index);
+VkCommandBuffer vulkan_offscreen_buffer_begin_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t image_index);
+void vulkan_offscreen_buffer_begin_render_pass(vulkan_offscreen_buffer *offscreen, VkCommandBuffer command_buffer);
 void vulkan_offscreen_buffer_end_recording(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t image_index);
 
 #endif

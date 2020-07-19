@@ -15,21 +15,23 @@ static VkSurfaceFormatKHR vk_choose_swap_surface_format(VkSurfaceFormatKHR *avai
 }
 
 static VkPresentModeKHR vk_choose_swap_present_mode(VkPresentModeKHR *available, uint32_t count) {
-    const bool mailbox = false;
-    const bool immediate = true;
 
-    if (mailbox) {
-        for (uint32_t i = 0; i < count; i++) {
-            VkPresentModeKHR this = available[i];
-            if (this == VK_PRESENT_MODE_MAILBOX_KHR) {
-                return this;
-            }
+    // VK_PRESENT_MODE_FIFO_KHR
+    // VK_PRESENT_MODE_IMMEDIATE_KHR
+    // VK_PRESENT_MODE_MAILBOX_KHR
+    // VK_PRESENT_MODE_FIFO_RELAXED_KHR
+    // VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR
+    // VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR
+
+    VkPresentModeKHR desired = VK_PRESENT_MODE_IMMEDIATE_KHR;
+
+    for (uint32_t i = 0; i < count; i++) {
+        if (available[i] == desired) {
+            return desired;
         }
     }
 
-    if (immediate) {
-        return VK_PRESENT_MODE_IMMEDIATE_KHR;
-    }
+    printf("Warning: Vulkan present mode not available. Defaulting to FIFO\n");
 
     return VK_PRESENT_MODE_FIFO_KHR;
 }

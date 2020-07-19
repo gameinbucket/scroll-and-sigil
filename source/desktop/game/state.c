@@ -25,8 +25,11 @@ static void record_rendering_offscreen(state *self, uint32_t image_index) {
     struct vulkan_base *vk_base = self->vk_base;
 
     vulkan_offscreen_buffer *offscreen = self->gbuffer;
-    vulkan_offscreen_buffer_begin_recording(vk_state, vk_base, offscreen, image_index);
-    VkCommandBuffer command_buffer = offscreen->command_buffers[image_index];
+    VkCommandBuffer command_buffer = vulkan_offscreen_buffer_begin_recording(vk_state, vk_base, offscreen, image_index);
+
+    world_scene_transfers(vk_state, vk_base, self->ws, command_buffer, image_index);
+
+    vulkan_offscreen_buffer_begin_render_pass(offscreen, command_buffer);
 
     scene_render(vk_state, vk_base, self->sc, command_buffer, image_index);
     world_scene_render(vk_state, vk_base, self->ws, command_buffer, image_index);
@@ -343,11 +346,10 @@ void state_render(state *self) {
 
     uint32_t current_frame = vk_state->current_frame;
 
-    VkResult vkres = vkWaitForFences(vk_state->vk_device, 1, &vk_base->vk_flight_fences[current_frame], VK_TRUE, VK_SYNC_TIMEOUT);
-    vk_ok(vkres);
+    VK_RESULT_OK(vkWaitForFences(vk_state->vk_device, 1, &vk_base->vk_flight_fences[current_frame], VK_TRUE, VK_SYNC_TIMEOUT));
 
     uint32_t image_index;
-    vkres = vkAcquireNextImageKHR(vk_state->vk_device, vk_base->swapchain->vk_swapchain, VK_SYNC_TIMEOUT, vk_base->vk_image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
+    VkResult vkres = vkAcquireNextImageKHR(vk_state->vk_device, vk_base->swapchain->vk_swapchain, VK_SYNC_TIMEOUT, vk_base->vk_image_available_semaphores[current_frame], VK_NULL_HANDLE, &image_index);
 
     if (vkres == VK_ERROR_OUT_OF_DATE_KHR) {
         int width;
@@ -555,9 +557,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
 
         self->pipelines[SHADER_SCREEN] = pipeline;
 
-        self->draw_canvas = create_vulkan_render_buffer(render_settings, 4, 6);
+        self->draw_canvas = create_vulkan_render_buffer(vk_state, render_settings, 4, 6);
         render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
-        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, self->draw_canvas, true);
+        vulkan_render_buffer_immediate_flush(vk_state, vk_base->vk_command_pool, self->draw_canvas);
     }
 
     {
@@ -705,9 +707,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
         self->pipelines[SHADER_COLOR_2D] = pipeline;
 
-        struct vulkan_render_buffer *render = create_vulkan_render_buffer(render_settings, 4, 6);
+        struct vulkan_render_buffer *render = create_vulkan_render_buffer(vk_state, render_settings, 4, 6);
         render_rectangle(render, 0, 0, 64, 64, 1.0f, 0.0f, 0.0f, 1.0f);
-        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, render, true);
+        vulkan_render_buffer_immediate_flush(vk_state, vk_base->vk_command_pool, render);
 
         self->hd = create_hud(pipeline, render);
     }
@@ -760,9 +762,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         vulkan_pipeline_static_initialize(vk_state, vk_base, pipeline);
         self->pipelines[SHADER_TEXTURE_3D_COLOR] = pipeline;
 
-        struct vulkan_render_buffer *render = create_vulkan_render_buffer(render_settings, VK_CUBE_VERTEX_COUNT * 10, VK_CUBE_INDICE_COUNT * 10);
+        struct vulkan_render_buffer *render = create_vulkan_render_buffer(vk_state, render_settings, VK_CUBE_VERTEX_COUNT * 10, VK_CUBE_INDICE_COUNT * 10);
         render_cube(render);
-        vulkan_render_buffer_initialize(vk_state, vk_base->vk_command_pool, render, true);
+        vulkan_render_buffer_immediate_flush(vk_state, vk_base->vk_command_pool, render);
 
         self->sc = create_scene(pipeline, render);
         self->sc->image_descriptors = self->image_descriptors;

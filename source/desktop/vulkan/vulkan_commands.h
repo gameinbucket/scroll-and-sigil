@@ -15,6 +15,7 @@
 #include "vulkan_state.h"
 
 VkCommandBuffer vk_begin_single_time_commands(vulkan_state *vk_state, VkCommandPool vk_command_pool);
+void vk_wait_on_command_buffer(vulkan_state *vk_state, VkCommandBuffer command_buffer);
 void vk_end_single_time_commands(vulkan_state *vk_state, VkCommandPool vk_command_pool, VkCommandBuffer command_buffer);
 void vk_create_command_pool(vulkan_state *vk_state, VkCommandPool *vk_command_pool);
 
