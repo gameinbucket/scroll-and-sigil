@@ -10,10 +10,10 @@ layout(set = 2, binding = 0) uniform UniformBufferBones {
     mat4 matrix[11];
 } bones;
 
-layout (location = 0) in vec3 in_position;
-layout (location = 1) in vec2 in_texture;
-layout (location = 2) in vec3 in_normal;
-layout (location = 3) in float in_bone;
+layout(location = 0) in vec3 in_position;
+layout(location = 1) in vec2 in_texture;
+layout(location = 2) in vec3 in_normal;
+layout(location = 3) in float in_bone;
 
 layout(location = 0) out vec3 out_position;
 layout(location = 1) out vec2 out_texture;

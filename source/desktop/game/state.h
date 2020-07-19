@@ -31,6 +31,8 @@
 #include "render/render.h"
 #include "world/world.h"
 
+#include "shaders/ssao_blur.h"
+
 #include "camera.h"
 #include "hud.h"
 #include "image_descriptor_system.h"
