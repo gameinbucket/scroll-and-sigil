@@ -1,5 +1,12 @@
 #include "vulkan_offscreen_buffer.h"
 
+struct vulkan_image_view_and_sample get_vulkan_offscreen_buffer_color_view_and_sample(vulkan_offscreen_buffer *offscreen) {
+    return (struct vulkan_image_view_and_sample){
+        .view = offscreen->color.view,
+        .sample = offscreen->color_sampler,
+    };
+}
+
 static void init_vulkan_frame_attachment(vulkan_state *vk_state, vulkan_frame_attachment *attachment, VkFormat format, VkImageUsageFlagBits usage, uint32_t width, uint32_t height) {
 
     attachment->format = format;

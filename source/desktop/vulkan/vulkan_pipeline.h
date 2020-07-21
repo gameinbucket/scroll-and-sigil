@@ -24,6 +24,8 @@ struct vulkan_pipeline {
     uint32_t swapchain_image_count;
     struct vulkan_pipe_data pipe_data;
     struct vulkan_render_settings render_settings;
+    uint32_t descriptor_set_layout_count;
+    VkDescriptorSetLayout *descriptor_set_layouts;
     VkPipeline vk_pipeline;
     VkPipelineLayout vk_pipeline_layout;
     bool include_depth;

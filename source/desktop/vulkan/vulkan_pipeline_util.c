@@ -68,6 +68,13 @@ void vulkan_pipeline_static_initialize(vulkan_state *vk_state, struct vulkan_bas
     vulkan_pipeline_update_descriptor_sets(vk_state, pipeline);
 }
 
+void vulkan_pipeline_basic_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline) {
+
+    pipeline->swapchain_image_count = vk_base->swapchain->swapchain_image_count;
+
+    vulkan_pipeline_compile_graphics(vk_state, vk_base, pipeline);
+}
+
 void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *pipeline) {
 
     vulkan_pipeline_clean(vk_state, pipeline);

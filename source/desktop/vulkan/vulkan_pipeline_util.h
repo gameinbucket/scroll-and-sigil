@@ -27,6 +27,7 @@ void vulkan_pipeline_cmd_bind_given_description(struct vulkan_pipeline *pipeline
 void vulkan_pipeline_recreate(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
 void vulkan_pipeline_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
 void vulkan_pipeline_static_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
+void vulkan_pipeline_basic_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
 void delete_vulkan_pipeline(vulkan_state *vk_state, struct vulkan_pipeline *pipeline);
 
 #endif

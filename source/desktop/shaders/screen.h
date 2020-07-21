@@ -1,5 +1,5 @@
-#ifndef SHADER_SSAO_BLUR_H
-#define SHADER_SSAO_BLUR_H
+#ifndef SCREEN_SHADER_H
+#define SCREEN_SHADER_H
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -19,10 +19,10 @@
 #include "vulkan/vulkan_state.h"
 #include "vulkan/vulkan_uniform_util.h"
 
-struct uniform_ssao_blur {
-    alignas(4) float texel;
+struct screen_shader {
+    struct vulkan_pipeline *pipeline;
 };
 
-struct vulkan_pipeline *new_ssao_blur(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen);
+struct screen_shader *new_screen_shader(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen);
 
 #endif

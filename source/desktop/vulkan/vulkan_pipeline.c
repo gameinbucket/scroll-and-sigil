@@ -147,16 +147,27 @@ void vulkan_pipeline_compile_graphics(vulkan_state *vk_state, vulkan_base *vk_ba
     color_blending.attachmentCount = color_blend_attachment_count;
     color_blending.pAttachments = color_blend_attachments;
 
-    uint32_t descriptor_layout_count = pipeline->pipe_data.number_of_sets;
-    VkDescriptorSetLayout *descriptor_layouts = safe_calloc(descriptor_layout_count, sizeof(VkDescriptorSetLayout));
-    for (uint32_t i = 0; i < descriptor_layout_count; i++) {
-        descriptor_layouts[i] = pipeline->pipe_data.sets[i].descriptor_layout;
-    }
-
     VkPipelineLayoutCreateInfo pipeline_layout_info = {0};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipeline_layout_info.setLayoutCount = descriptor_layout_count;
-    pipeline_layout_info.pSetLayouts = descriptor_layouts;
+
+    VkDescriptorSetLayout *descriptor_layouts = NULL;
+
+    if (pipeline->descriptor_set_layout_count > 0) {
+
+        pipeline_layout_info.setLayoutCount = pipeline->descriptor_set_layout_count;
+        pipeline_layout_info.pSetLayouts = pipeline->descriptor_set_layouts;
+
+    } else {
+
+        uint32_t descriptor_layout_count = pipeline->pipe_data.number_of_sets;
+        VkDescriptorSetLayout *descriptor_layouts = safe_calloc(descriptor_layout_count, sizeof(VkDescriptorSetLayout));
+        for (uint32_t i = 0; i < descriptor_layout_count; i++) {
+            descriptor_layouts[i] = pipeline->pipe_data.sets[i].descriptor_layout;
+        }
+
+        pipeline_layout_info.setLayoutCount = descriptor_layout_count;
+        pipeline_layout_info.pSetLayouts = descriptor_layouts;
+    }
 
     VkPipelineLayout vk_pipeline_layout = {0};
 
