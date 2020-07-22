@@ -31,6 +31,7 @@
 #include "render/render.h"
 #include "world/world.h"
 
+#include "shaders/deferred_texture_3d.h"
 #include "shaders/screen.h"
 #include "shaders/ssao_blur.h"
 
@@ -60,6 +61,8 @@ struct state {
     struct table *image_lookup;
     struct vulkan_image *images;
     struct vulkan_pipeline **pipelines;
+    struct screen_shader *screen_shader;
+    struct deferred_texture_3d_shader *deferred_texture_3d_shader;
     struct vulkan_render_buffer *draw_canvas;
     vulkan_offscreen_buffer *gbuffer;
     image_descriptor_system *image_descriptors;

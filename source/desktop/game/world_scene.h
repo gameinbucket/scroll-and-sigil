@@ -23,6 +23,8 @@
 #include "render/render.h"
 #include "world/world.h"
 
+#include "shaders/deferred_texture_3d.h"
+
 #include "camera.h"
 #include "image_descriptor_system.h"
 
@@ -34,7 +36,7 @@ struct world_scene {
     uint_table *sector_cache;
     uint_table **sprite_cache;
     image_descriptor_system *image_descriptors;
-    struct vulkan_pipeline *pipeline;
+    struct deferred_texture_3d_shader *scene_shader;
     struct vulkan_pipeline *pipeline_model;
     struct vulkan_render_buffer *thing_buffer;
     float view[16];

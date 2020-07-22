@@ -1,6 +1,9 @@
 #include "vulkan_pipe_data.h"
 
 void vulkan_pipe_data_initialize_uniforms(vulkan_state *vk_state, struct vulkan_pipe_data *pipe_data) {
+    if (pipe_data == NULL || pipe_data->sets == NULL) {
+        return;
+    }
     for (uint32_t i = 0; i < pipe_data->number_of_sets; i++) {
         struct vulkan_pipe_set *pipe_set = &pipe_data->sets[i];
         for (uint32_t k = 0; k < pipe_set->number_of_items; k++) {
@@ -18,6 +21,9 @@ void vulkan_pipe_data_initialize_uniforms(vulkan_state *vk_state, struct vulkan_
 }
 
 static void vulkan_pipe_item_clean(vulkan_state *vk_state, struct vulkan_pipe_item *pipe_item) {
+    if (pipe_item == NULL) {
+        return;
+    }
     if (pipe_item->uniforms != NULL) {
         for (uint32_t i = 0; i < pipe_item->count; i++) {
             vulkan_uniform_buffer_clean(vk_state, &pipe_item->uniforms[i]);
@@ -26,6 +32,9 @@ static void vulkan_pipe_item_clean(vulkan_state *vk_state, struct vulkan_pipe_it
 }
 
 static void vulkan_pipe_set_clean(vulkan_state *vk_state, struct vulkan_pipe_set *pipe_set) {
+    if (pipe_set == NULL) {
+        return;
+    }
     for (uint32_t i = 0; i < pipe_set->number_of_items; i++) {
         vulkan_pipe_item_clean(vk_state, &pipe_set->items[i]);
     }
@@ -33,7 +42,9 @@ static void vulkan_pipe_set_clean(vulkan_state *vk_state, struct vulkan_pipe_set
 }
 
 void vulkan_pipe_data_clean(vulkan_state *vk_state, struct vulkan_pipe_data *pipe_data) {
-
+    if (pipe_data == NULL || pipe_data->sets == NULL) {
+        return;
+    }
     for (uint32_t i = 0; i < pipe_data->number_of_sets; i++) {
         vulkan_pipe_set_clean(vk_state, &pipe_data->sets[i]);
     }
@@ -46,6 +57,9 @@ static void delete_vulkan_pipe_item(struct vulkan_pipe_item *pipe_item) {
 }
 
 static void delete_vulkan_pipe_set(vulkan_state *vk_state, struct vulkan_pipe_set *pipe_set) {
+    if (pipe_set == NULL) {
+        return;
+    }
     for (uint32_t i = 0; i < pipe_set->number_of_items; i++) {
         delete_vulkan_pipe_item(&pipe_set->items[i]);
     }
@@ -54,6 +68,9 @@ static void delete_vulkan_pipe_set(vulkan_state *vk_state, struct vulkan_pipe_se
 }
 
 void delete_vulkan_pipe_data(vulkan_state *vk_state, struct vulkan_pipe_data *pipe_data) {
+    if (pipe_data == NULL || pipe_data->sets == NULL) {
+        return;
+    }
     for (uint32_t i = 0; i < pipe_data->number_of_sets; i++) {
         delete_vulkan_pipe_set(vk_state, &pipe_data->sets[i]);
     }

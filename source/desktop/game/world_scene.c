@@ -373,19 +373,20 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     world *w = self->w;
     camera *c = self->c;
 
-    struct vulkan_pipeline *pipeline = self->pipeline;
+    struct deferred_texture_3d_shader *scene_shader = self->scene_shader;
+    struct vulkan_pipeline *pipeline = scene_shader->pipeline;
 
     {
         struct uniform_projection ubo;
 
         memcpy(ubo.mvp, self->model_view_projection, 16 * sizeof(float));
 
-        struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
-        vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
+        vulkan_copy_memory(scene_shader->uniforms->mapped_memory[image_index], &ubo, sizeof(ubo));
     }
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
-    vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
+
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 0, 1, &scene_shader->descriptor_sets[image_index]);
 
     // render
 
