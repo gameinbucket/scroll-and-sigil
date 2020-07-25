@@ -373,7 +373,7 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     world *w = self->w;
     camera *c = self->c;
 
-    struct deferred_texture_3d_shader *scene_shader = self->scene_shader;
+    struct texture_3d_shader *scene_shader = self->scene_shader;
     struct vulkan_pipeline *pipeline = scene_shader->pipeline;
 
     {
@@ -406,7 +406,8 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
     // thing models
 
-    pipeline = self->pipeline_model;
+    struct render_model_shader *scene_model_shader = self->scene_model_shader;
+    pipeline = scene_model_shader->pipeline;
 
     {
         struct uniform_projection_and_normal ubo;
@@ -418,20 +419,20 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
 
         memcpy(ubo.mvp, self->model_view_projection, 16 * sizeof(float));
 
-        struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[0].items[0].uniforms;
-        vulkan_copy_memory(uniform_buffer->mapped_memory[image_index], &ubo, sizeof(ubo));
+        vulkan_copy_memory(scene_model_shader->uniforms1->mapped_memory[image_index], &ubo, sizeof(ubo));
     }
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
-    vulkan_pipeline_cmd_bind_description(pipeline, command_buffer, 0, image_index);
 
-    VkDescriptorSet stone_descriptor = image_descriptor_system_get(self->image_descriptors, TEXTURE_HERO);
-    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &stone_descriptor);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 0, 1, &scene_model_shader->descriptor_sets1[image_index]);
+
+    VkDescriptorSet image_descriptor = image_descriptor_system_get(self->image_descriptors, TEXTURE_HERO);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &image_descriptor);
 
     int thing_model_count = w->thing_models_count;
     thing **thing_models = w->thing_models;
 
-    struct vulkan_uniform_buffer *uniform_buffer = pipeline->pipe_data.sets[2].items[0].uniforms;
+    struct vulkan_uniform_buffer *uniform_buffer = scene_model_shader->uniforms3;
     void *mapped_memory = uniform_buffer->mapped_memory[image_index];
 
     for (int i = 0; i < thing_model_count; i++) {
@@ -455,7 +456,8 @@ void world_scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_ba
     for (int i = 0; i < thing_model_count; i++) {
 
         const uint32_t dynamic = i * uniform_buffer->dynamic_alignment;
-        vulkan_pipeline_cmd_bind_dynamic_description(pipeline, command_buffer, 2, image_index, 1, &dynamic);
+        vulkan_pipeline_cmd_bind_dynamic_set(pipeline, command_buffer, 2, 1, &scene_model_shader->descriptor_sets3[image_index], 1, &dynamic);
+
         vulkan_render_buffer_draw(self->thing_buffer, command_buffer);
     }
 }

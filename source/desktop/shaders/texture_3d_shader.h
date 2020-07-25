@@ -1,5 +1,5 @@
-#ifndef DEFERRED_TEXTURE_3D_SHADER_H
-#define DEFERRED_TEXTURE_3D_SHADER_H
+#ifndef TEXTURE_3D_SHADER_H
+#define TEXTURE_3D_SHADER_H
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -19,7 +19,7 @@
 #include "vulkan/vulkan_state.h"
 #include "vulkan/vulkan_uniform_util.h"
 
-struct deferred_texture_3d_shader {
+struct texture_3d_shader {
     VkDescriptorSetLayout *descriptor_set_layouts;
     VkDescriptorPool descriptor_pool;
     VkDescriptorSet *descriptor_sets;
@@ -27,7 +27,7 @@ struct deferred_texture_3d_shader {
     struct vulkan_uniform_buffer *uniforms;
 };
 
-struct deferred_texture_3d_shader *new_deferred_texture_3d_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct vulkan_offscreen_buffer *offscreen);
-void delete_deferred_texture_3d_shader(vulkan_state *vk_state, struct deferred_texture_3d_shader *shader);
+struct texture_3d_shader *new_texture_3d_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct vulkan_offscreen_buffer *offscreen);
+void delete_texture_3d_shader(vulkan_state *vk_state, struct texture_3d_shader *shader);
 
 #endif

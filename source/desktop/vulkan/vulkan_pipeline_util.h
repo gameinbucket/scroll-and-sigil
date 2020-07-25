@@ -20,10 +20,8 @@
 
 VkPipelineColorBlendAttachmentState create_color_blend_attachment(VkColorComponentFlags mask, VkBool32 blend);
 void vulkan_pipeline_cmd_bind(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer);
-void vulkan_pipeline_cmd_bind_dynamic_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set_index, uint32_t image_index, uint32_t offset_count, const uint32_t *offsets);
-void vulkan_pipeline_cmd_bind_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set_index, uint32_t image_index);
 void vulkan_pipeline_cmd_bind_set(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set, uint32_t count, VkDescriptorSet *descriptors);
-void vulkan_pipeline_cmd_bind_given_description(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t count, VkDescriptorSet *descriptors);
+void vulkan_pipeline_cmd_bind_dynamic_set(struct vulkan_pipeline *pipeline, VkCommandBuffer command_buffer, uint32_t set, uint32_t count, VkDescriptorSet *descriptors, uint32_t offset_count, const uint32_t *offsets);
 void vulkan_pipeline_recreate(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
 void vulkan_pipeline_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);
 void vulkan_pipeline_static_initialize(vulkan_state *vk_state, struct vulkan_base *vk_base, struct vulkan_pipeline *pipeline);

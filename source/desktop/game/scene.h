@@ -21,15 +21,17 @@
 #include "vulkan/vulkan_state.h"
 #include "vulkan/vulkan_uniform_util.h"
 
+#include "shaders/texture_colored_3d_shader.h"
+
 #include "image_descriptor_system.h"
 
 struct scene {
-    struct vulkan_pipeline *pipeline;
+    struct texture_colored_3d_shader *shader;
     struct vulkan_render_buffer *render;
     image_descriptor_system *image_descriptors;
 };
 
-struct scene *create_scene(struct vulkan_pipeline *pipeline, struct vulkan_render_buffer *render);
+struct scene *create_scene(struct texture_colored_3d_shader *shader, struct vulkan_render_buffer *render);
 
 void scene_render(struct vulkan_state *vk_state, struct vulkan_base *vk_base, struct scene *self, VkCommandBuffer command_buffer, uint32_t image_index);
 

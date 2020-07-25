@@ -1,8 +1,11 @@
-#include "deferred_texture_3d.h"
+#include "texture_3d_shader.h"
 
-struct deferred_texture_3d_shader *new_deferred_texture_3d_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct vulkan_offscreen_buffer *offscreen) {
+#define DESCRIPT_LAYOUT_COUNT 2
+#define POOL_SIZE_COUNT 1
 
-    struct deferred_texture_3d_shader *shader = safe_calloc(1, sizeof(struct deferred_texture_3d_shader));
+struct texture_3d_shader *new_texture_3d_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct vulkan_offscreen_buffer *offscreen) {
+
+    struct texture_3d_shader *shader = safe_calloc(1, sizeof(struct texture_3d_shader));
 
     uint32_t swapchain_copies = vk_base->swapchain->swapchain_image_count;
 
@@ -14,7 +17,7 @@ struct deferred_texture_3d_shader *new_deferred_texture_3d_shader(vulkan_state *
 
     // descriptor set layouts
 
-    shader->descriptor_set_layouts = safe_calloc(2, sizeof(VkDescriptorSetLayout));
+    shader->descriptor_set_layouts = safe_calloc(DESCRIPT_LAYOUT_COUNT, sizeof(VkDescriptorSetLayout));
 
     {
         VkDescriptorSetLayoutBinding bindings[1];
@@ -54,7 +57,7 @@ struct deferred_texture_3d_shader *new_deferred_texture_3d_shader(vulkan_state *
 
     {
         uint32_t max_sets = swapchain_copies;
-        uint32_t pool_size_count = 1;
+        uint32_t pool_size_count = POOL_SIZE_COUNT;
 
         VkDescriptorPoolSize pool_size = {0};
 
@@ -119,17 +122,19 @@ struct deferred_texture_3d_shader *new_deferred_texture_3d_shader(vulkan_state *
     pipe_settings.vertex = "shaders/spv/texture3d.deferred.vert.spv";
     pipe_settings.fragment = "shaders/spv/texture3d.deferred.frag.spv";
 
-    pipe_settings.number_of_sets = 2;
+    pipe_settings.number_of_sets = DESCRIPT_LAYOUT_COUNT;
 
-    VkPipelineColorBlendAttachmentState color_attach = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+    if (offscreen != NULL) {
+        VkPipelineColorBlendAttachmentState color_attach = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
 
-    pipe_settings.use_render_pass = true;
-    pipe_settings.render_pass = offscreen->render_pass;
-    pipe_settings.color_blend_attachments_count = 3;
-    pipe_settings.color_blend_attachments = safe_calloc(pipe_settings.color_blend_attachments_count, sizeof(VkPipelineColorBlendAttachmentState));
-    pipe_settings.color_blend_attachments[0] = color_attach;
-    pipe_settings.color_blend_attachments[1] = color_attach;
-    pipe_settings.color_blend_attachments[2] = color_attach;
+        pipe_settings.use_render_pass = true;
+        pipe_settings.render_pass = offscreen->render_pass;
+        pipe_settings.color_blend_attachments_count = 3;
+        pipe_settings.color_blend_attachments = safe_calloc(pipe_settings.color_blend_attachments_count, sizeof(VkPipelineColorBlendAttachmentState));
+        pipe_settings.color_blend_attachments[0] = color_attach;
+        pipe_settings.color_blend_attachments[1] = color_attach;
+        pipe_settings.color_blend_attachments[2] = color_attach;
+    }
 
     struct vulkan_render_settings render_settings = {0};
     vulkan_render_settings_init(&render_settings, 3, 0, 2, 3, 0);
@@ -138,7 +143,7 @@ struct deferred_texture_3d_shader *new_deferred_texture_3d_shader(vulkan_state *
 
     vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
 
-    pipeline->descriptor_set_layout_count = 2;
+    pipeline->descriptor_set_layout_count = DESCRIPT_LAYOUT_COUNT;
     pipeline->descriptor_set_layouts = shader->descriptor_set_layouts;
 
     vulkan_pipeline_basic_initialize(vk_state, vk_base, pipeline);
@@ -148,7 +153,7 @@ struct deferred_texture_3d_shader *new_deferred_texture_3d_shader(vulkan_state *
     return shader;
 }
 
-void delete_deferred_texture_3d_shader(vulkan_state *vk_state, struct deferred_texture_3d_shader *shader) {
+void delete_texture_3d_shader(vulkan_state *vk_state, struct texture_3d_shader *shader) {
 
     delete_vulkan_pipeline(vk_state, shader->pipeline);
 
@@ -156,7 +161,7 @@ void delete_deferred_texture_3d_shader(vulkan_state *vk_state, struct deferred_t
 
     vkDestroyDescriptorPool(vk_state->vk_device, shader->descriptor_pool, NULL);
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < DESCRIPT_LAYOUT_COUNT; i++) {
         vkDestroyDescriptorSetLayout(vk_state->vk_device, shader->descriptor_set_layouts[i], NULL);
     }
 
