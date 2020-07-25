@@ -40,4 +40,6 @@ struct vulkan_uniform_buffer {
     void **mapped_memory;
 };
 
+struct vulkan_uniform_buffer *new_vulkan_uniform_buffer(size_t object_size);
+
 #endif

@@ -33,8 +33,10 @@
 
 #include "shaders/color_2d_shader.h"
 #include "shaders/render_model_shader.h"
-#include "shaders/screen.h"
-#include "shaders/ssao_blur.h"
+#include "shaders/screen_shader.h"
+#include "shaders/ssao_blur_shader.h"
+#include "shaders/ssao_lighting_shader.h"
+#include "shaders/ssao_shader.h"
 #include "shaders/texture_3d_shader.h"
 #include "shaders/texture_colored_3d_shader.h"
 
@@ -64,12 +66,17 @@ struct state {
     struct table *image_lookup;
     struct vulkan_image *images;
     struct screen_shader *screen_shader;
+    struct ssao_shader *ssao_shader;
+    struct ssao_blur_shader *ssao_blur_shader;
+    struct ssao_lighting_shader *ssao_lighting_shader;
     struct color_2d_shader *color_2d_shader;
     struct texture_colored_3d_shader *texture_colored_3d_shader;
     struct texture_3d_shader *texture_3d_shader;
     struct render_model_shader *render_model_shader;
     struct vulkan_render_buffer *draw_canvas;
-    vulkan_offscreen_buffer *gbuffer;
+    vulkan_offscreen_buffer *geo_offscreen;
+    vulkan_offscreen_buffer *ssao_offscreen;
+    vulkan_offscreen_buffer *blur_offscreen;
     image_descriptor_system *image_descriptors;
     world_scene *ws;
     struct hud *hd;

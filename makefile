@@ -19,7 +19,11 @@ endif
 
 .PHONY: all analysis address valgrind clean list-source list-objects test help
 
+all: COMPILER_FLAGS += -g
 all: $(NAME)
+
+release: COMPILER_FLAGS += -O3
+release: $(NAME)
 
 -include $(DEPENDENCY)
 
@@ -29,11 +33,9 @@ analysis: all
 address: COMPILER_FLAGS += -fsanitize=address
 address: all
 
-gdb: COMPILER_FLAGS += -g
 gdb: all
 	@ ./gdb.sh ./scroll-and-sigil
 
-valgrind: COMPILER_FLAGS += -g
 valgrind: all
 	@ ./valgrind.sh ./scroll-and-sigil
 

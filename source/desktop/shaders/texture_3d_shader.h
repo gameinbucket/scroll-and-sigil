@@ -28,6 +28,7 @@ struct texture_3d_shader {
 };
 
 struct texture_3d_shader *new_texture_3d_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct vulkan_offscreen_buffer *offscreen);
+void remake_texture_3d_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct texture_3d_shader *shader);
 void delete_texture_3d_shader(vulkan_state *vk_state, struct texture_3d_shader *shader);
 
 #endif

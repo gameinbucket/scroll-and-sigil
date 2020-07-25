@@ -28,6 +28,7 @@ struct screen_shader {
 };
 
 struct screen_shader *new_screen_shader(vulkan_state *vk_state, vulkan_base *vk_base);
+void remake_screen_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct screen_shader *screen);
 void delete_screen_shader(vulkan_state *vk_state, struct screen_shader *screen);
 
 #endif

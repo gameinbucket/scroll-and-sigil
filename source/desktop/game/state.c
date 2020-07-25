@@ -14,19 +14,16 @@ static void rendering_resize(state *self, int width, int height) {
 
     vulkan_base_recreate_swapchain(vk_state, vk_base, width, height);
 
-    // TODO: recreate_deferred_texture_3d_shader
+    vulkan_offscreen_buffer_recreate(self->vk_state, self->vk_base, self->geo_offscreen);
 
-    // vulkan_pipeline_recreate(vk_state, vk_base, self->sc->pipeline);
-    // vulkan_pipeline_recreate(vk_state, vk_base, self->ws->pipeline);
-    // vulkan_pipeline_recreate(vk_state, vk_base, self->hd->pipeline);
-
-    // remake_vulkan_offscreen_buffer(self->vk_state, self->vk_base, self->gbuffer);
-
-    // remake_screen_shader(self->vk_state, self->screen_shader);
-    // remake_color_2d_shader(self->vk_state, self->color_2d_shader);
-    // remake_texture_colored_3d_shader(self->vk_state, self->texture_colored_3d_shader);
-    // remake_texture_3d_shader(self->vk_state, self->texture_3d_shader);
-    // remake_render_model_shader(self->vk_state, self->render_model_shader);
+    remake_screen_shader(self->vk_state, self->vk_base, self->screen_shader);
+    remake_ssao_shader(self->vk_state, self->vk_base, self->ssao_shader);
+    remake_ssao_blur_shader(self->vk_state, self->vk_base, self->ssao_blur_shader);
+    remake_ssao_lighting_shader(self->vk_state, self->vk_base, self->ssao_lighting_shader);
+    remake_color_2d_shader(self->vk_state, self->vk_base, self->color_2d_shader);
+    remake_texture_colored_3d_shader(self->vk_state, self->vk_base, self->texture_colored_3d_shader);
+    remake_texture_3d_shader(self->vk_state, self->vk_base, self->texture_3d_shader);
+    remake_render_model_shader(self->vk_state, self->vk_base, self->render_model_shader);
 }
 
 static void record_rendering_offscreen(state *self, uint32_t image_index) {
@@ -34,7 +31,7 @@ static void record_rendering_offscreen(state *self, uint32_t image_index) {
     vulkan_state *vk_state = self->vk_state;
     struct vulkan_base *vk_base = self->vk_base;
 
-    vulkan_offscreen_buffer *offscreen = self->gbuffer;
+    vulkan_offscreen_buffer *offscreen = self->geo_offscreen;
     VkCommandBuffer command_buffer = vulkan_offscreen_buffer_begin_recording(vk_state, vk_base, offscreen, image_index);
 
     world_scene_transfers(vk_state, vk_base, self->ws, command_buffer, image_index);
@@ -78,7 +75,7 @@ static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
 
     vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 0, 1, &screen->descriptor_sets[image_index]);
-    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &self->gbuffer->output_descriptor);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &self->geo_offscreen->output_descriptor);
 
     vulkan_render_buffer_draw(self->draw_canvas, command_buffer);
 }
@@ -385,7 +382,7 @@ void state_render(state *self) {
     VkSemaphore signal_render_complete_semaphores[1] = {vk_base->vk_render_finished_semaphores[current_frame]};
 
     const bool offscreen_rendering = true;
-    vulkan_offscreen_buffer *offscreen = self->gbuffer;
+    vulkan_offscreen_buffer *offscreen = self->geo_offscreen;
     if (offscreen_rendering) {
 
         VkSubmitInfo submit_info = {0};
@@ -517,7 +514,9 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     world_scene_geometry(vk_state, vk_base, ws);
     self->ws = ws;
 
-    self->gbuffer = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height);
+    self->geo_offscreen = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height);
+    self->ssao_offscreen = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height);
+    self->blur_offscreen = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height);
 
     VkPipelineColorBlendAttachmentState color_attach = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
 
@@ -531,10 +530,13 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     }
 
     self->screen_shader = new_screen_shader(vk_state, vk_base);
+    self->ssao_shader = new_ssao_shader(vk_state, vk_base, self->ssao_offscreen);
+    self->ssao_blur_shader = new_ssao_blur_shader(vk_state, vk_base, self->blur_offscreen);
+    self->ssao_lighting_shader = new_ssao_lighting_shader(vk_state, vk_base, NULL);
     self->color_2d_shader = new_color_2d_shader(vk_state, vk_base, NULL);
-    self->texture_colored_3d_shader = new_texture_colored_3d_shader(vk_state, vk_base, self->gbuffer);
-    self->texture_3d_shader = new_texture_3d_shader(vk_state, vk_base, self->gbuffer);
-    self->render_model_shader = new_render_model_shader(vk_state, vk_base, self->gbuffer);
+    self->texture_colored_3d_shader = new_texture_colored_3d_shader(vk_state, vk_base, self->geo_offscreen);
+    self->texture_3d_shader = new_texture_3d_shader(vk_state, vk_base, self->geo_offscreen);
+    self->render_model_shader = new_render_model_shader(vk_state, vk_base, self->geo_offscreen);
 
     {
         struct vulkan_render_settings render_settings = {0};
@@ -573,11 +575,14 @@ void delete_state(state *self) {
 
     delete_vulkan_renderbuffer(self->vk_state, self->draw_canvas);
 
-    if (self->gbuffer != NULL) {
-        delete_vulkan_offscreen_buffer(self->vk_state, self->vk_base, self->gbuffer);
-    }
+    delete_vulkan_offscreen_buffer(self->vk_state, self->vk_base, self->geo_offscreen);
+    delete_vulkan_offscreen_buffer(self->vk_state, self->vk_base, self->ssao_offscreen);
+    delete_vulkan_offscreen_buffer(self->vk_state, self->vk_base, self->blur_offscreen);
 
     delete_screen_shader(self->vk_state, self->screen_shader);
+    delete_ssao_shader(self->vk_state, self->ssao_shader);
+    delete_ssao_blur_shader(self->vk_state, self->ssao_blur_shader);
+    delete_ssao_lighting_shader(self->vk_state, self->ssao_lighting_shader);
     delete_color_2d_shader(self->vk_state, self->color_2d_shader);
     delete_texture_colored_3d_shader(self->vk_state, self->texture_colored_3d_shader);
     delete_texture_3d_shader(self->vk_state, self->texture_3d_shader);

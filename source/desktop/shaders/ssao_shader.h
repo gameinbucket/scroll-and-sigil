@@ -1,5 +1,5 @@
-#ifndef RENDER_MODEL_SHADER_H
-#define RENDER_MODEL_SHADER_H
+#ifndef SSAO_SHADER_H
+#define SSAO_SHADER_H
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -19,7 +19,14 @@
 #include "vulkan/vulkan_state.h"
 #include "vulkan/vulkan_uniform_util.h"
 
-struct render_model_shader {
+struct uniform_ssao {
+    float samples[64 * 3];
+    float projection[16];
+    float texel[2];
+    float noise_scale[2];
+};
+
+struct ssao_shader {
     VkDescriptorSetLayout *descriptor_set_layouts;
     VkDescriptorPool descriptor_pool;
     VkDescriptorSet *descriptor_sets1;
@@ -29,8 +36,8 @@ struct render_model_shader {
     struct vulkan_uniform_buffer *uniforms3;
 };
 
-struct render_model_shader *new_render_model_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct vulkan_offscreen_buffer *offscreen);
-void remake_render_model_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct render_model_shader *shader);
-void delete_render_model_shader(vulkan_state *vk_state, struct render_model_shader *shader);
+struct ssao_shader *new_ssao_shader(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen);
+void remake_ssao_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct ssao_shader *shader);
+void delete_ssao_shader(vulkan_state *vk_state, struct ssao_shader *shader);
 
 #endif

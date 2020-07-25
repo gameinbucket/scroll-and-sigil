@@ -44,6 +44,8 @@ struct vulkan_offscreen_buffer {
 };
 
 struct vulkan_image_view_and_sample get_vulkan_offscreen_buffer_color_view_and_sample(vulkan_offscreen_buffer *offscreen);
+struct vulkan_image_view_and_sample get_vulkan_offscreen_buffer_normal_view_and_sample(vulkan_offscreen_buffer *offscreen);
+struct vulkan_image_view_and_sample get_vulkan_offscreen_buffer_position_view_and_sample(vulkan_offscreen_buffer *offscreen);
 
 vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, uint32_t width, uint32_t height);
 

@@ -1,6 +1,6 @@
 #include "texture_3d_shader.h"
 
-#define DESCRIPT_LAYOUT_COUNT 2
+#define DESCRIPTOR_LAYOUT_COUNT 2
 #define POOL_SIZE_COUNT 1
 
 struct texture_3d_shader *new_texture_3d_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct vulkan_offscreen_buffer *offscreen) {
@@ -11,13 +11,12 @@ struct texture_3d_shader *new_texture_3d_shader(vulkan_state *vk_state, vulkan_b
 
     // uniforms
 
-    shader->uniforms = safe_calloc(1, sizeof(struct vulkan_uniform_buffer));
-    shader->uniforms->object_size = sizeof(struct uniform_projection);
+    shader->uniforms = new_vulkan_uniform_buffer(sizeof(struct uniform_projection));
     vulkan_uniform_buffer_initialize(vk_state, swapchain_copies, shader->uniforms);
 
     // descriptor set layouts
 
-    shader->descriptor_set_layouts = safe_calloc(DESCRIPT_LAYOUT_COUNT, sizeof(VkDescriptorSetLayout));
+    shader->descriptor_set_layouts = safe_calloc(DESCRIPTOR_LAYOUT_COUNT, sizeof(VkDescriptorSetLayout));
 
     {
         VkDescriptorSetLayoutBinding bindings[1];
@@ -57,16 +56,15 @@ struct texture_3d_shader *new_texture_3d_shader(vulkan_state *vk_state, vulkan_b
 
     {
         uint32_t max_sets = swapchain_copies;
-        uint32_t pool_size_count = POOL_SIZE_COUNT;
 
         VkDescriptorPoolSize pool_size = {0};
 
         pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        pool_size.descriptorCount = swapchain_copies;
+        pool_size.descriptorCount = max_sets;
 
         VkDescriptorPoolCreateInfo pool_info = {0};
         pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        pool_info.poolSizeCount = pool_size_count;
+        pool_info.poolSizeCount = POOL_SIZE_COUNT;
         pool_info.pPoolSizes = &pool_size;
         pool_info.maxSets = max_sets;
 
@@ -96,15 +94,17 @@ struct texture_3d_shader *new_texture_3d_shader(vulkan_state *vk_state, vulkan_b
 
         free(layouts);
 
+        struct vulkan_uniform_buffer *ub = shader->uniforms;
+
         for (uint32_t i = 0; i < copies; i++) {
 
             VkWriteDescriptorSet write_descriptors[1];
             memset(write_descriptors, 0, sizeof(VkWriteDescriptorSet));
 
             VkDescriptorBufferInfo buffer_info = {0};
-            buffer_info.buffer = shader->uniforms->vk_uniform_buffers[i];
+            buffer_info.buffer = ub->vk_uniform_buffers[i];
             buffer_info.offset = 0;
-            buffer_info.range = sizeof(struct uniform_projection);
+            buffer_info.range = ub->object_size;
 
             write_descriptors[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             write_descriptors[0].dstSet = shader->descriptor_sets[i];
@@ -118,11 +118,9 @@ struct texture_3d_shader *new_texture_3d_shader(vulkan_state *vk_state, vulkan_b
     }
 
     struct vulkan_pipe_data pipe_settings = {0};
-
     pipe_settings.vertex = "shaders/spv/texture3d.deferred.vert.spv";
     pipe_settings.fragment = "shaders/spv/texture3d.deferred.frag.spv";
-
-    pipe_settings.number_of_sets = DESCRIPT_LAYOUT_COUNT;
+    pipe_settings.number_of_sets = DESCRIPTOR_LAYOUT_COUNT;
 
     if (offscreen != NULL) {
         VkPipelineColorBlendAttachmentState color_attach = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
@@ -143,7 +141,7 @@ struct texture_3d_shader *new_texture_3d_shader(vulkan_state *vk_state, vulkan_b
 
     vulkan_pipeline_settings(pipeline, true, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
 
-    pipeline->descriptor_set_layout_count = DESCRIPT_LAYOUT_COUNT;
+    pipeline->descriptor_set_layout_count = DESCRIPTOR_LAYOUT_COUNT;
     pipeline->descriptor_set_layouts = shader->descriptor_set_layouts;
 
     vulkan_pipeline_basic_initialize(vk_state, vk_base, pipeline);
@@ -151,6 +149,9 @@ struct texture_3d_shader *new_texture_3d_shader(vulkan_state *vk_state, vulkan_b
     shader->pipeline = pipeline;
 
     return shader;
+}
+
+void remake_texture_3d_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct texture_3d_shader *shader) {
 }
 
 void delete_texture_3d_shader(vulkan_state *vk_state, struct texture_3d_shader *shader) {
@@ -161,7 +162,7 @@ void delete_texture_3d_shader(vulkan_state *vk_state, struct texture_3d_shader *
 
     vkDestroyDescriptorPool(vk_state->vk_device, shader->descriptor_pool, NULL);
 
-    for (int i = 0; i < DESCRIPT_LAYOUT_COUNT; i++) {
+    for (int i = 0; i < DESCRIPTOR_LAYOUT_COUNT; i++) {
         vkDestroyDescriptorSetLayout(vk_state->vk_device, shader->descriptor_set_layouts[i], NULL);
     }
 

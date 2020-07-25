@@ -28,6 +28,7 @@ struct color_2d_shader {
 };
 
 struct color_2d_shader *new_color_2d_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct vulkan_offscreen_buffer *offscreen);
+void remake_color_2d_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct color_2d_shader *shader);
 void delete_color_2d_shader(vulkan_state *vk_state, struct color_2d_shader *shader);
 
 #endif
