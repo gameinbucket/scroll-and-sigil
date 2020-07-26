@@ -52,18 +52,18 @@ static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *
     {
         struct uniform_projection ubo = {0};
 
+        float width = (float)vk_base->swapchain->swapchain_extent.width;
+        float height = (float)vk_base->swapchain->swapchain_extent.height;
+
         float view[16];
         float ortho[16];
+        float correction[16];
+        float original[16];
 
         matrix_identity(view);
         matrix_translate(view, 0, 0, 0);
 
-        float width = (float)vk_base->swapchain->swapchain_extent.width;
-        float height = (float)vk_base->swapchain->swapchain_extent.height;
-
-        float correction[16];
         matrix_vulkan_correction(correction);
-        float original[16];
         matrix_orthographic(original, 0, width, 0, height, -1, 1);
         matrix_multiply(ortho, correction, original);
 
@@ -75,7 +75,7 @@ static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
 
     vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 0, 1, &screen->descriptor_sets[image_index]);
-    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &self->geo_offscreen->output_descriptor);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &self->geo_offscreen->descriptor_set);
 
     vulkan_render_buffer_draw(self->draw_canvas, command_buffer);
 }
@@ -514,9 +514,18 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     world_scene_geometry(vk_state, vk_base, ws);
     self->ws = ws;
 
-    self->geo_offscreen = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height);
-    self->ssao_offscreen = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height);
-    self->blur_offscreen = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height);
+    {
+        VkFormat attachment_formats[3] = {VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT};
+
+        self->geo_offscreen = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height, 3, attachment_formats, true);
+    }
+
+    {
+        VkFormat attachment_formats[1] = {VK_FORMAT_R16_SFLOAT};
+
+        self->ssao_offscreen = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height, 1, attachment_formats, false);
+        self->blur_offscreen = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height, 1, attachment_formats, false);
+    }
 
     VkPipelineColorBlendAttachmentState color_attach = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
 

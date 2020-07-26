@@ -13,11 +13,11 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "common/log.h"
-#include "common/mem.h"
-#include "io/sleep_util.h"
 #include "vulkan/vulkan_instance.h"
 #include "vulkan/vulkan_state.h"
+
+#include "common/log.h"
+#include "common/mem.h"
 
 #include "state.h"
 

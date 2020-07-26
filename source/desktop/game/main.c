@@ -109,27 +109,31 @@ static void main_loop(state *s) {
 
         updates++;
 
+#ifdef CALC_TIME
+        // struct timeval start, stop;
+        // gettimeofday(&start, NULL);
+        unsigned int begin_time = SDL_GetTicks();
+#endif
+
         if (updates == 4) {
             state_update(s);
             updates = 0;
         }
 
-#ifdef CALC_TIME
-        struct timeval start, stop;
-        gettimeofday(&start, NULL);
-#endif
-
         state_render(s);
 
 #ifdef CALC_TIME
-        gettimeofday(&stop, NULL);
-        unsigned int microseconds = (stop.tv_sec - start.tv_sec) * 1000000 + ((int)stop.tv_usec - (int)start.tv_usec);
+        unsigned int end_time = SDL_GetTicks();
+        unsigned int milliseconds = end_time - begin_time;
+        // gettimeofday(&stop, NULL);
+        // unsigned int microseconds = (stop.tv_sec - start.tv_sec) * 1000000 + ((int)stop.tv_usec - (int)start.tv_usec);
 #else
         unsigned int microseconds = 2000;
 #endif
 
 #ifdef TIMING_ON
-        printf("microseconds: %d\n", microseconds);
+        // printf("microseconds: %d\n", microseconds);
+        printf("milliseconds: %d\n", milliseconds);
 #endif
 
 #ifdef FPS_ON
@@ -143,9 +147,13 @@ static void main_loop(state *s) {
 #endif
 
 #ifdef SLEEP_ON
-        const unsigned int rest = 4000;
-        if (microseconds < rest) {
-            sleep_micro(rest - microseconds);
+        // const unsigned int rest = 4000;
+        // if (microseconds < rest) {
+        // sleep_micro(rest - microseconds);
+        // }
+        unsigned int rest = 4 - milliseconds;
+        if (rest > 0) {
+            SDL_Delay(rest);
         }
 #endif
     }

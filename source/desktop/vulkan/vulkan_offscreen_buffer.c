@@ -1,27 +1,13 @@
 #include "vulkan_offscreen_buffer.h"
 
-struct vulkan_image_view_and_sample get_vulkan_offscreen_buffer_color_view_and_sample(vulkan_offscreen_buffer *offscreen) {
+struct vulkan_image_view_and_sample get_vulkan_offscreen_buffer_view_and_sample(vulkan_offscreen_buffer *offscreen, int index) {
     return (struct vulkan_image_view_and_sample){
-        .view = offscreen->color.view,
+        .view = offscreen->attachments[index].view,
         .sample = offscreen->color_sampler,
     };
 }
 
-struct vulkan_image_view_and_sample get_vulkan_offscreen_buffer_normal_view_and_sample(vulkan_offscreen_buffer *offscreen) {
-    return (struct vulkan_image_view_and_sample){
-        .view = offscreen->normal.view,
-        .sample = offscreen->color_sampler,
-    };
-}
-
-struct vulkan_image_view_and_sample get_vulkan_offscreen_buffer_position_view_and_sample(vulkan_offscreen_buffer *offscreen) {
-    return (struct vulkan_image_view_and_sample){
-        .view = offscreen->position.view,
-        .sample = offscreen->color_sampler,
-    };
-}
-
-static void init_vulkan_frame_attachment(vulkan_state *vk_state, vulkan_frame_attachment *attachment, VkFormat format, VkImageUsageFlagBits usage, uint32_t width, uint32_t height) {
+static void init_vulkan_frame_attachment(vulkan_state *vk_state, struct vulkan_frame_attachment *attachment, VkFormat format, VkImageUsageFlagBits usage, uint32_t width, uint32_t height) {
 
     attachment->format = format;
 
@@ -81,23 +67,7 @@ static void init_vulkan_frame_attachment(vulkan_state *vk_state, vulkan_frame_at
 
 static void prepare_descriptors(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen) {
 
-    // pool
-
-    uint32_t total = 1;
-
-    VkDescriptorPoolSize pool_size_sampler = {0};
-    pool_size_sampler.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    pool_size_sampler.descriptorCount = total;
-
-    VkDescriptorPoolCreateInfo pool_info = {0};
-    pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    pool_info.poolSizeCount = 1;
-    pool_info.pPoolSizes = &pool_size_sampler;
-    pool_info.maxSets = total;
-
-    VK_RESULT_OK(vkCreateDescriptorPool(vk_state->vk_device, &pool_info, NULL, &offscreen->descriptor_pool));
-
-    // layout
+    // descriptor set layout
 
     VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
     sampler_layout_binding.binding = 0;
@@ -110,88 +80,104 @@ static void prepare_descriptors(vulkan_state *vk_state, vulkan_base *vk_base, vu
     layout_info.bindingCount = 1;
     layout_info.pBindings = &sampler_layout_binding;
 
-    VK_RESULT_OK(vkCreateDescriptorSetLayout(vk_state->vk_device, &layout_info, NULL, &offscreen->descriptor_layout));
+    VK_RESULT_OK(vkCreateDescriptorSetLayout(vk_state->vk_device, &layout_info, NULL, &offscreen->descriptor_set_layout));
 
-    // allocate
+    // descriptor pool
+
+    VkDescriptorPoolSize pool_size = {0};
+    pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    pool_size.descriptorCount = 1;
+
+    VkDescriptorPoolCreateInfo pool_info = {0};
+    pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    pool_info.poolSizeCount = 1;
+    pool_info.pPoolSizes = &pool_size;
+    pool_info.maxSets = 1;
+
+    VK_RESULT_OK(vkCreateDescriptorPool(vk_state->vk_device, &pool_info, NULL, &offscreen->descriptor_pool));
+
+    // descriptor set
 
     VkDescriptorSetAllocateInfo info = {0};
     info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     info.descriptorPool = offscreen->descriptor_pool;
     info.descriptorSetCount = 1;
-    info.pSetLayouts = &offscreen->descriptor_layout;
+    info.pSetLayouts = &offscreen->descriptor_set_layout;
 
-    VkDescriptorSet descriptor_set = {0};
+    VK_RESULT_OK(vkAllocateDescriptorSets(vk_state->vk_device, &info, &offscreen->descriptor_set));
 
-    VK_RESULT_OK(vkAllocateDescriptorSets(vk_state->vk_device, &info, &descriptor_set));
+    uint32_t attachment_count = offscreen->attachment_count;
 
-    // write
+    VkDescriptorImageInfo *descriptor_image_info = safe_calloc(attachment_count, sizeof(VkDescriptorImageInfo));
+    VkWriteDescriptorSet *write_descriptors = safe_calloc(attachment_count, sizeof(VkWriteDescriptorSet));
 
-    VkDescriptorImageInfo color_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->color.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    VkWriteDescriptorSet write = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, &color_descriptor, 1);
-    vkUpdateDescriptorSets(vk_state->vk_device, 1, &write, 0, NULL);
+    for (uint32_t i = 0; i < attachment_count; i++) {
 
-    // VkDescriptorImageInfo color_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->color.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    // VkDescriptorImageInfo position_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->position.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    // VkDescriptorImageInfo normal_descriptor = new_descriptor_image_info(offscreen->color_sampler, offscreen->normal.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        descriptor_image_info[i] = new_descriptor_image_info(offscreen->color_sampler, offscreen->attachments[i].view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        write_descriptors[i] = new_image_descriptor_writer(offscreen->descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, i, &descriptor_image_info[i], 1);
+    }
 
-    // VkWriteDescriptorSet write[3];
-    // write[0] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &color_descriptor, 1);
-    // write[1] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &position_descriptor, 1);
-    // write[2] = new_image_descriptor_writer(descriptor_set, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, &normal_descriptor, 1);
+    vkUpdateDescriptorSets(vk_state->vk_device, 1, write_descriptors, 0, NULL);
 
-    // vkUpdateDescriptorSets(vk_state->vk_device, 3, write, 0, NULL);
-
-    offscreen->output_descriptor = descriptor_set;
+    free(descriptor_image_info);
+    free(write_descriptors);
 }
 
-static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen, uint32_t width, uint32_t height) {
+static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen) {
 
-    offscreen->width = width;
-    offscreen->height = height;
+    uint32_t width = offscreen->width;
+    uint32_t height = offscreen->height;
+    uint32_t attachment_count = offscreen->attachment_count;
+    VkFormat *attachment_formats = offscreen->attachment_formats;
+    bool include_depth = offscreen->include_depth;
 
-    init_vulkan_frame_attachment(vk_state, &offscreen->color, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, width, height);
-    init_vulkan_frame_attachment(vk_state, &offscreen->normal, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, width, height);
-    init_vulkan_frame_attachment(vk_state, &offscreen->position, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, width, height);
+    uint32_t total_attachment_count = attachment_count + (include_depth ? 1 : 0);
 
-    VkFormat depth_format = vk_find_depth_format(vk_state);
+    for (uint32_t i = 0; i < attachment_count; i++) {
+        init_vulkan_frame_attachment(vk_state, &offscreen->attachments[i], attachment_formats[i], VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, width, height);
+    }
 
-    init_vulkan_frame_attachment(vk_state, &offscreen->depth, depth_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, width, height);
+    if (offscreen->include_depth) {
+        VkFormat depth_format = vk_find_depth_format(vk_state);
+        init_vulkan_frame_attachment(vk_state, &offscreen->depth_attachment, depth_format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, width, height);
+    }
 
-    VkAttachmentDescription attachments[4];
-    memset(attachments, 0, 4 * sizeof(VkAttachmentDescription));
+    VkAttachmentDescription *attachment_descriptions = safe_calloc(total_attachment_count, sizeof(VkAttachmentDescription));
 
-    for (uint32_t i = 0; i < 4; i++) {
-        attachments[i].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachments[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    for (uint32_t i = 0; i < total_attachment_count; i++) {
+        attachment_descriptions[i].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_descriptions[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment_descriptions[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_descriptions[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-        if (i == 3) {
-            attachments[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        if (include_depth && i == total_attachment_count - 1) {
+            attachment_descriptions[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            attachment_descriptions[i].format = offscreen->depth_attachment.format;
         } else {
-            attachments[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            attachment_descriptions[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            attachment_descriptions[i].format = offscreen->attachments[i].format;
         }
     }
 
-    attachments[0].format = offscreen->color.format;
-    attachments[1].format = offscreen->normal.format;
-    attachments[2].format = offscreen->position.format;
-    attachments[3].format = offscreen->depth.format;
+    VkAttachmentReference *color_reference = safe_calloc(attachment_count, sizeof(VkAttachmentReference));
 
-    VkAttachmentReference color_reference[3];
-    color_reference[0] = (VkAttachmentReference){.attachment = 0, .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
-    color_reference[1] = (VkAttachmentReference){.attachment = 1, .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
-    color_reference[2] = (VkAttachmentReference){.attachment = 2, .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+    for (uint32_t i = 0; i < attachment_count; i++) {
+        color_reference[i] = (VkAttachmentReference){.attachment = i, .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+    }
 
-    VkAttachmentReference depth_reference = (VkAttachmentReference){.attachment = 3, .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
+    VkAttachmentReference depth_reference = {0};
 
     VkSubpassDescription subpass = {0};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.pColorAttachments = color_reference;
-    subpass.colorAttachmentCount = 3;
-    subpass.pDepthStencilAttachment = &depth_reference;
+    subpass.colorAttachmentCount = attachment_count;
+
+    if (include_depth) {
+        depth_reference = (VkAttachmentReference){.attachment = (total_attachment_count - 1), .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
+        subpass.pDepthStencilAttachment = &depth_reference;
+    }
 
     VkSubpassDependency dependencies[2];
     memset(dependencies, 0, 2 * sizeof(VkSubpassDependency));
@@ -214,8 +200,8 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base 
 
     VkRenderPassCreateInfo render_pass_info = {0};
     render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    render_pass_info.attachmentCount = 4;
-    render_pass_info.pAttachments = attachments;
+    render_pass_info.attachmentCount = total_attachment_count;
+    render_pass_info.pAttachments = attachment_descriptions;
     render_pass_info.subpassCount = 1;
     render_pass_info.pSubpasses = &subpass;
     render_pass_info.dependencyCount = 2;
@@ -223,18 +209,22 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base 
 
     VK_RESULT_OK(vkCreateRenderPass(vk_state->vk_device, &render_pass_info, NULL, &offscreen->render_pass));
 
-    VkImageView views[4];
-    views[0] = offscreen->color.view;
-    views[1] = offscreen->normal.view;
-    views[2] = offscreen->position.view;
-    views[3] = offscreen->depth.view;
+    VkImageView *views = safe_calloc(total_attachment_count, sizeof(VkImageView));
+
+    for (uint32_t i = 0; i < attachment_count; i++) {
+        views[i] = offscreen->attachments[i].view;
+    }
+
+    if (include_depth) {
+        views[total_attachment_count - 1] = offscreen->depth_attachment.view;
+    }
 
     VkFramebufferCreateInfo create_info = {0};
     create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     create_info.pNext = NULL;
     create_info.renderPass = offscreen->render_pass;
     create_info.pAttachments = views;
-    create_info.attachmentCount = 4;
+    create_info.attachmentCount = total_attachment_count;
     create_info.width = offscreen->width;
     create_info.height = offscreen->height;
     create_info.layers = 1;
@@ -257,6 +247,10 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base 
 
     VK_RESULT_OK(vkCreateSampler(vk_state->vk_device, &sampler_info, NULL, &offscreen->color_sampler));
 
+    free(attachment_descriptions);
+    free(color_reference);
+    free(views);
+
     VkSemaphoreCreateInfo semaphore_info = {0};
     semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -267,18 +261,29 @@ static void prepare_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base 
     prepare_descriptors(vk_state, vk_base, offscreen);
 }
 
-vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, uint32_t width, uint32_t height) {
+vulkan_offscreen_buffer *create_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, uint32_t width, uint32_t height, uint32_t attachment_count, VkFormat *attachment_formats, bool include_depth) {
 
     vulkan_offscreen_buffer *offscreen = safe_calloc(1, sizeof(vulkan_offscreen_buffer));
-    prepare_vulkan_offscreen_buffer(vk_state, vk_base, offscreen, width, height);
+
+    offscreen->width = width;
+    offscreen->height = height;
+    offscreen->attachment_count = attachment_count;
+    offscreen->attachment_formats = safe_calloc(attachment_count, sizeof(VkFormat));
+    offscreen->attachments = safe_calloc(attachment_count, sizeof(struct vulkan_frame_attachment));
+    offscreen->include_depth = include_depth;
+
+    memcpy(offscreen->attachment_formats, attachment_formats, attachment_count * sizeof(VkFormat));
+
+    prepare_vulkan_offscreen_buffer(vk_state, vk_base, offscreen);
+
     return offscreen;
 }
 
-static void delete_vulkan_frame_attachment(vulkan_state *vk_state, vulkan_frame_attachment *self) {
+static void delete_vulkan_frame_attachment(vulkan_state *vk_state, struct vulkan_frame_attachment *attachment) {
 
-    vkDestroyImageView(vk_state->vk_device, self->view, NULL);
-    vkDestroyImage(vk_state->vk_device, self->image, NULL);
-    vkFreeMemory(vk_state->vk_device, self->memory, NULL);
+    vkDestroyImageView(vk_state->vk_device, attachment->view, NULL);
+    vkDestroyImage(vk_state->vk_device, attachment->image, NULL);
+    vkFreeMemory(vk_state->vk_device, attachment->memory, NULL);
 }
 
 void vulkan_offscreen_buffer_clean(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *self) {
@@ -293,13 +298,16 @@ void vulkan_offscreen_buffer_recreate(vulkan_state *vk_state, vulkan_base *vk_ba
 
 void delete_vulkan_offscreen_buffer(vulkan_state *vk_state, vulkan_base *vk_base, vulkan_offscreen_buffer *offscreen) {
 
-    delete_vulkan_frame_attachment(vk_state, &offscreen->color);
-    delete_vulkan_frame_attachment(vk_state, &offscreen->normal);
-    delete_vulkan_frame_attachment(vk_state, &offscreen->position);
-    delete_vulkan_frame_attachment(vk_state, &offscreen->depth);
+    for (uint32_t i = 0; i < offscreen->attachment_count; i++) {
+        delete_vulkan_frame_attachment(vk_state, &offscreen->attachments[i]);
+    }
+
+    if (offscreen->include_depth) {
+        delete_vulkan_frame_attachment(vk_state, &offscreen->depth_attachment);
+    }
 
     vkDestroyDescriptorPool(vk_state->vk_device, offscreen->descriptor_pool, NULL);
-    vkDestroyDescriptorSetLayout(vk_state->vk_device, offscreen->descriptor_layout, NULL);
+    vkDestroyDescriptorSetLayout(vk_state->vk_device, offscreen->descriptor_set_layout, NULL);
 
     vulkan_offscreen_buffer_clean(vk_state, vk_base, offscreen);
 

@@ -1,25 +1,5 @@
 #include "sleep_util.h"
 
-// void sleep_ms(unsigned int milliseconds) {
-//     sleep(milliseconds);
-// }
-
-// void sleep_ms(unsigned int milliseconds) {
-//     struct timespec delta = {milliseconds / 1000, (milliseconds % 1000) * NANO_TO_MILLISECONDS};
-//     if (nanosleep(&delta, &delta) < 0) {
-//         fprintf(stderr, "Error: nanosleep\n");
-//     }
-// }
-
-// #include <windows.h>
-// void sleep_ms(int milliseconds) {
-//     Sleep(milliseconds);
-// }
-
-// void sleep_ms(unsigned int milliseconds) {
-//     usleep(milliseconds * 1000);
-// }
-
 void sleep_ms(unsigned int milliseconds) {
 
     fd_set rfds;
