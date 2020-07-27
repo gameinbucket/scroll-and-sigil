@@ -123,7 +123,7 @@ static bool is_vk_physical_device_device_suitable(vulkan_state *vk_state, VkPhys
 bool vk_choose_physical_device(vulkan_state *vk_state) {
 
     uint32_t vk_device_count = 0;
-    vkEnumeratePhysicalDevices(vk_state->vk_instance, &vk_device_count, NULL);
+    VK_RESULT_OK(vkEnumeratePhysicalDevices(vk_state->vk_instance, &vk_device_count, NULL));
 
     if (vk_device_count == 0) {
         fprintf(stderr, "Error: No GPU with vulkan support\n");

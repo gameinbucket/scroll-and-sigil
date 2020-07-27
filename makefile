@@ -2,7 +2,7 @@ NAME = scroll-and-sigil
 
 SOURCE = $(wildcard source/shared/**/*.c) $(wildcard source/desktop/**/*.c)
 HEADERS = $(wildcard source/shared/**/*.h) $(wildcard source/desktop/**/*.h)
-OBJECTS = $(patsubst source/%.c,compile/objects/%.o,$(SOURCE))
+OBJECTS = $(patsubst source/%.c,compiled/objects/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
 INCLUDE = -Isource/shared -Isource/desktop -I$(VULKAN_SDK)/include
 
@@ -42,13 +42,13 @@ valgrind: all
 $(NAME): $(HEADERS) $(OBJECTS)
 	$(PREFIX) $(CC) $(OBJECTS) $(COMPILER_FLAGS) -o $(NAME) $(LINKER_LIBS) $(LINKER_FLAGS)
 
-compile/objects/%.o: source/%.c
+compiled/objects/%.o: source/%.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $< $(COMPILER_FLAGS) -MMD -o $@
 
 clean:
 	rm -f ./$(NAME)
-	rm -rf ./compile/objects
+	rm -rf ./compiled/objects
 
 list-source:
 	@echo $(SOURCE)

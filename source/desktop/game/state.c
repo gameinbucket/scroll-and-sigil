@@ -47,31 +47,38 @@ static void record_rendering_offscreen(state *self, uint32_t image_index) {
     vulkan_offscreen_buffer_end_recording(vk_state, vk_base, offscreen, image_index);
 }
 
-static void record_rendering_ssao(vulkan_state *vk_state, vulkan_base *vk_base, state *self, VkCommandBuffer command_buffer, uint32_t image_index) {
+static void ssao_render(vulkan_state *vk_state, vulkan_base *vk_base, state *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
     struct ssao_shader *shader = self->ssao_shader;
+    struct vulkan_pipeline *pipeline = shader->pipeline;
+
+    vulkan_copy_memory(shader->uniforms1->mapped_memory[image_index], &self->draw_canvas_uniforms, sizeof(self->draw_canvas_uniforms));
+
+    {
+        struct uniform_ssao ubo = {0};
+
+        vulkan_copy_memory(shader->uniforms3->mapped_memory[image_index], &ubo, sizeof(ubo));
+    }
+
+    vulkan_pipeline_cmd_bind(pipeline, command_buffer);
+
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 0, 1, &shader->descriptor_sets1[image_index]);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &self->geo_offscreen->descriptor_set);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 2, 1, &shader->descriptor_sets3[image_index]);
+
+    vulkan_render_buffer_draw(self->draw_canvas, command_buffer);
+}
+
+static void screen_render(vulkan_state *vk_state, vulkan_base *vk_base, state *self, VkCommandBuffer command_buffer, uint32_t image_index) {
+
+    struct screen_shader *shader = self->screen_shader;
     struct vulkan_pipeline *pipeline = shader->pipeline;
 
     vulkan_copy_memory(shader->uniforms->mapped_memory[image_index], &self->draw_canvas_uniforms, sizeof(self->draw_canvas_uniforms));
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
 
-    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 0, 1, &screen->descriptor_sets[image_index]);
-    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &self->geo_offscreen->descriptor_set);
-
-    vulkan_render_buffer_draw(self->draw_canvas, command_buffer);
-}
-
-static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *self, VkCommandBuffer command_buffer, uint32_t image_index) {
-
-    struct screen_shader *screen = self->screen_shader;
-    struct vulkan_pipeline *pipeline = screen->pipeline;
-
-    vulkan_copy_memory(shader->uniforms->mapped_memory[image_index], &self->draw_canvas_uniforms, sizeof(self->draw_canvas_uniforms));
-
-    vulkan_pipeline_cmd_bind(pipeline, command_buffer);
-
-    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 0, 1, &screen->descriptor_sets[image_index]);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 0, 1, &shader->descriptor_sets[image_index]);
     vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &self->geo_offscreen->descriptor_set);
 
     vulkan_render_buffer_draw(self->draw_canvas, command_buffer);
@@ -80,75 +87,127 @@ static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *
 static void record_rendering(state *self, uint32_t image_index) {
 
     bool offscreen = true;
+    bool ssao = false;
 
-    if (offscreen) {
+    vulkan_state *vk_state = self->vk_state;
+    struct vulkan_base *vk_base = self->vk_base;
+
+    if (ssao) {
 
         record_rendering_offscreen(self, image_index);
 
-        bool copy = true;
+        VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
+        VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
+        VkClearValue clear_values[2] = {clear_color, clear_depth};
 
-        if (copy) {
-            vulkan_state *vk_state = self->vk_state;
-            struct vulkan_base *vk_base = self->vk_base;
+        VkRenderPassBeginInfo render_pass_info = {0};
+        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_info.renderPass = vk_base->vk_render_pass;
+        render_pass_info.renderArea.offset = (VkOffset2D){0, 0};
+        render_pass_info.renderArea.extent = vk_base->swapchain->swapchain_extent;
+        render_pass_info.pClearValues = clear_values;
+        render_pass_info.clearValueCount = 2;
+        render_pass_info.framebuffer = vk_base->vk_framebuffers[image_index];
 
-            VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
-            VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
-            VkClearValue clear_values[2] = {clear_color, clear_depth};
+        uint32_t width = vk_base->swapchain->swapchain_extent.width;
+        uint32_t height = vk_base->swapchain->swapchain_extent.height;
 
-            VkRenderPassBeginInfo render_pass_info = {0};
-            render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            render_pass_info.renderPass = vk_base->vk_render_pass;
-            render_pass_info.renderArea.offset = (VkOffset2D){0, 0};
-            render_pass_info.renderArea.extent = vk_base->swapchain->swapchain_extent;
-            render_pass_info.pClearValues = clear_values;
-            render_pass_info.clearValueCount = 2;
-            render_pass_info.framebuffer = vk_base->vk_framebuffers[image_index];
+        VkViewport viewport = {0};
+        viewport.width = width;
+        viewport.height = height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
 
-            uint32_t width = vk_base->swapchain->swapchain_extent.width;
-            uint32_t height = vk_base->swapchain->swapchain_extent.height;
+        VkRect2D scissor = {0};
+        scissor.extent = (VkExtent2D){width, height};
+        scissor.offset = (VkOffset2D){0, 0};
 
-            VkViewport viewport = {0};
-            viewport.width = width;
-            viewport.height = height;
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
+        VkCommandBuffer command_buffer = vk_base->vk_command_buffers[image_index];
 
-            VkRect2D scissor = {0};
-            scissor.extent = (VkExtent2D){width, height};
-            scissor.offset = (VkOffset2D){0, 0};
+        VkCommandBufferBeginInfo command_begin_info = {0};
+        command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-            VkCommandBuffer command_buffer = vk_base->vk_command_buffers[image_index];
+        if (vkBeginCommandBuffer(command_buffer, &command_begin_info) != VK_SUCCESS) {
+            fprintf(stderr, "Error: Vulkan Begin Command Buffer\n");
+            exit(1);
+        }
 
-            VkCommandBufferBeginInfo command_begin_info = {0};
-            command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-            command_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-            if (vkBeginCommandBuffer(command_buffer, &command_begin_info) != VK_SUCCESS) {
-                fprintf(stderr, "Error: Vulkan Begin Command Buffer\n");
-                exit(1);
-            }
+        vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+        vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-            vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+        ssao_render(vk_state, vk_base, self, command_buffer, image_index);
 
-            vkCmdSetViewport(command_buffer, 0, 1, &viewport);
-            vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+        vkCmdEndRenderPass(command_buffer);
 
-            copy_rendering(vk_state, vk_base, self, command_buffer, image_index);
-            hud_render(vk_state, vk_base, self->hd, command_buffer, image_index);
-
-            vkCmdEndRenderPass(command_buffer);
-
-            if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
-                fprintf(stderr, "Error: Vulkan End Command Buffer\n");
-                exit(1);
-            }
+        if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+            fprintf(stderr, "Error: Vulkan End Command Buffer\n");
+            exit(1);
         }
 
         return;
     }
 
-    vulkan_state *vk_state = self->vk_state;
-    struct vulkan_base *vk_base = self->vk_base;
+    if (offscreen) {
+
+        record_rendering_offscreen(self, image_index);
+
+        VkClearValue clear_color = {.color = (VkClearColorValue){{0.0f, 0.0f, 0.0f, 1.0f}}};
+        VkClearValue clear_depth = {.depthStencil = (VkClearDepthStencilValue){1.0f, 0}};
+        VkClearValue clear_values[2] = {clear_color, clear_depth};
+
+        VkRenderPassBeginInfo render_pass_info = {0};
+        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_info.renderPass = vk_base->vk_render_pass;
+        render_pass_info.renderArea.offset = (VkOffset2D){0, 0};
+        render_pass_info.renderArea.extent = vk_base->swapchain->swapchain_extent;
+        render_pass_info.pClearValues = clear_values;
+        render_pass_info.clearValueCount = 2;
+        render_pass_info.framebuffer = vk_base->vk_framebuffers[image_index];
+
+        uint32_t width = vk_base->swapchain->swapchain_extent.width;
+        uint32_t height = vk_base->swapchain->swapchain_extent.height;
+
+        VkViewport viewport = {0};
+        viewport.width = width;
+        viewport.height = height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+
+        VkRect2D scissor = {0};
+        scissor.extent = (VkExtent2D){width, height};
+        scissor.offset = (VkOffset2D){0, 0};
+
+        VkCommandBuffer command_buffer = vk_base->vk_command_buffers[image_index];
+
+        VkCommandBufferBeginInfo command_begin_info = {0};
+        command_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        command_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        if (vkBeginCommandBuffer(command_buffer, &command_begin_info) != VK_SUCCESS) {
+            fprintf(stderr, "Error: Vulkan Begin Command Buffer\n");
+            exit(1);
+        }
+
+        vkCmdBeginRenderPass(command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+        vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+
+        screen_render(vk_state, vk_base, self, command_buffer, image_index);
+        hud_render(vk_state, vk_base, self->hd, command_buffer, image_index);
+
+        vkCmdEndRenderPass(command_buffer);
+
+        if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+            fprintf(stderr, "Error: Vulkan End Command Buffer\n");
+            exit(1);
+        }
+
+        return;
+    }
 
     VkCommandBuffer *command_buffers = vk_base->vk_command_buffers;
 
@@ -377,6 +436,9 @@ void state_render(state *self) {
     VkPipelineStageFlags wait_stages[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
     VkSemaphore signal_render_complete_semaphores[1] = {vk_base->vk_render_finished_semaphores[current_frame]};
+
+    const bool ssao_rendering = true;
+    // geo_offscreen -> ssao -> ssao_blur -> ssao_lighting
 
     const bool offscreen_rendering = true;
     vulkan_offscreen_buffer *offscreen = self->geo_offscreen;
