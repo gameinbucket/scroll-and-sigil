@@ -24,6 +24,9 @@ static void rendering_resize(state *self, int width, int height) {
     remake_texture_colored_3d_shader(self->vk_state, self->vk_base, self->texture_colored_3d_shader);
     remake_texture_3d_shader(self->vk_state, self->vk_base, self->texture_3d_shader);
     remake_render_model_shader(self->vk_state, self->vk_base, self->render_model_shader);
+
+    // remake draw_canvas
+    // remake draw_canvas_uniforms
 }
 
 static void record_rendering_offscreen(state *self, uint32_t image_index) {
@@ -44,33 +47,27 @@ static void record_rendering_offscreen(state *self, uint32_t image_index) {
     vulkan_offscreen_buffer_end_recording(vk_state, vk_base, offscreen, image_index);
 }
 
+static void record_rendering_ssao(vulkan_state *vk_state, vulkan_base *vk_base, state *self, VkCommandBuffer command_buffer, uint32_t image_index) {
+
+    struct ssao_shader *shader = self->ssao_shader;
+    struct vulkan_pipeline *pipeline = shader->pipeline;
+
+    vulkan_copy_memory(shader->uniforms->mapped_memory[image_index], &self->draw_canvas_uniforms, sizeof(self->draw_canvas_uniforms));
+
+    vulkan_pipeline_cmd_bind(pipeline, command_buffer);
+
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 0, 1, &screen->descriptor_sets[image_index]);
+    vulkan_pipeline_cmd_bind_set(pipeline, command_buffer, 1, 1, &self->geo_offscreen->descriptor_set);
+
+    vulkan_render_buffer_draw(self->draw_canvas, command_buffer);
+}
+
 static void copy_rendering(vulkan_state *vk_state, vulkan_base *vk_base, state *self, VkCommandBuffer command_buffer, uint32_t image_index) {
 
     struct screen_shader *screen = self->screen_shader;
     struct vulkan_pipeline *pipeline = screen->pipeline;
 
-    {
-        struct uniform_projection ubo = {0};
-
-        float width = (float)vk_base->swapchain->swapchain_extent.width;
-        float height = (float)vk_base->swapchain->swapchain_extent.height;
-
-        float view[16];
-        float ortho[16];
-        float correction[16];
-        float original[16];
-
-        matrix_identity(view);
-        matrix_translate(view, 0, 0, 0);
-
-        matrix_vulkan_correction(correction);
-        matrix_orthographic(original, 0, width, 0, height, -1, 1);
-        matrix_multiply(ortho, correction, original);
-
-        matrix_multiply(ubo.mvp, ortho, view);
-
-        vulkan_copy_memory(screen->uniforms->mapped_memory[image_index], &ubo, sizeof(ubo));
-    }
+    vulkan_copy_memory(shader->uniforms->mapped_memory[image_index], &self->draw_canvas_uniforms, sizeof(self->draw_canvas_uniforms));
 
     vulkan_pipeline_cmd_bind(pipeline, command_buffer);
 
@@ -536,6 +533,25 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         self->draw_canvas = create_vulkan_render_buffer(vk_state, render_settings, 4, 6);
         render_screen(self->draw_canvas, 0, 0, self->canvas_width, self->canvas_height);
         vulkan_render_buffer_immediate_flush(vk_state, vk_base->vk_command_pool, self->draw_canvas);
+    }
+
+    {
+        float width = (float)vk_base->swapchain->swapchain_extent.width;
+        float height = (float)vk_base->swapchain->swapchain_extent.height;
+
+        float view[16];
+        float ortho[16];
+        float correction[16];
+        float original[16];
+
+        matrix_identity(view);
+        matrix_translate(view, 0, 0, 0);
+
+        matrix_vulkan_correction(correction);
+        matrix_orthographic(original, 0, width, 0, height, -1, 1);
+        matrix_multiply(ortho, correction, original);
+
+        matrix_multiply(self->draw_canvas_uniforms.mvp, ortho, view);
     }
 
     self->screen_shader = new_screen_shader(vk_state, vk_base);

@@ -74,6 +74,7 @@ struct state {
     struct texture_3d_shader *texture_3d_shader;
     struct render_model_shader *render_model_shader;
     struct vulkan_render_buffer *draw_canvas;
+    struct uniform_projection draw_canvas_uniforms;
     vulkan_offscreen_buffer *geo_offscreen;
     vulkan_offscreen_buffer *ssao_offscreen;
     vulkan_offscreen_buffer *blur_offscreen;
