@@ -57,6 +57,13 @@ static void ssao_render(vulkan_state *vk_state, vulkan_base *vk_base, state *sel
     {
         struct uniform_ssao ubo = {0};
 
+        ubo.texel[0] = 1.0f / self->canvas_width;
+        ubo.texel[1] = 1.0f / self->canvas_height;
+        ubo.noise_scale[0] = self->canvas_width / 4.0f;
+        ubo.noise_scale[1] = self->canvas_height / 4.0f;
+        ubo.projection = self->ws->model_view_projection;
+        ubo.samples = self->ssao_samples;
+
         vulkan_copy_memory(shader->uniforms3->mapped_memory[image_index], &ubo, sizeof(ubo));
     }
 
@@ -505,7 +512,7 @@ void state_render(state *self) {
 }
 
 static void create_texture(image_system *is, vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path, VkFilter filter, VkSamplerAddressMode mode) {
-    image_details details = create_vulkan_texture(vk_state, command_pool, image, path, filter, mode);
+    image_details details = create_vulkan_png_texture(vk_state, command_pool, image, path, filter, mode);
     image_details *info = safe_box(&details, sizeof(image_details));
     image_system_add_image(is, path, info);
 }
@@ -572,6 +579,36 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     world_scene_initialize(vk_state, vk_base, vk_base->vk_command_pool, ws);
     world_scene_geometry(vk_state, vk_base, ws);
     self->ws = ws;
+
+    {
+        const int sample_size = 64 * 3;
+        self->ssao_samples = safe_malloc(sample_size * sizeof(float));
+        for (int i = 0; i < sample_size; i += 3) {
+            self->ssao_samples[i] = 2.0f * rand_float() - 1.0f;
+            self->ssao_samples[i + 1] = 2.0f * rand_float() - 1.0f;
+            self->ssao_samples[i + 2] = (float)rand() / (float)RAND_MAX;
+            vector3f_normalize(&self->ssao_samples[i]);
+            float multiple = (float)rand() / (float)RAND_MAX;
+            self->ssao_samples[i] *= multiple;
+            self->ssao_samples[i + 1] *= multiple;
+            self->ssao_samples[i + 2] *= multiple;
+            float scale = (float)i / 64.0f;
+            scale = lerp(0.1f, 1.0f, scale * scale);
+            self->ssao_samples[i] *= scale;
+            self->ssao_samples[i + 1] *= scale;
+            self->ssao_samples[i + 2] *= scale;
+        }
+
+        self->ssao_samples = ssao_samples();
+
+        float *noise_pixels = ssao_noise;
+
+        image_details details = create_vulkan_texture(vk_state, command_pool, image, pixels, filter, mode, VK_FORMAT_R16G16B16_SFLOAT, 6);
+        image_details *info = safe_box(&details, sizeof(image_details));
+        image_system_add_image(is, path, info);
+
+        free(noise_pixels);
+    }
 
     {
         VkFormat attachment_formats[3] = {VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT};

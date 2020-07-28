@@ -40,4 +40,7 @@ struct ssao_shader *new_ssao_shader(vulkan_state *vk_state, vulkan_base *vk_base
 void remake_ssao_shader(vulkan_state *vk_state, vulkan_base *vk_base, struct ssao_shader *shader);
 void delete_ssao_shader(vulkan_state *vk_state, struct ssao_shader *shader);
 
+float *ssao_samples();
+float *ssao_noise();
+
 #endif

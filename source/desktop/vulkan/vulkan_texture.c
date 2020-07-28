@@ -29,14 +29,12 @@ static void vk_create_texture_image_sampler(vulkan_state *vk_state, struct vulka
     }
 }
 
-image_details create_vulkan_texture(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path, VkFilter filter, VkSamplerAddressMode mode) {
+image_details create_vulkan_texture(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, image_pixels *pixels, VkFilter filter, VkSamplerAddressMode mode, VkFormat format, int bytes_per_pixel) {
 
-    image_pixels *png = read_png_file(NULL, path);
+    int width = pixels->width;
+    int height = pixels->height;
 
-    int width = png->width;
-    int height = png->height;
-
-    VkDeviceSize image_byte_size = width * height * 4;
+    VkDeviceSize image_byte_size = width * height * bytes_per_pixel;
 
     VkBuffer staging_buffer = {0};
     VkDeviceMemory staging_buffer_memory = {0};
@@ -48,13 +46,13 @@ image_details create_vulkan_texture(vulkan_state *vk_state, VkCommandPool comman
 
     void *data;
     vkMapMemory(vk_state->vk_device, staging_buffer_memory, 0, image_byte_size, 0, &data);
-    memcpy(data, png->pixels, image_byte_size);
+    memcpy(data, pixels->pixels, image_byte_size);
     vkUnmapMemory(vk_state->vk_device, staging_buffer_memory);
 
     struct vulkan_image_details details = {0};
     details.width = width;
     details.height = height;
-    details.format = VK_FORMAT_R8G8B8A8_SRGB;
+    details.format = format;
     details.tiling = VK_IMAGE_TILING_OPTIMAL;
     details.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     details.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
@@ -76,8 +74,6 @@ image_details create_vulkan_texture(vulkan_state *vk_state, VkCommandPool comman
     image->vk_texture_image = texture_image;
     image->vk_texture_image_memory = texture_image_memory;
 
-    delete_image_pixels(png);
-
     vk_create_texture_image_view(vk_state, image);
     vk_create_texture_image_sampler(vk_state, image, filter, mode);
 
@@ -85,4 +81,12 @@ image_details create_vulkan_texture(vulkan_state *vk_state, VkCommandPool comman
         .width = width,
         .height = height,
     };
+}
+
+image_details create_vulkan_png_texture(vulkan_state *vk_state, VkCommandPool command_pool, struct vulkan_image *image, char *path, VkFilter filter, VkSamplerAddressMode mode) {
+
+    image_pixels *png = read_png_file(NULL, path);
+    image_details details = create_vulkan_texture(vk_state, command_pool, image, png, filter, mode, VK_FORMAT_R8G8B8A8_SRGB, 4);
+    delete_image_pixels(png);
+    return details;
 }

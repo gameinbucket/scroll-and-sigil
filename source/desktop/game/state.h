@@ -82,6 +82,7 @@ struct state {
     world_scene *ws;
     struct hud *hd;
     struct scene *sc;
+    float *ssao_samples;
 };
 
 void state_update(state *self);

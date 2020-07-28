@@ -237,3 +237,35 @@ void delete_ssao_shader(vulkan_state *vk_state, struct ssao_shader *shader) {
 
     free(shader);
 }
+
+float *ssao_samples() {
+    const int sample_size = 64 * 3;
+    float *samples = safe_malloc(sample_size * sizeof(float));
+    for (int i = 0; i < sample_size; i += 3) {
+        samples[i] = 2.0f * rand_float() - 1.0f;
+        samples[i + 1] = 2.0f * rand_float() - 1.0f;
+        samples[i + 2] = (float)rand() / (float)RAND_MAX;
+        vector3f_normalize(&samples[i]);
+        float multiple = (float)rand() / (float)RAND_MAX;
+        samples[i] *= multiple;
+        samples[i + 1] *= multiple;
+        samples[i + 2] *= multiple;
+        float scale = (float)i / 64.0f;
+        scale = lerp(0.1f, 1.0f, scale * scale);
+        samples[i] *= scale;
+        samples[i + 1] *= scale;
+        samples[i + 2] *= scale;
+    }
+    return samples;
+}
+
+float *ssao_noise() {
+    const int noise_size = 16 * 3;
+    float *pixels = safe_malloc(noise_size * sizeof(float));
+    for (int i = 0; i < noise_size; i += 3) {
+        pixels[i] = 2.0f * rand_float() - 1.0f;
+        pixels[i + 1] = 2.0f * rand_float() - 1.0f;
+        pixels[i + 2] = 0.0f;
+    }
+    return pixels;
+}
