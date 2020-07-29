@@ -259,7 +259,7 @@ float *ssao_samples() {
     return samples;
 }
 
-float *ssao_noise() {
+image_pixels *ssao_noise() {
     const int noise_size = 16 * 3;
     float *pixels = safe_malloc(noise_size * sizeof(float));
     for (int i = 0; i < noise_size; i += 3) {
@@ -267,5 +267,9 @@ float *ssao_noise() {
         pixels[i + 1] = 2.0f * rand_float() - 1.0f;
         pixels[i + 2] = 0.0f;
     }
-    return pixels;
+    image_pixels *noise = safe_calloc(1, sizeof(image_pixels));
+    noise->width = 4;
+    noise->height = 4;
+    noise->pixels = pixels;
+    return noise;
 }

@@ -1,7 +1,7 @@
-import{
-  maps/grass
+import[
+  maps/grass,
   maps/house
-}
+]
 place[
   [grass, 0, 0]
   [house, 10, 10]

@@ -55,14 +55,14 @@ static void ssao_render(vulkan_state *vk_state, vulkan_base *vk_base, state *sel
     vulkan_copy_memory(shader->uniforms1->mapped_memory[image_index], &self->draw_canvas_uniforms, sizeof(self->draw_canvas_uniforms));
 
     {
-        struct uniform_ssao ubo = {0};
+        struct uniform_ssao ubo;
 
         ubo.texel[0] = 1.0f / self->canvas_width;
         ubo.texel[1] = 1.0f / self->canvas_height;
         ubo.noise_scale[0] = self->canvas_width / 4.0f;
         ubo.noise_scale[1] = self->canvas_height / 4.0f;
-        ubo.projection = self->ws->model_view_projection;
-        ubo.samples = self->ssao_samples;
+        memcpy(&ubo.projection, self->ws->model_view_projection, sizeof(ubo.projection));
+        memcpy(&ubo.samples, self->ssao_samples, 64 * 3 * sizeof(float));
 
         vulkan_copy_memory(shader->uniforms3->mapped_memory[image_index], &ubo, sizeof(ubo));
     }
@@ -580,34 +580,18 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
     world_scene_geometry(vk_state, vk_base, ws);
     self->ws = ws;
 
-    {
-        const int sample_size = 64 * 3;
-        self->ssao_samples = safe_malloc(sample_size * sizeof(float));
-        for (int i = 0; i < sample_size; i += 3) {
-            self->ssao_samples[i] = 2.0f * rand_float() - 1.0f;
-            self->ssao_samples[i + 1] = 2.0f * rand_float() - 1.0f;
-            self->ssao_samples[i + 2] = (float)rand() / (float)RAND_MAX;
-            vector3f_normalize(&self->ssao_samples[i]);
-            float multiple = (float)rand() / (float)RAND_MAX;
-            self->ssao_samples[i] *= multiple;
-            self->ssao_samples[i + 1] *= multiple;
-            self->ssao_samples[i + 2] *= multiple;
-            float scale = (float)i / 64.0f;
-            scale = lerp(0.1f, 1.0f, scale * scale);
-            self->ssao_samples[i] *= scale;
-            self->ssao_samples[i + 1] *= scale;
-            self->ssao_samples[i + 2] *= scale;
-        }
+    const bool ssao = false;
 
+    if (ssao) {
         self->ssao_samples = ssao_samples();
 
-        float *noise_pixels = ssao_noise;
+        image_pixels *noise_pixels = ssao_noise();
 
-        image_details details = create_vulkan_texture(vk_state, command_pool, image, pixels, filter, mode, VK_FORMAT_R16G16B16_SFLOAT, 6);
-        image_details *info = safe_box(&details, sizeof(image_details));
-        image_system_add_image(is, path, info);
+        struct vulkan_image *noise_texture = safe_calloc(1, sizeof(struct vulkan_image));
+        image_details noise_details =
+            create_vulkan_texture(vk_state, vk_base->vk_command_pool, noise_texture, noise_pixels, VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_FORMAT_R8G8B8A8_SRGB, 4);
 
-        free(noise_pixels);
+        delete_image_pixels(noise_pixels);
     }
 
     {
@@ -623,7 +607,8 @@ state *create_state(SDL_Window *window, vulkan_state *vk_state) {
         self->blur_offscreen = create_vulkan_offscreen_buffer(vk_state, vk_base, self->canvas_width, self->canvas_height, 1, attachment_formats, false);
     }
 
-    VkPipelineColorBlendAttachmentState color_attach = create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
+    VkPipelineColorBlendAttachmentState color_attach =
+        create_color_blend_attachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT, VK_FALSE);
 
     {
         struct vulkan_render_settings render_settings = {0};

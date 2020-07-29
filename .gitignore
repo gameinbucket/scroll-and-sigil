@@ -3,6 +3,7 @@
 
 main
 scroll-and-sigil
+scroll-and-sigil-headless
 unit-tests
 node_modules
 scroll-and-sigil.js

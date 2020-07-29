@@ -17,7 +17,7 @@ ifneq ($(shell uname), Linux)
 	COMPILER_FLAGS += -Wno-nullability-extension
 endif
 
-.PHONY: all analysis address valgrind clean list-source list-objects test help
+.PHONY: all release analysis address valgrind clean list-source list-objects test help
 
 all: COMPILER_FLAGS += -g
 all: $(NAME)

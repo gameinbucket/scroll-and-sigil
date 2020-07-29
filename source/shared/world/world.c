@@ -208,3 +208,6 @@ void world_update(world *self) {
         }
     }
 }
+
+void delete_world(world *self) {
+}

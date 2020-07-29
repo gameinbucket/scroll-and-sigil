@@ -68,6 +68,7 @@ void world_add_sector(world *self, sector *s);
 sector *world_find_sector(world *self, float x, float y);
 void world_load_map(world *self);
 void world_update(world *self);
+void delete_world(world *self);
 
 struct cell {
     line **lines;
