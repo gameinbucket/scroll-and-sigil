@@ -2,7 +2,7 @@ NAME = scroll-and-sigil.js
 
 SOURCE = $(wildcard source/shared/**/*.c) $(wildcard source/electron/**/*.c)
 HEADERS = $(wildcard source/shared/**/*.h) $(wildcard source/electron/**/*.h)
-OBJECTS = $(patsubst source/%.c,compile/wasm/%.o,$(SOURCE))
+OBJECTS = $(patsubst source/%.c,compiled/wasm/%.o,$(SOURCE))
 DEPENDENCY = $(patsubst %.o,%.d,$(OBJECTS))
 INCLUDE = -Isource/shared -Isource/electron 
 
@@ -19,10 +19,10 @@ all: $(NAME)
 $(NAME): $(HEADERS) $(OBJECTS)
 	$(CC) $(OBJECTS) $(COMPILER_FLAGS) $(EMCC_FLAGS) -o $(NAME)
 
-compile/wasm/%.o: source/%.c
+compiled/wasm/%.o: source/%.c
 	@mkdir -p $(dir $@)
 	$(CC) -c $< $(COMPILER_FLAGS) -MMD -o $@
 
 clean:
 	rm -f ./$(NAME)
-	rm -rf ./compile/wasm
+	rm -rf ./compiled/wasm

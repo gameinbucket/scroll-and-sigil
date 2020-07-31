@@ -1,7 +1,11 @@
-#include "main.h"
+#include "headless_main.h"
 
 int main() {
     printf("----------------------------------------------------------------------\n");
+
+    struct raster *raster = new_raster(800, 600);
+
+    raster_clear();
 
     world *w = create_world();
 
