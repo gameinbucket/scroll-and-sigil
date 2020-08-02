@@ -1,0 +1,12 @@
+[package]
+name = "editor"
+version = "0.1.0"
+authors = ["Nate M <email>"]
+edition = "2018"
+
+[dependencies]
+rand = "0.7.3"
+rand_chacha = "0.2.2"
+
+[lib]
+crate-type = ["lib"]

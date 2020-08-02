@@ -1,6 +1,13 @@
 #ifndef RASTER_H
 #define RASTER_H
 
+#include <inttypes.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
 struct raster {
     unsigned int width;
     unsigned int height;
