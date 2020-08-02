@@ -7,7 +7,7 @@
 ## editor
 
 - built into game binary for easy user content creation, including on consoles
-- usable with keyboard (with or without mouse), mouse (optional), and controller  
+- usable with keyboard (with or without mouse), mouse (optional), and controller
 - top down 2D view for map editing
 - toggelable 3D first person camera view, and sloped view
 - window for editing
@@ -16,6 +16,7 @@
   - behaviour / parameter scripts
 - no draggable popups (bad for controller input)
 - cloud synchronizing game packs for cross-platform use
+- minecraft like block editing mode (prefab squares to make placement easier)
 
 ### controls
 
@@ -45,6 +46,7 @@
 ```
 
 ### texture editing
+
 ```
 +------------------+--------------------------------------+
 | Open Save New Exit                                      |

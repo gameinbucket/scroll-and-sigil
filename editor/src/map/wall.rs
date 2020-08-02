@@ -1,11 +1,11 @@
-use crate::math::vector::Vector3;
+use crate::math::vector::Vector2;
 
 pub struct Wall {
-    pub va: Vector3,
-    pub vb: Vector3,
+    pub a: Vector2,
+    pub b: Vector2,
+    pub texture: i32,
     pub floor: f32,
     pub ceiling: f32,
-    pub texture: i32,
     pub u: f32,
     pub v: f32,
     pub s: f32,
@@ -13,23 +13,17 @@ pub struct Wall {
 }
 
 impl Wall {
-    pub fn new() -> Self {
+    pub fn new(a: Vector2, b: Vector2, texture: i32) -> Self {
         Wall {
-            va: Vector3::default(),
-            vb: Vector3::default(),
+            a,
+            b,
+            texture,
             floor: 0.0,
             ceiling: 0.0,
-            texture: 0,
             u: 0.0,
             v: 0.0,
             s: 0.0,
             t: 0.0,
         }
-    }
-}
-
-impl Default for Wall {
-    fn default() -> Self {
-        Wall::new()
     }
 }

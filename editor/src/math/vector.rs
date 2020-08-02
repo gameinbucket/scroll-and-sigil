@@ -1,3 +1,4 @@
+#[derive(Copy, Clone)]
 pub struct Vector3 {
     pub x: f32,
     pub y: f32,
@@ -16,6 +17,7 @@ impl Default for Vector3 {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct Vector2 {
     pub x: f32,
     pub y: f32,
