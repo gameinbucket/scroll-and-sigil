@@ -48,13 +48,11 @@ impl<'a> Line<'a> {
             minus: Option::None,
         }
     }
-
     pub fn update_sectors(&self) {
         // TODO
         // self.plus = Some(plus);
         // self.minus = Some(minus);
     }
-
     pub fn intersect(&self, with: &Line) -> Intersect {
         let a1: f32 = self.b.y - self.a.y;
         let b1: f32 = self.a.x - self.b.x;

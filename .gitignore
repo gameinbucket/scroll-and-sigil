@@ -1,5 +1,6 @@
 .vscode
 .DS_Store
+target
 
 main
 scroll-and-sigil
@@ -8,6 +9,7 @@ unit-tests
 node_modules
 scroll-and-sigil.js
 scroll-and-sigil.html
+Cargo.lock
 
 *.o
 *.d

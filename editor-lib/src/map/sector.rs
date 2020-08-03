@@ -41,11 +41,9 @@ impl<'a> Sector<'a> {
             outside: Option::None,
         }
     }
-
     pub fn update_triangles(&mut self, triangles: Vec<Triangle>) {
         self.triangles = triangles;
     }
-
     pub fn contains(&self, x: f32, y: f32) -> bool {
         let mut odd: bool = false;
         let vecs: &Vec<Vector2> = &self.vecs;

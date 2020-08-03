@@ -2,7 +2,8 @@ use std::time::Duration;
 
 use minifb::{Key, Window, WindowOptions};
 
-use editor::Canvas;
+use editor::canvas::canvas::rgb;
+use editor::canvas::canvas::Canvas;
 
 use editor::map::line::Line;
 use editor::map::sector::Sector;
@@ -107,15 +108,14 @@ fn main() {
 
     window.limit_update_rate(Some(Duration::from_millis(MILLISECONDS_PER_FRAME)));
 
-    let canvas = Canvas::new(CANVAS_WIDTH, CANVAS_HEIGHT);
+    let mut canvas = Canvas::new(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    let mut buffer: Vec<u32> = vec![0; CANVAS_WIDTH * CANVAS_HEIGHT];
+    canvas.clear(rgb(240, 240, 240));
+    canvas.line(rgb(255, 0, 0), 0, 0, 200, 180);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        canvas.draw(&mut buffer);
-
         window
-            .update_with_buffer(&buffer, CANVAS_WIDTH, CANVAS_HEIGHT)
+            .update_with_buffer(&canvas.pixels, CANVAS_WIDTH, CANVAS_HEIGHT)
             .expect("Error updating window buffer");
     }
 }

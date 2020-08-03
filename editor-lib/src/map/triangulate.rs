@@ -68,7 +68,7 @@ fn populate_with_links(sec: &Sector, polygons: &mut Vec<Polygon>, clockwise: boo
             if poly_vec_equal(o, sec.vecs[i]) {
                 for p in polygons.iter() {
                     if poly_vec_equal(p, sec.vecs[len - 1]) {
-                        o.previous.push(RefCell::new(p));
+                        // o.previous.push(RefCell::new(p));
                     }
                 }
                 break;
