@@ -17,13 +17,13 @@ impl Canvas {
             pixels,
         }
     }
-    pub fn clear(&mut self, rgb: u32) {
+    pub fn clear(&mut self, color: u32) {
         let size: usize = self.pixels.len();
         for i in 0..size {
-            self.pixels[i] = rgb;
+            self.pixels[i] = color;
         }
     }
-    pub fn line(&mut self, rgb: u32, x0: i32, y0: i32, x1: i32, y1: i32) {
+    pub fn line(&mut self, color: u32, x0: i32, y0: i32, x1: i32, y1: i32) {
         let dx = (x1 - x0).abs();
         let sx = if x0 < x1 { 1 } else { -1 };
         let dy = (y1 - y0).abs();
@@ -33,7 +33,10 @@ impl Canvas {
         let mut x = x0;
         let mut y = y0;
         loop {
-            self.pixels[x as usize + y as usize * self.width] = rgb;
+            if x < 0 || y < 0 {
+                return;
+            }
+            self.pixels[x as usize + y as usize * self.width] = color;
             if x == x1 && y == y1 {
                 break;
             }
@@ -47,5 +50,8 @@ impl Canvas {
                 y += sy;
             }
         }
+    }
+    pub fn triangle(&mut self, color: u32, x0: i32, y0: i32, x1: i32, y1: i32, x2: i32, y2: i32) {
+        self.pixels[x0 as usize + y0 as usize * self.width] = color;
     }
 }
