@@ -33,10 +33,13 @@ fn polygon_vec_equal(polygon: &Polygon, point: Vector2) -> bool {
     float_eq(polygon.point.x, point.x) && float_eq(polygon.point.y, point.y)
 }
 
-fn polygon_find(polygons: &Vec<Polygon>, point: Vector2) -> Option<&Polygon> {
+fn polygon_find(
+    polygons: &Vec<Rc<RefCell<Polygon>>>,
+    point: Vector2,
+) -> Option<Rc<RefCell<Polygon>>> {
     for poly in polygons.iter() {
-        if polygon_vec_equal(poly, point) {
-            return Some(poly);
+        if polygon_vec_equal(&poly.borrow(), point) {
+            return Some(poly.clone());
         }
     }
     return Option::None;
@@ -51,18 +54,18 @@ fn polygon_compare(a: &Polygon, b: &Polygon) -> i32 {
     return -1;
 }
 
-fn polygon_sorted_insert(polygons: &mut Vec<Polygon>, point: Vector2) {
+fn polygon_sorted_insert(polygons: &mut Vec<Rc<RefCell<Polygon>>>, point: Vector2) {
     let polygon = Polygon::new(point);
     for (i, existing) in polygons.iter().enumerate() {
-        if polygon_compare(&polygon, existing) <= 0 {
+        if polygon_compare(&polygon, &existing.borrow()) <= 0 {
             polygons.insert(i, Rc::new(RefCell::new(polygon)));
             return;
         }
     }
-    polygons.push(polygon);
+    polygons.push(Rc::new(RefCell::new(polygon)));
 }
 
-fn clean_population(polygons: &mut Vec<Polygon>) {
+fn clean_population(polygons: &mut Vec<Rc<RefCell<Polygon>>>) {
     // let remaining = Vec::new();
     // for polygon in polygons.iter() {
     //     remaining.push(Polygon::new(polygon.point));
@@ -77,56 +80,74 @@ fn clean_population(polygons: &mut Vec<Polygon>) {
     // }
 }
 
-fn populate_references(sec: &Sector, polygons: &mut Vec<Polygon>, clockwise: bool) {
+fn angle(a: Vector2, b: Vector2) -> f64 {
+    // let angle = atan2(a->y - b->y, a->x - b->x);
+    // if (angle < 0) {
+    //     angle += MATH_TAU;
+    // }
+    // return angle;
+    0.0
+}
+
+fn populate_references(sec: &Sector, polygons: &mut Vec<Rc<RefCell<Polygon>>>, clockwise: bool) {
     let len: usize = sec.vecs.len();
     for i in 0..len {
         let original = polygon_find(polygons, sec.vecs[i]).unwrap();
-        let previous = polygon_find(polygons, sec.vecs[len - 1]).unwrap();
+        let p: usize;
+        let n: usize;
+        if clockwise {
+            if i == 0 {
+                p = len - 1;
+            } else {
+                p = i - 1;
+            }
+            if i == len - 1 {
+                n = 0;
+            } else {
+                n = i + 1;
+            }
+        } else {
+            if i == 0 {
+                n = len - 1;
+            } else {
+                n = i - 1;
+            }
+            if i == len - 1 {
+                p = 0;
+            } else {
+                p = i + 1;
+            }
+        }
+        let next = polygon_find(polygons, sec.vecs[n]).unwrap();
+        let previous = polygon_find(polygons, sec.vecs[p]).unwrap();
+        if original.borrow().previous.is_empty() {
+            original.borrow_mut().previous.push(previous);
+        } else {
+            let borrow = original.borrow();
+            let point = borrow.point;
+            let using = borrow.previous[0].borrow().point;
+            // polygon_vertex *using_last = original->last->items[0];
 
-        // original.previous.push(Rc::new(RefCell::new(previous)));
+            // double angle = calc_angle(using_last->point, original->point);
 
-        // let original = polygon_find(polygons, sec.vecs[i]).unwrap();
-        // let previous;
-        // let next;
-        // if clockwise {
-        //     if i == 0 {
-        //         previous = polygon_find(polygons, sec.vecs[len - 1]).unwrap();
-        //     } else {
-        //         previous = polygon_find(polygons, sec.vecs[i - 1]).unwrap();
-        //     }
-        //     if i == len - 1 {
-        //         next = polygon_find(polygons, sec.vecs[0]).unwrap();
-        //     } else {
-        //         next = polygon_find(polygons, sec.vecs[i + 1]).unwrap();
-        //     }
-        // } else {
-        //     if i == 0 {
-        //         next = polygon_find(polygons, sec.vecs[len - 1]).unwrap();
-        //     } else {
-        //         next = polygon_find(polygons, sec.vecs[i - 1]).unwrap();
-        //     }
-        //     if i == len - 1 {
-        //         previous = polygon_find(polygons, sec.vecs[0]).unwrap();
-        //     } else {
-        //         previous = polygon_find(polygons, sec.vecs[i + 1]).unwrap();
-        //     }
-        // }
-        // if original.previous.is_empty() {
-        //     original.previous.push(previous);
-        // } else {
-        // }
-        // if original.next.is_empty() {
-        //     original.next.push(previous);
-        // } else {
-        // }
+            // if (calc_angle(last->point, original->point) < angle) {
+            //     array_insert(original->last, 0, last);
+            // }
+
+            let angle = angle(using, point);
+        }
+        if original.borrow().next.is_empty() {
+            original.borrow_mut().next.push(next);
+        } else {
+        }
     }
 }
 
-fn populate_vectors(sec: &Sector, polygons: &mut Vec<Polygon>) {
+fn populate_vectors(sec: &Sector, polygons: &mut Vec<Rc<RefCell<Polygon>>>) {
     for point in sec.vecs.iter().copied() {
         let mut exists = false;
         for polygon in polygons.iter() {
-            if polygon_vec_equal(polygon, point) {
+            if polygon_vec_equal(&polygon.borrow(), point) {
                 exists = true;
                 break;
             }
@@ -146,7 +167,7 @@ fn skip(sector: &Sector, floor: bool) -> bool {
     !sector.has_ceiling()
 }
 
-fn populate<'p>(sec: &Sector, floor: bool, mut polygons: &mut Vec<Polygon>) {
+fn populate<'p>(sec: &Sector, floor: bool, mut polygons: &mut Vec<Rc<RefCell<Polygon>>>) {
     for inner in sec.inside.iter() {
         if skip(inner, floor) {
             continue;
@@ -163,17 +184,17 @@ fn populate<'p>(sec: &Sector, floor: bool, mut polygons: &mut Vec<Polygon>) {
     populate_vectors(sec, &mut polygons);
     populate_references(sec, &mut polygons, true);
     for i in 0..polygons.len() {
-        polygons[i].index = i
+        polygons[i].borrow_mut().index = i
     }
 }
 
-fn classify(polygons: &Vec<Polygon>, monotone: &mut Vec<Polygon>) {}
+fn classify(polygons: &Vec<Rc<RefCell<Polygon>>>, monotone: &mut Vec<Rc<RefCell<Polygon>>>) {}
 
 fn clip<'p>(
     sec: &Sector,
     floor: bool,
     scale: f32,
-    monotone: &Vec<Polygon>,
+    monotone: &Vec<Rc<RefCell<Polygon>>>,
     triangles: &mut Vec<Triangle>,
 ) {
 }
