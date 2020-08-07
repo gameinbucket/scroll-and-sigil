@@ -1,3 +1,5 @@
+use crate::math::util::float_eq;
+
 #[derive(Copy, Clone)]
 pub struct Vector3 {
     pub x: f32,
@@ -42,6 +44,9 @@ impl Vector2 {
             interior += 2.0 * std::f32::consts::PI;
         }
         return interior;
+    }
+    pub fn eq(&self, other: Vector2) -> bool {
+        float_eq(self.x, other.x) && float_eq(self.y, other.y)
     }
 }
 

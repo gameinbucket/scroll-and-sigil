@@ -1,6 +1,7 @@
 use crate::map::sector::Sector;
 use crate::map::triangle::Triangle;
 use crate::math::util::float_eq;
+use crate::math::util::float_zero;
 use crate::math::vector::Vector2;
 
 use std::cell::RefCell;
@@ -37,17 +38,13 @@ fn update_polygon_indices(polygons: &Vec<Rc<RefCell<Polygon>>>) {
     }
 }
 
-fn polygon_vec_equal(polygon: &Polygon, point: Vector2) -> bool {
-    float_eq(polygon.point.x, point.x) && float_eq(polygon.point.y, point.y)
-}
-
 fn polygon_find(
     polygons: &Vec<Rc<RefCell<Polygon>>>,
     point: Vector2,
 ) -> Option<Rc<RefCell<Polygon>>> {
-    for poly in polygons.iter() {
-        if polygon_vec_equal(&poly.borrow(), point) {
-            return Some(poly.clone());
+    for polygon in polygons.iter() {
+        if point.eq(polygon.borrow().point) {
+            return Some(polygon.clone());
         }
     }
     return Option::None;
@@ -73,14 +70,67 @@ fn triangle_contains(tri: [Vector2; 3], x: f32, y: f32) -> bool {
     let mut k = 2;
     for i in 0..3 {
         let vi = tri[i];
-        let vi = tri[k];
-        let value = 0.0;
-        if x < value {
-            odd = !odd;
+        let vk = tri[k];
+        if (vi.y > y) != (vk.y > y) {
+            let value = (vk.x - vi.x) * (y - vi.y) / (vk.y - vi.y) + vi.x;
+            if x < value {
+                odd = !odd;
+            }
         }
         k = i;
     }
     odd
+}
+
+fn vector_line_intersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2) -> bool {
+    let a1: f32 = b.y - a.y;
+    let b1: f32 = a.x - b.x;
+    let c1: f32 = (b.x * a.y) - (a.x * b.y);
+    let r3: f32 = (a1 * c.x) + (b1 * c.y) + c1;
+    let r4: f32 = (a1 * d.x) + (b1 * d.y) + c1;
+    if !float_zero(r3) && !float_zero(r4) && r3 * r4 >= 0.0 {
+        return false;
+    }
+    let a2: f32 = d.y - c.y;
+    let b2: f32 = c.x - d.x;
+    let c2: f32 = (d.x * c.y) - (c.x * d.y);
+    let r1: f32 = (a2 * a.x) + (b2 * a.y) + c2;
+    let r2: f32 = (a2 * b.x) + (b2 * b.y) + c2;
+    if !float_zero(r1) && !float_zero(r2) && r1 * r2 >= 0.0 {
+        return false;
+    }
+    let denominator: f32 = (a1 * b2) - (a2 * b1);
+    if (float_zero(denominator)) {
+        return false;
+    }
+    true
+}
+
+fn valid_polygon(polygon: &Vec<Rc<RefCell<Polygon>>>, a: Vector2, b: Vector2) -> bool {
+    for polygon in polygon.iter() {
+        let c = polygon.borrow().point;
+        let d = polygon.borrow().previous[0];
+        if !a.eq(c) && !a.eq(d) && !b.eq(c) && !b.eq(d) && vector_line_intersect(a, b, c, d) {
+            return false;
+        }
+    }
+    true
+}
+
+fn valid_vectors(vectors: &Vec<Vector2>, a: Vector2, b: Vector2, c: Vector2) -> bool {
+    if a.interior_angle(b, c) > std::f32::consts::PI {
+        return false;
+    }
+    let tri = [a, b, c];
+    for vec in vectors.iter().copied() {
+        if vec.eq(a) || vec.eq(b) || vec.eq(c) {
+            continue;
+        }
+        if triangle_contains(tri, vec.x, vec.y) {
+            return false;
+        }
+    }
+    true
 }
 
 fn polygon_sorted_insert(polygons: &mut Vec<Rc<RefCell<Polygon>>>, point: Vector2) {
@@ -211,7 +261,7 @@ fn populate_vectors(sec: &Sector, polygons: &mut Vec<Rc<RefCell<Polygon>>>) {
     for point in sec.vecs.iter().copied() {
         let mut exists = false;
         for polygon in polygons.iter() {
-            if polygon_vec_equal(&polygon.borrow(), point) {
+            if point.eq(polygon.borrow().point) {
                 exists = true;
                 break;
             }
@@ -250,7 +300,69 @@ fn populate(sec: &Sector, floor: bool, mut polygons: &mut Vec<Rc<RefCell<Polygon
     update_polygon_indices(&polygons);
 }
 
-fn classify(polygons: &Vec<Rc<RefCell<Polygon>>>, monotone: &mut Vec<Rc<RefCell<Polygon>>>) {}
+fn classify(polygons: &Vec<Rc<RefCell<Polygon>>>, monotone: &mut Vec<Rc<RefCell<Polygon>>>) {
+    let mut merge = Vec::new();
+    let mut split = Vec::new();
+    for polygon in polygons.iter() {
+        let current = polygon.borrow();
+        let previous = current.previous[0];
+        let next = current.next[0];
+        let reflex = previous.interior_angle(current.point, next) > std::f32::consts::PI;
+        let both_above = previous.y < current.point.y && next.y <= current.point.y;
+        let both_below = previous.y >= current.point.y && next.y >= current.point.y;
+        let collinear = next.y == current.point.y;
+        if (both_above && reflex) {
+            monotone.push(polygon.clone());
+        } else if (both_above && !reflex) {
+            if (!collinear) {
+                split.push(polygon);
+            }
+        } else if (both_below && !reflex) {
+            if (!collinear) {
+                merge.push(polygon.clone());
+            }
+        }
+    }
+    for polygon in merge.iter() {
+        let current = polygon.borrow();
+        let start = current.index + 1;
+        let point = current.point;
+        for k in start..polygons.len() {
+            let diagonal = polygons[k].borrow();
+            if valid_polygon(polygons, point, diagonal.point) {
+                let mut current = polygon.borrow_mut();
+                let mut diagonal = polygons[k].borrow_mut();
+                current.merge = true;
+                current.next.push(diagonal.point);
+                current.previous.push(diagonal.point);
+                diagonal.next.push(current.point);
+                diagonal.previous.push(current.point);
+                break;
+            }
+        }
+    }
+    for polygon in split.iter() {
+        let current = polygon.borrow();
+        let start = current.index;
+        let point = current.point;
+        for k in (0..start).rev() {
+            let diagonal = polygons[k].borrow();
+            if valid_polygon(polygons, point, diagonal.point) {
+                if !diagonal.merge {
+                    monotone.push(polygons[k].clone());
+                    let mut current = polygon.borrow_mut();
+                    let mut diagonal = polygons[k].borrow_mut();
+                    current.merge = true;
+                    current.next.push(diagonal.point);
+                    current.previous.push(diagonal.point);
+                    diagonal.next.push(current.point);
+                    diagonal.previous.push(current.point);
+                }
+                break;
+            }
+        }
+    }
+}
 
 fn clip(
     sec: &Sector,
@@ -261,6 +373,34 @@ fn clip(
 ) {
 }
 
+fn clip_all(
+    sec: &Sector,
+    floor: bool,
+    scale: f32,
+    monotone: &Vec<Rc<RefCell<Polygon>>>,
+    triangles: &mut Vec<Triangle>,
+) {
+    let mut vecs = Vec::new();
+    for polygon in monotone.iter() {
+        let start = polygon.borrow().index;
+        let next = polygon.borrow().next[0];
+        let mut current = start;
+        loop {
+            vecs.push(monotone[current].borrow().point);
+            let mut angle = std::f32::MAX;
+            for {
+            }
+            let mut previous = 0;
+            next = current;
+            current = previous;
+            if (current == start) {
+                break;
+            }
+        }
+        vecs.clear();
+    }
+}
+
 fn construct(sector: &Sector, floor: bool, scale: f32, triangles: &mut Vec<Triangle>) {
     if skip(sector, floor) {
         return;
@@ -269,7 +409,7 @@ fn construct(sector: &Sector, floor: bool, scale: f32, triangles: &mut Vec<Trian
     let mut monotone = Vec::new();
     populate(sector, floor, &mut polygons);
     classify(&polygons, &mut monotone);
-    clip(sector, floor, scale, &monotone, triangles);
+    clip_all(sector, floor, scale, &monotone, triangles);
 }
 
 pub fn triangulate_sector(sec: &mut Sector, scale: f32) {
