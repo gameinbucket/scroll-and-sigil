@@ -7,3 +7,7 @@ pub fn float_eq(x: f32, y: f32) -> bool {
 pub fn float_zero(x: f32) -> bool {
     x.abs() < FLOAT_PRECISION
 }
+
+pub fn same_reference<T>(a: *const T, b: *const T) -> bool {
+    a == b
+}
