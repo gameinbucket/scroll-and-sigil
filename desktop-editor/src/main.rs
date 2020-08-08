@@ -56,7 +56,7 @@ fn place_house(world: &mut World, x: f32, y: f32) {
     let floor: f32 = 0.0;
     let ceiling: f32 = 10.0;
     let top: f32 = 0.0;
-    let sector = Sector::new(
+    let mut sector = Sector::new(
         bottom,
         floor,
         ceiling,
@@ -67,6 +67,7 @@ fn place_house(world: &mut World, x: f32, y: f32) {
         lines,
     );
     println!("sector: {}, {}", sector.bottom, sector.vecs.len());
+    triangulate_sector(&mut sector, SECTOR_SCALE);
     world.push_sector(sector);
 }
 fn place_grass(world: &mut World) {

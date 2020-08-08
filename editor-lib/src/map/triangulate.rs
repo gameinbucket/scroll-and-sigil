@@ -38,6 +38,15 @@ fn update_polygon_indices(polygons: &Vec<Rc<RefCell<Polygon>>>) {
     }
 }
 
+fn polygon_remove_point(vecs: &mut Vec<Vector2>, point: Vector2) {
+    for i in 0..vecs.len() {
+        if vecs[i].eq(point) {
+            vecs.remove(i);
+            break;
+        }
+    }
+}
+
 fn polygon_find(
     polygons: &Vec<Rc<RefCell<Polygon>>>,
     point: Vector2,
@@ -80,6 +89,10 @@ fn triangle_contains(tri: [Vector2; 3], x: f32, y: f32) -> bool {
         k = i;
     }
     odd
+}
+
+fn triangle_valid(vecs: &Vec<Vector2>, a: Vector2, b: Vector2, c: Vector2) -> bool {
+    true
 }
 
 fn vector_line_intersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2) -> bool {
@@ -160,7 +173,7 @@ fn cull_vectors(polygons: &mut Vec<Rc<RefCell<Polygon>>>) {
         loop {
             let mut polygon = polygons[current].borrow_mut();
             polygon.perimeter = true;
-            remaining.remove(current);
+            remaining.retain(|&x| x != current);
             while polygon.next.len() != 1 {
                 let next = polygon_index_of_vec(polygons, polygon.next[1]);
                 pending.insert(next);
@@ -220,15 +233,8 @@ fn cull_vectors(polygons: &mut Vec<Rc<RefCell<Polygon>>>) {
 fn populate_references(sec: &Sector, polygons: &Vec<Rc<RefCell<Polygon>>>, clockwise: bool) {
     let len: usize = sec.vecs.len();
     for i in 0..len {
-        let find = polygon_find(polygons, sec.vecs[i]).unwrap();
-        let mut original = find.borrow_mut();
-        let mut p = i - 1;
-        let mut n = i + 1;
-        if i == 0 {
-            p = len - 1;
-        } else if i == len - 1 {
-            n = 0;
-        }
+        let mut p = if i == 0 { len - 1 } else { i - 1 };
+        let mut n = if i == len - 1 { 0 } else { i + 1 };
         if !clockwise {
             let t = p;
             p = n;
@@ -236,6 +242,8 @@ fn populate_references(sec: &Sector, polygons: &Vec<Rc<RefCell<Polygon>>>, clock
         }
         let next = polygon_find(polygons, sec.vecs[n]).unwrap().borrow().point;
         let previous = polygon_find(polygons, sec.vecs[p]).unwrap().borrow().point;
+        let find = polygon_find(polygons, sec.vecs[i]).unwrap();
+        let mut original = find.borrow_mut();
         if original.previous.is_empty() {
             original.previous.push(previous);
         } else {
@@ -274,9 +282,7 @@ fn populate_vectors(sec: &Sector, polygons: &mut Vec<Rc<RefCell<Polygon>>>) {
 
 fn skip(sector: &Sector, floor: bool) -> bool {
     if floor {
-        if !sector.has_floor() {
-            return true;
-        }
+        return !sector.has_floor();
     }
     !sector.has_ceiling()
 }
@@ -368,9 +374,41 @@ fn clip(
     sec: &Sector,
     floor: bool,
     scale: f32,
-    monotone: &Vec<Rc<RefCell<Polygon>>>,
     triangles: &mut Vec<Triangle>,
+    vecs: &mut Vec<Vector2>,
 ) {
+    let mut i = 0;
+    let mut size = vecs.len();
+    while size > 3 {
+        let plus = if i == size - 1 { 0 } else { i + 1 };
+        let minus = if i == 0 { size - 1 } else { i - 1 };
+        let previous = vecs[minus];
+        let current = vecs[i];
+        let next = vecs[plus];
+        if triangle_valid(vecs, previous, current, next) {
+            let tri;
+            if floor {
+                tri = Triangle::new(previous, current, next, sec.floor, sec.floor_texture);
+            } else {
+                tri = Triangle::new(next, current, previous, sec.ceiling, sec.ceiling_texture);
+            }
+            triangles.push(tri);
+            vecs.remove(i);
+            size -= 1;
+        } else {
+            i += 1;
+        }
+        if i == size {
+            i = 0;
+        }
+    }
+    let tri;
+    if floor {
+        tri = Triangle::new(vecs[0], vecs[1], vecs[2], sec.floor, sec.floor_texture);
+    } else {
+        tri = Triangle::new(vecs[2], vecs[1], vecs[0], sec.ceiling, sec.ceiling_texture);
+    }
+    triangles.push(tri);
 }
 
 fn clip_all(
@@ -383,20 +421,44 @@ fn clip_all(
     let mut vecs = Vec::new();
     for polygon in monotone.iter() {
         let start = polygon.borrow().index;
-        let next = polygon.borrow().next[0];
+        let mut next = polygon_index_of_vec(monotone, polygon.borrow().next[0]);
         let mut current = start;
         loop {
-            vecs.push(monotone[current].borrow().point);
-            let mut angle = std::f32::MAX;
-            for {
-            }
+            let current_point = monotone[current].borrow().point;
+            vecs.push(current_point);
             let mut previous = 0;
+            let mut angle = std::f32::MAX;
+            let a = monotone[next].borrow().point;
+            let b = current_point;
+            for c in monotone[current].borrow().previous.iter().copied() {
+                let angle_1 = (a.x - b.x).atan2(a.y - b.y);
+                let angle_2 = (b.x - c.x).atan2(b.y - c.y);
+                let mut interior = angle_2 - angle_1;
+                if (interior < 0.0) {
+                    interior += 2.0 * std::f32::consts::PI;
+                }
+                interior += std::f32::consts::PI;
+                if (interior > 2.0 * std::f32::consts::PI) {
+                    interior -= 2.0 * std::f32::consts::PI;
+                }
+                if (interior < angle) {
+                    previous = polygon_index_of_vec(monotone, c);
+                    angle = interior;
+                }
+            }
+            let mut mutate_current = monotone[current].borrow_mut();
+            polygon_remove_point(&mut mutate_current.next, a);
+            polygon_remove_point(
+                &mut mutate_current.previous,
+                monotone[previous].borrow().point,
+            );
             next = current;
             current = previous;
             if (current == start) {
                 break;
             }
         }
+        clip(sec, floor, scale, triangles, &mut vecs);
         vecs.clear();
     }
 }
@@ -407,9 +469,13 @@ fn construct(sector: &Sector, floor: bool, scale: f32, triangles: &mut Vec<Trian
     }
     let mut polygons = Vec::new();
     let mut monotone = Vec::new();
+    println!("populate");
     populate(sector, floor, &mut polygons);
+    println!("classify {}", polygons.len());
     classify(&polygons, &mut monotone);
+    println!("clip {}", monotone.len());
     clip_all(sector, floor, scale, &monotone, triangles);
+    println!("triangles {}", triangles.len());
 }
 
 pub fn triangulate_sector(sec: &mut Sector, scale: f32) {
