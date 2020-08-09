@@ -2,7 +2,9 @@ use crate::map::line::Line;
 use crate::map::triangle::Triangle;
 use crate::math::vector::Vector2;
 
-pub struct Sector<'a> {
+use std::rc::{Rc, Weak};
+
+pub struct Sector {
     pub bottom: f32,
     pub floor: f32,
     pub ceiling: f32,
@@ -10,13 +12,15 @@ pub struct Sector<'a> {
     pub floor_texture: i32,
     pub ceiling_texture: i32,
     pub vecs: Vec<Vector2>,
-    pub lines: Vec<Line<'a>>,
+    pub lines: Vec<Line>,
     pub triangles: Vec<Triangle>,
-    pub inside: Vec<&'a Sector<'a>>,
-    pub outside: Option<&'a Sector<'a>>,
+    // pub inside: Vec<Rc<Sector>>,
+    // pub outside: Option<Rc<Sector>>,
+    pub inside: Vec<usize>,
+    pub outside: Option<usize>,
 }
 
-impl<'a> Sector<'a> {
+impl Sector {
     pub fn new(
         bottom: f32,
         floor: f32,
@@ -25,7 +29,7 @@ impl<'a> Sector<'a> {
         floor_texture: i32,
         ceiling_texture: i32,
         vecs: Vec<Vector2>,
-        lines: Vec<Line<'a>>,
+        lines: Vec<Line>,
     ) -> Self {
         Sector {
             bottom,
@@ -62,20 +66,32 @@ impl<'a> Sector<'a> {
         }
         odd
     }
-    pub fn find(&self, x: f32, y: f32) -> &Sector {
-        let inside: &Vec<&Sector> = &self.inside;
-        let count: usize = inside.len();
-        for i in 0..count {
-            if inside[i].contains(x, y) {
-                return inside[i].find(x, y);
-            }
-        }
-        self
-    }
+    // pub fn find(&self, x: f32, y: f32) -> Option<Rc<Sector>> {
+    //     for sec in self.inside.iter() {
+    //         if sec.contains(x, y) {
+    //             let nested = sec.find(x, y);
+    //             if nested.is_some() {
+    //                 return nested;
+    //             }
+    //             return Some(sec.clone());
+    //         }
+    //     }
+    //     Option::None
+    // }
     pub fn has_floor(&self) -> bool {
         self.floor_texture >= 0
     }
     pub fn has_ceiling(&self) -> bool {
         self.ceiling_texture >= 0
     }
+}
+
+pub fn find<'s>(sectors: &'s Vec<Sector>, sector: &'s Sector, x: f32, y: f32) -> &'s Sector {
+    for i in sector.inside.iter().copied() {
+        let sector = &sectors[i];
+        if sector.contains(x, y) {
+            return find(sectors, sector, x, y);
+        }
+    }
+    return sector;
 }

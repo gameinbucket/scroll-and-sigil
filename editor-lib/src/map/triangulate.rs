@@ -5,18 +5,16 @@ use crate::math::util::float_zero;
 use crate::math::vector::Vector2;
 
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::collections::HashSet;
 use std::rc::Rc;
-use std::rc::Weak;
 
 struct Polygon {
     index: usize,
     merge: bool,
     perimeter: bool,
     point: Vector2,
-    previous: Vec<Vector2>,
-    next: Vec<Vector2>,
+    previous: Vec<Rc<RefCell<Polygon>>>,
+    next: Vec<Rc<RefCell<Polygon>>>,
 }
 
 impl Polygon {
@@ -38,10 +36,10 @@ fn update_polygon_indices(polygons: &Vec<Rc<RefCell<Polygon>>>) {
     }
 }
 
-fn polygon_remove_point(vecs: &mut Vec<Vector2>, point: Vector2) {
-    for i in 0..vecs.len() {
-        if vecs[i].eq(point) {
-            vecs.remove(i);
+fn polygon_remove_point(polygons: &mut Vec<Rc<RefCell<Polygon>>>, point: Vector2) {
+    for i in 0..polygons.len() {
+        if polygons[i].borrow().point.eq(point) {
+            polygons.remove(i);
             break;
         }
     }
@@ -59,12 +57,6 @@ fn polygon_find(
     return Option::None;
 }
 
-fn polygon_index_of_vec(polygons: &Vec<Rc<RefCell<Polygon>>>, point: Vector2) -> usize {
-    let p = polygon_find(polygons, point).unwrap();
-    let i = p.borrow().index;
-    i
-}
-
 fn polygon_compare(a: &Polygon, b: &Polygon) -> i32 {
     let i = a.point;
     let e = b.point;
@@ -74,7 +66,25 @@ fn polygon_compare(a: &Polygon, b: &Polygon) -> i32 {
     return -1;
 }
 
-fn triangle_contains(tri: [Vector2; 3], x: f32, y: f32) -> bool {
+fn vector_angle(a: Vector2, b: Vector2) -> f32 {
+    let mut angle = (a.y - b.y).atan2(a.x - b.x);
+    if angle < 0.0 {
+        angle += 2.0 * std::f32::consts::PI;
+    }
+    return angle;
+}
+
+fn vector_interior_angle(first: Vector2, second: Vector2, third: Vector2) -> f32 {
+    let angle_one = (first.y - second.y).atan2(first.x - second.x);
+    let angle_two = (second.y - third.y).atan2(second.x - third.x);
+    let mut interior = angle_two - angle_one;
+    if interior < 0.0 {
+        interior += 2.0 * std::f32::consts::PI;
+    }
+    return interior;
+}
+
+fn triangle_contains(tri: &[Vector2; 3], x: f32, y: f32) -> bool {
     let mut odd = false;
     let mut k = 2;
     for i in 0..3 {
@@ -89,10 +99,6 @@ fn triangle_contains(tri: [Vector2; 3], x: f32, y: f32) -> bool {
         k = i;
     }
     odd
-}
-
-fn triangle_valid(vecs: &Vec<Vector2>, a: Vector2, b: Vector2, c: Vector2) -> bool {
-    true
 }
 
 fn vector_line_intersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2) -> bool {
@@ -122,7 +128,7 @@ fn vector_line_intersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2) -> bool
 fn valid_polygon(polygon: &Vec<Rc<RefCell<Polygon>>>, a: Vector2, b: Vector2) -> bool {
     for polygon in polygon.iter() {
         let c = polygon.borrow().point;
-        let d = polygon.borrow().previous[0];
+        let d = polygon.borrow().previous[0].borrow().point;
         if !a.eq(c) && !a.eq(d) && !b.eq(c) && !b.eq(d) && vector_line_intersect(a, b, c, d) {
             return false;
         }
@@ -130,8 +136,8 @@ fn valid_polygon(polygon: &Vec<Rc<RefCell<Polygon>>>, a: Vector2, b: Vector2) ->
     true
 }
 
-fn valid_vectors(vectors: &Vec<Vector2>, a: Vector2, b: Vector2, c: Vector2) -> bool {
-    if a.interior_angle(b, c) > std::f32::consts::PI {
+fn triangle_valid(vectors: &Vec<Vector2>, a: Vector2, b: Vector2, c: Vector2) -> bool {
+    if vector_interior_angle(a, b, c) > std::f32::consts::PI {
         return false;
     }
     let tri = [a, b, c];
@@ -139,7 +145,7 @@ fn valid_vectors(vectors: &Vec<Vector2>, a: Vector2, b: Vector2, c: Vector2) -> 
         if vec.eq(a) || vec.eq(b) || vec.eq(c) {
             continue;
         }
-        if triangle_contains(tri, vec.x, vec.y) {
+        if triangle_contains(&tri, vec.x, vec.y) {
             return false;
         }
     }
@@ -175,14 +181,14 @@ fn cull_vectors(polygons: &mut Vec<Rc<RefCell<Polygon>>>) {
             polygon.perimeter = true;
             remaining.retain(|&x| x != current);
             while polygon.next.len() != 1 {
-                let next = polygon_index_of_vec(polygons, polygon.next[1]);
+                let next = polygon.next[1].borrow().index;
                 pending.insert(next);
                 polygon.next.remove(1);
             }
             while polygon.previous.len() != 1 {
                 polygon.previous.remove(1);
             }
-            current = polygon_index_of_vec(polygons, polygon.next[0]);
+            current = polygon.next[0].borrow().index;
             if current == start {
                 break;
             }
@@ -191,9 +197,8 @@ fn cull_vectors(polygons: &mut Vec<Rc<RefCell<Polygon>>>) {
             for polygon_index in pending.iter().copied() {
                 dead.insert(polygon_index);
                 let polygon = polygons[polygon_index].borrow();
-                for point in polygon.next.iter().copied() {
-                    let find = polygon_find(polygons, point).unwrap();
-                    let next = find.borrow();
+                for ref_next in polygon.next.iter() {
+                    let next = ref_next.borrow();
                     if !next.perimeter {
                         if !pending.contains(&next.index) && !dead.contains(&next.index) {
                             holding.insert(next.index);
@@ -240,16 +245,16 @@ fn populate_references(sec: &Sector, polygons: &Vec<Rc<RefCell<Polygon>>>, clock
             p = n;
             n = t;
         }
-        let next = polygon_find(polygons, sec.vecs[n]).unwrap().borrow().point;
-        let previous = polygon_find(polygons, sec.vecs[p]).unwrap().borrow().point;
-        let find = polygon_find(polygons, sec.vecs[i]).unwrap();
-        let mut original = find.borrow_mut();
+        let next = polygon_find(polygons, sec.vecs[n]).unwrap();
+        let previous = polygon_find(polygons, sec.vecs[p]).unwrap();
+        let ref_original = polygon_find(polygons, sec.vecs[i]).unwrap();
+        let mut original = ref_original.borrow_mut();
         if original.previous.is_empty() {
-            original.previous.push(previous);
+            original.previous.push(previous.clone());
         } else {
             let point = original.point;
-            let existing = original.previous[0];
-            if previous.angle(point) < existing.angle(point) {
+            let existing = original.previous[0].borrow().point;
+            if vector_angle(previous.borrow().point, point) < vector_angle(existing, point) {
                 original.previous.insert(0, previous);
             }
         }
@@ -257,8 +262,8 @@ fn populate_references(sec: &Sector, polygons: &Vec<Rc<RefCell<Polygon>>>, clock
             original.next.push(next);
         } else {
             let point = original.point;
-            let existing = original.next[0];
-            if next.angle(point) < existing.angle(point) {
+            let existing = original.next[0].borrow().point;
+            if vector_angle(next.borrow().point, point) < vector_angle(existing, point) {
                 original.next.insert(0, next);
             }
         }
@@ -287,22 +292,30 @@ fn skip(sector: &Sector, floor: bool) -> bool {
     !sector.has_ceiling()
 }
 
-fn populate(sec: &Sector, floor: bool, mut polygons: &mut Vec<Rc<RefCell<Polygon>>>) {
-    for inner in sec.inside.iter() {
+fn populate(
+    sectors: &mut Vec<Sector>,
+    sector: usize,
+    floor: bool,
+    mut polygons: &mut Vec<Rc<RefCell<Polygon>>>,
+) {
+    let sector = &sectors[sector];
+    for inner in sector.inside.iter().copied() {
+        let inner = &sectors[inner];
         if skip(inner, floor) {
             continue;
         }
         populate_vectors(inner, &mut polygons);
     }
-    for inner in sec.inside.iter() {
+    for inner in sector.inside.iter().copied() {
+        let inner = &sectors[inner];
         if skip(inner, floor) {
             continue;
         }
         populate_references(inner, &polygons, false);
     }
     cull_vectors(&mut polygons);
-    populate_vectors(sec, &mut polygons);
-    populate_references(sec, &polygons, true);
+    populate_vectors(sector, &mut polygons);
+    populate_references(sector, &polygons, true);
     update_polygon_indices(&polygons);
 }
 
@@ -311,9 +324,9 @@ fn classify(polygons: &Vec<Rc<RefCell<Polygon>>>, monotone: &mut Vec<Rc<RefCell<
     let mut split = Vec::new();
     for polygon in polygons.iter() {
         let current = polygon.borrow();
-        let previous = current.previous[0];
-        let next = current.next[0];
-        let reflex = previous.interior_angle(current.point, next) > std::f32::consts::PI;
+        let previous = current.previous[0].borrow().point;
+        let next = current.next[0].borrow().point;
+        let reflex = vector_interior_angle(previous, current.point, next) > std::f32::consts::PI;
         let both_above = previous.y < current.point.y && next.y <= current.point.y;
         let both_below = previous.y >= current.point.y && next.y >= current.point.y;
         let collinear = next.y == current.point.y;
@@ -321,7 +334,7 @@ fn classify(polygons: &Vec<Rc<RefCell<Polygon>>>, monotone: &mut Vec<Rc<RefCell<
             monotone.push(polygon.clone());
         } else if (both_above && !reflex) {
             if (!collinear) {
-                split.push(polygon);
+                split.push(polygon.clone());
             }
         } else if (both_below && !reflex) {
             if (!collinear) {
@@ -330,19 +343,22 @@ fn classify(polygons: &Vec<Rc<RefCell<Polygon>>>, monotone: &mut Vec<Rc<RefCell<
         }
     }
     for polygon in merge.iter() {
-        let current = polygon.borrow();
-        let start = current.index + 1;
-        let point = current.point;
+        let start = polygon.borrow().index + 1;
+        let point = polygon.borrow().point;
         for k in start..polygons.len() {
-            let diagonal = polygons[k].borrow();
-            if valid_polygon(polygons, point, diagonal.point) {
-                let mut current = polygon.borrow_mut();
-                let mut diagonal = polygons[k].borrow_mut();
-                current.merge = true;
-                current.next.push(diagonal.point);
-                current.previous.push(diagonal.point);
-                diagonal.next.push(current.point);
-                diagonal.previous.push(current.point);
+            let diagonal = &polygons[k];
+            if valid_polygon(polygons, point, diagonal.borrow().point) {
+                {
+                    let mut current = polygon.borrow_mut();
+                    current.merge = true;
+                    current.next.push(diagonal.clone());
+                    current.previous.push(diagonal.clone());
+                }
+                {
+                    let mut diagonal = diagonal.borrow_mut();
+                    diagonal.next.push(polygon.clone());
+                    diagonal.previous.push(polygon.clone());
+                }
                 break;
             }
         }
@@ -352,17 +368,21 @@ fn classify(polygons: &Vec<Rc<RefCell<Polygon>>>, monotone: &mut Vec<Rc<RefCell<
         let start = current.index;
         let point = current.point;
         for k in (0..start).rev() {
-            let diagonal = polygons[k].borrow();
-            if valid_polygon(polygons, point, diagonal.point) {
-                if !diagonal.merge {
-                    monotone.push(polygons[k].clone());
-                    let mut current = polygon.borrow_mut();
-                    let mut diagonal = polygons[k].borrow_mut();
-                    current.merge = true;
-                    current.next.push(diagonal.point);
-                    current.previous.push(diagonal.point);
-                    diagonal.next.push(current.point);
-                    diagonal.previous.push(current.point);
+            let diagonal = &polygons[k];
+            if valid_polygon(polygons, point, diagonal.borrow().point) {
+                if !diagonal.borrow().merge {
+                    monotone.push(diagonal.clone());
+                    {
+                        let mut current = polygon.borrow_mut();
+                        current.merge = true;
+                        current.next.push(diagonal.clone());
+                        current.previous.push(diagonal.clone());
+                    }
+                    {
+                        let mut diagonal = diagonal.borrow_mut();
+                        diagonal.next.push(polygon.clone());
+                        diagonal.previous.push(polygon.clone());
+                    }
                 }
                 break;
             }
@@ -419,18 +439,17 @@ fn clip_all(
     triangles: &mut Vec<Triangle>,
 ) {
     let mut vecs = Vec::new();
-    for polygon in monotone.iter() {
-        let start = polygon.borrow().index;
-        let mut next = polygon_index_of_vec(monotone, polygon.borrow().next[0]);
-        let mut current = start;
+    for start in monotone.iter() {
+        let mut next = start.borrow().next[0].clone();
+        let mut current = start.clone();
         loop {
-            let current_point = monotone[current].borrow().point;
-            vecs.push(current_point);
-            let mut previous = 0;
+            let a = next.borrow().point;
+            let b = current.borrow().point;
+            vecs.push(b);
             let mut angle = std::f32::MAX;
-            let a = monotone[next].borrow().point;
-            let b = current_point;
-            for c in monotone[current].borrow().previous.iter().copied() {
+            let mut previous = Option::None;
+            for ref_previous in current.borrow().previous.iter() {
+                let c = ref_previous.borrow().point;
                 let angle_1 = (a.x - b.x).atan2(a.y - b.y);
                 let angle_2 = (b.x - c.x).atan2(b.y - c.y);
                 let mut interior = angle_2 - angle_1;
@@ -442,45 +461,59 @@ fn clip_all(
                     interior -= 2.0 * std::f32::consts::PI;
                 }
                 if (interior < angle) {
-                    previous = polygon_index_of_vec(monotone, c);
+                    previous = Some(ref_previous.clone());
                     angle = interior;
                 }
             }
-            let mut mutate_current = monotone[current].borrow_mut();
-            polygon_remove_point(&mut mutate_current.next, a);
-            polygon_remove_point(
-                &mut mutate_current.previous,
-                monotone[previous].borrow().point,
-            );
-            next = current;
-            current = previous;
-            if (current == start) {
+            let mut previous = previous.unwrap();
+            {
+                let mut mutate_current = current.borrow_mut();
+                polygon_remove_point(&mut mutate_current.next, a);
+                polygon_remove_point(&mut mutate_current.previous, previous.borrow().point);
+            }
+            if Rc::ptr_eq(&previous, start) {
                 break;
             }
+            next = current;
+            current = previous;
         }
         clip(sec, floor, scale, triangles, &mut vecs);
         vecs.clear();
     }
 }
 
-fn construct(sector: &Sector, floor: bool, scale: f32, triangles: &mut Vec<Triangle>) {
-    if skip(sector, floor) {
+fn construct(
+    sectors: &mut Vec<Sector>,
+    sector: usize,
+    floor: bool,
+    scale: f32,
+    triangles: &mut Vec<Triangle>,
+) {
+    if skip(&sectors[sector], floor) {
         return;
     }
     let mut polygons = Vec::new();
     let mut monotone = Vec::new();
     println!("populate");
-    populate(sector, floor, &mut polygons);
+    populate(sectors, sector, floor, &mut polygons);
     println!("classify {}", polygons.len());
     classify(&polygons, &mut monotone);
     println!("clip {}", monotone.len());
-    clip_all(sector, floor, scale, &monotone, triangles);
+    clip_all(&sectors[sector], floor, scale, &monotone, triangles);
     println!("triangles {}", triangles.len());
+    for polygon in polygons.iter() {
+        let mut polygon = polygon.borrow_mut();
+        polygon.next.clear();
+        polygon.previous.clear();
+    }
+    monotone.clear();
+    polygons.clear();
+    println!("---------------------------");
 }
 
-pub fn triangulate_sector(sec: &mut Sector, scale: f32) {
+pub fn triangulate_sector(sectors: &mut Vec<Sector>, sector: usize, scale: f32) {
     let mut triangles: Vec<Triangle> = Vec::new();
-    construct(sec, true, scale, &mut triangles);
-    construct(sec, false, scale, &mut triangles);
-    sec.update_triangles(triangles);
+    construct(sectors, sector, true, scale, &mut triangles);
+    construct(sectors, sector, false, scale, &mut triangles);
+    sectors[sector].update_triangles(triangles);
 }

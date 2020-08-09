@@ -3,24 +3,26 @@ use crate::map::wall::Wall;
 use crate::math::util::float_zero;
 use crate::math::vector::Vector2;
 
+use std::rc::Weak;
+
 pub struct Intersect {
     pub x: f32,
     pub y: f32,
     pub ok: bool,
 }
 
-pub struct Line<'a> {
+pub struct Line {
     pub bottom: Option<Wall>,
     pub middle: Option<Wall>,
     pub top: Option<Wall>,
     pub a: Vector2,
     pub b: Vector2,
     pub normal: Vector2,
-    pub plus: Option<&'a Sector<'a>>,
-    pub minus: Option<&'a Sector<'a>>,
+    pub plus: Option<Weak<Sector>>,
+    pub minus: Option<Weak<Sector>>,
 }
 
-impl<'a> Line<'a> {
+impl Line {
     pub fn new(low: i32, mid: i32, up: i32, a: Vector2, b: Vector2) -> Self {
         let mut bottom = Option::None;
         let mut middle = Option::None;
