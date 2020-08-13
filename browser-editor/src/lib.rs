@@ -1,6 +1,9 @@
-use minifb::{Key, MouseMode, Window, WindowOptions};
-use rand::prelude::*;
-use std::time::Duration;
+#![allow(unused)]
+#![allow(dead_code)]
+
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
+use web_sys::{console, WebGlProgram, WebGlRenderingContext, WebGlShader};
 
 use editor::canvas::canvas::rgb;
 use editor::canvas::canvas::Canvas;
@@ -64,6 +67,7 @@ fn place_house(world: &mut World, x: f32, y: f32) {
     );
     world.push_sector(sector);
 }
+
 fn place_grass(world: &mut World) {
     let mut vecs = Vec::with_capacity(4);
     vecs.push(Vector2::new(0.0, 0.0));
@@ -87,10 +91,13 @@ fn place_grass(world: &mut World) {
     );
     world.push_sector(sector);
 }
+
 const WORLD_DRAW_SCALE: i32 = 10;
+
 fn px(i: f32) -> i32 {
     i as i32 * WORLD_DRAW_SCALE
 }
+
 fn draw_triangle(canvas: &mut Canvas, camera: (i32, i32), color: u32, triangle: &Triangle) {
     canvas.triangle(
         color,
@@ -102,6 +109,7 @@ fn draw_triangle(canvas: &mut Canvas, camera: (i32, i32), color: u32, triangle: 
         px(triangle.c.y) + camera.1,
     );
 }
+
 fn draw_line(canvas: &mut Canvas, camera: (i32, i32), color: u32, line: &Line) {
     canvas.line(
         color,
@@ -111,11 +119,12 @@ fn draw_line(canvas: &mut Canvas, camera: (i32, i32), color: u32, line: &Line) {
         px(line.b.y) + camera.1,
     );
 }
+
 fn draw_world(canvas: &mut Canvas, camera: (i32, i32), world: &World) {
     let color = rgb(255, 0, 0);
     for sector in world.get_sectors().iter() {
         for triangle in sector.triangles.iter() {
-            let color = rgb(0, rand::thread_rng().gen_range(0, 255), 0);
+            let color = rgb(0, 255, 0);
             draw_triangle(canvas, camera, color, triangle);
         }
         for line in sector.lines.iter() {
@@ -123,61 +132,135 @@ fn draw_world(canvas: &mut Canvas, camera: (i32, i32), world: &World) {
         }
     }
 }
+
 fn draw_cursor(canvas: &mut Canvas, x: i32, y: i32) {
     let color = rgb(0, 0, 225);
     canvas.triangle(color, x, y, x + 4, y, x + 2, y + 4);
 }
-fn main() {
+
+pub fn compile_shader(
+    context: &WebGlRenderingContext,
+    shader_type: u32,
+    source: &str,
+) -> Result<WebGlShader, String> {
+    let shader = context
+        .create_shader(shader_type)
+        .ok_or_else(|| String::from("Unable to create shader object"))?;
+    context.shader_source(&shader, source);
+    context.compile_shader(&shader);
+
+    if context
+        .get_shader_parameter(&shader, WebGlRenderingContext::COMPILE_STATUS)
+        .as_bool()
+        .unwrap_or(false)
+    {
+        Ok(shader)
+    } else {
+        Err(context
+            .get_shader_info_log(&shader)
+            .unwrap_or_else(|| String::from("Unknown error creating shader")))
+    }
+}
+
+pub fn link_program(
+    context: &WebGlRenderingContext,
+    vert_shader: &WebGlShader,
+    frag_shader: &WebGlShader,
+) -> Result<WebGlProgram, String> {
+    let program = context
+        .create_program()
+        .ok_or_else(|| String::from("Unable to create shader object"))?;
+
+    context.attach_shader(&program, vert_shader);
+    context.attach_shader(&program, frag_shader);
+    context.link_program(&program);
+
+    if context
+        .get_program_parameter(&program, WebGlRenderingContext::LINK_STATUS)
+        .as_bool()
+        .unwrap_or(false)
+    {
+        Ok(program)
+    } else {
+        Err(context
+            .get_program_info_log(&program)
+            .unwrap_or_else(|| String::from("Unknown error creating program object")))
+    }
+}
+
+#[wasm_bindgen(start)]
+pub fn main() -> Result<(), JsValue> {
+    console::log_1(&"foobar".into());
+
     let mut world = World::new();
     place_grass(&mut world);
     place_house(&mut world, 10.0, 10.0);
     place_house(&mut world, 35.0, 10.0);
     world.build();
 
-    let mut window = Window::new(
-        "Scroll and Sigil Editor",
-        CANVAS_WIDTH,
-        CANVAS_HEIGHT,
-        WindowOptions::default(),
-    )
-    .expect("Error creating window");
-
-    window.limit_update_rate(Some(Duration::from_millis(MILLISECONDS_PER_FRAME)));
-
-    let mut camera = (0, 0);
+    let camera = (0, 0);
 
     let mut canvas = Canvas::new(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    let mut dirty = true;
+    canvas.clear(0);
+    draw_world(&mut canvas, camera, &world);
 
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        if window.is_key_down(Key::W) {
-            camera.1 -= 5;
-            dirty = true;
-        }
-        if window.is_key_down(Key::A) {
-            camera.0 -= 5;
-            dirty = true;
-        }
-        if window.is_key_down(Key::S) {
-            camera.1 += 5;
-            dirty = true;
-        }
-        if window.is_key_down(Key::D) {
-            camera.0 += 5;
-            dirty = true;
-        }
-        if dirty {
-            canvas.clear(0);
-            draw_world(&mut canvas, camera, &world);
-            let mouse = window.get_mouse_pos(MouseMode::Clamp).unwrap_or((0.0, 0.0));
-            draw_cursor(&mut canvas, mouse.0 as i32, mouse.1 as i32);
-            window
-                .update_with_buffer(&canvas.pixels, CANVAS_WIDTH, CANVAS_HEIGHT)
-                .expect("Error updating window buffer");
-            dirty = false;
-        } else {
-            window.update();
-        }
+    let document = web_sys::window().unwrap().document().unwrap();
+    let canvas = document.get_element_by_id("canvas").unwrap();
+    let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
+
+    let context = canvas
+        .get_context("webgl")?
+        .unwrap()
+        .dyn_into::<WebGlRenderingContext>()?;
+
+    let vert_shader = compile_shader(
+        &context,
+        WebGlRenderingContext::VERTEX_SHADER,
+        r#"
+       attribute vec4 position;
+       void main() {
+           gl_Position = position;
+       }
+   "#,
+    )?;
+    let frag_shader = compile_shader(
+        &context,
+        WebGlRenderingContext::FRAGMENT_SHADER,
+        r#"
+       void main() {
+           gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+       }
+   "#,
+    )?;
+    let program = link_program(&context, &vert_shader, &frag_shader)?;
+    context.use_program(Some(&program));
+
+    let vertices: [f32; 9] = [-0.7, -0.7, 0.0, 0.7, -0.7, 0.0, 0.0, 0.7, 0.0];
+
+    let buffer = context.create_buffer().ok_or("failed to create buffer")?;
+    context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&buffer));
+
+    unsafe {
+        let vert_array = js_sys::Float32Array::view(&vertices);
+
+        context.buffer_data_with_array_buffer_view(
+            WebGlRenderingContext::ARRAY_BUFFER,
+            &vert_array,
+            WebGlRenderingContext::STATIC_DRAW,
+        );
     }
+
+    context.vertex_attrib_pointer_with_i32(0, 3, WebGlRenderingContext::FLOAT, false, 0, 0);
+    context.enable_vertex_attrib_array(0);
+
+    context.clear_color(0.0, 0.0, 0.0, 1.0);
+    context.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
+
+    context.draw_arrays(
+        WebGlRenderingContext::TRIANGLES,
+        0,
+        (vertices.len() / 3) as i32,
+    );
+    Ok(())
 }

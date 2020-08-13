@@ -7,4 +7,4 @@ edition = "2018"
 [dependencies]
 rand = "0.7.3"
 minifb = "0.16.0"
-editor = { path = "../editor-lib" }
+editor = { path = "../scroll-sigil-lib" }

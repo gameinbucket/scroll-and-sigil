@@ -1,5 +1,7 @@
 use crate::map::line::Line;
 use crate::map::sector::Sector;
+use crate::map::thing::Thing;
+use crate::map::thing::Updatable;
 use crate::map::triangulate::triangulate_sector;
 
 use std::collections::HashSet;
@@ -13,6 +15,7 @@ pub struct WorldCell {
 }
 
 pub struct World {
+    things: Vec<Thing>,
     sectors: Vec<Sector>,
     cells: Vec<WorldCell>,
     cell_columns: usize,
@@ -22,6 +25,7 @@ pub struct World {
 impl World {
     pub fn new() -> Self {
         World {
+            things: Vec::new(),
             sectors: Vec::new(),
             cells: Vec::new(),
             cell_columns: 0,
@@ -31,15 +35,18 @@ impl World {
     pub fn push_sector(&mut self, sector: Sector) {
         self.sectors.push(sector);
     }
+
     pub fn get_sectors(&self) -> &Vec<Sector> {
         &self.sectors
     }
+
     fn build_sector_lines(&mut self, index: usize) {
         let sector = &self.sectors[index];
         if sector.lines.len() == 0 {
             return;
         }
     }
+
     pub fn build(&mut self) {
         let mut top = 0.0;
         let mut right = 0.0;
@@ -95,7 +102,6 @@ impl World {
                     let other_len = self.sectors[inside].inside.len();
                     for o in 0..other_len {
                         let other = self.sectors[inside].inside[o];
-                        println!("dead {}", other);
                         dead.insert(other);
                     }
                 }
@@ -110,7 +116,6 @@ impl World {
             for k in 0..inside_len {
                 let inside = self.sectors[i].inside[k];
                 let inner = &mut self.sectors[inside];
-                println!("inner {} -> outside {}", inside, i);
                 inner.outside = Some(i);
             }
         }
@@ -123,6 +128,12 @@ impl World {
         }
         for i in 0..self.sectors.len() {
             self.build_sector_lines(i);
+        }
+    }
+
+    pub fn update(&mut self) {
+        for thing in self.things.iter_mut() {
+            thing.update();
         }
     }
 }
