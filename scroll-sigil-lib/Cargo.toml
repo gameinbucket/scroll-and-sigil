@@ -1,8 +1,0 @@
-[package]
-name = "editor"
-version = "0.1.0"
-authors = ["Nate M <email>"]
-edition = "2018"
-
-[lib]
-crate-type = ["lib"]
